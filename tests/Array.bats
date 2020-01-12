@@ -13,13 +13,13 @@ import bash-framework/Array
     [[ "${BASH_FRAMEWORK_INITIALIZED}" = "1" ]]
 }
 
-@test "Array::Contains" {
+@test "Array::contains" {
     declare -a tab=("elem1" "elem2" "elem3")
 
-    Array::Contains "elem0" "${tab[@]}"
+    Array::contains "elem0" "${tab[@]}"
     [[ "${status}" = "1" ]]
-    Array::Contains "elem1" "${tab[@]}"
+    Array::contains "elem1" "${tab[@]}"
     [[ "${status}" = "0" ]]
-    Array::Contains "elem3" "${tab[@]}"
+    Array::contains "elem3" "${tab[@]}"
     [[ "${status}" = "0" ]]
 }

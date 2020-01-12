@@ -68,8 +68,8 @@ Framework::SourceFile() {
   if [[ -f "$libPath" ]]
   then
     ## if already imported let's return
-    # if declare -f "Array::Contains" &> /dev/null &&
-    if [[ "${__bash_framework__allowFileReloading-}" != true ]] && [[ ! -z "${__bash_framework__importedFiles[*]}" ]] && Array::Contains "$libPath" "${__bash_framework__importedFiles[@]}"
+    # if declare -f "Array::contains" &> /dev/null &&
+    if [[ "${__bash_framework__allowFileReloading-}" != true ]] && [[ ! -z "${__bash_framework__importedFiles[*]}" ]] && Array::contains "$libPath" "${__bash_framework__importedFiles[@]}"
     then
       # DEBUG subject=level3 Log "File previously imported: ${libPath}"
       return 0
