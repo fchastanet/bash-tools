@@ -22,35 +22,12 @@ declare -g mysqlMockedStep=0
 }
 
 @test "db size" {
-    set -x
-    local mysqlMockedStep=0
-    mysqlMocked() {
-        case ${mysqlMockedStep} in
-        0)
-            cat "${BATS_TEST_DIRNAME}/data/databaseSize.dbList"
-            ;;
-        1)
-            cat "${BATS_TEST_DIRNAME}/data/databaseSize.result_db1"
-            ;;
-        2)
-            cat "${BATS_TEST_DIRNAME}/data/databaseSize.result_db2"
-            ;;
-        esac
-    }
-    alias mysql=mysqlMocked
-
-    Database::setMysqlCommands dbInstance \
-        "mysql" \
-        "${dbInstance['MYSQLDUMP_COMMAND']}" \
-        "${dbInstance['MYSQLSHOW_COMMAND']}"
-
     local out=$(
         ${toolsDir}/dbQueryAllDatabases \
-            -e "${BATS_TEST_DIRNAME}/data/localhost-root.env" \
+            -e "${BATS_TEST_DIRNAME}/data/databaseSize.env.sh" \
             "${BATS_TEST_DIRNAME}/data/databaseSize.sql" 2>&1
     )
-    echo $out
-    [[ ${out} == *"ERROR - You must provide env-file parameter"* ]]
+    [[ "${out}" = "$(cat "${BATS_TEST_DIRNAME}/data/databaseSize.expectedResult")" ]]
 }
 
 @test "parallel not installed" {

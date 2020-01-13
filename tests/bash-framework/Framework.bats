@@ -27,7 +27,7 @@ __bash_framework_envFile="" source "$(cd "$( readlink -e "${BATS_TEST_DIRNAME}/.
 }
 
 @test "__bash_framework_rootCallingScriptPath" {
-    [[ "${__bash_framework_rootCallingScriptPath}" = "$( cd "${BATS_TEST_DIRNAME}/../../vendor/bats/libexec" && pwd )" ]]
+    [[ "${__bash_framework_rootCallingScriptPath}" = "$( cd "${BATS_TEST_DIRNAME}/../../vendor/bats/libexec/bats-core" && pwd )" ]]
 }
 
 @test "__bash_framework_rootVendorPath" {
