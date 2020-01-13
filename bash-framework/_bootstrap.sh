@@ -16,7 +16,7 @@ Log::displayError() {
 
 # shellcheck source=bash-framework/Framework.sh
 source "${__bash_framework_rootLibPath}/Framework.sh" || {
-    Log::displayError "FATAL ERROR: Unable to bootstrap (missing bash-fraemwork directory?)"
+    Log::displayError "FATAL ERROR: Unable to bootstrap (missing bash-framework directory?)"
     exit 1
 }
 # shellcheck source=bash-framework/Array.sh
