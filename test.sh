@@ -16,5 +16,5 @@ CURRENT_DIR=$( cd "$( readlink -e "${BASH_SOURCE[0]%/*}" )" && pwd )
 # https://github.com/grayhemp/bats-mock
 # https://github.com/mbland/go-script-bash#introduction
 
-"${CURRENT_DIR}/vendor/bats/bin/bats"  tests/bash-framework
-"${CURRENT_DIR}/vendor/bats/bin/bats" --tap tests/tools
+"${CURRENT_DIR}/vendor/bats/bin/bats" tests/bash-framework
+"${CURRENT_DIR}/vendor/bats/bin/bats" tests/tools
