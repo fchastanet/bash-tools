@@ -19,7 +19,7 @@ readonly __RESET_COLOR='\e[0m'            # Reset Color
 Log::displayError() {
     local msg="ERROR - ${1}"
     if (( ${BASH_FRAMEWORK_DISPLAY_LEVEL} >= ${__LEVEL_ERROR} )); then
-        echo -e "${__ERROR_COLOR}${msg}${__RESET_COLOR}"
+        (>&2 echo -e "${__ERROR_COLOR}${msg}${__RESET_COLOR}")
     fi
     Log::logMessage ${__LEVEL_ERROR} "${msg}"
 }
@@ -27,7 +27,7 @@ Log::displayError() {
 Log::displayWarning() {
     local msg="WARN  - ${1}"
     if (( ${BASH_FRAMEWORK_DISPLAY_LEVEL} >= ${__LEVEL_WARNING} )); then
-        echo -e "${__WARNING_COLOR}${msg}${__RESET_COLOR}"
+        (>&2 echo -e "${__WARNING_COLOR}${msg}${__RESET_COLOR}")
     fi
     Log::logMessage ${__LEVEL_WARNING} "${msg}"
 }
@@ -35,14 +35,14 @@ Log::displayWarning() {
 Log::displayInfo() {
     local msg="INFO  - ${1}"
     if (( ${BASH_FRAMEWORK_DISPLAY_LEVEL} >= ${__LEVEL_INFO} )); then
-        echo -e "${__INFO_COLOR}${msg}${__RESET_COLOR}"
+        (>&2 echo -e "${__INFO_COLOR}${msg}${__RESET_COLOR}")
     fi
     Log::logMessage ${__LEVEL_INFO} "${msg}"
 }
 
 Log::displaySuccess() {
     local msg="${1}"
-    echo -e "${__SUCCESS_COLOR}${msg}${__RESET_COLOR}"
+    (>&2 echo -e "${__SUCCESS_COLOR}${msg}${__RESET_COLOR}")
     Log::logMessage ${__LEVEL_SUCCESS} "${msg}"
 }
 
@@ -51,7 +51,7 @@ Log::displayDebug() {
     local msg="DEBUG - ${1}"
 
     if (( ${BASH_FRAMEWORK_DISPLAY_LEVEL} >= ${__LEVEL_DEBUG} )); then
-        echo -e "${__DEBUG_COLOR}${msg}${__RESET_COLOR}"
+        (>&2 echo -e "${__DEBUG_COLOR}${msg}${__RESET_COLOR}")
     fi
     Log::logMessage ${__LEVEL_DEBUG} "${msg}"
 }

@@ -9,7 +9,7 @@ Functions::checkCommandExists() {
     local commandName="$1"
     local helpIfNotExists="$2"
 
-    Log::displayInfo "check ${commandName} version"
+    Log::displayDebug "check ${commandName} version"
     which ${commandName} >/dev/null 2>/dev/null || {
         Log::displayError "${commandName} is not installed, please install it"
         if [[ ! -z "${helpIfNotExists}" ]]; then
