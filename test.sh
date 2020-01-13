@@ -14,4 +14,5 @@ CURRENT_DIR=$( cd "$( readlink -e "${BASH_SOURCE[0]%/*}" )" && pwd )
 [[ ! -f "vendor/bats-support/load.bash" ]] && git clone https://github.com/ztombol/bats-support.git "${CURRENT_DIR}/vendor/bats-support"
 [[ ! -f "vendor/bats-assert/load.bash" ]] && git clone https://github.com/ztombol/bats-assert.git "${CURRENT_DIR}/vendor/bats-assert"
 
-"${CURRENT_DIR}/vendor/bats/bin/bats"  tests
+"${CURRENT_DIR}/vendor/bats/bin/bats"  tests/bash-framework
+"${CURRENT_DIR}/vendor/bats/bin/bats"  tests/tools

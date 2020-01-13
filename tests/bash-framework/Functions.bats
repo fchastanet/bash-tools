@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 
-load '../vendor/bats-support/load'
-load '../vendor/bats-assert/load'
+load '../../vendor/bats-support/load'
+load '../../vendor/bats-assert/load'
 
 # shellcheck source=bash-framework/_bootstrap.sh
-__bash_framework_envFile="" source "$(cd "$( readlink -e "${BATS_TEST_DIRNAME}/..")" && pwd)/bash-framework/_bootstrap.sh" || exit 1
+__bash_framework_envFile="" source "$(cd "$( readlink -e "${BATS_TEST_DIRNAME}/../..")" && pwd)/bash-framework/_bootstrap.sh" || exit 1
 
 import bash-framework/Functions
 
@@ -19,7 +19,6 @@ import bash-framework/Functions
     alias uname="unameMocked"
 
     [[ "$(Functions::isWindows)" = "1" ]]
-    unalias uname
 }
 
 @test "Functions::checkDnsHostname localhost" {
@@ -35,9 +34,6 @@ import bash-framework/Functions
     alias ping="pingMocked"
 
     [[ "$(Functions::checkDnsHostname "willywonka.fchastanet.lan" && echo "0" || echo "$?")" = "0" ]]
-
-    unalias uname
-    unalias ping
 }
 
 @test "Functions::checkDnsHostname external host" {
@@ -60,10 +56,6 @@ import bash-framework/Functions
     alias ifconfig="ifconfigMocked"
     Functions::checkDnsHostname "willywonka.fchastanet.lan"
     [[ "$?" = "0" ]]
-
-    unalias uname
-    unalias ping
-    unalias ifconfig
 }
 
 @test "Functions::checkCommandExists exists" {

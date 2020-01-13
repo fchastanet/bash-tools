@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 
-load '../vendor/bats-support/load'
-load '../vendor/bats-assert/load'
+load '../../vendor/bats-support/load'
+load '../../vendor/bats-assert/load'
 
 # shellcheck source=bash-framework/_bootstrap.sh
-source "$(cd "$( readlink -e "${BATS_TEST_DIRNAME}/..")" && pwd)/bash-framework/_bootstrap.sh" || exit 1
+source "$(cd "$( readlink -e "${BATS_TEST_DIRNAME}/../..")" && pwd)/bash-framework/_bootstrap.sh" || exit 1
 
 import bash-framework/Version
 

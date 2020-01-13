@@ -1,0 +1,39 @@
+#!/usr/bin/env bash
+(>&2 echo $*)
+case ${mysqlMockedStep} in
+0)
+    cat "${BATS_TEST_DIRNAME}/data/databaseSize.dbList"
+    ;;
+esac
+
+set -x
+f() {
+    local mysqlMockedStep=0
+    mysqlMocked() {
+        case ${mysqlMockedStep} in
+        0)
+            cat "${BATS_TEST_DIRNAME}/data/databaseSize.dbList"
+            ;;
+        1)
+            cat "${BATS_TEST_DIRNAME}/data/databaseSize.result_db1"
+            ;;
+        2)
+            cat "${BATS_TEST_DIRNAME}/data/databaseSize.result_db2"
+            ;;
+        esac
+    }
+    alias mysql=mysqlMocked
+
+    Database::setMysqlCommands dbInstance \
+        "mysql" \
+        "${dbInstance['MYSQLDUMP_COMMAND']}" \
+        "${dbInstance['MYSQLSHOW_COMMAND']}"
+
+    local out=$(
+        ${toolsDir}/dbQueryAllDatabases \
+            -e "${BATS_TEST_DIRNAME}/data/localhost-root.env" \
+            "${BATS_TEST_DIRNAME}/data/databaseSize.sql" 2>&1
+    )
+    echo $out
+    [[ ${out} == *"ERROR - You must provide env-file parameter"* ]]
+}
