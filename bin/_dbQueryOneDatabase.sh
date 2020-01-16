@@ -14,8 +14,6 @@ Framework::expectNonRootUser
 # ensure that Ctrl-C is trapped by this script and not sub mysql process
 trap 'exit 130' INT
 
-CURRENT_DIR=$( cd "$( readlink -e "${BASH_SOURCE[0]%/*}" )" && pwd )
-
 import bash-framework/Database
 
 declare HOSTNAME="$1"
@@ -33,5 +31,6 @@ Database::setOptions dbInstance "${MYSQL_OPTIONS} --connect-timeout=5"
 echo -n "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
 
 # errors will be shown on stderr, result on stdout
+# shellcheck disable=SC2154
 Database::query dbInstance "${query}" "${DB}" ||
     Log::displayError "database ${DB} error" 1>&2

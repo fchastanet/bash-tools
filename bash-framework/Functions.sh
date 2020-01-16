@@ -9,10 +9,9 @@ Functions::checkCommandExists() {
     local commandName="$1"
     local helpIfNotExists="$2"
 
-    Log::displayDebug "check ${commandName} version"
-    which ${commandName} >/dev/null 2>/dev/null || {
+    command -v "${commandName}" >/dev/null 2>&1 || {
         Log::displayError "${commandName} is not installed, please install it"
-        if [[ ! -z "${helpIfNotExists}" ]]; then
+        if [[ -n "${helpIfNotExists}" ]]; then
             Log::displayInfo "${helpIfNotExists}"
         fi
         exit 1
@@ -51,10 +50,10 @@ Functions::checkDnsHostname() {
     # check if host is reachable
     local returnCode=0
     if [[ "$(Functions::isWindows)" = "1" ]]; then
-        COMMAND_OUTPUT=$(ping -4 -n 1 ${host} 2>&1)
+        COMMAND_OUTPUT=$(ping -4 -n 1 "${host}" 2>&1)
         returnCode=$?
     else
-        COMMAND_OUTPUT=$(ping -c 1 ${host} 2>&1)
+        COMMAND_OUTPUT=$(ping -c 1 "${host}" 2>&1)
         returnCode=$?
     fi
 
@@ -63,7 +62,7 @@ Functions::checkDnsHostname() {
         # under windows: Pinging willywonka.fchastanet.lan [127.0.0.1] with 32 bytes of data
         # under linux: PING willywonka.fchastanet.lan (127.0.1.1) 56(84) bytes of data.
         local ip
-        ip=$(echo ${COMMAND_OUTPUT} | grep -i ping | grep -Eo '[0-9.]{4,}' | head -1)
+        ip=$(echo "${COMMAND_OUTPUT}" | grep -i ping | grep -Eo '[0-9.]{4,}' | head -1)
 
         # now we have to check if ip is bound to local ip address
         if [[ ${ip} != 127.0.* ]]; then
@@ -71,10 +70,10 @@ Functions::checkDnsHostname() {
             # check if ip resolve to our ips
             Log::displayInfo "check if ip(${ip}) associated to host(${host}) is listed in your network configuration"
             if [[ "$(Functions::isWindows)" = "1" ]]; then
-                COMMAND_OUTPUT=$(ipconfig 2>&1 | grep ${ip} | cat )
+                COMMAND_OUTPUT=$(ipconfig 2>&1 | grep "${ip}" | cat )
                 returnCode=$?
             else
-                COMMAND_OUTPUT=$(ifconfig 2>&1 | grep ${ip} | cat )
+                COMMAND_OUTPUT=$(ifconfig 2>&1 | grep "${ip}" | cat )
                 returnCode=$?
             fi
             if [[ "${returnCode}" != "0" ]]; then

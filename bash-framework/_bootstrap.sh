@@ -10,8 +10,15 @@ declare -g __bash_framework_rootCallingScriptPath="$( cd "$(dirname "$0")" && pw
 declare -g __bash_framework_rootVendorPath="$( cd "${__bash_framework_rootLibPath}/.." && pwd )"
 
 ## stubs in case either exception or log is not loaded
-Log::displayError() {
-    echo "Error: $1" 1>&2
+temporaryDisplayError() {
+  (>&2 echo "Error: $1")
+}
+alias Log::displayError='temporaryDisplayError'
+
+# shellcheck source=bash-framework/Constants.sh
+source "${__bash_framework_rootLibPath}/Constants.sh" || {
+    Log::displayError "FATAL ERROR: Unable to bootstrap (missing lib directory?)"
+    exit 1
 }
 
 # shellcheck source=bash-framework/Framework.sh
@@ -24,6 +31,11 @@ source "${__bash_framework_rootLibPath}/Array.sh" || {
     Log::displayError "FATAL ERROR: Unable to bootstrap (missing lib directory?)"
     exit 1
 }
+
+shopt -s expand_aliases
+alias import="__bash_framework__allowFileReloading=false Framework::Import"
+alias source="__bash_framework__allowFileReloading=true Framework::ImportOne"
+alias .="__bash_framework__allowFileReloading=true Framework::ImportOne"
 
 #---
 ## Initialize some default variables
@@ -46,9 +58,12 @@ Framework::bootstrap() {
     fi
 
     # default values
-    BASH_FRAMEWORK_DISPLAY_LEVEL=${__LEVEL_INFO}
-    BASH_FRAMEWORK_LOG_LEVEL=${__LEVEL_OFF}
-    BASH_FRAMEWORK_LOG_FILE=""
+    # shellcheck disable=SC2034
+    BASH_FRAMEWORK_DISPLAY_LEVEL=${BASH_FRAMEWORK_DISPLAY_LEVEL:-${__LEVEL_INFO}}
+    # shellcheck disable=SC2034
+    BASH_FRAMEWORK_LOG_LEVEL=${BASH_FRAMEWORK_LOG_LEVEL:-${__LEVEL_OFF}}
+    # shellcheck disable=SC2034
+    BASH_FRAMEWORK_LOG_FILE="${BASH_FRAMEWORK_LOG_FILE:-}"
 
     # import .env file
     set -o allexport
@@ -72,33 +87,16 @@ Framework::bootstrap() {
         source "${__bash_framework_envFile}"
     fi
 
-    if (( ${BASH_FRAMEWORK_LOG_LEVEL} > ${__LEVEL_OFF} )); then
-        if [[ -z "${BASH_FRAMEWORK_LOG_FILE}" ]]; then
-            Log::displayError "BASH_FRAMEWORK_LOG_FILE - log file not specified"
-        else
-            if ! touch --no-create "${BASH_FRAMEWORK_LOG_FILE}" ; then
-                Log::displayError "Log file ${__bash_framework_rootCallingScriptPath}/${BASH_FRAMEWORK_LOG_FILE} is not writable"
-                BASH_FRAMEWORK_LOG_LEVEL=${__LEVEL_OFF}
-            fi
-        fi
-    fi
+    source bash-framework/LogBootstrap
 
     set +o allexport
 
     BASH_FRAMEWORK_INITIALIZED=1
 }
 
-shopt -s expand_aliases
-alias import="__bash_framework__allowFileReloading=false Framework::Import"
-alias source="__bash_framework__allowFileReloading=true Framework::ImportOne"
-alias .="__bash_framework__allowFileReloading=true Framework::ImportOne"
-
 #########################
 ### INITIALIZE SYSTEM ###
 #########################
-import bash-framework/Log
-import bash-framework/Functions
-
 # Bash will remember & return the highest exit code in a chain of pipes.
 # This way you can catch the error inside pipes, e.g. mysqldump | gzip
 set -o pipefail
@@ -111,3 +109,6 @@ set -o errtrace
 export TERM=xterm-256color
 
 Framework::bootstrap
+
+import bash-framework/Functions
+import bash-framework/Log

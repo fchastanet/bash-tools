@@ -1,18 +1,144 @@
 #!/usr/bin/env bash
 
-load '../../vendor/bats-support/load'
-load '../../vendor/bats-assert/load'
+# shellcheck source=bash-framework/Constants.sh
+source "$(cd "$( readlink -e "${BATS_TEST_DIRNAME}/../..")" && pwd)/bash-framework/Constants.sh" || exit 1
 
-# shellcheck source=bash-framework/_bootstrap.sh
-__bash_framework_envFile="" source "$(cd "$( readlink -e "${BATS_TEST_DIRNAME}/../..")" && pwd)/bash-framework/_bootstrap.sh" || exit 1
+assertLogs() {
+    local displayLevel=$1
 
-import bash-framework/Database
+    local debugMsg=$(Log::displayDebug "debug" 2>&1)
+    local expectedDebugMsg="$(echo -e "${__DEBUG_COLOR}DEBUG - debug${__RESET_COLOR}")"
+    local infoMsg=$(Log::displayInfo "info" 2>&1)
+    local expectedInfoMsg="$(echo -e "${__INFO_COLOR}INFO  - info${__RESET_COLOR}")"
+    local successMsg=$(Log::displaySuccess "success" 2>&1)
+    local expectedSuccessMsg="$(echo -e "${__SUCCESS_COLOR}success${__RESET_COLOR}")"
+    local warningMsg=$(Log::displayWarning "warning" 2>&1)
+    local expectedWarningMsg="$(echo -e "${__WARNING_COLOR}WARN  - warning${__RESET_COLOR}")"
+    local errorMsg=$(Log::displayError "error" 2>&1)
+    local expectedErrorMsg="$(echo -e "${__ERROR_COLOR}ERROR - error${__RESET_COLOR}")"
 
-@test "framework is loaded" {
-    [[ "${BASH_FRAMEWORK_INITIALIZED}" = "1" ]]
+    if (( displayLevel == __LEVEL_OFF )); then
+        [[
+          -z "${debugMsg}" &&
+          -z "${infoMsg}" &&
+          -z "${successMsg}" &&
+          -z "${warningMsg}" &&
+          -z "${errorMsg}"
+        ]] && return 0
+    elif (( displayLevel == __LEVEL_DEBUG )); then
+        [[
+          "${debugMsg}" == "${expectedDebugMsg}" &&
+          "${infoMsg}" == "${expectedInfoMsg}" &&
+          "${successMsg}" == "${expectedSuccessMsg}" &&
+          "${warningMsg}" == "${expectedWarningMsg}" &&
+          "${errorMsg}" == "${expectedErrorMsg}"
+        ]] && return 0
+    elif (( displayLevel == __LEVEL_INFO )); then
+        [[
+          -z "${debugMsg}" &&
+          "${infoMsg}" == "${expectedInfoMsg}" &&
+          "${successMsg}" == "${expectedSuccessMsg}" &&
+          "${warningMsg}" == "${expectedWarningMsg}" &&
+          "${errorMsg}" == "${expectedErrorMsg}"
+        ]] && return 0
+    elif (( displayLevel == __LEVEL_SUCCESS )); then
+        [[
+            -z "${debugMsg}" &&
+            "${infoMsg}" == "${expectedInfoMsg}" &&
+            "${successMsg}" == "${expectedSuccessMsg}" &&
+            "${warningMsg}" == "${expectedWarningMsg}" &&
+            "${errorMsg}" == "${expectedErrorMsg}"
+        ]] && return 0
+    elif (( displayLevel == __LEVEL_WARNING )); then
+        [[
+            -z "${debugMsg}"  &&
+            -z "${infoMsg}"  &&
+            -z "${successMsg}"  &&
+            "${warningMsg}" == "${expectedWarningMsg}"  &&
+            "${errorMsg}" == "${expectedErrorMsg}"
+        ]] && return 0
+    elif (( displayLevel == __LEVEL_ERROR )); then
+        [[
+            -z "${debugMsg}" &&
+            -z "${infoMsg}" &&
+            -z "${successMsg}" &&
+            -z "${warningMsg}" &&
+            "${errorMsg}" == "${expectedErrorMsg}"
+        ]]  && return 0
+    fi
+    return 1
 }
 
-@test "Log::displayDebug" {
-    # TODO check that message is displayed on stderr
-    # TODO check that log file is appended
+@test "Log::displayDebug activated with envfile" {
+    BASH_FRAMEWORK_INITIALIZED=0  __bash_framework_envFile="${BATS_TEST_DIRNAME}/data/Log.debug.env" source "$(cd "$( readlink -e "${BATS_TEST_DIRNAME}/../..")" && pwd)/bash-framework/_bootstrap.sh" || exit 1
+    run assertLogs ${__LEVEL_DEBUG}
+    [[ "${status}" == "0" ]]
 }
+
+@test "Log::displayDebug activated with env var" {
+    BASH_FRAMEWORK_INITIALIZED=0 BASH_FRAMEWORK_DISPLAY_LEVEL=${__LEVEL_DEBUG} source "$(cd "$( readlink -e "${BATS_TEST_DIRNAME}/../..")" && pwd)/bash-framework/_bootstrap.sh" || exit 1
+    run assertLogs ${__LEVEL_DEBUG}
+    [[ "${status}" == "0" ]]
+}
+
+@test "Log::displayInfo activated with envfile" {
+    BASH_FRAMEWORK_INITIALIZED=0  __bash_framework_envFile="${BATS_TEST_DIRNAME}/data/Log.info.env" source "$(cd "$( readlink -e "${BATS_TEST_DIRNAME}/../..")" && pwd)/bash-framework/_bootstrap.sh" || exit 1
+    run assertLogs ${__LEVEL_INFO}
+    [[ "${status}" == "0" ]]
+}
+
+@test "Log::displayInfo activated with env var" {
+    BASH_FRAMEWORK_INITIALIZED=0 BASH_FRAMEWORK_DISPLAY_LEVEL=${__LEVEL_INFO} source "$(cd "$( readlink -e "${BATS_TEST_DIRNAME}/../..")" && pwd)/bash-framework/_bootstrap.sh" || exit 1
+    run assertLogs ${__LEVEL_INFO}
+    [[ "${status}" == "0" ]]
+}
+
+@test "Log::displaySuccess activated with envfile" {
+    BASH_FRAMEWORK_INITIALIZED=0  __bash_framework_envFile="${BATS_TEST_DIRNAME}/data/Log.success.env" source "$(cd "$( readlink -e "${BATS_TEST_DIRNAME}/../..")" && pwd)/bash-framework/_bootstrap.sh" || exit 1
+    run assertLogs ${__LEVEL_SUCCESS}
+    [[ "${status}" == "0" ]]
+}
+
+@test "Log::displaySuccess activated with env var" {
+    BASH_FRAMEWORK_INITIALIZED=0 BASH_FRAMEWORK_DISPLAY_LEVEL=${__LEVEL_SUCCESS} source "$(cd "$( readlink -e "${BATS_TEST_DIRNAME}/../..")" && pwd)/bash-framework/_bootstrap.sh" || exit 1
+    run assertLogs ${__LEVEL_SUCCESS}
+    [[ "${status}" == "0" ]]
+}
+
+@test "Log::displayWarning activated with envfile" {
+    BASH_FRAMEWORK_INITIALIZED=0  __bash_framework_envFile="${BATS_TEST_DIRNAME}/data/Log.warning.env" source "$(cd "$( readlink -e "${BATS_TEST_DIRNAME}/../..")" && pwd)/bash-framework/_bootstrap.sh" || exit 1
+    run assertLogs ${__LEVEL_WARNING}
+    [[ "${status}" == "0" ]]
+}
+
+@test "Log::displayWarning activated with env var" {
+    BASH_FRAMEWORK_INITIALIZED=0 BASH_FRAMEWORK_DISPLAY_LEVEL=${__LEVEL_WARNING} source "$(cd "$( readlink -e "${BATS_TEST_DIRNAME}/../..")" && pwd)/bash-framework/_bootstrap.sh" || exit 1
+    run assertLogs ${__LEVEL_WARNING}
+    [[ "${status}" == "0" ]]
+}
+
+@test "Log::displayError activated with envfile" {
+    BASH_FRAMEWORK_INITIALIZED=0  __bash_framework_envFile="${BATS_TEST_DIRNAME}/data/Log.error.env" source "$(cd "$( readlink -e "${BATS_TEST_DIRNAME}/../..")" && pwd)/bash-framework/_bootstrap.sh" || exit 1
+    run assertLogs ${__LEVEL_ERROR}
+    [[ "${status}" == "0" ]]
+}
+
+@test "Log::displayError activated with env var" {
+    BASH_FRAMEWORK_INITIALIZED=0 BASH_FRAMEWORK_DISPLAY_LEVEL=${__LEVEL_ERROR} source "$(cd "$( readlink -e "${BATS_TEST_DIRNAME}/../..")" && pwd)/bash-framework/_bootstrap.sh" || exit 1
+    run assertLogs ${__LEVEL_ERROR}
+    [[ "${status}" == "0" ]]
+}
+
+@test "display off with env file" {
+    BASH_FRAMEWORK_INITIALIZED=0  __bash_framework_envFile="${BATS_TEST_DIRNAME}/data/Log.off.env" source "$(cd "$( readlink -e "${BATS_TEST_DIRNAME}/../..")" && pwd)/bash-framework/_bootstrap.sh" || exit 1
+    run assertLogs ${__LEVEL_OFF}
+    [[ "${status}" == "0" ]]
+}
+
+@test "display off with env var" {
+    BASH_FRAMEWORK_INITIALIZED=0 BASH_FRAMEWORK_DISPLAY_LEVEL=${__LEVEL_OFF} source "$(cd "$( readlink -e "${BATS_TEST_DIRNAME}/../..")" && pwd)/bash-framework/_bootstrap.sh" || exit 1
+    run assertLogs ${__LEVEL_OFF}
+    [[ "${status}" == "0" ]]
+}
+
+# TODO check that log file is appended

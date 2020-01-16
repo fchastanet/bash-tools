@@ -7,7 +7,6 @@ source "$( cd "$( readlink -e "${BASH_SOURCE[0]%/*}/.." )" && pwd )/bash-framewo
 Framework::expectNonRootUser
 
 CURRENT_DIR=$( cd "$( readlink -e "${BASH_SOURCE[0]%/*}" )" && pwd )
-CONTAINER="${PROJECT_NAMESPACE}-${WEB_HOSTNAME}"
 
 import bash-framework/Database
 import bash-framework/Array
@@ -19,26 +18,21 @@ trap 'exit 130' INT
 
 #default values
 SCRIPT_NAME=${0##*/}
-PARAMETERS=$@
-QUERY_FILE=""
 JOBS_NUMBER=1
 QUERY=0
-WITH_HEADERS=0
 MYSQL_OPTIONS=""
-VERBOSE=0
 declare -a PARALLEL_OPTIONS
 
 # Usage info
 showHelp() {
 cat << EOF
 Usage: ${SCRIPT_NAME} [-h|--help]
-Usage: ${SCRIPT_NAME} <query|queryFile> [--env-file|-e <envfile>] [-t|--as-tsv] [-q|--query] [-w|--with-headers] [--jobs|-j <numberOfJobs>] [--bar|-b]
+Usage: ${SCRIPT_NAME} <query|queryFile> [--env-file|-e <envfile>] [-t|--as-tsv] [-q|--query] [--jobs|-j <numberOfJobs>] [--bar|-b]
     --help,-h prints this help and exits
     --as-tsv,-t show results as tsv file (separated by tabulations)
     --query,-q implies <query> parameter is a mysql query string
     --jobs,-j <numberOfJobs> specify the number of db to query in parallel (this needs the use of gnu parallel)
     --bar,-b Show progress as a progress bar. In the bar is shown: % of jobs completed, estimated seconds left, and number of jobs started.
-    --with-headers,-w first line will be displayed with columns name (see --db-reference option if needed)
     <query|queryFile>
         if -q option is provided this parameter is a mysql query string
         else a file must be specified
@@ -55,7 +49,7 @@ EOF
 # -o is for short options like -h
 # -l is for long options with double dash like --help
 # the comma separates different long options
-options=$(getopt -l help,verbose,as-tsv,query,bar,jobs:,with-headers,env-file: -o htqbj:wve: -- "$@" 2> /dev/null) || {
+options=$(getopt -l help,as-tsv,query,bar,jobs:,with-headers,env-file: -o htqbj:we: -- "$@" 2> /dev/null) || {
     Log::displayError "invalid options specified"
     showHelp
     exit 1
@@ -79,9 +73,6 @@ case $1 in
 --bar|-b)
     PARALLEL_OPTIONS+=("--bar")
     ;;
---with-headers|-w)
-    WITH_HEADERS=1
-    ;;
 --query|-q)
     QUERY=1
     ;;
@@ -101,7 +92,7 @@ shift
 done
 
 # additional arguments
-shift $(expr $OPTIND - 1 )
+shift $(( OPTIND - 1 ))
 
 queryFile=$1
 if [[ -z "${queryFile}" ]]; then
@@ -177,25 +168,30 @@ if [[ "${JOBS_NUMBER}" = "1" ]] ; then
     (
         allDbs="$(Database::query dbInstance "show databases" | tail -n +2 )"
         headerLineDisplayed=0
+        declare db
         echo "${allDbs}" | while IFS=" " read db; do
             if ! Array::contains "${db}" "performance_schema" "information_schema" "mysql" ; then
                 # errors will be shown on stderr, result on stdout
                 if [[ "${headerLineDisplayed}" = "0" ]]; then
-                    Database::query dbInstance "${query}" ${db}
+                    Database::query dbInstance "${query}" "${db}" || (
+                      Log::displayError "database ${db} error" >&2
+                    )
                     headerLineDisplayed=1
                 else
                     # remove first header line
-                    Database::query dbInstance "${query}" ${db} | tail -n +2
+                    (Database::query dbInstance "${query}" "${db}" | tail -n +2) || (
+                      Log::displayError "database ${db} error" >&2
+                    )
                 fi
             fi
         done
-    ) || Log::displayError "database ${db} error" >&2
+    )
 else
     PARALLEL_OPTIONS+=("--linebuffer" "-j" "${JOBS_NUMBER}")
 
     export query
     Database::query dbInstance "show databases" "mysql" |
         parallel "${PARALLEL_OPTIONS[@]}" "${CURRENT_DIR}/_dbQueryOneDatabase.sh" \
-            "${HOSTNAME}" "${PORT}" "${USER}" "${PASSWORD}" "${MYSQL_OPTIONS}" "${db}" \
+            "${HOSTNAME}" "${PORT}" "${USER}" "${PASSWORD}" "${MYSQL_OPTIONS}" \
             | sed -E '1!{/^@@@/d}' | sed -e 's/@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@//'
 fi

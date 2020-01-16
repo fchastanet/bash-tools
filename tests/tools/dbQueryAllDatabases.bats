@@ -1,14 +1,11 @@
 #!/usr/bin/env bash
 
-load '../../vendor/bats-support/load'
-load '../../vendor/bats-assert/load'
-
 declare -g toolsDir="$( cd "${BATS_TEST_DIRNAME}/../../bin" && pwd )"
 declare -g mysqlMockedStep=0
 
 @test "display help" {
     local help=$(${toolsDir}/dbQueryAllDatabases --help)
-    [[ ${help} == *"<query|queryFile> [--env-file|-e <envfile>] [-t|--as-tsv] [-q|--query] [-w|--with-headers] [--jobs|-j <numberOfJobs>] [--bar|-b]"* ]]
+    [[ "${help}" == *"<query|queryFile> [--env-file|-e <envfile>] [-t|--as-tsv] [-q|--query] [--jobs|-j <numberOfJobs>] [--bar|-b]"* ]]
 }
 
 @test "query file not provided" {

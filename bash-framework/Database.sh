@@ -39,6 +39,7 @@ Database::newInstance() {
 ## @param $1 (passed by reference) database instance to use
 #---
 Database::setPrefix() {
+    # shellcheck disable=SC2178
     local -n instance=$1
     instance['COMMAND_PREFIX']="$1"
 }
@@ -47,6 +48,7 @@ Database::setPrefix() {
 ## @param $1 (passed by reference) database instance to use
 #---
 Database::setOptions() {
+    # shellcheck disable=SC2178
     local -n instance=$1
     instance['OPTIONS']="$2"
 }
@@ -55,6 +57,7 @@ Database::setOptions() {
 ## @param $1 (passed by reference) database instance to use
 #---
 Database::setDumpOptions() {
+    # shellcheck disable=SC2178
     local -n instance=$1
     instance['DUMP_OPTIONS']="$2"
 }
@@ -63,6 +66,7 @@ Database::setDumpOptions() {
 ## @param $1 (passed by reference) database instance to use
 #---
 Database::setQueryOptions() {
+    # shellcheck disable=SC2178
     local -n instance=$1
     instance['QUERY_OPTIONS']="$2"
 }
@@ -74,6 +78,7 @@ Database::setQueryOptions() {
 ## @param $4 mysqlshow command
 #---
 Database::setMysqlCommands() {
+    # shellcheck disable=SC2178
     local -n instance=$1
     instance['MYSQL_COMMAND']="$2"
     instance['MYSQLDUMP_COMMAND']="$3"
@@ -98,21 +103,23 @@ Database::createAuthFile() {
 
     printf "%b" "${conf}" > "${instance2['AUTH_FILE']}"
 
-    trap "rm -f "${instance2['AUTH_FILE']}" 2>/dev/null" EXIT
+    # shellcheck disable=SC2064
+    trap "rm -f '${instance2['AUTH_FILE']}' 2>/dev/null" EXIT
 }
 
 #---
 ## check if database exists
 #---
 Database::ifDbExists() {
+    # shellcheck disable=SC2178
     local -n instance=$1
     local dbName="$2"
 
     local result
     local mysqlCommand=""
 
-    mysqlCommand="${instance['MYSQLSHOW_COMMAND']} --defaults-extra-file="${instance['AUTH_FILE']}""
-    mysqlCommand+=""${dbName}" | grep -v Wildcard | grep -o "${dbName}""
+    mysqlCommand="${instance['MYSQLSHOW_COMMAND']} --defaults-extra-file='${instance['AUTH_FILE']}'"
+    mysqlCommand+="'${dbName}' | grep -v Wildcard | grep -o '${dbName}'"
     Log::displayDebug "execute command: '${mysqlCommand}'"
     result=$(MSYS_NO_PATHCONV=1 eval "${mysqlCommand}")
 
@@ -127,12 +134,14 @@ Database::ifDbExists() {
 ## @return 0 if table $3 exists, 1 else
 #---
 Database::isTableExists() {
+    # shellcheck disable=SC2178
     local -n instance=$1
     local dbName="$2"
     local tableThatShouldExists="$3"
 
-    local sql=$"select count(*) from information_schema.tables where table_schema=\"${dbName}\" and table_name=\"${tableThatShouldExists}\""
-    local result=$(Database::query instance "${sql}")
+    local sql=$"select count(*) from information_schema.tables where table_schema='${dbName}' and table_name='${tableThatShouldExists}'"
+    local result
+    result=$(Database::query instance "${sql}")
     if [[ "${result}" = "0" ]]; then
         Log::displayWarning "Db ${dbName} not initialized"
         return 1
@@ -148,6 +157,7 @@ Database::isTableExists() {
 ## @return 0 if success, 1 else
 #---
 Database::createDb() {
+    # shellcheck disable=SC2178
     local -n instance=$1
     local dbName="$2"
 
@@ -170,6 +180,7 @@ Database::createDb() {
 ## @return 0 if success, 1 else
 #---
 Database::dropDb() {
+    # shellcheck disable=SC2178
     local -n instance=$1
     local dbName="$2"
 
@@ -192,20 +203,17 @@ Database::dropDb() {
 ##    if not provided or empty, the command can be piped (eg: cat file.sql | Database::queryDb ...)
 ## @param $3 (optional) the db name
 Database::query() {
+    # shellcheck disable=SC2178
     local -n instance=$1
     local mysqlCommand=""
 
-    if [[ ! -z "${__db_mysqlCommandPrefix}" ]]; then
-        mysqlCommand="${__db_mysqlCommandPrefix} "
-    fi
-
-    mysqlCommand+="${instance['MYSQL_COMMAND']} --defaults-extra-file="${instance['AUTH_FILE']}" ${instance['QUERY_OPTIONS']} ${instance['OPTIONS']}"
+    mysqlCommand+="${instance['MYSQL_COMMAND']} --defaults-extra-file='${instance['AUTH_FILE']}' ${instance['QUERY_OPTIONS']} ${instance['OPTIONS']}"
     # add optional db name
-    if [[ ! -z "${3+x}" ]]; then
-        mysqlCommand+=" "$3""
+    if [[ -n "${3+x}" ]]; then
+        mysqlCommand+=" '$3'"
     fi
     # add optional sql query
-    if [[ ! -z "${2+x}" && ! -z "$2" ]]; then
+    if [[ -n "${2+x}" && -n "$2" ]]; then
         if [[ ! -f "$2" ]]; then
             mysqlCommand+=" -e "
             mysqlCommand+=$(Functions::quote "$2")
@@ -231,6 +239,7 @@ Database::query() {
 ## @param $4... additional dump options
 #---
 Database::dump() {
+    # shellcheck disable=SC2178
     local -n instance=$1
     local db="$2"
     local optionalTableList=""
@@ -239,20 +248,17 @@ Database::dump() {
 
     # optional table list
     shift 2
-    if [[ ! -z "${1+x}" ]]; then
+    if [[ -n "${1+x}" ]]; then
         optionalTableList="$1"
         shift 1
     fi
 
     # additional options
-    if [[ ! -z "${1+x}" ]]; then
-        dumpAdditionalOptions="$@"
+    if [[ -n "${1+x}" ]]; then
+        dumpAdditionalOptions="$*"
     fi
 
-    if [[ ! -z "${__db_mysqlCommandPrefix}" ]]; then
-        mysqlCommand="${__db_mysqlCommandPrefix} "
-    fi
-    mysqlCommand+="${instance['MYSQLDUMP_COMMAND']} --defaults-extra-file="${instance['AUTH_FILE']}" "
+    mysqlCommand+="${instance['MYSQLDUMP_COMMAND']} --defaults-extra-file='${instance['AUTH_FILE']}' "
     mysqlCommand+="${instance['DUMP_OPTIONS']} ${dumpAdditionalOptions} ${db} ${optionalTableList}"
 
     Log::displayDebug "execute command: '${mysqlCommand}'"

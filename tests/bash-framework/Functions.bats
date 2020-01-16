@@ -1,8 +1,5 @@
 #!/usr/bin/env bash
 
-load '../../vendor/bats-support/load'
-load '../../vendor/bats-assert/load'
-
 # shellcheck source=bash-framework/_bootstrap.sh
 __bash_framework_envFile="" source "$(cd "$( readlink -e "${BATS_TEST_DIRNAME}/../..")" && pwd)/bash-framework/_bootstrap.sh" || exit 1
 
@@ -33,7 +30,9 @@ import bash-framework/Functions
     }
     alias ping="pingMocked"
 
-    [[ "$(Functions::checkDnsHostname "willywonka.fchastanet.lan" && echo "0" || echo "$?")" = "0" ]]
+    if ! Functions::checkDnsHostname "willywonka.fchastanet.lan"; then
+        false
+    fi
 }
 
 @test "Functions::checkDnsHostname external host" {
@@ -54,20 +53,16 @@ import bash-framework/Functions
         return 0
     }
     alias ifconfig="ifconfigMocked"
-    Functions::checkDnsHostname "willywonka.fchastanet.lan"
-    [[ "$?" = "0" ]]
+    Functions::checkDnsHostname "willywonka.fchastanet.lan" || false
 }
 
 @test "Functions::checkCommandExists exists" {
-    (
-        Functions::checkCommandExists bash
-    ) && exitStatus=$? && true
-    [[ "${exitStatus}" = "0" ]]
+   (Functions::checkCommandExists "bash") || false
 }
 
 @test "Functions::checkCommandExists not exists" {
-    (
-        Functions::checkCommandExists dsfdsfsd
-    ) || exitStatus=$? && true
-    [[ "${exitStatus}" = "1" ]]
+    run Functions::checkCommandExists "qsfdsfds"
+    [[ "$status" -eq 1 ]]
+    (>&2 echo $(env) )
+    [[ "${lines[0]}" = "$(echo -e "${__ERROR_COLOR}ERROR - qsfdsfds is not installed, please install it${__RESET_COLOR}")" ]]
 }
