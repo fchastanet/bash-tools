@@ -10,10 +10,12 @@ declare logLevel=${BASH_FRAMEWORK_LOG_LEVEL:-${__LEVEL_OFF}}
 if (( logLevel > __LEVEL_OFF )); then
   if [[ -z "${BASH_FRAMEWORK_LOG_FILE}" ]]; then
       logLevel=${__LEVEL_OFF}
+      BASH_FRAMEWORK_LOG_LEVEL=${__LEVEL_OFF}
   else
       if ! touch --no-create "${BASH_FRAMEWORK_LOG_FILE}" ; then
           Log::displayError "Log file ${BASH_FRAMEWORK_LOG_FILE} is not writable"
-          logLevel=${__LEVEL_OFF}
+         logLevel=${__LEVEL_OFF}
+         BASH_FRAMEWORK_LOG_LEVEL=${__LEVEL_OFF}
       fi
   fi
   if (( logLevel >= __LEVEL_ERROR )); then
@@ -50,7 +52,7 @@ if (( displayLevel > __LEVEL_OFF )); then
   if (( displayLevel >= __LEVEL_INFO )); then
       alias Log::displayInfo='__displayInfo'
   fi
-  if (( displayLevel >= __LEVEL_SUCESS )); then
+  if (( displayLevel >= __LEVEL_SUCCESS )); then
       alias Log::displaySuccess='__displaySuccess'
   fi
   if (( displayLevel >= __LEVEL_DEBUG )); then

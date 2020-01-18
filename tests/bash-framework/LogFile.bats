@@ -100,20 +100,21 @@ assertFileLogs() {
 }
 
 @test "Log::log... log file not specified" {
-    BASH_FRAMEWORK_LOG_FILE="" BASH_FRAMEWORK_INITIALIZED=0  __bash_framework_envFile="${BATS_TEST_DIRNAME}/data/Log.debug.env" run source "$(cd "$( readlink -e "${BATS_TEST_DIRNAME}/../..")" && pwd)/bash-framework/_bootstrap.sh" || exit 1
-    [[ "${status}" == "1" ]]
+    BASH_FRAMEWORK_LOG_FILE="" BASH_FRAMEWORK_INITIALIZED=0  __bash_framework_envFile="${BATS_TEST_DIRNAME}/data/Log.debug.env" source "$(cd "$( readlink -e "${BATS_TEST_DIRNAME}/../..")" && pwd)/bash-framework/_bootstrap.sh" || exit 1
+    [[ "${BASH_FRAMEWORK_LOG_LEVEL}" == "${__LEVEL_OFF}" ]]
 }
 
 @test "Log::log... log file not writable" {
     chmod 400 "${logFile}"
-    BASH_FRAMEWORK_LOG_FILE="" BASH_FRAMEWORK_INITIALIZED=0  __bash_framework_envFile="${BATS_TEST_DIRNAME}/data/Log.debug.env" run source "$(cd "$( readlink -e "${BATS_TEST_DIRNAME}/../..")" && pwd)/bash-framework/_bootstrap.sh" || exit 1
-    [[ "${status}" == "1" ]]
+    BASH_FRAMEWORK_LOG_FILE="" BASH_FRAMEWORK_INITIALIZED=0  __bash_framework_envFile="${BATS_TEST_DIRNAME}/data/Log.debug.env" source "$(cd "$( readlink -e "${BATS_TEST_DIRNAME}/../..")" && pwd)/bash-framework/_bootstrap.sh" || exit 1
+    [[ "${BASH_FRAMEWORK_LOG_LEVEL}" == "${__LEVEL_OFF}" ]]
 }
 
 @test "Log::logDebug activated with envfile" {
     BASH_FRAMEWORK_LOG_FILE="${logFile}" BASH_FRAMEWORK_INITIALIZED=0  __bash_framework_envFile="${BATS_TEST_DIRNAME}/data/Log.debug.env" source "$(cd "$( readlink -e "${BATS_TEST_DIRNAME}/../..")" && pwd)/bash-framework/_bootstrap.sh" || exit 1
-    run assertFileLogs ${__LEVEL_DEBUG}
-    [[ "${status}" == "0" ]]
+    (>&2 alias)
+    assertFileLogs ${__LEVEL_DEBUG}
+    [[ "$?" == "0" ]]
 }
 
 @test "Log::logDebug activated with env var" {
