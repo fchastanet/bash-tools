@@ -111,74 +111,86 @@ assertFileLogs() {
 }
 
 @test "Log::logDebug activated with envfile" {
-    BASH_FRAMEWORK_LOG_FILE="${logFile}" BASH_FRAMEWORK_INITIALIZED=0  __bash_framework_envFile="${BATS_TEST_DIRNAME}/data/Log.debug.env" source "$(cd "$( readlink -e "${BATS_TEST_DIRNAME}/../..")" && pwd)/bash-framework/_bootstrap.sh" || exit 1
-    (>&2 alias)
+    BASH_FRAMEWORK_LOG_FILE="${logFile}"
+    BASH_FRAMEWORK_INITIALIZED=0  __bash_framework_envFile="${BATS_TEST_DIRNAME}/data/Log.debug.env" source "$(cd "$( readlink -e "${BATS_TEST_DIRNAME}/../..")" && pwd)/bash-framework/_bootstrap.sh" || exit 1
+
     assertFileLogs ${__LEVEL_DEBUG}
     [[ "$?" == "0" ]]
 }
 
 @test "Log::logDebug activated with env var" {
-    BASH_FRAMEWORK_LOG_FILE="${logFile}" BASH_FRAMEWORK_INITIALIZED=0 BASH_FRAMEWORK_DISPLAY_LEVEL=${__LEVEL_DEBUG} source "$(cd "$( readlink -e "${BATS_TEST_DIRNAME}/../..")" && pwd)/bash-framework/_bootstrap.sh" || exit 1
-    run assertFileLogs ${__LEVEL_DEBUG}
-    [[ "${status}" == "0" ]]
+    BASH_FRAMEWORK_LOG_FILE="${logFile}"
+    BASH_FRAMEWORK_INITIALIZED=0 BASH_FRAMEWORK_LOG_LEVEL=${__LEVEL_DEBUG} source "$(cd "$( readlink -e "${BATS_TEST_DIRNAME}/../..")" && pwd)/bash-framework/_bootstrap.sh" || exit 1
+    assertFileLogs ${__LEVEL_DEBUG}
+    [[ "$?" == "0" ]]
 }
 
 @test "Log::logInfo activated with envfile" {
-    BASH_FRAMEWORK_LOG_FILE="${logFile}" BASH_FRAMEWORK_INITIALIZED=0  __bash_framework_envFile="${BATS_TEST_DIRNAME}/data/Log.info.env" source "$(cd "$( readlink -e "${BATS_TEST_DIRNAME}/../..")" && pwd)/bash-framework/_bootstrap.sh" || exit 1
+    BASH_FRAMEWORK_LOG_FILE="${logFile}"
+    BASH_FRAMEWORK_INITIALIZED=0  __bash_framework_envFile="${BATS_TEST_DIRNAME}/data/Log.info.env" source "$(cd "$( readlink -e "${BATS_TEST_DIRNAME}/../..")" && pwd)/bash-framework/_bootstrap.sh" || exit 1
     run assertFileLogs ${__LEVEL_INFO}
-    [[ "${status}" == "0" ]]
+    [[ "$?" == "0" ]]
 }
 
 @test "Log::logInfo activated with env var" {
-    BASH_FRAMEWORK_LOG_FILE="${logFile}" BASH_FRAMEWORK_INITIALIZED=0 BASH_FRAMEWORK_DISPLAY_LEVEL=${__LEVEL_INFO} source "$(cd "$( readlink -e "${BATS_TEST_DIRNAME}/../..")" && pwd)/bash-framework/_bootstrap.sh" || exit 1
+    BASH_FRAMEWORK_LOG_FILE="${logFile}"
+    BASH_FRAMEWORK_INITIALIZED=0 BASH_FRAMEWORK_DISPLAY_LEVEL=${__LEVEL_INFO} source "$(cd "$( readlink -e "${BATS_TEST_DIRNAME}/../..")" && pwd)/bash-framework/_bootstrap.sh" || exit 1
     run assertFileLogs ${__LEVEL_INFO}
-    [[ "${status}" == "0" ]]
+    [[ "$?" == "0" ]]
 }
 
 @test "Log::logSuccess activated with envfile" {
-    BASH_FRAMEWORK_LOG_FILE="${logFile}" BASH_FRAMEWORK_INITIALIZED=0  __bash_framework_envFile="${BATS_TEST_DIRNAME}/data/Log.success.env" source "$(cd "$( readlink -e "${BATS_TEST_DIRNAME}/../..")" && pwd)/bash-framework/_bootstrap.sh" || exit 1
+    BASH_FRAMEWORK_LOG_FILE="${logFile}"
+    BASH_FRAMEWORK_INITIALIZED=0  __bash_framework_envFile="${BATS_TEST_DIRNAME}/data/Log.success.env" source "$(cd "$( readlink -e "${BATS_TEST_DIRNAME}/../..")" && pwd)/bash-framework/_bootstrap.sh" || exit 1
     run assertFileLogs ${__LEVEL_SUCCESS}
-    [[ "${status}" == "0" ]]
+    [[ "$?" == "0" ]]
 }
 
 @test "Log::logSuccess activated with env var" {
-    BASH_FRAMEWORK_LOG_FILE="${logFile}" BASH_FRAMEWORK_INITIALIZED=0 BASH_FRAMEWORK_DISPLAY_LEVEL=${__LEVEL_SUCCESS} source "$(cd "$( readlink -e "${BATS_TEST_DIRNAME}/../..")" && pwd)/bash-framework/_bootstrap.sh" || exit 1
+    BASH_FRAMEWORK_LOG_FILE="${logFile}"
+    BASH_FRAMEWORK_INITIALIZED=0 BASH_FRAMEWORK_DISPLAY_LEVEL=${__LEVEL_SUCCESS} source "$(cd "$( readlink -e "${BATS_TEST_DIRNAME}/../..")" && pwd)/bash-framework/_bootstrap.sh" || exit 1
     run assertFileLogs ${__LEVEL_SUCCESS}
-    [[ "${status}" == "0" ]]
+    [[ "$?" == "0" ]]
 }
 
 @test "Log::logWarning activated with envfile" {
-    BASH_FRAMEWORK_LOG_FILE="${logFile}" BASH_FRAMEWORK_INITIALIZED=0  __bash_framework_envFile="${BATS_TEST_DIRNAME}/data/Log.warning.env" source "$(cd "$( readlink -e "${BATS_TEST_DIRNAME}/../..")" && pwd)/bash-framework/_bootstrap.sh" || exit 1
+    BASH_FRAMEWORK_LOG_FILE="${logFile}"
+    BASH_FRAMEWORK_INITIALIZED=0  __bash_framework_envFile="${BATS_TEST_DIRNAME}/data/Log.warning.env" source "$(cd "$( readlink -e "${BATS_TEST_DIRNAME}/../..")" && pwd)/bash-framework/_bootstrap.sh" || exit 1
     run assertFileLogs ${__LEVEL_WARNING}
-    [[ "${status}" == "0" ]]
+    [[ "$?" == "0" ]]
 }
 
 @test "Log::logWarning activated with env var" {
-    BASH_FRAMEWORK_LOG_FILE="${logFile}" BASH_FRAMEWORK_INITIALIZED=0 BASH_FRAMEWORK_DISPLAY_LEVEL=${__LEVEL_WARNING} source "$(cd "$( readlink -e "${BATS_TEST_DIRNAME}/../..")" && pwd)/bash-framework/_bootstrap.sh" || exit 1
+    BASH_FRAMEWORK_LOG_FILE="${logFile}"
+    BASH_FRAMEWORK_INITIALIZED=0 BASH_FRAMEWORK_DISPLAY_LEVEL=${__LEVEL_WARNING} source "$(cd "$( readlink -e "${BATS_TEST_DIRNAME}/../..")" && pwd)/bash-framework/_bootstrap.sh" || exit 1
     run assertFileLogs ${__LEVEL_WARNING}
-    [[ "${status}" == "0" ]]
+    [[ "$?" == "0" ]]
 }
 
 @test "Log::logError activated with envfile" {
-    BASH_FRAMEWORK_LOG_FILE="${logFile}" BASH_FRAMEWORK_INITIALIZED=0  __bash_framework_envFile="${BATS_TEST_DIRNAME}/data/Log.error.env" source "$(cd "$( readlink -e "${BATS_TEST_DIRNAME}/../..")" && pwd)/bash-framework/_bootstrap.sh" || exit 1
+    BASH_FRAMEWORK_LOG_FILE="${logFile}"
+    BASH_FRAMEWORK_INITIALIZED=0  __bash_framework_envFile="${BATS_TEST_DIRNAME}/data/Log.error.env" source "$(cd "$( readlink -e "${BATS_TEST_DIRNAME}/../..")" && pwd)/bash-framework/_bootstrap.sh" || exit 1
     run assertFileLogs ${__LEVEL_ERROR}
-    [[ "${status}" == "0" ]]
+    [[ "$?" == "0" ]]
 }
 
 @test "Log::logError activated with env var" {
-    BASH_FRAMEWORK_LOG_FILE="${logFile}" BASH_FRAMEWORK_INITIALIZED=0 BASH_FRAMEWORK_DISPLAY_LEVEL=${__LEVEL_ERROR} source "$(cd "$( readlink -e "${BATS_TEST_DIRNAME}/../..")" && pwd)/bash-framework/_bootstrap.sh" || exit 1
+    BASH_FRAMEWORK_LOG_FILE="${logFile}"
+    BASH_FRAMEWORK_INITIALIZED=0 BASH_FRAMEWORK_DISPLAY_LEVEL=${__LEVEL_ERROR} source "$(cd "$( readlink -e "${BATS_TEST_DIRNAME}/../..")" && pwd)/bash-framework/_bootstrap.sh" || exit 1
     run assertFileLogs ${__LEVEL_ERROR}
-    [[ "${status}" == "0" ]]
+    [[ "$?" == "0" ]]
 }
 
 @test "log off with env file" {
-    BASH_FRAMEWORK_LOG_FILE="${logFile}" BASH_FRAMEWORK_INITIALIZED=0  __bash_framework_envFile="${BATS_TEST_DIRNAME}/data/Log.off.env" source "$(cd "$( readlink -e "${BATS_TEST_DIRNAME}/../..")" && pwd)/bash-framework/_bootstrap.sh" || exit 1
+    BASH_FRAMEWORK_LOG_FILE="${logFile}"
+    BASH_FRAMEWORK_INITIALIZED=0  __bash_framework_envFile="${BATS_TEST_DIRNAME}/data/Log.off.env" source "$(cd "$( readlink -e "${BATS_TEST_DIRNAME}/../..")" && pwd)/bash-framework/_bootstrap.sh" || exit 1
     run assertFileLogs ${__LEVEL_OFF}
-    [[ "${status}" == "0" ]]
+    [[ "$?" == "0" ]]
 }
 
 @test "log off with env var" {
-    BASH_FRAMEWORK_LOG_FILE="${logFile}" BASH_FRAMEWORK_INITIALIZED=0 BASH_FRAMEWORK_DISPLAY_LEVEL=${__LEVEL_OFF} source "$(cd "$( readlink -e "${BATS_TEST_DIRNAME}/../..")" && pwd)/bash-framework/_bootstrap.sh" || exit 1
+    BASH_FRAMEWORK_LOG_FILE="${logFile}"
+    BASH_FRAMEWORK_INITIALIZED=0 BASH_FRAMEWORK_DISPLAY_LEVEL=${__LEVEL_OFF} source "$(cd "$( readlink -e "${BATS_TEST_DIRNAME}/../..")" && pwd)/bash-framework/_bootstrap.sh" || exit 1
     run assertFileLogs ${__LEVEL_OFF}
-    [[ "${status}" == "0" ]]
+    [[ "$?" == "0" ]]
 }

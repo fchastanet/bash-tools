@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 
-alias Log::logError=":; #"
-alias Log::logWarning=":; #"
-alias Log::logInfo=":; #"
-alias Log::logSuccess=":; #"
-alias Log::logDebug=":; #"
+Log::logError() { :;}
+Log::logWarning() { :;}
+Log::logInfo() { :;}
+Log::logSuccess() { :;}
+Log::logDebug() { :;}
 
 declare logLevel=${BASH_FRAMEWORK_LOG_LEVEL:-${__LEVEL_OFF}}
 if (( logLevel > __LEVEL_OFF )); then
@@ -19,43 +19,43 @@ if (( logLevel > __LEVEL_OFF )); then
       fi
   fi
   if (( logLevel >= __LEVEL_ERROR )); then
-      alias Log::logError='__logMessage "ERROR  " '
+      Log::logError() { __logMessage "ERROR  " "$@"; }
   fi
   if (( logLevel >= __LEVEL_WARNING )); then
-      alias Log::logWarning='__logMessage "WARNING" '
+      Log::logWarning() { __logMessage "WARNING" "$@"; }
   fi
   if (( logLevel >= __LEVEL_INFO )); then
-      alias Log::logInfo='__logMessage "INFO   " '
+      Log::logInfo() { __logMessage "INFO   " "$@"; }
   fi
   if (( logLevel >= __LEVEL_SUCCESS )); then
-      alias Log::logSuccess='__logMessage "SUCCESS" '
+      Log::logSuccess() { __logMessage "SUCCESS" "$@"; }
   fi
   if (( logLevel >= __LEVEL_DEBUG )); then
-      alias Log::logDebug='__logMessage "DEBUG  " '
+      Log::logDebug() { __logMessage "DEBUG  " "$@"; }
   fi
 fi
 
-alias Log::displayError=":; #"
-alias Log::displayWarning=":; #"
-alias Log::displayInfo=":; #"
-alias Log::displaySuccess=":; #"
-alias Log::displayDebug=":; #"
+Log::displayError() { :;}
+Log::displayWarning() { :;}
+Log::displayInfo() { :;}
+Log::displaySuccess() { :;}
+Log::displayDebug() { :;}
 
 declare displayLevel=${BASH_FRAMEWORK_DISPLAY_LEVEL:-${__LEVEL_OFF}}
 if (( displayLevel > __LEVEL_OFF )); then
   if (( displayLevel >= __LEVEL_ERROR )); then
-      alias Log::displayError='__displayError'
+      Log::displayError() { __displayError "$@"; }
   fi
   if (( displayLevel >= __LEVEL_WARNING )); then
-      alias Log::displayWarning='__displayWarning'
+      Log::displayWarning() { __displayWarning "$@"; }
   fi
   if (( displayLevel >= __LEVEL_INFO )); then
-      alias Log::displayInfo='__displayInfo'
+      Log::displayInfo() { __displayInfo "$@"; }
   fi
   if (( displayLevel >= __LEVEL_SUCCESS )); then
-      alias Log::displaySuccess='__displaySuccess'
+      Log::displaySuccess() { __displaySuccess "$@"; }
   fi
   if (( displayLevel >= __LEVEL_DEBUG )); then
-      alias Log::displayDebug='__displayDebug'
+      Log::displayDebug() { __displayDebug "$@"; }
   fi
 fi

@@ -12,10 +12,9 @@ declare -g __bash_framework_rootCallingScriptPath="$( cd "$(dirname "$0")" && pw
 declare -g __bash_framework_rootVendorPath="$( cd "${__bash_framework_rootLibPath}/.." && pwd )"
 
 ## stubs in case either exception or log is not loaded
-temporaryDisplayError() {
+Log::displayError() {
   (>&2 echo "Error: $1")
 }
-alias Log::displayError='temporaryDisplayError'
 
 # shellcheck source=bash-framework/Constants.sh
 source "${__bash_framework_rootLibPath}/Constants.sh" || {
@@ -68,7 +67,6 @@ Framework::bootstrap() {
     BASH_FRAMEWORK_LOG_FILE="${BASH_FRAMEWORK_LOG_FILE:-${BASH_FRAMEWORK_LOG_FILE}}"
 
     # import .env file
-    set -o allexport
     if [[ -z "${__bash_framework_envFile+xxx}" ]]; then
         # __bash_framework_envFile not defined
         if [ -f "${__bash_framework_rootCallingScriptPath}/.env" ]; then

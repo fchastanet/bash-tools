@@ -9,8 +9,7 @@ __logMessage() {
     local date
 
     date="$(date '+%Y-%m-%d %H:%M:%S')"
-    echo "${BASH_FRAMEWORK_LOG_FILE}"
-    ls -al "${BASH_FRAMEWORK_LOG_FILE}"
+
     if [[ -n "${levelMsg}" ]]; then
       levelMsg=" - ${levelMsg}"
     fi
