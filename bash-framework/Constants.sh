@@ -16,16 +16,5 @@ if [[ "${BASH_FRAMEWORK_LOG_INITIALIZED:-0}" = "0" ]]; then
   readonly __WARNING_COLOR='\e[33m'         # Yellow
   readonly __DEBUG_COLOR='\e[37m'           # Grey
   readonly __RESET_COLOR='\e[0m'            # Reset Color
-
-  alias Log::displayError=":; #"
-  alias Log::displayWarning=":; #"
-  alias Log::displayInfo=":; #"
-  alias Log::displaySuccess=":; #"
-  alias Log::displayDebug=":; #"
-  alias Log::logError=":; #"
-  alias Log::logWarning=":; #"
-  alias Log::logInfo=":; #"
-  alias Log::logSuccess=":; #"
-  alias Log::logDebug=":; #"
 fi
 BASH_FRAMEWORK_LOG_INITIALIZED=1

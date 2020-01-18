@@ -2,6 +2,8 @@
 
 # inspired by https://github.com/niieani/bash-oo-framework
 
+shopt -s expand_aliases
+
 # shellcheck disable=2155
 declare -g __bash_framework_rootLibPath="$( cd "${BASH_SOURCE[0]%/*}" && pwd )"
 # shellcheck disable=2155
@@ -63,7 +65,7 @@ Framework::bootstrap() {
     # shellcheck disable=SC2034
     BASH_FRAMEWORK_LOG_LEVEL=${BASH_FRAMEWORK_LOG_LEVEL:-${__LEVEL_OFF}}
     # shellcheck disable=SC2034
-    BASH_FRAMEWORK_LOG_FILE="${BASH_FRAMEWORK_LOG_FILE:-}"
+    BASH_FRAMEWORK_LOG_FILE="${BASH_FRAMEWORK_LOG_FILE:-${BASH_FRAMEWORK_LOG_FILE}}"
 
     # import .env file
     set -o allexport

@@ -1,33 +1,43 @@
 #!/usr/bin/env bash
 
+alias Log::logError=":; #"
+alias Log::logWarning=":; #"
+alias Log::logInfo=":; #"
+alias Log::logSuccess=":; #"
+alias Log::logDebug=":; #"
+
+declare logLevel=${BASH_FRAMEWORK_LOG_LEVEL:-${__LEVEL_OFF}}
 if (( logLevel > __LEVEL_OFF )); then
   if [[ -z "${BASH_FRAMEWORK_LOG_FILE}" ]]; then
-      Log::displayError "BASH_FRAMEWORK_LOG_FILE - log file not specified"
+      logLevel=${__LEVEL_OFF}
   else
       if ! touch --no-create "${BASH_FRAMEWORK_LOG_FILE}" ; then
           Log::displayError "Log file ${BASH_FRAMEWORK_LOG_FILE} is not writable"
-          BASH_FRAMEWORK_LOG_LEVEL=${__LEVEL_OFF}
           logLevel=${__LEVEL_OFF}
       fi
   fi
   if (( logLevel >= __LEVEL_ERROR )); then
-      alias Log::logError='__logMessage'
+      alias Log::logError='__logMessage "ERROR  " '
   fi
   if (( logLevel >= __LEVEL_WARNING )); then
-      alias Log::logWarning='__logMessage'
+      alias Log::logWarning='__logMessage "WARNING" '
   fi
   if (( logLevel >= __LEVEL_INFO )); then
-      alias Log::logInfo='__logMessage'
+      alias Log::logInfo='__logMessage "INFO   " '
   fi
-  if (( logLevel >= __LEVEL_INFO )); then
-      alias Log::logSuccess='__logMessage'
+  if (( logLevel >= __LEVEL_SUCCESS )); then
+      alias Log::logSuccess='__logMessage "SUCCESS" '
   fi
   if (( logLevel >= __LEVEL_DEBUG )); then
-      alias Log::logDebug='__logMessage'
+      alias Log::logDebug='__logMessage "DEBUG  " '
   fi
-else
-  alias Log::displayError=':; #'
 fi
+
+alias Log::displayError=":; #"
+alias Log::displayWarning=":; #"
+alias Log::displayInfo=":; #"
+alias Log::displaySuccess=":; #"
+alias Log::displayDebug=":; #"
 
 declare displayLevel=${BASH_FRAMEWORK_DISPLAY_LEVEL:-${__LEVEL_OFF}}
 if (( displayLevel > __LEVEL_OFF )); then
@@ -40,14 +50,10 @@ if (( displayLevel > __LEVEL_OFF )); then
   if (( displayLevel >= __LEVEL_INFO )); then
       alias Log::displayInfo='__displayInfo'
   fi
-  if (( displayLevel >= __LEVEL_INFO )); then
+  if (( displayLevel >= __LEVEL_SUCESS )); then
       alias Log::displaySuccess='__displaySuccess'
   fi
   if (( displayLevel >= __LEVEL_DEBUG )); then
       alias Log::displayDebug='__displayDebug'
   fi
 fi
-
-declare logLevel=${BASH_FRAMEWORK_LOG_LEVEL:-${__LEVEL_OFF}}
-
-
