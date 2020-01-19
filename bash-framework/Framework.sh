@@ -2,6 +2,12 @@
 
 declare -ag __bash_framework__importedFiles
 
+# Public: exits with message if current user is not the expected one
+#
+# **Arguments**:
+# * $1 expected user login
+#
+# **Exit**: code 1 if current user is not the expected one
 Framework::expectUser() {
     local expectedUserName="$1"
     local currentUserName
@@ -13,6 +19,9 @@ Framework::expectUser() {
     fi
 }
 
+# Public: exits with message if current user is root
+#
+# **Exit**: code 1 if current user is root
 Framework::expectNonRootUser() {
     local expectedUserName="$1"
     local currentUserName
@@ -24,6 +33,12 @@ Framework::expectNonRootUser() {
     fi
 }
 
+# Public: exits with message if expected global variable is not set
+#
+# **Arguments**:
+# * $1 expected global variable
+#
+# **Exit**: code 1 if expected global variable is not set
 Framework::expectGlobalVariables() {
     for var in "${@}"
     do
@@ -34,6 +49,12 @@ Framework::expectGlobalVariables() {
     done
 }
 
+# Public: get absolute file from relative path
+#
+# **Arguments**:
+# * $1 relative file path
+#
+# **Output**: absolute path (can be $1 if $1 begins with /)
 Framework::GetAbsolutePath() {
   # http://stackoverflow.com/questions/3915040/bash-fish-command-to-print-absolute-path-to-a-file
   # $1 : relative filename
@@ -46,6 +67,12 @@ Framework::GetAbsolutePath() {
   fi
 }
 
+# Internal: source given file or exits with message on error
+#
+# **Arguments**:
+# * $1 file to source
+#
+# **Exit**: code 1 if error while sourcing
 Framework::WrapSource() {
   local libPath="$1"
   shift
@@ -56,6 +83,12 @@ Framework::WrapSource() {
   }
 }
 
+# Internal: source given file. Do not source it again if it has already been sourced.
+#
+# **Arguments**:
+# * $1 file to source
+#
+# **Exit**: code 1 if error while sourcing
 Framework::SourceFile() {
   local libPath="$1"
   shift
@@ -86,6 +119,14 @@ Framework::SourceFile() {
   fi
 }
 
+# Internal: source given file.
+# Do not source it again if it has already been sourced.
+# try to source relative path from each libpath
+#
+# **Arguments**:
+# * $1 file to source
+#
+# **Exit**: code 1 if error while sourcing
 Framework::SourcePath() {
   local libPath="$1"
   shift
@@ -102,6 +143,18 @@ Framework::SourcePath() {
   fi
 }
 
+# Public: source given file.
+# Do not source it again if it has already been sourced.
+# try to source relative path from each libpath in this order:
+#   * vendor/bash-framework
+#   * vendor
+#   * calling script path
+#   * absolute path
+#
+# **Arguments**:
+# * $1 file to source
+#
+# **Exit**: code 1 if error while sourcing
 Framework::ImportOne() {
   local libPath="$1"
   shift
@@ -124,6 +177,12 @@ Framework::ImportOne() {
   }
 }
 
+# Public: source given files using Framework::ImportOne.
+#
+# **Arguments**:
+# * $@ files to source
+#
+# **Exit**: code 1 if error while sourcing
 Framework::Import() {
   local savedOptions
   case $- in

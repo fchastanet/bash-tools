@@ -5,6 +5,13 @@ import bash-framework/Functions
 # shellcheck source=bash-framework/Log.sh
 import bash-framework/Log
 
+#---
+## ensure that command exists with expected version
+## else will exit with code 1 and error message
+## @param string $1 command name
+## @param string $2 the command to execute to retrieve the version
+## @param string $3 the expected command version
+#---
 Version::checkMinimal() {
     local commandName="$1"
     local commandVersion="$2"
@@ -29,12 +36,14 @@ Version::checkMinimal() {
 
 }
 
-# @param $1 version 1
-# @param $2 version 2
-# @return
-#   0 if equal
-#   1 if version1 > version2
-#   2 else
+#---
+## @param $1 version 1
+## @param $2 version 2
+## @return
+##   0 if equal
+##   1 if version1 > version2
+##   2 else
+#---
 Version::compare() {
     if [[ "$1" = "$2" ]]
     then
