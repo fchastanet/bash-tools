@@ -2,9 +2,12 @@
 
 CURRENT_DIR=$( cd "$( readlink -e "${BASH_SOURCE[0]%/*}" )" && pwd )
 
+TOMDOC_VERSION="cut_by_declaration_types"
 [[ ! -f "${CURRENT_DIR}/vendor/fchastanet.tomdoc.sh/tomdoc.sh" ]] && (
     rm -Rf "${CURRENT_DIR}/vendor/fchastanet.tomdoc.sh"
     git clone git://github.com/tests-always-included/tomdoc.sh.git "${CURRENT_DIR}/vendor/fchastanet.tomdoc.sh"
+    cd "${CURRENT_DIR}/vendor/fchastanet.tomdoc.sh"
+    git checkout ${TOMDOC_VERSION}
 )
 
 generateShDoc() {
