@@ -30,6 +30,6 @@ if [[ "${BASH_FRAMEWORK_LOG_INITIALIZED:-0}" = "0" ]]; then
   # Internal: color used for debug level (grey)
   readonly __DEBUG_COLOR='\e[37m'
   # Internal: reset color
-  readonly __RESET_COLOR='\e[0m'            # Reset Color
+  readonly __RESET_COLOR='\e[0m'
 fi
 BASH_FRAMEWORK_LOG_INITIALIZED=1

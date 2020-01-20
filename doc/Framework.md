@@ -68,10 +68,10 @@ source given file.
 source given file.
  Do not source it again if it has already been sourced.
  try to source relative path from each libpath in this order:
-    * vendor/bash-framework
-    * vendor
-    * calling script path
-    * absolute path
+* vendor/bash-framework
+* vendor
+* calling script path
+* absolute path
 
 **Arguments**:
 * $1 file to source
