@@ -1,1 +1,0 @@
-# bash-framework/LogBootstrap.sh

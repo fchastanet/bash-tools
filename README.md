@@ -128,7 +128,9 @@ Command: cli [--fullname|-f] <container> [user] [command]
         cli web root
 ```
 
-## Framework
+## Framework documentation
+
+[see the auto generated bash doc](doc/Index.md)
 
 ## Unit tests
 

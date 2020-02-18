@@ -29,4 +29,3 @@ compare version
 * 0 if equal
 * 1 if version1 > version2
 * 2 else
-

@@ -41,4 +41,3 @@ ask the user to ignore(i), overwrite(o) or abort(a)
 * 1 if o or O
  **Exit**:
 * 1 if a or A
-

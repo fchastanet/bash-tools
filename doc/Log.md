@@ -68,4 +68,3 @@ display success message on stderr
 * $1 - messsage
  **Output**: using success color
  message
-

@@ -16,4 +16,3 @@ check if an element is contained in an array
 ```
 
 Returns 0 if found, 1 otherwise
-

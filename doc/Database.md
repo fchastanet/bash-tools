@@ -98,6 +98,19 @@ drop database if exists
 **Returns**:
 * 0 if success
 * 1 else
+# function `Database::dropTable`
+> ***Public***
+
+drop table if exists
+
+**Arguments**:
+* $1 (passed by reference) database instance to use
+* $2 database name
+* $3 table name to drop
+
+**Returns**:
+* 0 if success
+* 1 else
 # function `Database::query`
 > ***Public***
 
@@ -122,4 +135,3 @@ dump db limited to optional table list
 * _$4(optional)_ ... additional dump options
 
 **Returns**: mysqldump command status code
-

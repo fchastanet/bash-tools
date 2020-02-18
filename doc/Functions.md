@@ -32,4 +32,3 @@ quote a string
 * $1 the string to quote
 
 **Output**: the string quoted
-
