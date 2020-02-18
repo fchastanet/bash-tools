@@ -10,8 +10,6 @@ if [[  "$USER" = "root" ]]; then
 fi
 
 CURRENT_DIR=$( cd "$( readlink -e "${BASH_SOURCE[0]%/*}" )" && pwd )
-PROFILES_DIR="$(cd "${CURRENT_DIR}/.." && pwd)/dbImportProfiles"
-HOME_PROFILES_DIR="${HOME}/.dbImportProfiles"
 
 import bash-framework/Database
 
@@ -20,14 +18,13 @@ trap 'exit 130' INT
 
 # default values
 SCRIPT_NAME=${0##*/}
-PROFILE="default"
 FORCE=0
 DOWNLOAD_DUMP=0
-SKIP_SCHEMA=0
 REMOTE_DB=""
 LOCAL_DB=""
 COLLATION_NAME=""
 CHARACTER_SET=""
+TABLE=""
 TIMEFORMAT='time spent : %3R'
 
 # check dependencies
@@ -37,29 +34,18 @@ if ! which pv > /dev/null || ! which mysql > /dev/null || ! which mysqlshow > /d
 fi
 
 showHelp() {
-    local profilesList=""
-    local homeProfilesList=""
-
-    profilesList=$(cd "${PROFILES_DIR}" && find . -type f -name \*.sh -printf '%P\n' | sed 's/\.sh$//g' | paste -sd "," - | sed -e 's/,/, /g')
-
-    if [[ -d "${HOME_PROFILES_DIR}" ]]; then
-        homeProfilesList=$(cd "${HOME_PROFILES_DIR}" && find . -type f -name \*.sh -printf '%P\n' | sed 's/\.sh$//g' | paste -sd "," - | sed -e 's/,/, /g')
-    fi
 cat << EOF
-    Command: ${SCRIPT_NAME} --help prints this help and exits
-    Command: ${SCRIPT_NAME} <remoteDbName> [<localDbName>] [-f|--force] [-d|--download-dump] [-s|--skip-schema]
-                            [-p|--profile profileName] [-o|--collation-name utf8_general_ci] [-c|--character-set utf8]
+    Command: ${SCRIPT_NAME} [--help] prints this help and exits
+    Command: ${SCRIPT_NAME} <remoteDbName> <tableName> [<localDbName>] [-d|--download-dump] [-f|--force] [-o|--collation-name utf8_general_ci] [-c|--character-set utf8]
 
+    download the remote table data and install data in local database (the schema should exists)
+
+    <tableName>   : table name to import
     <localDbName> : use remote db name if not provided
     -f|--force If local db exists, it will overwrite it
     -d|--download-dump force remote db dump (default: use already downloaded dump in ${DB_IMPORT_DUMP_DIR} if available)
-    -s|--skip-schema avoid to import the schema
     -o|--collation-name change the collation name used during database creation (default value: collation name used by remote db)
     -c|--character-set change the character set used during database creation (default value: character set used by remote db)
-    -p|--profile profileName the name of the profile to use in order to include or exclude tables
-        (if not specified ${HOME_PROFILES_DIR}/default.sh  is used if exists otherwise ${PROFILES_DIR}/default.sh)
-        list of available home profiles (${HOME_PROFILES_DIR}): ${homeProfilesList}
-        list of available profiles : ${profilesList}
 
     remote DB connection : ${REMOTE_MYSQL_USER}:${REMOTE_MYSQL_PASSWORD}@${REMOTE_MYSQL_HOSTNAME}:${REMOTE_MYSQL_PORT}
     local DB connection  : ${MYSQL_ROOT_USER}:${MYSQL_ROOT_PASSWORD}@${MYSQL_HOSTNAME}:${MYSQL_PORT}
@@ -71,7 +57,7 @@ EOF
 # -o is for short options like -h
 # -l is for long options with double dash like --help
 # the comma separates different long options
-options=$(getopt -l help,force,download-dump,skip-schema,profile:,collation-name:,character-set: -o hfdsp:c:o: -- "$@" 2> /dev/null) || {
+options=$(getopt -l help,force,download-dump,collation-name:,character-set: -o hfdc:o: -- "$@" 2> /dev/null) || {
     Log::displayError "invalid options specified"
     showHelp
     exit 1
@@ -90,14 +76,7 @@ case $1 in
     FORCE=1
     ;;
 -d|--download-dump)
-    DOWNLOAD_DUMP="1"
-    ;;
--s|--skip-schema)
-    SKIP_SCHEMA="1"
-    ;;
--p|--profile)
-    shift
-    PROFILE="$1"
+    DOWNLOAD_DUMP=1
     ;;
 -o|--collation-name)
     shift
@@ -128,7 +107,11 @@ while true; do
     if [[ -z "${REMOTE_DB}" ]]; then
         REMOTE_DB="$1"
     else
-        LOCAL_DB="$1"
+        if [[ -z "${TABLE}" ]]; then
+            TABLE="$1"
+        else
+            LOCAL_DB="$1"
+        fi
     fi
 
     shift
@@ -136,6 +119,12 @@ done
 
 if [[ -z "${REMOTE_DB}" ]]; then
     Log::displayError "you must provide remoteDbName"
+    showHelp
+    exit 1
+fi
+
+if [[ -z "${TABLE}" ]]; then
+    Log::displayError "you must provide tableName"
     showHelp
     exit 1
 fi
@@ -154,22 +143,6 @@ if [[ "${MYSQL_HOSTNAME}" = "localhost" ]]; then
     Log::displayWarning "check that MYSQL_HOSTNAME should not be 127.0.0.1 instead of localhost"
 fi
 
-# load the profile
-if [[ -z "${PROFILE}" ]]; then
-    Log::displayError "you should specify a profile"
-    showHelp
-    exit 1
-fi
-
-if [[ -f "${HOME_PROFILES_DIR}/${PROFILE}.sh" ]]; then
-    PROFILE_COMMAND="${HOME_PROFILES_DIR}/${PROFILE}.sh"
-elif [[ -f "${PROFILES_DIR}/${PROFILE}.sh" ]]; then
-    PROFILE_COMMAND="${PROFILES_DIR}/${PROFILE}.sh"
-else
-    Log::displayError "the profile ${PROFILES_DIR}/${PROFILE}.sh does not exist"
-    exit 1
-fi
-
 # create db instances
 declare -Agx dbRemoteInstance dbLocalInstance
 Database::newInstance dbLocalInstance "${MYSQL_HOSTNAME}" "${MYSQL_PORT}" "${MYSQL_ROOT_USER}" "${MYSQL_ROOT_PASSWORD}"
@@ -178,15 +151,23 @@ Database::newInstance dbRemoteInstance "${REMOTE_MYSQL_HOSTNAME}" "${REMOTE_MYSQ
 Database::setOptions dbRemoteInstance "${MYSQL_OPTIONS} --connect-timeout=5"
 
 # check if local db exists
-LOCAL_DB_EXISTS=0
-Database::ifDbExists dbLocalInstance "${LOCAL_DB}" && {
-    Log::displayInfo "Local Database ${LOCAL_DB} already exists !"
+Database::ifDbExists dbLocalInstance "${LOCAL_DB}" || {
+    Log::displayError "Local Database ${LOCAL_DB} does not exist !"
+}
+
+# check if local table exists
+LOCAL_TABLE_EXISTS='0'
+Database::isTableExists dbLocalInstance "${LOCAL_DB}" "${TABLE}" && {
+    Log::displayInfo "Local table ${LOCAL_DB}/${TABLE} already exists"
     if [[ "${FORCE}" = "0" ]]; then
         Log::displayError "use --force to drop it"
         exit 1
+    else
+      LOCAL_TABLE_EXISTS='1'
     fi
-    LOCAL_DB_EXISTS='1'
 }
+
+Log::displayInfo "import table ${TABLE} from ${REMOTE_DB} to ${LOCAL_DB}"
 
 if [[ -z "${DB_IMPORT_DUMP_DIR}" ]]; then
     Log::displayError "you have to specify a value for DB_IMPORT_DUMP_DIR env variable"
@@ -202,10 +183,8 @@ if [[ ! -d "${DB_IMPORT_DUMP_DIR}" ]]; then
     }
 fi
 
-REMOTE_DB_DUMP_TEMP_FILE="${DB_IMPORT_DUMP_DIR}/${REMOTE_DB}_${PROFILE}.sql"
-REMOTE_DB_STRUCTURE_DUMP_TEMP_FILE="${DB_IMPORT_DUMP_DIR}/${REMOTE_DB}_${PROFILE}_structure.sql"
-
 # check if local dump exists
+REMOTE_DB_DUMP_TEMP_FILE="${DB_IMPORT_DUMP_DIR}/importTable_${REMOTE_DB}_${TABLE}.sql"
 if [[ "${DOWNLOAD_DUMP}" = "0" ]]; then
     if [[ -f "${REMOTE_DB_DUMP_TEMP_FILE}" && -f "${REMOTE_DB_STRUCTURE_DUMP_TEMP_FILE}" ]]; then
         Log::displayInfo "local dump already exists, avoid download"
@@ -219,7 +198,8 @@ fi
 read -r -d '\0' DUMP_HEADER <<- EOM
     SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS = 0;
     SET @OLD_AUTOCOMMIT=@@AUTOCOMMIT, AUTOCOMMIT = 0;
-    SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS = 0;\0
+    SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS = 0;
+    DROP TABLE IF EXISTS \`${TABLE}\`;\0
 EOM
 
 read -r -d '\0' DUMP_FOOTER <<- EOM2
@@ -229,7 +209,6 @@ read -r -d '\0' DUMP_FOOTER <<- EOM2
     SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS;\0
 EOM2
 
-Log::displayInfo "Importing remote db '${REMOTE_DB}' to local db '${LOCAL_DB}'"
 if [[ "${DOWNLOAD_DUMP}" = "1" ]]; then
     Log::displayInfo "Download dump"
 
@@ -253,65 +232,39 @@ if [[ "${DOWNLOAD_DUMP}" = "1" ]]; then
         exit 1
     }
 
-    # calculate remote db dump size
-    Log::displayInfo "Calculate tables list for profile ${PROFILE}"
-    chmod 755 "${PROFILE_COMMAND}"
-
-    LIST_TABLES=$(Database::query dbRemoteInstance "show tables" "${REMOTE_DB}" | ${PROFILE_COMMAND})
-    readarray -t LIST_TABLES_ARRAY <<< ${LIST_TABLES}
-    IFS=$'\n' eval 'LIST_TABLES_ARRAY=(${LIST_TABLES})'
-    LIST_TABLES=$(printf "'%q'," "${LIST_TABLES_ARRAY[@]}")
-
-    Log::displayInfo "Calculate dump size for tables ${LIST_TABLES}"
+    # calculate remote table dump size
+    Log::displayDebug "Calculate dump size for table ${TABLE}"
     DUMP_SIZE_QUERY="SELECT ROUND(SUM(data_length + index_length) / 1024 / 1024, 0) AS size FROM information_schema.TABLES WHERE table_schema=\"${REMOTE_DB}\""
-    DUMP_SIZE_QUERY+=" AND table_name IN(${LIST_TABLES} 'dummy') "
+    DUMP_SIZE_QUERY+=" AND table_name='${TABLE}'"
     DUMP_SIZE_QUERY+=" GROUP BY table_schema"
     REMOTE_DB_DUMP_SIZE=$(echo "${DUMP_SIZE_QUERY}" | Database::query dbRemoteInstance )
     if [[ -z "${REMOTE_DB_DUMP_SIZE}" ]]; then
         # could occur with the none profile
         REMOTE_DB_DUMP_SIZE="0"
     fi
+
     # dump db
-    Log::displayInfo "Dump the database $REMOTE_DB (Size:${REMOTE_DB_DUMP_SIZE}MB) ...";
+    Log::displayInfo "Dump the table ${TABLE} from database $REMOTE_DB (Size:${REMOTE_DB_DUMP_SIZE}MB) ...";
     echo "${DUMP_HEADER}" > "${REMOTE_DB_DUMP_TEMP_FILE}"
     DUMP_SIZE_PV_ESTIMATION=$(awk "BEGIN {printf \"%.0f\",${REMOTE_DB_DUMP_SIZE}/1.5}")
-    time Database::dump dbRemoteInstance "${REMOTE_DB}" "${LIST_TABLES//[,]/ }" --no-create-info --skip-add-drop-table --single-transaction=TRUE | \
+    time Database::dump dbRemoteInstance "${REMOTE_DB}" "${TABLE}" --skip-add-drop-table --single-transaction=TRUE | \
         pv --progress --size ${DUMP_SIZE_PV_ESTIMATION}m >> "${REMOTE_DB_DUMP_TEMP_FILE}"
     echo ${DUMP_FOOTER} >> "${REMOTE_DB_DUMP_TEMP_FILE}"
 
-    Log::displayInfo "Dump structure of the database ${REMOTE_DB} ...";
-    echo "${DUMP_HEADER}" > "${REMOTE_DB_STRUCTURE_DUMP_TEMP_FILE}"
-    time Database::dump dbRemoteInstance "${REMOTE_DB}" "" --no-data --skip-add-drop-table --single-transaction=TRUE \
-        >> "${REMOTE_DB_STRUCTURE_DUMP_TEMP_FILE}"
-    echo ${DUMP_FOOTER} >> "${REMOTE_DB_STRUCTURE_DUMP_TEMP_FILE}"
-
-    Log::displayInfo "Dump done.";
+    Log::displayDebug "Dump done.";
 else
     if [[ -z "${COLLATION_NAME}" ]]; then
         COLLATION_NAME="utf8_general_ci"
     fi
 fi
 
-# drop local db
-if [[ "${LOCAL_DB_EXISTS}" = "1" ]]; then
-    Log::displayInfo "drop local database ${LOCAL_DB}";
-    Database::query dbLocalInstance "DROP DATABASE IF EXISTS ${LOCAL_DB}"
+# drop local table
+if [[ "${LOCAL_TABLE_EXISTS}" = "1" ]]; then
+    Log::displayInfo "drop local table ${LOCAL_DB}.${TABLE}";
+    Database::dropTable dbLocalInstance "${LOCAL_DB}" "${TABLE}"
 fi
 
-Log::displayInfo "create local database ${LOCAL_DB}";
-Database::query dbLocalInstance "CREATE DATABASE ${LOCAL_DB}/*!40100 COLLATE \"${COLLATION_NAME}\" */"
-
-if [[ "${SKIP_SCHEMA}" = "1" ]]; then
-    Log::displayInfo "avoid to create db structure";
-else
-    Log::displayInfo "create db structure from ${REMOTE_DB_STRUCTURE_DUMP_TEMP_FILE}";
-    time ( \
-        pv "${REMOTE_DB_STRUCTURE_DUMP_TEMP_FILE}" | \
-            Database::query dbLocalInstance "" ${LOCAL_DB}
-    )
-fi
-
-Log::displayInfo "import remote to local from file ${REMOTE_DB_DUMP_TEMP_FILE}"
+Log::displayDebug "import remote to local from file ${REMOTE_DB_DUMP_TEMP_FILE}"
 time ( \
     pv "${REMOTE_DB_DUMP_TEMP_FILE}" | \
         Database::query dbLocalInstance "" ${LOCAL_DB}

@@ -154,13 +154,13 @@ Database::ifDbExists() {
 # * 1 else
 Database::isTableExists() {
   # shellcheck disable=SC2178
-  local -n instance=$1
+  local -n instance2=$1
   local dbName="$2"
   local tableThatShouldExists="$3"
 
   local sql=$"select count(*) from information_schema.tables where table_schema='${dbName}' and table_name='${tableThatShouldExists}'"
   local result
-  result=$(Database::query instance "${sql}")
+  result=$(Database::query instance2 "${sql}")
   if [[ "${result}" == "0" ]]; then
     Log::displayWarning "Db ${dbName} not initialized"
     return 1
@@ -180,11 +180,11 @@ Database::isTableExists() {
 # * 1 else
 Database::createDb() {
   # shellcheck disable=SC2178
-  local -n instance=$1
+  local -n instance2=$1
   local dbName="$2"
 
   local sql="CREATE DATABASE IF NOT EXISTS ${dbName} CHARACTER SET 'utf8' COLLATE 'utf8_general_ci'"
-  Database::query instance "${sql}"
+  Database::query instance2 "${sql}"
   local result=$?
 
   if [[ "${result}" == "0" ]]; then
@@ -206,17 +206,45 @@ Database::createDb() {
 # * 1 else
 Database::dropDb() {
   # shellcheck disable=SC2178
-  local -n instance=$1
+  local -n instance2=$1
   local dbName="$2"
 
   local sql="DROP DATABASE IF EXISTS ${dbName}"
-  Database::query instance "${sql}"
+  Database::query instance2 "${sql}"
   local result=$?
 
   if [[ "${result}" == "0" ]]; then
     Log::displayInfo "Db ${dbName} has been dropped"
   else
     Log::displayError "Dropping Db ${dbName} has failed"
+  fi
+  return ${result}
+}
+
+# Public: drop table if exists
+#
+# **Arguments**:
+# * $1 (passed by reference) database instance to use
+# * $2 database name
+# * $3 table name to drop
+#
+# **Returns**:
+# * 0 if success
+# * 1 else
+Database::dropTable() {
+  # shellcheck disable=SC2178
+  local -n instance2=$1
+  local dbName="$2"
+  local tableName="$3"
+
+  local sql="DROP TABLE IF EXISTS ${tableName}"
+  Database::query instance2 "${sql}" "${dbName}"
+  local result=$?
+
+  if [[ "${result}" == "0" ]]; then
+    Log::displayInfo "Table ${dbName}.${tableName} has been dropped"
+  else
+    Log::displayError "Dropping Table ${dbName}.${tableName} has failed"
   fi
   return ${result}
 }
