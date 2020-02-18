@@ -8,7 +8,7 @@ Run the example
 bin/dbQueryAllDatabases -e dbQueriesSample/localhost-root.env dbQueriesSample/databaseSize.sql
 ```
 
-Help
+**Help**
 ```
 Usage: dbQueryAllDatabases [-h|--help]
 Usage: dbQueryAllDatabases <query|queryFile> [--env-file|-e <envfile>] [-t|--as-tsv] [-q|--query] [--jobs|-j <numberOfJobs>] [--bar|-b]
@@ -40,7 +40,7 @@ Import remote db into local db
 bin/dbImport ExampleDbName
 ```
 
-Help
+**Help**
 ```
 Command: dbImport --help prints this help and exits
 Command: dbImport <remoteDbName> [<localDbName>] [-f|--force] [-d|--download-dump] [-s|--skip-schema]
@@ -67,7 +67,7 @@ Import remote db table into local db
 bin/dbImport ExampleDbName ExampleTableName
 ```
 
-Help
+**Help**
 ```
 Command: dbImportTable [--help] prints this help and exits
 Command: dbImportTable <remoteDbName> <tableName> [<localDbName>] [-d|--download-dump] [-f|--force] [-o|--collation-name utf8_general_ci] [-c|--character-set utf8]
@@ -84,6 +84,50 @@ Command: dbImportTable <remoteDbName> <tableName> [<localDbName>] [-d|--download
     local DB connection  : root:root@127.0.0.1:3306
     remote DB connection : root:root@remoteDB:3306
 ```
+
+### bin/cli
+
+easy connection to docker container
+
+**Example 1: open bash on a container named web**
+```bash
+cli web
+```
+will actually execute this command : MSYS_NO_PATHCONV=1 MSYS2_ARG_CONV_EXCL='*' docker exec -it -e COLUMNS="$(tput cols)" -e LINES="$(tput lines)" --user= apache2 //bin/bash
+
+**Example 2: connect to mysql container with root user**
+```bash
+cli mysql root bash
+```
+will actually execute this command : MSYS_NO_PATHCONV=1 MSYS2_ARG_CONV_EXCL='*' docker exec -e COLUMNS="$(tput cols)" -e LINES="$(tput lines)" -it --user=root ckls-mysql bash
+
+**Example 3: connect to mysql server in order to execute a query**
+
+will actually execute this command : MSYS_NO_PATHCONV=1 MSYS2_ARG_CONV_EXCL='*' docker exec -it -e COLUMNS="$(tput cols)" -e LINES="$(tput lines)" --user=mysql ckls-mysql //bin/bash -c 'mysql -h127.0.0.1 -uroot -proot -P3306'
+
+**Example 4: pipe sql command to mysql container** 
+```bash
+echo 'SELECT table_schema AS "Database",ROUND(SUM(data_length + index_length) / 1024 / 1024, 2) AS "Size (MB)" FROM information_schema.TABLES' | bin/cli mysql
+```
+will actually execute this command : MSYS_NO_PATHCONV=1 MSYS2_ARG_CONV_EXCL='*' docker exec -i -e COLUMNS="$(tput cols)" -e LINES="$(tput lines)" --user=mysql ckls-mysql //bin/bash -c 'mysql -h127.0.0.1 -uroot -proot -P3306'
+notice that as input is given to the command, tty option is not provided to docker exec
+
+**Help**
+```
+Command: cli --help prints this help and exits
+Command: cli [--fullname|-f] <container> [user] [command]
+
+    <container> : container should be one of these values : apache2,mysql,redis,mailhog
+
+    -f|--fullname do not prepend ckls- in front of container
+
+    examples:
+    to connect to mysql container in bash mode with user mysql
+        cli mysql mysql "//bin/bash"
+    to connect to web container with user root
+        cli web root
+```
+
 ## Framework
 
 ## Unit tests
