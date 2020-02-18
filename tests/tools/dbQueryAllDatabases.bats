@@ -13,9 +13,12 @@ declare -g mysqlMockedStep=0
     [[ ${out} == *"ERROR - You must provide the sql file to be executed"* ]]
 }
 
-@test "env-file not provided" {
-    local out=$(${toolsDir}/dbQueryAllDatabases "${BATS_TEST_DIRNAME}/data/databaseSize.sql" 2>&1)
-    [[ ${out} == *"ERROR - You must provide env-file parameter"* ]]
+@test "providing env-file changes the db connection parameters" {
+    local out=$(${toolsDir}/dbQueryAllDatabases \
+        -e "${BATS_TEST_DIRNAME}/data/databaseSize.envProvided.sh" \
+        "${BATS_TEST_DIRNAME}/data/databaseSize.sql" 2>&1
+    )
+    [[ ${out} == *"parameters OK"* ]]
 }
 
 @test "db size" {
@@ -28,7 +31,10 @@ declare -g mysqlMockedStep=0
 }
 
 @test "parallel not installed" {
-    alias parallel="dsfsdf"
-    local out=$(${toolsDir}/dbQueryAllDatabases -j2 2>&1)
-    echo $out
+    local out=$(${toolsDir}/dbQueryAllDatabases \
+        -e "${BATS_TEST_DIRNAME}/data/databaseSize.parallelNotFound.sh" \
+        -j2 \
+        "${BATS_TEST_DIRNAME}/data/databaseSize.sql" 2>&1
+    )
+    [[ "${out}" == *"parallelNotFound: command not found"* ]]
 }

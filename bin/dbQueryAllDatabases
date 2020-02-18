@@ -37,10 +37,11 @@ Usage: ${SCRIPT_NAME} <query|queryFile> [--env-file|-e <envfile>] [-t|--as-tsv] 
         if -q option is provided this parameter is a mysql query string
         else a file must be specified
     --env-file,-e <envfile> load <envfile>, this file must contains these variables in order to connect to the mysql server
-HOSTNAME=""
-USER=""
-PASSWORD=""
-PORT=""
+MYSQL_HOSTNAME=""
+MYSQL_USER=""
+MYSQL_PASSWORD=""
+MYSQL_PORT=""
+    local DB connection  : ${MYSQL_USER}:${MYSQL_PASSWORD}@${MYSQL_HOSTNAME}:${MYSQL_PORT}
 EOF
 }
 
@@ -127,36 +128,33 @@ if [[ ${JOBS_NUMBER} -gt 1 ]] ; then
     Functions::checkCommandExists parallel "sudo apt-get install parallel"
 fi
 
-if [[ -z "${ENV_FILE}" ]]; then
-    Log::displayError "You must provide env-file parameter"
-    exit 1
-fi
+if [[ -n "${ENV_FILE}" ]]; then
+  if [[ ! -f "${ENV_FILE}" ]]; then
+      Log::displayError "env file ${ENV_FILE} does not exist"
+      exit 1
+  fi
 
-if [[ ! -f "${ENV_FILE}" ]]; then
-    Log::displayError "env file ${ENV_FILE} does not exist"
-    exit 1
-fi;
+  # load env file
+  source "${ENV_FILE}"
+
+  # check that expected env variables are set
+  expectedEnvVars=(MYSQL_HOSTNAME MYSQL_USER MYSQL_PASSWORD MYSQL_PORT)
+  allEnvVarSet=1
+  for var in "${expectedEnvVars[@]}"
+  do
+      [[ -v "${var}" ]] || {
+          Log::displayError "env file ${ENV_FILE} should define variable ${var}"
+          allEnvVarSet=0
+      }
+  done
+  [[ "${allEnvVarSet}" = "0" ]] && exit 1
+fi
 
 # mysql command is needed
 Functions::checkCommandExists mysql "sudo apt-get install mysql-client"
 
-# load env file
-source "${ENV_FILE}"
-
-# check that expected env variables are set
-expectedEnvVars=(HOSTNAME USER PASSWORD PORT)
-allEnvVarSet=1
-for var in "${expectedEnvVars[@]}"
-do
-    [[ -v "${var}" ]] || {
-        Log::displayError "env file ${ENV_FILE} should define variable ${var}"
-        allEnvVarSet=0
-    }
-done
-[[ "${allEnvVarSet}" = "0" ]] && exit 1
-
 declare -Agx dbInstance
-Database::newInstance dbInstance "${HOSTNAME}" "${PORT}" "${USER}" "${PASSWORD}"
+Database::newInstance dbInstance "${MYSQL_HOSTNAME}" "${MYSQL_PORT}" "${MYSQL_USER}" "${MYSQL_PASSWORD}"
 Database::setOptions dbInstance "${MYSQL_OPTIONS}"
 Database::setMysqlCommands dbInstance \
     "${MYSQL_COMMAND:-${dbInstance['MYSQL_COMMAND']}}" \
@@ -166,7 +164,8 @@ Database::setMysqlCommands dbInstance \
 # list of all databases
 if [[ "${JOBS_NUMBER}" = "1" ]] ; then
     (
-        allDbs="$(Database::query dbInstance "show databases" | tail -n +2 )"
+        allDbs="$(Database::query dbInstance "show databases" | tail -n +2)"
+
         headerLineDisplayed=0
         declare db
         echo "${allDbs}" | while IFS=" " read db; do
@@ -192,6 +191,6 @@ else
     export query
     Database::query dbInstance "show databases" "mysql" |
         parallel "${PARALLEL_OPTIONS[@]}" "${CURRENT_DIR}/_dbQueryOneDatabase.sh" \
-            "${HOSTNAME}" "${PORT}" "${USER}" "${PASSWORD}" "${MYSQL_OPTIONS}" \
+            "${MYSQL_HOSTNAME}" "${MYSQL_PORT}" "${MYSQL_USER}" "${MYSQL_PASSWORD}" "${MYSQL_OPTIONS}" \
             | sed -E '1!{/^@@@/d}' | sed -e 's/@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@//'
 fi

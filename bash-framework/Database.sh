@@ -254,9 +254,6 @@ Database::query() {
   else
     eval "${mysqlCommand}"
   fi
-  local result="$?"
-
-  return ${result}
 }
 
 # Public: dump db limited to optional table list
