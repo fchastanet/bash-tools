@@ -69,9 +69,9 @@ Framework::bootstrap() {
     # import .env file
     if [[ -z "${__bash_framework_envFile+xxx}" ]]; then
         # __bash_framework_envFile not defined
-        if [ -f "${__bash_framework_rootCallingScriptPath}/.env" ]; then
+        if [[ -f "${__bash_framework_rootCallingScriptPath}/.env" ]]; then
             source "${__bash_framework_rootCallingScriptPath}/.env" || exit 1
-        elif [ -f "${HOME}/.env" ]; then
+        elif [[ -z "${BATS_VERSION+xxx}" && -f "${HOME}/.env" ]]; then
             # shellcheck source=~/.env
             source "${HOME}/.env" || exit 1
         fi
