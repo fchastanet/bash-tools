@@ -154,10 +154,8 @@ if [[ -z "${REMOTE_MYSQL_HOSTNAME}" || -z "${REMOTE_MYSQL_PORT}" || -z "${REMOTE
     exit 1
 fi
 
-# if outside docker
-if [[ -z "${CONTAINER_NAME+unset}" ]]; then
-    Log::displayWarning "we are not in a docker container let's override MYSQL_HOSTNAME to 127.0.0.1"
-    MYSQL_HOSTNAME="127.0.0.1"
+if [[ "${MYSQL_HOSTNAME}" = "localhost" ]]; then
+    Log::displayWarning "check that MYSQL_HOSTNAME should not be 127.0.0.1 instead of localhost"
 fi
 
 # load the profile
