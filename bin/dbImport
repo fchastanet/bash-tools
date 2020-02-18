@@ -81,7 +81,6 @@ options=$(getopt -l help,force,download-dump,skip-schema,profile:,collation-name
     exit 1
 }
 
-# TODO add parameters to override local/remote mysql connections
 eval set -- "${options}"
 while true
 do
