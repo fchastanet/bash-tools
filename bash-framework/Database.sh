@@ -30,7 +30,7 @@ Database::newInstance() {
   fi
   instance['OPTIONS']="--default-character-set=utf8"
   instance['DEFAULT_QUERY_OPTIONS']="-s --skip-column-names"
-  instance['QUERY_OPTIONS']=instance['DEFAULT_QUERY_OPTIONS']
+  instance['QUERY_OPTIONS']="${instance['DEFAULT_QUERY_OPTIONS']:-}"
   instance['DUMP_OPTIONS']="--default-character-set=utf8 --compress --compact --hex-blob --routines --triggers --single-transaction"
   instance['AUTH_FILE']=""
   instance['MYSQL_COMMAND']="/usr/bin/mysql"
@@ -134,7 +134,7 @@ Database::ifDbExists() {
   local result
   local mysqlCommand=""
 
-  mysqlCommand="${instance['MYSQLSHOW_COMMAND']} --defaults-extra-file='${instance['AUTH_FILE']}'"
+  mysqlCommand="${instance['MYSQLSHOW_COMMAND']} --defaults-extra-file='${instance['AUTH_FILE']}' "
   mysqlCommand+="'${dbName}' | grep -v Wildcard | grep -o '${dbName}'"
   Log::displayDebug "execute command: '${mysqlCommand}'"
   result=$(MSYS_NO_PATHCONV=1 eval "${mysqlCommand}")

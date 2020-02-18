@@ -8,6 +8,12 @@ Run the example
 bin/dbQueryAllDatabases -e dbQueriesSample/localhost-root.env dbQueriesSample/databaseSize.sql
 ```
 
+### bin/dbImport
+Import remote db into local db
+```bash
+bin/dbImport ExampleDb
+```
+
 ## Framework
 
 ## Unit tests
