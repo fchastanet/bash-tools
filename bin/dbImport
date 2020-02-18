@@ -46,9 +46,9 @@ showHelp() {
         homeProfilesList=$(cd "${HOME_PROFILES_DIR}" && find . -type f -name \*.sh -printf '%P\n' | sed 's/\.sh$//g' | paste -sd "," - | sed -e 's/,/, /g')
     fi
 cat << EOF
-    Command: ${SCRIPT_NAME} --help prints this help and exits
-    Command: ${SCRIPT_NAME} <remoteDbName> [<localDbName>] [-f|--force] [-d|--download-dump] [-s|--skip-schema]
-                            [-p|--profile profileName] [-o|--collation-name utf8_general_ci] [-c|--character-set utf8]
+Command: ${SCRIPT_NAME} --help prints this help and exits
+Command: ${SCRIPT_NAME} <remoteDbName> [<localDbName>] [-f|--force] [-d|--download-dump] [-s|--skip-schema]
+                        [-p|--profile profileName] [-o|--collation-name utf8_general_ci] [-c|--character-set utf8]
 
     <localDbName> : use remote db name if not provided
     -f|--force If local db exists, it will overwrite it
@@ -61,8 +61,8 @@ cat << EOF
         list of available home profiles (${HOME_PROFILES_DIR}): ${homeProfilesList}
         list of available profiles : ${profilesList}
 
-    remote DB connection : ${REMOTE_MYSQL_USER}:${REMOTE_MYSQL_PASSWORD}@${REMOTE_MYSQL_HOSTNAME}:${REMOTE_MYSQL_PORT}
     local DB connection  : ${MYSQL_ROOT_USER}:${MYSQL_ROOT_PASSWORD}@${MYSQL_HOSTNAME}:${MYSQL_PORT}
+    remote DB connection : ${REMOTE_MYSQL_USER}:${REMOTE_MYSQL_PASSWORD}@${REMOTE_MYSQL_HOSTNAME}:${REMOTE_MYSQL_PORT}
 EOF
 }
 

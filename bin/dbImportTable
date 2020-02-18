@@ -35,8 +35,8 @@ fi
 
 showHelp() {
 cat << EOF
-    Command: ${SCRIPT_NAME} [--help] prints this help and exits
-    Command: ${SCRIPT_NAME} <remoteDbName> <tableName> [<localDbName>] [-d|--download-dump] [-f|--force] [-o|--collation-name utf8_general_ci] [-c|--character-set utf8]
+Command: ${SCRIPT_NAME} [--help] prints this help and exits
+Command: ${SCRIPT_NAME} <remoteDbName> <tableName> [<localDbName>] [-d|--download-dump] [-f|--force] [-o|--collation-name utf8_general_ci] [-c|--character-set utf8]
 
     download the remote table data and install data in local database (the schema should exists)
 
@@ -47,8 +47,8 @@ cat << EOF
     -o|--collation-name change the collation name used during database creation (default value: collation name used by remote db)
     -c|--character-set change the character set used during database creation (default value: character set used by remote db)
 
-    remote DB connection : ${REMOTE_MYSQL_USER}:${REMOTE_MYSQL_PASSWORD}@${REMOTE_MYSQL_HOSTNAME}:${REMOTE_MYSQL_PORT}
     local DB connection  : ${MYSQL_ROOT_USER}:${MYSQL_ROOT_PASSWORD}@${MYSQL_HOSTNAME}:${MYSQL_PORT}
+    remote DB connection : ${REMOTE_MYSQL_USER}:${REMOTE_MYSQL_PASSWORD}@${REMOTE_MYSQL_HOSTNAME}:${REMOTE_MYSQL_PORT}
 EOF
 }
 
