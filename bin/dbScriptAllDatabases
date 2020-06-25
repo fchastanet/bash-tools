@@ -1,0 +1,188 @@
+#!/bin/bash
+
+# load ckls-bootstrap
+# shellcheck source=.dev/vendor/bash-framework/_bootstrap.sh
+source "$( cd "$( readlink -e "${BASH_SOURCE[0]%/*}/.." )" && pwd )/vendor/bash-framework/_bootstrap.sh"
+
+if [[  "${USER}" = "root" ]]; then
+    Log::displayError "The script must not be run as root"
+    exit 1
+fi
+
+CURRENT_DIR=$( cd "$( readlink -e "${BASH_SOURCE[0]%/*}" )" && pwd )
+CONTAINER="${PROJECT_NAMESPACE}-${WEB_HOSTNAME}"
+
+import bash-framework/Database
+#initialize Database lib in order to use to docker
+if which docker; then
+    Database::setMysqlPrefix "docker exec -i ${CONTAINER}"
+fi
+
+# ensure that Ctrl-C is trapped by this script and not sub mysql process
+trap 'exit 130' INT
+
+#default values
+SCRIPT_NAME=${0##*/}
+PARAMETERS=$@
+QUERY_FILE="default"
+JOBS_NUMBER=1
+REMOTE=0
+MYSQL_OPTIONS=""
+OUTPUT_DIR="${__rootSrcPath__}/dbCheckStructs"
+DB_NAME=""
+VERBOSE=0
+SCRIPTS_FOLDER="${CURRENT_DIR}/dbScripts"
+SCRIPT="${SCRIPTS_FOLDER}/dbCheckStructOneDatabase.sh"
+
+# Usage info
+showHelp() {
+local scriptsList=$(find "${SCRIPTS_FOLDER}" -type f -name \*.sh -printf '%P\n' | sed 's/\.sh$//g' | sed -e "s/^/\t\t/")
+
+cat << EOF
+Allow to check database(s) across CKLS propel schema
+and propose repair scripts if needed in the directory "${OUTPUT_DIR}"
+
+Usage: ${SCRIPT_NAME} [-h|--help]
+Usage: ${SCRIPT_NAME} [-j|--jobs <numberOfJobs>] [-s|--script <scriptToExecute>] [-o|--output <outputDirectory>] [-r|--remote] [-v|--verbose] [<dbName>]
+    <dbName> : if provided will check only this db, otherwise all dbs of mysql server will be checked
+    -h|--help prints this help and exits
+    -j|--jobs <numberOfJobs> specify the number of db to query in parallel
+    -o|--output <outputDirectory> output directory for repair SQL scripts
+    -r|--remote checks remote db, local db otherwise
+    -v|--verbose display more information
+    -s|--script <scriptToExecute> specify the script that will be executed on each database
+        default value: ${SCRIPT}
+        list of available scripts (${SCRIPTS_FOLDER}):
+${scriptsList}
+EOF
+}
+
+# read command parameters
+# $@ is all command line parameters passed to the script.
+# -o is for short options like -h
+# -l is for long options with double dash like --help
+# the comma separates different long options
+options=$(getopt -l help,remote,jobs:script:,,output:,verbose -o hrj:s:o:v -- "$@" 2> /dev/null) || {
+    Log::displayError "invalid options specified"
+    showHelp
+    exit 1
+}
+
+eval set -- "${options}"
+while true
+do
+case $1 in
+-h|--help)
+    showHelp
+    exit 0
+    ;;
+--jobs|-j)
+    shift
+    JOBS_NUMBER=$1
+    ;;
+--script|-s)
+    shift
+    SCRIPT="$1"
+    ;;
+--remote|-r)
+    REMOTE=1
+    ;;
+
+--output|-o)
+    shift
+    OUTPUT_DIR="$1"
+    ;;
+--verbose|-v)
+    VERBOSE=1
+    ;;
+--)
+    shift
+    break;;
+*)
+    Log::displayError "invalid argument $1"
+    showHelp
+    exit 1
+esac
+shift
+done
+
+# additional arguments
+shift $(expr $OPTIND - 1 )
+if [[ "$1" != "" ]]; then
+    DB_NAME="$1"
+    shift
+fi
+
+if [[ "$1" != "" ]]; then
+    Log::displayError "too much arguments provided, argument $1 not expected"
+    showHelp
+    exit 1
+fi
+
+if [[ "${OUTPUT_DIR:0:1}" != "/" ]] ; then
+   # relative path
+   OUTPUT_DIR="${__rootSrcPath__}/${OUTPUT_DIR}"
+fi
+mkdir -p "${OUTPUT_DIR}" || {
+    Log::displayError "unable to create directory ${OUTPUT_DIR}"
+    exit 1
+}
+if [[ ! -d "${OUTPUT_DIR}" || ! -w "${OUTPUT_DIR}" ]] ; then
+    Log::displayError "output dir is not correct or not writable"
+    exit 1
+fi
+
+if ! [[ ${JOBS_NUMBER} =~ ^[0-9]+$ ]] ; then
+   Log::displayError "number of jobs is incorrect"
+   exit 1
+fi
+if [[ ${JOBS_NUMBER} -lt 1 ]] ; then
+    Log::displayError "number of jobs must be greater than 0"
+    exit 1
+fi
+
+# try script inside script folder
+if [[ ! -f "${SCRIPTS_FOLDER}/${SCRIPT}.sh" ]]; then
+    # try script absolute or relative
+    if [[ ! -f "${SCRIPT}" ]]; then
+        Log::displayError "unable to find script ${SCRIPT}"
+        exit 1
+    fi
+else
+    SCRIPT="${SCRIPTS_FOLDER}/${SCRIPT}.sh"
+fi
+
+if [[ "${REMOTE}" = "1" ]] ; then
+    HOSTNAME="${REMOTE_MYSQL_HOSTNAME}"
+    USER="${REMOTE_MYSQL_USER}"
+    PASSWORD="${REMOTE_MYSQL_PASSWORD}"
+    PORT="${REMOTE_MYSQL_PORT}"
+else
+    HOSTNAME="${MYSQL_HOSTNAME}"
+    USER="${MYSQL_USER}"
+    PASSWORD="${MYSQL_PASSWORD}"
+    PORT="${MYSQL_PORT}"
+fi
+
+# list of all databases
+Log::displayInfo "get the list of all databases"
+Database::setMysqlOptions "${MYSQL_OPTIONS}"
+if [[ -z "${DB_NAME}" ]]; then
+    sql='SELECT `schema_name` from INFORMATION_SCHEMA.SCHEMATA  WHERE `schema_name` NOT IN("information_schema", "mysql", "performance_schema")'
+    allDbs="$(Database::query "${HOSTNAME}" "${PORT}" "${USER}" "${PASSWORD}" "${sql}")"
+else
+    allDbs="${DB_NAME}"
+fi
+
+Log::displayInfo "processing $(echo "${allDbs}"|wc -l) databases using ${JOBS_NUMBER} jobs"
+
+if [[ "${JOBS_NUMBER}" = "1" ]] ; then
+    echo "${allDbs}" | while IFS=" " read db; do
+        "${SCRIPT}" "${REMOTE}" "${VERBOSE}" "${OUTPUT_DIR}" "${db}"
+    done
+else
+    export selectedQueryFile
+    export MYSQL_OPTIONS
+
+    echo "${allDbs}" | parallel --tag --linebuffer --jobs=${JOBS_NUMBER} "${SCRIPT}" "${REMOTE}" "${VERBOSE}" "${OUTPUT_DIR}"
+fi
