@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+
+SCRIPT_NAME=${0##*/}
+
+# load ckls-bootstrap
+# shellcheck source=.dev/vendor/bash-framework/_bootstrap.sh
+source "$( cd "$( readlink -e "${BASH_SOURCE[0]%/*}/.." )" && pwd )/vendor/bash-framework/_bootstrap.sh"
+
+showHelp() {
+cat << EOF
+Command: ${SCRIPT_NAME} <branchName>
+show an error if branchName is not a known branch
+EOF
+}
+
+if [[ "$#" != "1" ]]; then
+    Log::displayError "$0: invalid arguments"
+    showHelp
+    exit 1
+fi
+branch="$1"
+
+# check various branch hierarchies, adjust as needed
+git show-ref --verify refs/heads/"$branch" ||
+git show-ref --verify refs/remotes/"$branch" || {
+    Log::displayError "not a branch name: $branch"
+    exit 1
+}

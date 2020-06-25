@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+
+SCRIPT_NAME=${0##*/}
+
+# load ckls-bootstrap
+# shellcheck source=.dev/vendor/bash-framework/_bootstrap.sh
+source "$( cd "$( readlink -e "${BASH_SOURCE[0]%/*}/.." )" && pwd )/vendor/bash-framework/_bootstrap.sh"
+
+showHelp() {
+cat << EOF
+# Usage: ${SCRIPT_NAME} <branch> <commit>
+show an error if commit is not an ancestor of branch
+EOF
+}
+
+if [[ "$#" != "2" ]]; then
+    Log::displayError "${SCRIPT_NAME}: invalid arguments"
+    showHelp
+    exit 1
+fi
+
+claimedBranch="$1"
+commit="$2"
+
+merge_base="$(git merge-base "${commit}" "${claimedBranch}")" &&
+  test -n "$merge_base" &&
+  test "$merge_base" = "$(git rev-parse --verify "${commit}")" &&
+  exit 0
+
+Log::displayError "${commit} is not an ancestor of ${claimedBranch}"
+exit 1
