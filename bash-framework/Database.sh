@@ -56,8 +56,8 @@ Database::newInstance() {
 # * $2 - options list
 Database::setOptions() {
   # shellcheck disable=SC2178
-  local -n instance=$1
-  instance['OPTIONS']="$2"
+  local -n instance2=$1
+  instance2['OPTIONS']="$2"
 }
 
 # Public: set the options to use on mysqldump command
@@ -118,7 +118,7 @@ Database::createAuthFile() {
   printf "%b" "${conf}" >"${instance2['AUTH_FILE']}"
 
   # shellcheck disable=SC2064
-  trap "rm -f '${instance2['AUTH_FILE']}' 2>/dev/null" EXIT
+  #trap "rm -f '${instance2['AUTH_FILE']}' 2>/dev/null" EXIT
 }
 
 # Public: check if given database exists
@@ -260,10 +260,10 @@ Database::dropTable() {
 # **Returns**: mysql command status code
 Database::query() {
   # shellcheck disable=SC2178
-  local -n instance=$1
+  local -n instance2=$1
   local mysqlCommand=""
 
-  mysqlCommand+="${instance['MYSQL_COMMAND']} --defaults-extra-file='${instance['AUTH_FILE']}' ${instance['QUERY_OPTIONS']} ${instance['OPTIONS']}"
+  mysqlCommand+="${instance2['MYSQL_COMMAND']} --defaults-extra-file='${instance2['AUTH_FILE']}' ${instance2['QUERY_OPTIONS']} ${instance2['OPTIONS']}"
   # add optional db name
   if [[ -n "${3+x}" ]]; then
     mysqlCommand+=" '$3'"
@@ -278,7 +278,7 @@ Database::query() {
   Log::displayDebug "execute command: '${mysqlCommand}'"
 
   if [[ -f "$2" ]]; then
-    eval "${mysqlCommand}" <"$2"
+    eval "${mysqlCommand}" < "$2"
   else
     eval "${mysqlCommand}"
   fi

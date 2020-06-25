@@ -20,12 +20,11 @@ declare HOSTNAME="$1"
 declare PORT="$2"
 declare USER="$3"
 declare PASSWORD="$4"
-declare MYSQL_OPTIONS="$5"
-declare DB="$6"
+declare DB="$5"
 
 declare -Agx dbInstance
 Database::newInstance dbInstance "${HOSTNAME}" "${PORT}" "${USER}" "${PASSWORD}"
-Database::setOptions dbInstance "${MYSQL_OPTIONS} --connect-timeout=5"
+Database::setQueryOptions dbInstance "${MYSQL_OPTIONS} --connect-timeout=5"
 
 # identify columns header
 echo -n "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"

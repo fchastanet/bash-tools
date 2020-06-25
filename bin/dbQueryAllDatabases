@@ -12,7 +12,7 @@ import bash-framework/Database
 import bash-framework/Array
 
 #initialize Database lib in order to use to docker
-#set -x
+
 # ensure that Ctrl-C is trapped by this script and not sub mysql process
 trap 'exit 130' INT
 
@@ -20,6 +20,7 @@ trap 'exit 130' INT
 SCRIPT_NAME=${0##*/}
 JOBS_NUMBER=1
 QUERY=0
+REMOTE=0
 MYSQL_OPTIONS=""
 declare -a PARALLEL_OPTIONS
 
@@ -31,6 +32,7 @@ Usage: ${SCRIPT_NAME} <query|queryFile> [--env-file|-e <envfile>] [-t|--as-tsv] 
     --help,-h prints this help and exits
     --as-tsv,-t show results as tsv file (separated by tabulations)
     --query,-q implies <query> parameter is a mysql query string
+    -r|--remote checks remote db, local db otherwise
     --jobs,-j <numberOfJobs> specify the number of db to query in parallel (this needs the use of gnu parallel)
     --bar,-b Show progress as a progress bar. In the bar is shown: % of jobs completed, estimated seconds left, and number of jobs started.
     <query|queryFile>
@@ -56,7 +58,7 @@ EOF
 # -o is for short options like -h
 # -l is for long options with double dash like --help
 # the comma separates different long options
-options=$(getopt -l help,as-tsv,query,bar,jobs:,with-headers,env-file: -o htqbj:we: -- "$@" 2> /dev/null) || {
+options=$(getopt -l help,as-tsv,query,remote,bar,jobs:,with-headers,env-file: -o htqrbj:we: -- "$@" 2> /dev/null) || {
     Log::displayError "invalid options specified"
     showHelp
     exit 1
@@ -82,6 +84,9 @@ case $1 in
     ;;
 --query|-q)
     QUERY=1
+    ;;
+--remote|-r)
+    REMOTE=1
     ;;
 --env-file|-e)
     shift
@@ -122,6 +127,18 @@ else
     query="${queryFile}"
 fi
 
+if [[ "${REMOTE}" = "1" ]] ; then
+    HOSTNAME="${REMOTE_MYSQL_HOSTNAME}"
+    USER="${REMOTE_MYSQL_USER}"
+    PASSWORD="${REMOTE_MYSQL_PASSWORD}"
+    PORT="${REMOTE_MYSQL_PORT}"
+else
+    HOSTNAME="${MYSQL_HOSTNAME}"
+    USER="${MYSQL_USER}"
+    PASSWORD="${MYSQL_PASSWORD}"
+    PORT="${MYSQL_PORT}"
+fi
+
 if ! [[ ${JOBS_NUMBER} =~ ^[0-9]+$ ]] ; then
    Log::displayError "number of jobs is incorrect"
    exit 1
@@ -144,7 +161,7 @@ if [[ -n "${ENV_FILE}" ]]; then
   source "${ENV_FILE}"
 
   # check that expected env variables are set
-  expectedEnvVars=(MYSQL_HOSTNAME MYSQL_USER MYSQL_PASSWORD MYSQL_PORT)
+  expectedEnvVars=(HOSTNAME USER PASSWORD PORT)
   allEnvVarSet=1
   for var in "${expectedEnvVars[@]}"
   do
@@ -160,7 +177,7 @@ fi
 Functions::checkCommandExists mysql "sudo apt-get install mysql-client"
 
 declare -Agx dbInstance
-Database::newInstance dbInstance "${MYSQL_HOSTNAME}" "${MYSQL_PORT}" "${MYSQL_USER}" "${MYSQL_PASSWORD}"
+Database::newInstance dbInstance "${HOSTNAME}" "${PORT}" "${USER}" "${PASSWORD}"
 Database::setOptions dbInstance "${MYSQL_OPTIONS}"
 Database::setMysqlCommands dbInstance \
     "${MYSQL_COMMAND:-${dbInstance['MYSQL_COMMAND']}}" \
@@ -171,7 +188,6 @@ Database::setMysqlCommands dbInstance \
 if [[ "${JOBS_NUMBER}" = "1" ]] ; then
     (
         allDbs="$(Database::query dbInstance "show databases" | tail -n +2)"
-
         headerLineDisplayed=0
         declare db
         echo "${allDbs}" | while IFS=" " read db; do
@@ -184,7 +200,7 @@ if [[ "${JOBS_NUMBER}" = "1" ]] ; then
                     headerLineDisplayed=1
                 else
                     # remove first header line
-                    (Database::query dbInstance "${query}" "${db}" | tail -n +2) || (
+                    (Database::query dbInstance "${query}" "${db}" | tail -n +1) || (
                       Log::displayError "database ${db} error" >&2
                     )
                 fi
@@ -195,8 +211,10 @@ else
     PARALLEL_OPTIONS+=("--linebuffer" "-j" "${JOBS_NUMBER}")
 
     export query
+    export MYSQL_OPTIONS
     Database::query dbInstance "show databases" "mysql" |
         parallel "${PARALLEL_OPTIONS[@]}" "${CURRENT_DIR}/_dbQueryOneDatabase.sh" \
-            "${MYSQL_HOSTNAME}" "${MYSQL_PORT}" "${MYSQL_USER}" "${MYSQL_PASSWORD}" "${MYSQL_OPTIONS}" \
-            | sed -E '1!{/^@@@/d}' | sed -e 's/@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@//'
+            "${HOSTNAME}" "${PORT}" "${USER}" "${PASSWORD}" \
+            | sed -E '1!{/^@@@/d}' \
+            | sed 's/^@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@//'
 fi
