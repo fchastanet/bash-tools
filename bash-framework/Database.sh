@@ -154,13 +154,13 @@ Database::ifDbExists() {
 # * 1 else
 Database::isTableExists() {
   # shellcheck disable=SC2178
-  local -n instance2=$1
+  local -n instanceIsTableExists=$1
   local dbName="$2"
   local tableThatShouldExists="$3"
 
   local sql=$"select count(*) from information_schema.tables where table_schema='${dbName}' and table_name='${tableThatShouldExists}'"
   local result
-  result=$(Database::query instance2 "${sql}")
+  result=$(Database::query instanceIsTableExists "${sql}")
   if [[ "${result}" == "0" ]]; then
     Log::displayWarning "Db ${dbName} not initialized"
     return 1
@@ -260,10 +260,10 @@ Database::dropTable() {
 # **Returns**: mysql command status code
 Database::query() {
   # shellcheck disable=SC2178
-  local -n instance2=$1
+  local -n instanceQuery=$1
   local mysqlCommand=""
 
-  mysqlCommand+="${instance2['MYSQL_COMMAND']} --defaults-extra-file='${instance2['AUTH_FILE']}' ${instance2['QUERY_OPTIONS']} ${instance2['OPTIONS']}"
+  mysqlCommand+="${instanceQuery['MYSQL_COMMAND']} --defaults-extra-file='${instanceQuery['AUTH_FILE']}' ${instanceQuery['QUERY_OPTIONS']} ${instanceQuery['OPTIONS']}"
   # add optional db name
   if [[ -n "${3+x}" ]]; then
     mysqlCommand+=" '$3'"

@@ -186,8 +186,8 @@ fi
 # check if local dump exists
 REMOTE_DB_DUMP_TEMP_FILE="${DB_IMPORT_DUMP_DIR}/importTable_${REMOTE_DB}_${TABLE}.sql"
 if [[ "${DOWNLOAD_DUMP}" = "0" ]]; then
-    if [[ -f "${REMOTE_DB_DUMP_TEMP_FILE}" && -f "${REMOTE_DB_STRUCTURE_DUMP_TEMP_FILE}" ]]; then
-        Log::displayInfo "local dump already exists, avoid download"
+    if [[ -f "${REMOTE_DB_DUMP_TEMP_FILE}" ]]; then
+        Log::displayInfo "local dump ${REMOTE_DB_DUMP_TEMP_FILE} already exists, avoid download"
     else
         Log::displayInfo "local dump does not exist"
         DOWNLOAD_DUMP=1
@@ -199,7 +199,7 @@ read -r -d '\0' DUMP_HEADER <<- EOM
     SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS = 0;
     SET @OLD_AUTOCOMMIT=@@AUTOCOMMIT, AUTOCOMMIT = 0;
     SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS = 0;
-    DROP TABLE IF EXISTS \`${TABLE}\`;\0
+    DELETE IGNORE FROM \`${TABLE}\`;\0
 EOM
 
 read -r -d '\0' DUMP_FOOTER <<- EOM2
@@ -244,24 +244,19 @@ if [[ "${DOWNLOAD_DUMP}" = "1" ]]; then
     fi
 
     # dump db
-    Log::displayInfo "Dump the table ${TABLE} from database $REMOTE_DB (Size:${REMOTE_DB_DUMP_SIZE}MB) ...";
+    Log::displayInfo "Dump the table ${TABLE} from database $REMOTE_DB (Size:${REMOTE_DB_DUMP_SIZE}MB) ... to file ${REMOTE_DB_DUMP_TEMP_FILE}";
     echo "${DUMP_HEADER}" > "${REMOTE_DB_DUMP_TEMP_FILE}"
     DUMP_SIZE_PV_ESTIMATION=$(awk "BEGIN {printf \"%.0f\",${REMOTE_DB_DUMP_SIZE}/1.5}")
     time Database::dump dbRemoteInstance "${REMOTE_DB}" "${TABLE}" --skip-add-drop-table --single-transaction=TRUE | \
         pv --progress --size ${DUMP_SIZE_PV_ESTIMATION}m >> "${REMOTE_DB_DUMP_TEMP_FILE}"
     echo ${DUMP_FOOTER} >> "${REMOTE_DB_DUMP_TEMP_FILE}"
+    sed -i -r -e 's/CREATE TABLE `/CREATE TABLE IF NOT EXISTS `/g' "${REMOTE_DB_DUMP_TEMP_FILE}"
 
     Log::displayDebug "Dump done.";
 else
     if [[ -z "${COLLATION_NAME}" ]]; then
         COLLATION_NAME="utf8_general_ci"
     fi
-fi
-
-# drop local table
-if [[ "${LOCAL_TABLE_EXISTS}" = "1" ]]; then
-    Log::displayInfo "drop local table ${LOCAL_DB}.${TABLE}";
-    Database::dropTable dbLocalInstance "${LOCAL_DB}" "${TABLE}"
 fi
 
 Log::displayDebug "import remote to local from file ${REMOTE_DB_DUMP_TEMP_FILE}"
