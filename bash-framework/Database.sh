@@ -31,7 +31,7 @@ Database::newInstance() {
   instance['OPTIONS']="--default-character-set=utf8"
   instance['DEFAULT_QUERY_OPTIONS']="-s --skip-column-names"
   instance['QUERY_OPTIONS']="${instance['DEFAULT_QUERY_OPTIONS']:-}"
-  instance['DUMP_OPTIONS']="--default-character-set=utf8 --compress --compact --hex-blob --routines --triggers --single-transaction"
+  instance['DUMP_OPTIONS']="--default-character-set=utf8 --compress --compact --hex-blob --routines --triggers --single-transaction --set-gtid-purged=OFF"
   instance['AUTH_FILE']=""
   instance['MYSQL_COMMAND']="/usr/bin/mysql"
   instance['MYSQLDUMP_COMMAND']="/usr/bin/mysqldump"
