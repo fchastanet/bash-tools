@@ -29,9 +29,10 @@ Database::newInstance() {
     return
   fi
   instance['OPTIONS']="--default-character-set=utf8"
-  instance['DEFAULT_QUERY_OPTIONS']="-s --skip-column-names"
+  instance['SSL_OPTIONS']='--ssl-mode=DISABLED'
+  instance['DEFAULT_QUERY_OPTIONS']="-s --skip-column-names ${instance['SSL_OPTIONS']} "
   instance['QUERY_OPTIONS']="${instance['DEFAULT_QUERY_OPTIONS']:-}"
-  instance['DUMP_OPTIONS']="--default-character-set=utf8 --compress --compact --hex-blob --routines --triggers --single-transaction --set-gtid-purged=OFF"
+  instance['DUMP_OPTIONS']="--default-character-set=utf8 --compress --compact --hex-blob --routines --triggers --single-transaction --set-gtid-purged=OFF --column-statistics=0 ${instance['SSL_OPTIONS']}"
   instance['AUTH_FILE']=""
   instance['MYSQL_COMMAND']="/usr/bin/mysql"
   instance['MYSQLDUMP_COMMAND']="/usr/bin/mysqldump"
@@ -134,7 +135,7 @@ Database::ifDbExists() {
   local result
   local mysqlCommand=""
 
-  mysqlCommand="${instance['MYSQLSHOW_COMMAND']} --defaults-extra-file='${instance['AUTH_FILE']}' "
+  mysqlCommand="${instance['MYSQLSHOW_COMMAND']} --defaults-extra-file='${instance['AUTH_FILE']}' ${instance['SSL_OPTIONS']} "
   mysqlCommand+="'${dbName}' | grep -v Wildcard | grep -o '${dbName}'"
   Log::displayDebug "execute command: '${mysqlCommand}'"
   result=$(MSYS_NO_PATHCONV=1 eval "${mysqlCommand}")
