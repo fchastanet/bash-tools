@@ -1,0 +1,21 @@
+#!/bin/bash
+
+# load bash-framework
+# shellcheck source=bash-framework/_bootstrap.sh
+source "$( cd "$( readlink -e "${BASH_SOURCE[0]%/*}/.." )" && pwd )/bash-framework/_bootstrap.sh"
+
+DUMP_NAME="$1"
+DB_NAME="$2"
+PROFILE="${3:-default}"
+CHARACTER_SET="${4:-utf8}"
+
+CURRENT_DIR=$( cd "$( readlink -e "${BASH_SOURCE[0]%/*}" )" && pwd )
+
+# TODO fullstream aws s3 cp --quiet s3://ck-dev-frsa-devsql/exports/PANDORA_FF.tar.gz /dev/stdout | tar zxOf -
+# TODO  CHARACTER_SET replace
+tar xOfz "${HOME}/.dbImportDumps/${DUMP_NAME}.tar.gz" | awk \
+  -v PROFILE="${PROFILE}" \
+  -v CHARACTER_SET="${CHARACTER_SET}" \
+  -f "${CURRENT_DIR}/dbImportStream.awk" \
+  - \
+  mysql -h"${MYSQL_HOSTNAME}" -P"${MYSQL_PORT}" -u"${MYSQL_ROOT_USER}" -p"${MYSQL_ROOT_PASSWORD}" "${DB_NAME}" 
