@@ -26,7 +26,6 @@ DOWNLOAD_DUMP=0
 FROM_AWS=0
 SKIP_SCHEMA=0
 REMOTE_DB=""
-REFERENCE_DB=""
 LOCAL_DB=""
 COLLATION_NAME=""
 CHARACTER_SET=""
@@ -59,7 +58,7 @@ Command: ${SCRIPT_NAME} <remoteDbName> [<localDbName>] [-f|--force]
     -d|--download-dump force remote db dump (default: use already downloaded dump in ${DB_IMPORT_DUMP_DIR} if available)
     -a|--from-aws db dump will be downloaded from s3 instead of using remote db, 
         remoteDBName will represent the name of the file
-        profile will be calulated against local db using AWS_REFERENCE_DB=${AWS_REFERENCE_DB} db
+        profile will be calculated against the dump itself
     -s|--skip-schema avoid to import the schema
     -o|--collation-name change the collation name used during database creation (default value: collation name used by remote db)
     -c|--character-set change the character set used during database creation (default value: character set used by remote db)
@@ -71,7 +70,6 @@ Command: ${SCRIPT_NAME} <remoteDbName> [<localDbName>] [-f|--force]
     local DB connection   : ${MYSQL_ROOT_USER}:${MYSQL_ROOT_PASSWORD}@${MYSQL_HOSTNAME}:${MYSQL_PORT}
     remote DB connection  : ${REMOTE_MYSQL_USER}:${REMOTE_MYSQL_PASSWORD}@${REMOTE_MYSQL_HOSTNAME}:${REMOTE_MYSQL_PORT}
     Aws s3 location       : ${S3_BASE_URL}
-    Aws reference DB name : ${AWS_REFERENCE_DB} (using local DB connection)
 EOF
 }
 
@@ -174,12 +172,6 @@ if [[ "${FROM_AWS}" = "1" && -z "${S3_BASE_URL}" ]]; then
     exit 1
 fi
 
-if [[ "${FROM_AWS}" = "1" ]]; then
-    REFERENCE_DB="${AWS_REFERENCE_DB}"
-else
-    REFERENCE_DB="${REMOTE_DB}"
-fi
-
 # load the profile
 if [[ -z "${PROFILE}" ]]; then
     Log::displayError "you should specify a profile"
@@ -200,13 +192,9 @@ fi
 declare -Agx dbRemoteInstance dbLocalInstance
 Database::newInstance dbLocalInstance "${MYSQL_HOSTNAME}" "${MYSQL_PORT}" "${MYSQL_ROOT_USER}" "${MYSQL_ROOT_PASSWORD}"
 Database::setOptions dbLocalInstance "${MYSQL_OPTIONS} --connect-timeout=5"
-if [[ "${FROM_AWS}" = "1" ]]; then
-    Database::newInstance dbRemoteInstance "${MYSQL_HOSTNAME}" "${MYSQL_PORT}" "${MYSQL_ROOT_USER}" "${MYSQL_ROOT_PASSWORD}"
-    Database::setOptions dbRemoteInstance "${MYSQL_OPTIONS} --connect-timeout=5"
-else
-    Database::newInstance dbRemoteInstance "${REMOTE_MYSQL_HOSTNAME}" "${REMOTE_MYSQL_PORT}" "${REMOTE_MYSQL_USER}" "${REMOTE_MYSQL_PASSWORD}"
-    Database::setOptions dbRemoteInstance "${MYSQL_OPTIONS} --connect-timeout=5"
-fi
+Database::newInstance dbRemoteInstance "${REMOTE_MYSQL_HOSTNAME}" "${REMOTE_MYSQL_PORT}" "${REMOTE_MYSQL_USER}" "${REMOTE_MYSQL_PASSWORD}"
+Database::setOptions dbRemoteInstance "${MYSQL_OPTIONS} --connect-timeout=5"
+
 # check if local db exists
 LOCAL_DB_EXISTS=0
 Database::ifDbExists dbLocalInstance "${LOCAL_DB}" && {
@@ -232,12 +220,12 @@ if [[ ! -d "${DB_IMPORT_DUMP_DIR}" ]]; then
     }
 fi
 
-S3_PREFIX=""
 if [[ "${FROM_AWS}" = "1" ]]; then
-    S3_PREFIX="S3_"
+    REMOTE_DB_DUMP_TEMP_FILE="${DB_IMPORT_DUMP_DIR}/${REMOTE_DB}.tar.gz"
+else
+    REMOTE_DB_DUMP_TEMP_FILE="${DB_IMPORT_DUMP_DIR}/${REMOTE_DB}_${PROFILE}.sql"
 fi
-REMOTE_DB_DUMP_TEMP_FILE="${DB_IMPORT_DUMP_DIR}/${S3_PREFIX}${REMOTE_DB}_${PROFILE}.sql"
-REMOTE_DB_STRUCTURE_DUMP_TEMP_FILE="${DB_IMPORT_DUMP_DIR}/${S3_PREFIX}${REMOTE_DB}_${PROFILE}_structure.sql"
+REMOTE_DB_STRUCTURE_DUMP_TEMP_FILE="${DB_IMPORT_DUMP_DIR}/${REMOTE_DB}_${PROFILE}_structure.sql"
 
 # check if local dump exists
 if [[ "${DOWNLOAD_DUMP}" = "0" ]]; then
@@ -268,68 +256,49 @@ read -r -d '\0' DUMP_FOOTER <<- EOM2
     SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS;\0
 EOM2
 
-Log::displayInfo "Importing remote db '${REMOTE_DB}' to local db '${LOCAL_DB}'"
 if [[ "${DOWNLOAD_DUMP}" = "1" ]]; then
     Log::displayInfo "Download dump"
 
-    # get remote db collation name
-    if [[ -z "${COLLATION_NAME}" ]]; then
-        COLLATION_NAME=$(Database::query dbRemoteInstance \
-            "SELECT default_collation_name FROM information_schema.SCHEMATA WHERE schema_name = \"${REFERENCE_DB}\";" "information_schema")
-    fi
-
-    # get remote db character set
-    if [[ -z "${CHARACTER_SET}" ]]; then
-        CHARACTER_SET=$(Database::query dbRemoteInstance \
-            "SELECT default_character_set_name FROM information_schema.SCHEMATA WHERE schema_name = \"${REFERENCE_DB}\";" "information_schema")
-    fi
-
-    DUMP_HEADER=$(printf "${DUMP_HEADER}\nSET names '${CHARACTER_SET}';\n")
-
-    # check if remote db exists
-    Database::ifDbExists dbRemoteInstance "${REFERENCE_DB}" || {
-        Log::displayError "Remote Database ${REFERENCE_DB} does not exist"
-        exit 1
-    }
-
-    # calculate remote db dump size
-    Log::displayInfo "Calculate tables list for profile ${PROFILE}"
-    chmod 755 "${PROFILE_COMMAND}"
-
-    FULL_LIST_TABLES="$(Database::query dbRemoteInstance "show tables" "${REFERENCE_DB}")"
-    LIST_TABLES="$(echo "${FULL_LIST_TABLES}" | ${PROFILE_COMMAND})"
-    readarray -t LIST_TABLES_ARRAY <<< ${LIST_TABLES}
-    IFS=$'\n' eval 'LIST_TABLES_ARRAY=(${LIST_TABLES})'
-    
     if [[ "${FROM_AWS}" = "1" ]]; then
-        # dowload dump from s3
+        # download dump from s3
         S3_URL="${S3_BASE_URL%/}/${REMOTE_DB}.tar.gz"
-        (
-            set -o errexit
-            cd '/tmp' || exit 1 
-            Log::displayInfo "Download dump from ${S3_URL} ...";
-            aws s3 cp "${S3_URL}" . || exit 1 
-            tar xvzf "${REMOTE_DB}.tar.gz" || exit 1 
-            rm "${REMOTE_DB}.tar.gz" || exit 1 
-            # filter insert matching profile
-            SED_OPTIONS=("-i")
-            LIST_REMOVED_TABLES="$(diff --changed-group-format="%<" <(echo "${FULL_LIST_TABLES}") <(echo "${LIST_TABLES}"))"
-            Log::displayInfo "Keeping inserts for tables : $(printf "'%q'," ${LIST_TABLES})"
-            while IFS=$'\n' read -r TABLE; do
-                SED_OPTIONS+=("-e")
-                SED_OPTIONS+=("s/^INSERT INTO \`${TABLE}\` .*$//g")
-            done < <(echo "${LIST_REMOVED_TABLES}")
-            sed "${SED_OPTIONS[@]}" "${REMOTE_DB}.sql"
-            mv "${REMOTE_DB}.sql" "${REMOTE_DB_DUMP_TEMP_FILE}"
-        ) || {
+        Log::displayInfo "Download dump from ${S3_URL} ...";
+        TMPDIR="${TEMP_FOLDER:-/tmp}" aws s3 cp "${S3_URL}" "${REMOTE_DB_DUMP_TEMP_FILE}" || {
             Log::displayError "unable to download dump from S3 : ${S3_URL}"
             exit 1
         }
     else
-        # Calculate dump size
+        # get remote db collation name
+        if [[ -z "${COLLATION_NAME}" ]]; then
+            COLLATION_NAME=$(Database::query dbRemoteInstance \
+                "SELECT default_collation_name FROM information_schema.SCHEMATA WHERE schema_name = \"${REMOTE_DB}\";" "information_schema")
+        fi
+
+        # get remote db character set
+        if [[ -z "${CHARACTER_SET}" ]]; then
+            CHARACTER_SET=$(Database::query dbRemoteInstance \
+                "SELECT default_character_set_name FROM information_schema.SCHEMATA WHERE schema_name = \"${REMOTE_DB}\";" "information_schema")
+        fi
+
+        DUMP_HEADER=$(printf "${DUMP_HEADER}\nSET names '${CHARACTER_SET}';\n")
+
+        # check if remote db exists
+        Database::ifDbExists dbRemoteInstance "${REMOTE_DB}" || {
+            Log::displayError "Remote Database ${REMOTE_DB} does not exist"
+            exit 1
+        }
+
+        # calculate remote db dump size
+        Log::displayInfo "Calculate tables list for profile ${PROFILE}"
+        chmod 755 "${PROFILE_COMMAND}"
+
+        FULL_LIST_TABLES="$(Database::query dbRemoteInstance "show tables" "${REMOTE_DB}")"
+        LIST_TABLES="$(echo "${FULL_LIST_TABLES}" | ${PROFILE_COMMAND})"
+        readarray -t LIST_TABLES_ARRAY <<< ${LIST_TABLES}
+        IFS=$'\n' eval 'LIST_TABLES_ARRAY=(${LIST_TABLES})'
         LIST_TABLES_DUMP=$(printf "'%q'," "${LIST_TABLES_ARRAY[@]}")
         Log::displayInfo "Calculate dump size for tables ${LIST_TABLES_DUMP}"
-        DUMP_SIZE_QUERY="SELECT ROUND(SUM(data_length + index_length) / 1024 / 1024, 0) AS size FROM information_schema.TABLES WHERE table_schema=\"${REFERENCE_DB}\""
+        DUMP_SIZE_QUERY="SELECT ROUND(SUM(data_length + index_length) / 1024 / 1024, 0) AS size FROM information_schema.TABLES WHERE table_schema=\"${REMOTE_DB}\""
         DUMP_SIZE_QUERY+=" AND table_name IN(${LIST_TABLES_DUMP} 'dummy') "
         DUMP_SIZE_QUERY+=" GROUP BY table_schema"
         REMOTE_DB_DUMP_SIZE=$(echo "${DUMP_SIZE_QUERY}" | Database::query dbRemoteInstance )
@@ -344,13 +313,13 @@ if [[ "${DOWNLOAD_DUMP}" = "1" ]]; then
         DUMP_SIZE_PV_ESTIMATION=$(awk "BEGIN {printf \"%.0f\",${REMOTE_DB_DUMP_SIZE}/1.5}")
         time Database::dump dbRemoteInstance "${REMOTE_DB}" "${LIST_TABLES//[,]/ }" --no-create-info --skip-add-drop-table --single-transaction=TRUE | \
             pv --progress --size ${DUMP_SIZE_PV_ESTIMATION}m >> "${REMOTE_DB_DUMP_TEMP_FILE}"
-        echo ${DUMP_FOOTER} >> "${REMOTE_DB_DUMP_TEMP_FILE}"
+        echo "${DUMP_FOOTER}" >> "${REMOTE_DB_DUMP_TEMP_FILE}"
 
         Log::displayInfo "Dump structure of the database ${REMOTE_DB} ...";
         echo "${DUMP_HEADER}" > "${REMOTE_DB_STRUCTURE_DUMP_TEMP_FILE}"
         time Database::dump dbRemoteInstance "${REMOTE_DB}" "" --no-data --skip-add-drop-table --single-transaction=TRUE \
             >> "${REMOTE_DB_STRUCTURE_DUMP_TEMP_FILE}"
-        echo ${DUMP_FOOTER} >> "${REMOTE_DB_STRUCTURE_DUMP_TEMP_FILE}"
+        echo "${DUMP_FOOTER}" >> "${REMOTE_DB_STRUCTURE_DUMP_TEMP_FILE}"
     fi
     Log::displayInfo "Dump done.";
 else
@@ -368,20 +337,29 @@ fi
 Log::displayInfo "create local database ${LOCAL_DB}";
 Database::query dbLocalInstance "CREATE DATABASE ${LOCAL_DB}/*!40100 COLLATE \"${COLLATION_NAME}\" */"
 
-if [[ "${SKIP_SCHEMA}" = "1" ]]; then
-    Log::displayInfo "avoid to create db structure";
+if [[ "${FROM_AWS}" = "1" ]]; then
+    "${CURRENT_DIR}/dbImportStream" \
+        "${REMOTE_DB_DUMP_TEMP_FILE}" \
+        "${LOCAL_DB}" \
+        "${PROFILE_COMMAND}" \
+        "${CHARACTER_SET}"
 else
-    Log::displayInfo "create db structure from ${REMOTE_DB_STRUCTURE_DUMP_TEMP_FILE}";
+    Log::displayInfo "Importing remote db '${REMOTE_DB}' to local db '${LOCAL_DB}'"
+    if [[ "${SKIP_SCHEMA}" = "1" ]]; then
+        Log::displayInfo "avoid to create db structure";
+    else
+        Log::displayInfo "create db structure from ${REMOTE_DB_STRUCTURE_DUMP_TEMP_FILE}";
+        time ( \
+            pv "${REMOTE_DB_STRUCTURE_DUMP_TEMP_FILE}" | \
+                Database::query dbLocalInstance "" ${LOCAL_DB}
+        )
+    fi
+
+    Log::displayInfo "import remote to local from file ${REMOTE_DB_DUMP_TEMP_FILE}"
     time ( \
-        pv "${REMOTE_DB_STRUCTURE_DUMP_TEMP_FILE}" | \
+        pv "${REMOTE_DB_DUMP_TEMP_FILE}" | \
             Database::query dbLocalInstance "" ${LOCAL_DB}
     )
 fi
-
-Log::displayInfo "import remote to local from file ${REMOTE_DB_DUMP_TEMP_FILE}"
-time ( \
-    pv "${REMOTE_DB_DUMP_TEMP_FILE}" | \
-        Database::query dbLocalInstance "" ${LOCAL_DB}
-)
 
 Log::displayInfo "Done";

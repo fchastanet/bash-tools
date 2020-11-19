@@ -5,25 +5,33 @@ BEGIN{
 }
 {
   buffer = substr($0, 0, 150)
-  print "buffer " buffer  > "/dev/stderr"
+  line = $0
   if(match(buffer, /^LOCK TABLES `([^`]+)` WRITE;$/, arr) != 0) {
     # check if inserts are part of the profile
-    profileCmd = "echo '" arr[1] "' | " PROFILE " | grep -q " arr[1]
-    if (system(profileCmd) == 0) {
-      print "begin insert " arr[1]  > "/dev/stderr"
+    tableName=arr[1]
+    if (!tableName in map) {
+      profileCmd = "echo '" tableName "' | " PROFILE_COMMAND " | grep -q " tableName
+      map[tableName] = (system(profileCmd) == 0)
+      close(profileCmd)
+    }
+    if (map[tableName]) {
+      print "begin insert " tableName  > "/dev/stderr"
       write=1
     } else {
-      print "ignore table " arr[1]  > "/dev/stderr"
+      print "ignore table " tableName  > "/dev/stderr"
       write=0
     }
-    close(profileCmd)
-  } else if(buffer, /^commit;$/, arr) != 0) {
+  } else if(match(buffer, /^commit;$/, arr) != 0) {
     write=1
-  } else if(buffer, /^commit;$/, arr) != 0) {
-    
+  } else if(match(buffer, /SET NAMES ([^ ]+)/, arr) != 0) {
+    sub(/SET NAMES ([^ ]+)/, "SET NAMES " CHARACTER_SET, line)
+    write=1
+  } else if(match(buffer, /SET character_set_client = ([^ ]+)/, arr) != 0 && substr(arr[1], 0, 1) != "@") {
+    sub(/SET character_set_client = ([^ ]+)/, "SET character_set_client = " CHARACTER_SET, line)
+    write=1
   }
 
   if (write == 1) {
-    print
+    print line
   }
 }
