@@ -9,7 +9,7 @@ BEGIN{
   if(match(buffer, /^LOCK TABLES `([^`]+)` WRITE;$/, arr) != 0) {
     # check if inserts are part of the profile
     tableName=arr[1]
-    if (!tableName in map) {
+    if (! (tableName in map)) {
       profileCmd = "echo '" tableName "' | " PROFILE_COMMAND " | grep -q " tableName
       map[tableName] = (system(profileCmd) == 0)
       close(profileCmd)
