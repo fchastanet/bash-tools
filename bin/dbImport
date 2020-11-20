@@ -67,8 +67,8 @@ Command: ${SCRIPT_NAME} <remoteDbName> [<localDbName>] [-f|--force]
         list of available home profiles (${HOME_PROFILES_DIR}): ${homeProfilesList}
         list of available profiles : ${profilesList}
 
-    local DB connection   : ${MYSQL_ROOT_USER}:${MYSQL_ROOT_PASSWORD}@${MYSQL_HOSTNAME}:${MYSQL_PORT}
-    remote DB connection  : ${REMOTE_MYSQL_USER}:${REMOTE_MYSQL_PASSWORD}@${REMOTE_MYSQL_HOSTNAME}:${REMOTE_MYSQL_PORT}
+    local DB connection   : ${MYSQL_ROOT_USER}:Hidden@${MYSQL_HOSTNAME}:${MYSQL_PORT}
+    remote DB connection  : ${REMOTE_MYSQL_USER}:Hidden@${REMOTE_MYSQL_HOSTNAME}:${REMOTE_MYSQL_PORT}
     Aws s3 location       : ${S3_BASE_URL}
 EOF
 }
@@ -256,6 +256,9 @@ read -r -d '\0' DUMP_FOOTER <<- EOM2
     SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS;\0
 EOM2
 
+Log::displayInfo "tables list will calculated using profile ${PROFILE} => ${PROFILE_COMMAND}"
+chmod 755 "${PROFILE_COMMAND}"
+
 if [[ "${DOWNLOAD_DUMP}" = "1" ]]; then
     Log::displayInfo "Download dump"
 
@@ -289,9 +292,6 @@ if [[ "${DOWNLOAD_DUMP}" = "1" ]]; then
         }
 
         # calculate remote db dump size
-        Log::displayInfo "Calculate tables list for profile ${PROFILE}"
-        chmod 755 "${PROFILE_COMMAND}"
-
         FULL_LIST_TABLES="$(Database::query dbRemoteInstance "show tables" "${REMOTE_DB}")"
         LIST_TABLES="$(echo "${FULL_LIST_TABLES}" | ${PROFILE_COMMAND})"
         readarray -t LIST_TABLES_ARRAY <<< ${LIST_TABLES}
@@ -322,10 +322,9 @@ if [[ "${DOWNLOAD_DUMP}" = "1" ]]; then
         echo "${DUMP_FOOTER}" >> "${REMOTE_DB_STRUCTURE_DUMP_TEMP_FILE}"
     fi
     Log::displayInfo "Dump done.";
-else
-    if [[ -z "${COLLATION_NAME}" ]]; then
-        COLLATION_NAME="utf8_general_ci"
-    fi
+fi
+if [[ -z "${COLLATION_NAME}" ]]; then
+    COLLATION_NAME="utf8_general_ci"
 fi
 
 # drop local db
@@ -351,14 +350,14 @@ else
         Log::displayInfo "create db structure from ${REMOTE_DB_STRUCTURE_DUMP_TEMP_FILE}";
         time ( \
             pv "${REMOTE_DB_STRUCTURE_DUMP_TEMP_FILE}" | \
-                Database::query dbLocalInstance "" ${LOCAL_DB}
+                Database::query dbLocalInstance "" "${LOCAL_DB}"
         )
     fi
 
     Log::displayInfo "import remote to local from file ${REMOTE_DB_DUMP_TEMP_FILE}"
     time ( \
         pv "${REMOTE_DB_DUMP_TEMP_FILE}" | \
-            Database::query dbLocalInstance "" ${LOCAL_DB}
+            Database::query dbLocalInstance "" "${LOCAL_DB}"
     )
 fi
 
