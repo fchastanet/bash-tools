@@ -16,7 +16,7 @@ CURRENT_DIR=$( cd "$( readlink -e "${BASH_SOURCE[0]%/*}" )" && pwd )
 # https://github.com/grayhemp/bats-mock
 # https://github.com/mbland/go-script-bash#introduction
 
-if (( $# <= 1)); then
+if (( $# < 1)); then
   "${CURRENT_DIR}/vendor/bats/bin/bats" $1 -r tests
 else
   "${CURRENT_DIR}/vendor/bats/bin/bats" "$@"

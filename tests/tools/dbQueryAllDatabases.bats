@@ -27,6 +27,7 @@ declare -g mysqlMockedStep=0
             -e "${BATS_TEST_DIRNAME}/data/databaseSize.env.sh" \
             "${BATS_TEST_DIRNAME}/data/databaseSize.sql" 2>&1
     )
+
     [[ "${out}" = "$(cat "${BATS_TEST_DIRNAME}/data/databaseSize.expectedResult")" ]]
 }
 

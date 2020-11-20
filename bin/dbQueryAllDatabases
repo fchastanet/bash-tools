@@ -200,7 +200,7 @@ if [[ "${JOBS_NUMBER}" = "1" ]] ; then
                     headerLineDisplayed=1
                 else
                     # remove first header line
-                    (Database::query dbInstance "${query}" "${db}" | tail -n +1) || (
+                    (Database::query dbInstance "${query}" "${db}" | sed 1d) || (
                       Log::displayError "database ${db} error" >&2
                     )
                 fi
