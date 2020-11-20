@@ -15,6 +15,7 @@ Usage: dbQueryAllDatabases <query|queryFile> [--env-file|-e <envfile>] [-t|--as-
     --help,-h prints this help and exits
     --as-tsv,-t show results as tsv file (separated by tabulations)
     --query,-q implies <query> parameter is a mysql query string
+    -r|--remote checks remote db, local db otherwise
     --jobs,-j <numberOfJobs> specify the number of db to query in parallel (this needs the use of gnu parallel)
     --bar,-b Show progress as a progress bar. In the bar is shown: % of jobs completed, estimated seconds left, and number of jobs started.
     <query|queryFile>
@@ -30,8 +31,8 @@ REMOTE_MYSQL_PORT=""
 REMOTE_MYSQL_USER=""
 REMOTE_MYSQL_PASSWORD=""
 
-    local DB connection  : root:root@127.0.0.1:3306
-    remote DB connection : root:root@remoteDB:3306
+    local DB connection  : root:hidden@127.0.0.1:3306
+    remote DB connection : root:hidden@127.0.0.1:3306
 ```
 
 ### bin/dbImport
@@ -43,22 +44,28 @@ bin/dbImport ExampleDbName
 **Help**
 ```
 Command: dbImport --help prints this help and exits
-Command: dbImport <remoteDbName> [<localDbName>] [-f|--force] [-d|--download-dump] [-s|--skip-schema]
-                        [-p|--profile profileName] [-o|--collation-name utf8_general_ci] [-c|--character-set utf8]
+Command: dbImport <remoteDbName> [<localDbName>] [-f|--force] 
+                        [-d|--download-dump] [-a|--from-aws]
+                        [-s|--skip-schema] [-p|--profile profileName] 
+                        [-o|--collation-name utf8_general_ci] [-c|--character-set utf8]
 
     <localDbName> : use remote db name if not provided
     -f|--force If local db exists, it will overwrite it
-    -d|--download-dump force remote db dump (default: use already downloaded dump in /home/vagrant/projects/bash-tools/mysqlDumps if available)
+    -d|--download-dump force remote db dump (default: use already downloaded dump in /home/vagrant/.bash-tools/dbImportDumps if available)
+    -a|--from-aws db dump will be downloaded from s3 instead of using remote db, 
+        remoteDBName will represent the name of the file
+        profile will be calculated against the dump itself
     -s|--skip-schema avoid to import the schema
     -o|--collation-name change the collation name used during database creation (default value: collation name used by remote db)
     -c|--character-set change the character set used during database creation (default value: character set used by remote db)
     -p|--profile profileName the name of the profile to use in order to include or exclude tables
-        (if not specified /home/vagrant/.dbImportProfiles/default.sh  is used if exists otherwise /home/vagrant/projects/bash-tools/dbImportProfiles/default.sh)
-        list of available home profiles (/home/vagrant/.dbImportProfiles): none, bugProd, default, smartgroup, sample, precomputeLearnerTimezone, all
-        list of available profiles : none, default, all
+        (if not specified /home/vagrant/.bash-tools/dbImportProfiles/default.sh  is used if exists otherwise /home/vagrant/projects/bash-tools/dbImportProfiles/default.sh)
+        list of available home profiles (/home/vagrant/.bash-tools/dbImportProfiles): ing, precomputeLearnerTimezone, all, none, sample, smartgroup, default, 5496, bugProd, blendedX
+        list of available profiles : all, none, default
 
-    local DB connection  : root:root@127.0.0.1:3306
-    remote DB connection  : root:root@remoteDB:3306
+    local DB connection   : root:Hidden@127.0.0.1:3306
+    remote DB connection  : root:Hidden@127.0.0.1:3306
+    Aws s3 location       : s3://example/exports/
 ```
 
 ### bin/dbImportTable
@@ -70,19 +77,25 @@ bin/dbImport ExampleDbName ExampleTableName
 **Help**
 ```
 Command: dbImportTable [--help] prints this help and exits
-Command: dbImportTable <remoteDbName> <tableName> [<localDbName>] [-d|--download-dump] [-f|--force] [-o|--collation-name utf8_general_ci] [-c|--character-set utf8]
+Command: dbImportTable <remoteDbName> <tableName> [<localDbName>] 
+    [-d|--download-dump] [-f|--force] [-a|--from-aws]
+    [-o|--collation-name utf8_general_ci] [-c|--character-set utf8]
 
     download the remote table data and install data in local database (the schema should exists)
 
     <tableName>   : table name to import
     <localDbName> : use remote db name if not provided
-    -f|--force If local db exists, it will overwrite it
-    -d|--download-dump force remote db dump (default: use already downloaded dump in /home/vagrant/projects/bash-tools/mysqlDumps if available)
+    -f|--force If local table exists, it will overwrite it
+    -a|--from-aws db dump will be downloaded from s3 instead of using remote db, 
+        remoteDBName will represent the name of the file
+        profile will be calculated against the dump itself
+    -d|--download-dump force remote db dump (default: use already downloaded dump in /home/vagrant/.bash-tools/dbImportDumps if available)
     -o|--collation-name change the collation name used during database creation (default value: collation name used by remote db)
     -c|--character-set change the character set used during database creation (default value: character set used by remote db)
 
-    local DB connection  : root:root@127.0.0.1:3306
-    remote DB connection : root:root@remoteDB:3306
+    local DB connection  : root:Hidden@127.0.0.1:3306
+    remote DB connection : root:Hidden@127.0.0.1:3306
+    Aws s3 location       : s3://example/exports/
 ```
 
 ### bin/cli
@@ -114,25 +127,37 @@ notice that as input is given to the command, tty option is not provided to dock
 
 **Help**
 ```
-Command: cli --help prints this help and exits
-Command: cli [--fullname|-f] <container> [user] [command]
+    Command: cli --help prints this help and exits
+    Command: cli <container> [user] [command]
 
-    <container> : container should be one of these values : apache2,mysql,redis,mailhog
-
-    -f|--fullname do not prepend ckls- in front of container
+    <container> : container should be one of these values : apache2,mysql8,mailhog,redis,proxysql
 
     examples:
     to connect to mysql container in bash mode with user mysql
         cli mysql mysql "//bin/bash"
     to connect to web container with user root
         cli web root
+
+    these mappings are provided by default using /home/vagrant/projects/bash-tools/cliProfile/default.sh
+    you can override these mappings by providing your own profile in /home/vagrant/.bash-tools/cliProfile.sh
+
+    This script will be executed with the variables userArg containerArg commandArg set as specified in command line
+    and should provide value for the following variables finalUserArg finalContainerArg finalCommandArg
 ```
 
 ## Framework documentation
+You can generate doc by running
+```bash
+./doc.sh
+```
 
 [see the auto generated bash doc](doc/Index.md)
 
 ## Unit tests
+you can run the unit test
+```bash
+./test.sh
+```
 
 ## Install
 install GNU parallel
@@ -142,5 +167,3 @@ Like so many projects, this effort has roots in many places.
 
 I would like to thank particularly  Bazyli Brzóska for his work on the project [Bash Infinity](https://github.com/niieani/bash-oo-framework).
 Framework part of this project is largely inspired by his work(some parts copied). You can see his [blog](https://invent.life/project/bash-infinity-framework) too that is really interesting 
-
-TODO bats
