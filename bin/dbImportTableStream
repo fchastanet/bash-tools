@@ -1,0 +1,11 @@
+#!/bin/bash
+
+CURRENT_DIR=$( cd "$( readlink -e "${BASH_SOURCE[0]%/*}" )" && pwd )
+DUMP_FILE="$1"
+TABLE_NAME="$2"
+CHARACTER_SET="${3:-utf8}"
+
+tar xOfz "${DUMP_FILE}" | awk \
+  -v CHARACTER_SET="${CHARACTER_SET}" \
+  -v TABLE_NAME="${TABLE_NAME}" \
+  -f "${CURRENT_DIR}/dbImportTableStream.awk"
