@@ -297,6 +297,7 @@ if [[ "${DOWNLOAD_DUMP}" = "1" ]]; then
         readarray -t LIST_TABLES_ARRAY <<< ${LIST_TABLES}
         IFS=$'\n' eval 'LIST_TABLES_ARRAY=(${LIST_TABLES})'
         LIST_TABLES_DUMP=$(printf "'%q'," "${LIST_TABLES_ARRAY[@]}")
+
         Log::displayInfo "Calculate dump size for tables ${LIST_TABLES_DUMP}"
         DUMP_SIZE_QUERY="SELECT ROUND(SUM(data_length + index_length) / 1024 / 1024, 0) AS size FROM information_schema.TABLES WHERE table_schema=\"${REMOTE_DB}\""
         DUMP_SIZE_QUERY+=" AND table_name IN(${LIST_TABLES_DUMP} 'dummy') "
@@ -311,7 +312,7 @@ if [[ "${DOWNLOAD_DUMP}" = "1" ]]; then
         Log::displayInfo "Dump the database $REMOTE_DB (Size:${REMOTE_DB_DUMP_SIZE}MB) ...";
         echo "${DUMP_HEADER}" > "${REMOTE_DB_DUMP_TEMP_FILE}"
         DUMP_SIZE_PV_ESTIMATION=$(awk "BEGIN {printf \"%.0f\",${REMOTE_DB_DUMP_SIZE}/1.5}")
-        time Database::dump dbRemoteInstance "${REMOTE_DB}" "${LIST_TABLES//[,]/ }" --no-create-info --skip-add-drop-table --single-transaction=TRUE | \
+        time Database::dump dbRemoteInstance "${REMOTE_DB}" "${LIST_TABLES_DUMP//[,]/ }" --no-create-info --skip-add-drop-table --single-transaction=TRUE | \
             pv --progress --size ${DUMP_SIZE_PV_ESTIMATION}m >> "${REMOTE_DB_DUMP_TEMP_FILE}"
         echo "${DUMP_FOOTER}" >> "${REMOTE_DB_DUMP_TEMP_FILE}"
 
