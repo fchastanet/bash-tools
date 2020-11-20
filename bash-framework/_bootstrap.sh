@@ -49,7 +49,8 @@ alias .="__bash_framework__allowFileReloading=true Framework::ImportOne"
 ## all these variables can be overridden by a .env file that will be searched in the following directories
 ## in this order (stop on first file found):
 ## * __bash_framework_rootCallingScriptPath: upper directory
-## * ~ : home path
+## * ~/ : home path
+## * ~/.bash-tools : home path .bash-tools
 ## alternatively you can force a given .env file to be loaded using
 ## __bash_framework_envFile=<fullPathToEnvFile or empty if no file to be loaded>
 #---
@@ -74,6 +75,9 @@ Framework::bootstrap() {
         elif [[ -z "${BATS_VERSION+xxx}" && -f "${HOME}/.env" ]]; then
             # shellcheck source=~/.env
             source "${HOME}/.env" || exit 1
+        elif [[ -z "${BATS_VERSION+xxx}" && -f "${HOME}/.bash-tools/.env" ]]; then
+            # shellcheck source=~/.bash-tools/.env
+            source "${HOME}/.bash-tools/.env" || exit 1
         fi
     elif [[ -z "${__bash_framework_envFile}" ]]; then
         # __bash_framework_envFile defined but empty - nothing to do

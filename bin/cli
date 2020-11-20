@@ -18,7 +18,7 @@ SCRIPT_NAME=${0##*/}
 CLI_PROFILE_DEFAULT=
 CURRENT_DIR=$( cd "$( readlink -e "${BASH_SOURCE[0]%/*}" )" && pwd )
 CLI_PROFILE_DEFAULT="$(cd "${CURRENT_DIR}/.." && pwd)/cliProfile/default.sh"
-CLI_PROFILE_HOME="${HOME}/.cliProfile.sh"
+CLI_PROFILE_HOME="${HOME}/.bash-tools/cliProfile.sh"
 
 showHelp() {
 local containers
@@ -37,8 +37,9 @@ cat << EOF
 
     these mappings are provided by default using ${CLI_PROFILE_DEFAULT}
     you can override these mappings by providing your own profile in ${CLI_PROFILE_HOME}
+    
     This script will be executed with the variables userArg containerArg commandArg set as specified in command line
-    and should provide value for the following variables finalU²serArg finalContainerArg finalCommandArg
+    and should provide value for the following variables finalUserArg finalContainerArg finalCommandArg
 EOF
 }
 
