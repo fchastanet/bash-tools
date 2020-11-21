@@ -11,7 +11,7 @@ fi
 
 CURRENT_DIR=$( cd "$( readlink -e "${BASH_SOURCE[0]%/*}" )" && pwd )
 PROFILES_DIR="$(cd "${CURRENT_DIR}/.." && pwd)/dbImportProfiles"
-HOME_PROFILES_DIR="${HOME}/.dbImportProfiles"
+HOME_PROFILES_DIR="${HOME}/.bash-tools/dbImportProfiles"
 
 import bash-framework/Database
 
