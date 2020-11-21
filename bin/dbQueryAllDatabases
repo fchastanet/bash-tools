@@ -2,11 +2,10 @@
 
 # load bash-framework
 # shellcheck source=bash-framework/_bootstrap.sh
-source "$( cd "$( readlink -f "${BASH_SOURCE[0]%/*}/.." )" && pwd )/bash-framework/_bootstrap.sh"
+CURRENT_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
+source "$( cd "${CURRENT_DIR}/.." && pwd )/bash-framework/_bootstrap.sh"
 
 Framework::expectNonRootUser
-
-CURRENT_DIR=$( cd "$( readlink -f "${BASH_SOURCE[0]%/*}" )" && pwd )
 
 import bash-framework/Database
 import bash-framework/Array

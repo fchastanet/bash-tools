@@ -6,7 +6,7 @@ USER="root"
 PASSWORD="root"
 # shellcheck disable=SC2034
 PORT="3306"
-___CURRENT_DIR="$( cd "$( readlink -f "${BASH_SOURCE[0]%/*}" )" && pwd )"
+___CURRENT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 mysqlMocked() {
     if [[ "$6" = "show databases" ]]; then

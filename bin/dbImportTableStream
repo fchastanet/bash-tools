@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-CURRENT_DIR=$( cd "$( readlink -f "${BASH_SOURCE[0]%/*}" )" && pwd )
+CURRENT_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 DUMP_FILE="$1"
 TABLE_NAME="$2"
 CHARACTER_SET="${3:-utf8}"

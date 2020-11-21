@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 
+CURRENT_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 # load bash-framework
 # shellcheck source=bash-framework/_bootstrap.sh
-source "$( cd "$( readlink -f "${BASH_SOURCE[0]%/*}/.." )" && pwd )/bash-framework/_bootstrap.sh"
+source "$( cd "${CURRENT_DIR}/.." && pwd )/bash-framework/_bootstrap.sh"
 
 import bash-framework/Log
 
@@ -16,7 +17,6 @@ trap 'exit 130' INT
 
 SCRIPT_NAME=${0##*/}
 CLI_PROFILE_DEFAULT=
-CURRENT_DIR=$( cd "$( readlink -f "${BASH_SOURCE[0]%/*}" )" && pwd )
 CLI_PROFILE_DEFAULT="$(cd "${CURRENT_DIR}/.." && pwd)/cliProfile/default.sh"
 CLI_PROFILE_HOME="${HOME}/.bash-tools/cliProfile.sh"
 

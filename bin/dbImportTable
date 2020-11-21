@@ -1,15 +1,15 @@
 #!/usr/bin/env bash
 
+CURRENT_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 # load bash-framework
 # shellcheck source=bash-framework/_bootstrap.sh
-source "$( cd "$( readlink -f "${BASH_SOURCE[0]%/*}/.." )" && pwd )/bash-framework/_bootstrap.sh"
+source "$( cd "${CURRENT_DIR}/.." && pwd )/bash-framework/_bootstrap.sh"
 
 if [[  "$USER" = "root" ]]; then
     Log::displayError "The script must not be run as root"
     exit 1
 fi
 
-CURRENT_DIR=$( cd "$( readlink -f "${BASH_SOURCE[0]%/*}" )" && pwd )
 
 import bash-framework/Database
 

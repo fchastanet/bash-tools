@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 
-CURRENT_DIR=$( cd "$( readlink -f "${BASH_SOURCE[0]%/*}" )" && pwd )
+CURRENT_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 
 TOMDOC_VERSION="master"
 [[ ! -f "${CURRENT_DIR}/vendor/fchastanet.tomdoc.sh/tomdoc.sh" ]] && (
     rm -Rf "${CURRENT_DIR}/vendor/fchastanet.tomdoc.sh"
     git clone github.com:fchastanet/tomdoc.sh.git "${CURRENT_DIR}/vendor/fchastanet.tomdoc.sh"
-    cd "${CURRENT_DIR}/vendor/fchastanet.tomdoc.sh"
+    cd "${CURRENT_DIR}/vendor/fchastanet.tomdoc.sh" || exit 1
     git checkout ${TOMDOC_VERSION}
 )
 

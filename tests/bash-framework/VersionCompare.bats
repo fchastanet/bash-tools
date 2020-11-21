@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # shellcheck source=bash-framework/_bootstrap.sh
-source "$(cd "$( readlink -f "${BATS_TEST_DIRNAME}/../..")" && pwd)/bash-framework/_bootstrap.sh" || exit 1
+source "$(cd "${BATS_TEST_DIRNAME}/../.." && pwd)/bash-framework/_bootstrap.sh" || exit 1
 
 import bash-framework/Version
 
