@@ -4,7 +4,7 @@
 
 # load ckls-bootstrap
 # shellcheck source=.dev/vendor/bash-framework/_bootstrap.sh
-source "$( cd "$( readlink -e "${BASH_SOURCE[0]%/*}/.." )" && pwd )/vendor/bash-framework/_bootstrap.sh"
+source "$( cd "$( readlink -f "${BASH_SOURCE[0]%/*}/.." )" && pwd )/vendor/bash-framework/_bootstrap.sh"
 
 cmdName=$(basename $0)
 

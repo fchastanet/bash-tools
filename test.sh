@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-set -x
+
 BATS_VERSION=master
-CURRENT_DIR=$( cd "$( readlink -e "${BASH_SOURCE[0]%/*}" )" && pwd )
+CURRENT_DIR=$( cd "$( readlink -f "${BASH_SOURCE[0]%/*}" )" && pwd )
 
 [[ ! -f "${CURRENT_DIR}/vendor/bats/bin/bats" ]] && (
     rm -Rf "${CURRENT_DIR}/vendor/bats-install" "${CURRENT_DIR}/vendor/bats"
@@ -16,8 +16,11 @@ CURRENT_DIR=$( cd "$( readlink -e "${BASH_SOURCE[0]%/*}" )" && pwd )
 # https://github.com/grayhemp/bats-mock
 # https://github.com/mbland/go-script-bash#introduction
 
-if (( $# < 1)); then
-  "${CURRENT_DIR}/vendor/bats/bin/bats" $1 -r tests
-else
-  "${CURRENT_DIR}/vendor/bats/bin/bats" "$@"
-fi
+(
+  cd "${CURRENT_DIR}" || exit 1
+  if (( $# < 1)); then
+    "${CURRENT_DIR}/vendor/bats/bin/bats" -r tests
+  else
+    "${CURRENT_DIR}/vendor/bats/bin/bats" "$@"
+  fi
+)

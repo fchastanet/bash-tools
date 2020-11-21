@@ -1,4 +1,16 @@
 language: bash
 
+env:
+  - BASH=latest
+  - BASH=5.0.17
+
+before_script:
+  - docker pull bash:$BASH
+  - docker run bash:$BASH --version
+
 script:
-    - bash test.sh
+  - bash test.sh
+
+script:
+  - docker run -v $PWD:/bash --user $(id -u):$(id -g)  amd64/bash:$BASH  /bash/test.sh
+  - docker run -v $PWD:/bash --user $(id -u):$(id -g)  bash:$BASH  /bash/test.sh

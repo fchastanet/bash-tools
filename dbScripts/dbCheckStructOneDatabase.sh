@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 ############################################################
 # INTERNAL USE ONLY
@@ -16,12 +16,12 @@ declare db="$4"
 
 # load ckls-bootstrap
 # shellcheck source=.dev/vendor/bash-framework/_bootstrap.sh
-source "$( cd "$( readlink -e "${BASH_SOURCE[0]%/*}/../.." )" && pwd )/vendor/bash-framework/_bootstrap.sh"
+source "$( cd "$( readlink -f "${BASH_SOURCE[0]%/*}/../.." )" && pwd )/vendor/bash-framework/_bootstrap.sh"
 
 # ensure that Ctrl-C is trapped by this script and not sub mysql process
 trap 'exit 130' INT
 
-CURRENT_DIR=$( cd "$( readlink -e "${BASH_SOURCE[0]%/*}" )" && pwd )
+CURRENT_DIR=$( cd "$( readlink -f "${BASH_SOURCE[0]%/*}" )" && pwd )
 CONTAINER="${PROJECT_NAMESPACE}-${WEB_HOSTNAME}"
 MYSQL_OPTIONS=""
 

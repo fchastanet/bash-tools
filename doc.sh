@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-CURRENT_DIR=$( cd "$( readlink -e "${BASH_SOURCE[0]%/*}" )" && pwd )
+CURRENT_DIR=$( cd "$( readlink -f "${BASH_SOURCE[0]%/*}" )" && pwd )
 
 TOMDOC_VERSION="master"
 [[ ! -f "${CURRENT_DIR}/vendor/fchastanet.tomdoc.sh/tomdoc.sh" ]] && (

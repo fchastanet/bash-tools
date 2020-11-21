@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 ############################################################
 # INTERNAL USE ONLY
@@ -7,7 +7,7 @@
 
 # load bash-framework
 # shellcheck source=bash-framework/_bootstrap.sh
-source "$( cd "$( readlink -e "${BASH_SOURCE[0]%/*}/.." )" && pwd )/bash-framework/_bootstrap.sh"
+source "$( cd "$( readlink -f "${BASH_SOURCE[0]%/*}/.." )" && pwd )/bash-framework/_bootstrap.sh"
 
 Framework::expectNonRootUser
 
