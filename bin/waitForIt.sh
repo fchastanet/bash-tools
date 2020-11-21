@@ -4,7 +4,7 @@
 
 # load ckls-bootstrap
 # shellcheck source=.dev/vendor/bash-framework/_bootstrap.sh
-source "$( cd "$( readlink -e "${BASH_SOURCE[0]%/*}/.." )" && pwd )/vendor/bash-framework/_bootstrap.sh"
+source "$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." && pwd )/vendor/bash-framework/_bootstrap.sh"
 
 cmdName=$(basename $0)
 
@@ -148,7 +148,7 @@ QUIET=${QUIET:-0}
 
 # check to see if timeout is from busybox?
 # check to see if timeout is from busybox?
-TIMEOUT_PATH=$(readlink -f "$(which timeout)")
+TIMEOUT_PATH=$(dirname "$(which timeout)")
 if [[ ${TIMEOUT_PATH} =~ "busybox" ]]; then
         ISBUSY=1
         BUSYTIMEFLAG="-t"

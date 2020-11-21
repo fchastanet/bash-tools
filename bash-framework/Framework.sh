@@ -26,8 +26,8 @@ Framework::expectNonRootUser() {
     local expectedUserName="$1"
     local currentUserName
 
-    currentUserName=$(id -u -n)
-    if [  "${currentUserName}" = "root" ]; then
+    currentUserId=$(id -u)
+    if [  "${currentUserId}" = "0" ]; then
         Log::displayError "The script must not be run as root"
         exit 1
     fi

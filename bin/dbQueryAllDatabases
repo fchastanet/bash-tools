@@ -1,12 +1,11 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # load bash-framework
 # shellcheck source=bash-framework/_bootstrap.sh
-source "$( cd "$( readlink -e "${BASH_SOURCE[0]%/*}/.." )" && pwd )/bash-framework/_bootstrap.sh"
+CURRENT_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
+source "$( cd "${CURRENT_DIR}/.." && pwd )/bash-framework/_bootstrap.sh"
 
 Framework::expectNonRootUser
-
-CURRENT_DIR=$( cd "$( readlink -e "${BASH_SOURCE[0]%/*}" )" && pwd )
 
 import bash-framework/Database
 import bash-framework/Array
@@ -143,13 +142,6 @@ if ! [[ ${JOBS_NUMBER} =~ ^[0-9]+$ ]] ; then
    Log::displayError "number of jobs is incorrect"
    exit 1
 fi
-if [[ ${JOBS_NUMBER} -lt 1 ]] ; then
-    Log::displayError "number of jobs must be greater than 0"
-    exit 1
-fi
-if [[ ${JOBS_NUMBER} -gt 1 ]] ; then
-    Functions::checkCommandExists parallel "sudo apt-get install parallel"
-fi
 
 if [[ -n "${ENV_FILE}" ]]; then
   if [[ ! -f "${ENV_FILE}" ]]; then
@@ -171,6 +163,14 @@ if [[ -n "${ENV_FILE}" ]]; then
       }
   done
   [[ "${allEnvVarSet}" = "0" ]] && exit 1
+fi
+
+if [[ ${JOBS_NUMBER} -lt 1 ]] ; then
+    Log::displayError "number of jobs must be greater than 0"
+    exit 1
+fi
+if [[ ${JOBS_NUMBER} -gt 1 ]] ; then
+    Functions::checkCommandExists parallel "sudo apt-get install parallel"
 fi
 
 # mysql command is needed

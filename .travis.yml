@@ -1,4 +1,19 @@
 language: bash
 
+env:
+  - BASH=4.4
+  - BASH=5.0.17
+  - BASH=rc
+
+install:
+  - bash test-install.sh
+
+before_script:
+  - docker pull bash:$BASH
+  - docker run bash:$BASH --version
+  - docker pull amd64/bash:$BASH
+  - docker run amd64/bash:$BASH --version
+
 script:
-    - bash test.sh
+  - docker run --rm -v $PWD:/bash --user $(id -u):$(id -g) amd64/bash:$BASH  /bash/test.sh
+  - docker run --rm -v $PWD:/bash --user $(id -u):$(id -g) bash:$BASH  /bash/test.sh

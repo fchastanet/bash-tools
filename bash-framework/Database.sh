@@ -107,7 +107,7 @@ Database::setMysqlCommands() {
 Database::createAuthFile() {
   local -n instance2=$1
 
-  instance2['AUTH_FILE']=$(mktemp "${TMPDIR:-/tmp}/mysql.XXXXXXXXXXXX.cnf")
+  instance2['AUTH_FILE']=$(mktemp -p "${TMPDIR:-/tmp}" -t "mysql.XXXXXXXXXXXX")
 
   local conf=""
   conf+="[client]\n"
