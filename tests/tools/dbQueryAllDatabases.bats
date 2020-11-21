@@ -37,6 +37,5 @@ declare -g mysqlMockedStep=0
         -j2 \
         "${BATS_TEST_DIRNAME}/data/databaseSize.sql" 2>&1
     )
-    (>&2 echo "${out}")
     [[ "${out}" == *"ERROR - parallel is not installed, please install it"* ]]
 }

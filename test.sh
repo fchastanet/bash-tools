@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
 
-set -x
 CURRENT_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 
 if [ ! -d "${CURRENT_DIR}/vendor/bats" ]; then

@@ -18,7 +18,7 @@ declare db="$4"
 CURRENT_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 # load ckls-bootstrap
 # shellcheck source=/bash-framework/_bootstrap.sh
-source "$( cd "${CURRENT_DIR}/../.." && pwd )/vendor/bash-framework/_bootstrap.sh"
+source "$( cd "${CURRENT_DIR}/.." && pwd )/vendor/bash-framework/_bootstrap.sh"
 
 # ensure that Ctrl-C is trapped by this script and not sub mysql process
 trap 'exit 130' INT
