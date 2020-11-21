@@ -4,13 +4,15 @@ env:
   - BASH=latest
   - BASH=5.0.17
 
+install:
+  - bash test-install.sh
+
 before_script:
   - docker pull bash:$BASH
   - docker run bash:$BASH --version
+  - docker pull amd64/bash:$BASH
+  - docker run amd64/bash:$BASH --version
 
 script:
-  - bash test.sh
-
-script:
-  - docker run -v $PWD:/bash --user $(id -u):$(id -g)  amd64/bash:$BASH  /bash/test.sh
-  - docker run -v $PWD:/bash --user $(id -u):$(id -g)  bash:$BASH  /bash/test.sh
+  - docker run --rm -v $PWD:/bash --user $(id -u):$(id -g) amd64/bash:$BASH  /bash/test.sh
+  - docker run --rm -v $PWD:/bash --user $(id -u):$(id -g) bash:$BASH  /bash/test.sh
