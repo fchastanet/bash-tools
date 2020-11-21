@@ -1,5 +1,7 @@
 # bash-tools
 
+Build status: [![Build Status](https://travis-ci.com/fchastanet/bash-tools.svg?branch=master)](https://travis-ci.com/fchastanet/bash-tools)
+
 ## The tools
 ### bin/dbQueryAllDatabases
 
