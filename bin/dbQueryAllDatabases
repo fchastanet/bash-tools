@@ -142,13 +142,6 @@ if ! [[ ${JOBS_NUMBER} =~ ^[0-9]+$ ]] ; then
    Log::displayError "number of jobs is incorrect"
    exit 1
 fi
-if [[ ${JOBS_NUMBER} -lt 1 ]] ; then
-    Log::displayError "number of jobs must be greater than 0"
-    exit 1
-fi
-if [[ ${JOBS_NUMBER} -gt 1 ]] ; then
-    Functions::checkCommandExists parallel "sudo apt-get install parallel"
-fi
 
 if [[ -n "${ENV_FILE}" ]]; then
   if [[ ! -f "${ENV_FILE}" ]]; then
@@ -170,6 +163,14 @@ if [[ -n "${ENV_FILE}" ]]; then
       }
   done
   [[ "${allEnvVarSet}" = "0" ]] && exit 1
+fi
+
+if [[ ${JOBS_NUMBER} -lt 1 ]] ; then
+    Log::displayError "number of jobs must be greater than 0"
+    exit 1
+fi
+if [[ ${JOBS_NUMBER} -gt 1 ]] ; then
+    Functions::checkCommandExists parallel "sudo apt-get install parallel"
 fi
 
 # mysql command is needed
