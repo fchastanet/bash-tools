@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-
+set -x
 BATS_VERSION=master
 CURRENT_DIR=$( cd "$( readlink -e "${BASH_SOURCE[0]%/*}" )" && pwd )
 
