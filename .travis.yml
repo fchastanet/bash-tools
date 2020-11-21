@@ -1,8 +1,9 @@
 language: bash
 
 env:
-  - BASH=latest
+  - BASH=4.4
   - BASH=5.0.17
+  - BASH=rc
 
 install:
   - bash test-install.sh
