@@ -11,20 +11,29 @@ finalUserArg="${userArg}"
 finalCommandArg="${commandArg}"
 
 if [[ -z "${containerArg}" ]]; then
-    finalContainerArg="apache2"
+    finalContainerArg="ckls-php"
 fi
-# manage container aliases
 case "${containerArg}" in
-  web) finalContainerArg="apache2";;
+web|php|ckls)
+    finalContainerArg="ckls-php"
+    ;;
 esac
 
-# user changes following the container used
 if [[ -z "${userArg}" ]]; then
     finalUserArg="www-data"
     case "${containerArg}" in
-        node) finalUserArg="node";;
-        redis)finalUserArg="redis";;
-        mysql|mysqlRemote)finalUserArg="mysql";;
+        node)
+            finalUserArg="node"
+            finalContainerArg="ckls-node"
+            ;;
+        redis)
+            finalUserArg="redis"
+            finalContainerArg="ckls-redis"
+            ;;
+        mysql|mysqlRemote)
+            finalUserArg="mysql"
+            finalContainerArg="ckls-mysql8"
+            ;;
     esac
 fi
 
@@ -33,9 +42,8 @@ if [[ -z "${commandArg}" ]]; then
     finalCommandArg="//bin/bash"
     case ${containerArg} in
         redis)finalCommandArg="redis-cli";;
-        mysql)finalCommandArg="//bin/bash -c 'mysql -h${MYSQL_HOSTNAME} -u${MYSQL_USER} -p${MYSQL_PASSWORD} -P${HOST_MYSQL_PORT}'";;
+        mysql)finalCommandArg="//bin/bash -c 'mysql -h${MYSQL_HOSTNAME} -u${MYSQL_USER} -p${MYSQL_PASSWORD} -P${MYSQL_PORT}'";;
         mysqlRemote)
-            finalContainerArg="mysql"
             finalCommandArg="//bin/bash -c 'mysql -h${REMOTE_MYSQL_HOSTNAME} -u${REMOTE_MYSQL_USER} -p${REMOTE_MYSQL_PASSWORD}  -P${REMOTE_MYSQL_PORT}'"
             ;;
     esac
