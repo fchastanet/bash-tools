@@ -36,7 +36,9 @@ fi
 
 showHelp() {
 cat << EOF
-Command: ${SCRIPT_NAME} [--help] prints this help and exits
+Description: Import remote db table into local db
+
+Command: ${SCRIPT_NAME} [-h|--help] prints this help and exits
 Command: ${SCRIPT_NAME} <remoteDbName> <tableName> [<localDbName>] 
     [-d|--download-dump] [-f|--force] [-a|--from-aws]
     [-o|--collation-name utf8_general_ci] [-c|--character-set utf8]

@@ -10,7 +10,7 @@ if [[  "$USER" = "root" ]]; then
     exit 1
 fi
 
-PROFILES_DIR="$(cd "${CURRENT_DIR}/.." && pwd)/dbImportProfiles"
+PROFILES_DIR="$(cd "${CURRENT_DIR}/.." && pwd)/conf/dbImportProfiles"
 HOME_PROFILES_DIR="${HOME}/.bash-tools/dbImportProfiles"
 
 import bash-framework/Database
@@ -47,8 +47,10 @@ showHelp() {
         homeProfilesList=$(cd "${HOME_PROFILES_DIR}" && find . -type f -name \*.sh -printf '%P\n' | sed 's/\.sh$//g' | paste -sd "," - | sed -e 's/,/, /g')
     fi
 cat << EOF
-Command: ${SCRIPT_NAME} --help prints this help and exits
-Command: ${SCRIPT_NAME} <remoteDbName> [<localDbName>] [-f|--force] 
+Description: Import remote db into local db
+
+Usage: ${SCRIPT_NAME} --help prints this help and exits
+Usage: ${SCRIPT_NAME} <remoteDbName> [<localDbName>] [-f|--force] 
                         [-d|--download-dump] [-a|--from-aws]
                         [-s|--skip-schema] [-p|--profile profileName] 
                         [-o|--collation-name utf8_general_ci] [-c|--character-set utf8]

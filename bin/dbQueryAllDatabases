@@ -26,7 +26,9 @@ declare -a PARALLEL_OPTIONS
 # Usage info
 showHelp() {
 cat << EOF
-Usage: ${SCRIPT_NAME} [-h|--help]
+Description: Execute a query on multiple database in order to generate a report, query can be parallelized on multiple databases
+
+Usage: ${SCRIPT_NAME} [-h|--help] prints this help and exits
 Usage: ${SCRIPT_NAME} <query|queryFile> [--env-file|-e <envfile>] [-t|--as-tsv] [-q|--query] [--jobs|-j <numberOfJobs>] [--bar|-b]
     --help,-h prints this help and exits
     --as-tsv,-t show results as tsv file (separated by tabulations)

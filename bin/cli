@@ -17,14 +17,16 @@ trap 'exit 130' INT
 
 SCRIPT_NAME=${0##*/}
 CLI_PROFILE_DEFAULT=
-CLI_PROFILE_DEFAULT="$(cd "${CURRENT_DIR}/.." && pwd)/cliProfile/default.sh"
-CLI_PROFILE_HOME="${HOME}/.bash-tools/cliProfile.sh"
+CLI_PROFILE_DEFAULT="$(cd "${CURRENT_DIR}/.." && pwd)/conf/cliProfile/default.sh"
+CLI_PROFILE_HOME="${HOME}/.bash-tools/cliProfile/default.sh"
 
 showHelp() {
 local containers
 containers=$(docker ps --format '{{.Names}}'| sed -E 's/[^-]+-(.*)/\1/'| paste -sd "," -)
 cat << EOF
-    Command: ${SCRIPT_NAME} --help prints this help and exits
+    Description: easy connection to docker container
+
+    Command: ${SCRIPT_NAME} [-h|--help] prints this help and exits
     Command: ${SCRIPT_NAME} <container> [user] [command]
 
     <container> : container should be one of these values : ${containers}

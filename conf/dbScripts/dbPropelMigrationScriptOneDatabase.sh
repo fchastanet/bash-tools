@@ -2,7 +2,7 @@
 
 ############################################################
 # INTERNAL USE ONLY
-# USED BY .dev/tools/dbScriptAllDatabases
+# USED BY bin/dbScriptAllDatabases
 ############################################################
 
 if [[  "${USER}" = "root" ]]; then
@@ -15,10 +15,9 @@ declare VERBOSE="$2"
 declare outputDir="$3"
 declare db="$4"
 
-CURRENT_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 # load ckls-bootstrap
 # shellcheck source=/bash-framework/_bootstrap.sh
-source "$( cd "${CURRENT_DIR}/.." && pwd )/vendor/bash-framework/_bootstrap.sh"
+source "${BASH_TOOLS_FOLDER}/vendor/bash-framework/_bootstrap.sh"
 
 # ensure that Ctrl-C is trapped by this script and not sub mysql process
 trap 'exit 130' INT
@@ -104,13 +103,13 @@ createRepairScript() {
 
     cmd=""
     # these overrides are used by app/config/elms-conf.php
-    cmd+="OVERRIDE_DATABASE_HOST="${HOSTNAME}" "
-    cmd+="OVERRIDE_DATABASE_USER="${USER}" "
-    cmd+="OVERRIDE_DATABASE_PASSWORD="${PASSWORD}" "
-    cmd+="OVERRIDE_DATABASE_NAME="${db}" "
+    cmd+="OVERRIDE_DATABASE_HOST=\"${HOSTNAME}\" "
+    cmd+="OVERRIDE_DATABASE_USER=\"${USER}\" "
+    cmd+="OVERRIDE_DATABASE_PASSWORD=\"${PASSWORD}\" "
+    cmd+="OVERRIDE_DATABASE_NAME=\"${db}\" "
     # the propel output dir is overridden in app/config/config_remote.yml
-    cmd+="SYMFONY__PROPEL__OUTPUT__DIR="${PROPEL_OUTPUT_DIR}" "
-    cmd+=""${__rootSrcPath__}/bin/console" crossknowledge:migration:generate-diff "
+    cmd+="SYMFONY__PROPEL__OUTPUT__DIR=\"${PROPEL_OUTPUT_DIR}\" "
+    cmd+="\"${__rootSrcPath__}/bin/console\" crossknowledge:migration:generate-diff "
     # to target app/config/config_remote.yml
     cmd+="--env=remote "
     if [[ "${VERBOSE}" = "1" ]]; then

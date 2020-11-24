@@ -2,16 +2,79 @@
 
 Build status: [![Build Status](https://travis-ci.com/fchastanet/bash-tools.svg?branch=master)](https://travis-ci.com/fchastanet/bash-tools)
 
-## The tools
-### bin/dbQueryAllDatabases
+## 1. Table of contents 
+- [1. Table of contents](#1-table-of-contents)
+- [2. Exerpt](#2-exerpt)
+- [3. Installation/Configuration](#3-installationconfiguration)
+- [4. The tools](#4-the-tools)
+  - [4.1. bin/dbQueryAllDatabases](#41-bindbqueryalldatabases)
+  - [4.2. bin/dbImport](#42-bindbimport)
+  - [4.3. bin/dbImportTable](#43-bindbimporttable)
+  - [4.4. bin/cli](#44-bincli)
+- [5. Bash Framework](#5-bash-framework)
+- [6. Acknowledgements](#6-acknowledgements)
 
-Run the example
+## 2. Exerpt
+
+This is a collection of several bash tools using a bash framework allowing to easily import bash script, log, display log messages, database manipulation, user interation, version comparison, ...
+
+List of tools:
+* **cli** : easy connection to docker container
+* **dbImport** : Import db from aws dump or remote db into local db
+* **dbImportTable** : Import remote db table into local db
+* **dbQueryAllDatabases** : Execute a query on multiple database in order to generate a report, query can be parallelized on multiple databases
+* **dbScriptAllDatabases** : same as dbQueryAllDatabases but you can execute an arbitrary script on each database
+* **gitIsAncestor** : show an error if commit is not an ancestor of branch
+* **gitIsBranch** : show an error if branchName is not a known branch
+* **waitforIt** : useful in docker container to know if another container port is accessible
+* **waitForMysql** : useful in docker container to know if mysql server is ready to receive queries
+
+## 3. Installation/Configuration
+
+clone this repository and create configuration files in your home directory
 ```bash
-bin/dbQueryAllDatabases -e dbQueriesSample/localhost-root.env dbQueriesSample/databaseSize.sql
+git clone git@github.com:fchastanet/bash-tools.git
+cd bash-tools
+mkdir -p ~/.bash-tools && cp -R conf/. ~/.bash-tools
+sed -i -E "s/^BASH_TOOLS_FOLDER=.*$/BASH_TOOLS_FOLDER=$(pwd)" ~/.bash-tools/.env
+```
+
+The following structure will be created in your home directory
+<pre>
+~/.bash-tools/
+├── cliProfile
+│   ├── default.sh
+├── dbCheckStructs
+├── dbImportDumps
+├── dbImportProfiles
+│   ├── sample.sh
+├── dbQueries
+│   └── sample.sql
+└── .env
+</pre>
+
+Some tools need [GNU parallel software](https://www.gnu.org/software/parallel/), it allows running multiple processes in parallel. You can install it running
+```bash
+sudo apt update
+sudo apt install -y parallel
+# remove parallel nagware
+mkdir ~/.parallel
+touch ~/.parallel/will-cite
+```
+
+## 4. The tools
+
+### 4.1. bin/dbQueryAllDatabases
+
+Execute a query on multiple database in order to generate a report, query can be parallelized on multiple databases
+```bash
+bin/dbQueryAllDatabases -e conf/db/localhost-root.env conf/dbQueries/databaseSize.sql
 ```
 
 **Help**
 ```
+Description: Execute a query on multiple database in order to generate a report, query can be parallelized on multiple databases
+
 Usage: dbQueryAllDatabases [-h|--help]
 Usage: dbQueryAllDatabases <query|queryFile> [--env-file|-e <envfile>] [-t|--as-tsv] [-q|--query] [--jobs|-j <numberOfJobs>] [--bar|-b]
     --help,-h prints this help and exits
@@ -37,14 +100,16 @@ REMOTE_MYSQL_PASSWORD=""
     remote DB connection : root:hidden@127.0.0.1:3306
 ```
 
-### bin/dbImport
+### 4.2. bin/dbImport
 Import remote db into local db
 ```bash
-bin/dbImport ExampleDbName
+dbImport ExampleDbName
 ```
 
 **Help**
 ```
+Description: Import remote db into local db
+
 Command: dbImport --help prints this help and exits
 Command: dbImport <remoteDbName> [<localDbName>] [-f|--force] 
                         [-d|--download-dump] [-a|--from-aws]
@@ -61,8 +126,8 @@ Command: dbImport <remoteDbName> [<localDbName>] [-f|--force]
     -o|--collation-name change the collation name used during database creation (default value: collation name used by remote db)
     -c|--character-set change the character set used during database creation (default value: character set used by remote db)
     -p|--profile profileName the name of the profile to use in order to include or exclude tables
-        (if not specified /home/vagrant/.bash-tools/dbImportProfiles/default.sh  is used if exists otherwise /home/vagrant/projects/bash-tools/dbImportProfiles/default.sh)
-        list of available home profiles (/home/vagrant/.bash-tools/dbImportProfiles): ing, precomputeLearnerTimezone, all, none, sample, smartgroup, default, 5496, bugProd, blendedX
+        (if not specified /home/vagrant/.bash-tools/dbImportProfiles/default.sh  is used if exists otherwise /home/vagrant/projects/bash-tools/conf/dbImportProfiles/default.sh)
+        list of available home profiles (/home/vagrant/.bash-tools/dbImportProfiles): ing, precomputeLearnerTimezone, all, none, sample, default
         list of available profiles : all, none, default
 
     local DB connection   : root:Hidden@127.0.0.1:3306
@@ -70,14 +135,16 @@ Command: dbImport <remoteDbName> [<localDbName>] [-f|--force]
     Aws s3 location       : s3://example/exports/
 ```
 
-### bin/dbImportTable
+### 4.3. bin/dbImportTable
 Import remote db table into local db
 ```bash
-bin/dbImport ExampleDbName ExampleTableName
+dbImportTable ExampleDbName ExampleTableName
 ```
 
 **Help**
 ```
+Description: Import remote db table into local db
+
 Command: dbImportTable [--help] prints this help and exits
 Command: dbImportTable <remoteDbName> <tableName> [<localDbName>] 
     [-d|--download-dump] [-f|--force] [-a|--from-aws]
@@ -100,7 +167,7 @@ Command: dbImportTable <remoteDbName> <tableName> [<localDbName>]
     Aws s3 location       : s3://example/exports/
 ```
 
-### bin/cli
+### 4.4. bin/cli
 
 easy connection to docker container
 
@@ -129,7 +196,9 @@ notice that as input is given to the command, tty option is not provided to dock
 
 **Help**
 ```
-    Command: cli --help prints this help and exits
+    Description: easy connection to docker container
+
+    Command: cli [-h|--help] prints this help and exits
     Command: cli <container> [user] [command]
 
     <container> : container should be one of these values : apache2,mysql8,mailhog,redis,proxysql
@@ -141,30 +210,91 @@ notice that as input is given to the command, tty option is not provided to dock
         cli web root
 
     these mappings are provided by default using /home/vagrant/projects/bash-tools/cliProfile/default.sh
-    you can override these mappings by providing your own profile in /home/vagrant/.bash-tools/cliProfile.sh
+    you can override these mappings by providing your own profile in /home/vagrant/.bash-tools/cliProfile/default.sh
 
     This script will be executed with the variables userArg containerArg commandArg set as specified in command line
     and should provide value for the following variables finalUserArg finalContainerArg finalCommandArg
 ```
 
-## Framework documentation
-You can generate doc by running
+## 5. Bash Framework
+
+All these tools are based on *Bash framework* with the following features:
+ * A boostrap that allows to import automatically .env file in home folder or ~/.bash-tools folder in order to load some environment variables
+ * **import alias** allows to import (only once) a bash file found in following folders (in order)
+    * vendor/bash-framework
+    * vendor
+    * calling script path
+    * absolute path 
+  * **source alias**, same as import but multiple times import allowed
+  * Framework
+    * **Framework::expectUser** exits with message if current user is not the expected one
+    * **Framework::expectNonRootUser** exits with message if current user is root
+  * Database
+    * **Database::dump** dump db limited to optional table list
+    * **Database::query** mysql query on a given db
+    * **Database::dropTable** drop table if exists
+    * **Database::dropDb** drop database if exists
+    * **Database::createDb** create database if not already existing
+    * **Database::isTableExists** check if table exists on given db
+    * **Database::ifDbExists** check if given database exists
+    * all these methods need to call **Database::newInstance** in order to reference target db connection
+  * Array
+    * **Array::contains** check if an element is contained in an array
+  * Functions
+    * **Functions::checkCommandExists** check if command specified exists or exits with error message if not
+    * **Functions::isWindows** determine if the script is executed under windows (git bash, wsl)
+    * **Functions::quote** quote a string replace ' with \'
+  * UI
+    * **UI::askToContinue** ask the user if he wishes to continue a process
+    * **UI::askYesNo** ask the user a confirmation
+    * **UI::askToIgnoreOverwriteAbort** ask the user to ignore(i), overwrite(o) or abort(a)
+  * Version
+    * **Version::checkMinimal** ensure that command exists with expected version
+    * **Version::compare** compares two versions
+  * Log::display* output colored message on error output and log the message 
+    * **Log::displayError** error message in red
+    * **Log::displayWarning** warning message  in yellow
+    * **Log::displayInfo** info message in white on lightBlue
+    * **Log::displaySuccess** success message in green
+    * **Log::displayDebug** debug message in grey
+  * Log::log* output message in a log file
+    * **Log::logError**
+    * **Log::logWarning**
+    * **Log::logInfo**
+    * **Log::logSuccess**
+    * **Log::logDebug**
+
+
+**Usage:** simply add these lines to your script
+```bash
+#!/usr/bin/env bash
+
+# load bash-framework
+# shellcheck source=bash-framework/_bootstrap.sh
+CURRENT_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
+source "$( cd "${CURRENT_DIR}/.." && pwd )/bash-framework/_bootstrap.sh"
+
+# bash framework is loaded, .env has been loaded (default .env file present in bash-framework is loaded if none exists yet) 
+
+# exits with message if this script is executed using root user
+Framework::expectNonRootUser
+
+# import some useful apis
+import bash-framework/Database
+import bash-framework/Array
+```
+
+[see the auto generated bash doc](doc/Index.md) generated by running
 ```bash
 ./doc.sh
 ```
 
-[see the auto generated bash doc](doc/Index.md)
-
-## Unit tests
-you can run the unit test
+All the methods of this framework are unit tested, you can run the unit tests using the following command
 ```bash
 ./test.sh
 ```
 
-## Install
-install GNU parallel
-
-## Acknowledgements
+## 6. Acknowledgements
 Like so many projects, this effort has roots in many places. 
 
 I would like to thank particularly  Bazyli Brzóska for his work on the project [Bash Infinity](https://github.com/niieani/bash-oo-framework).

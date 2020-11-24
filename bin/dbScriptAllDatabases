@@ -2,8 +2,11 @@
 
 CURRENT_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 # load ckls-bootstrap
-# shellcheck source=.dev/vendor/bash-framework/_bootstrap.sh
+# shellcheck source=vendor/bash-framework/_bootstrap.sh
 source "$( cd "${CURRENT_DIR}/.." && pwd )/vendor/bash-framework/_bootstrap.sh"
+
+# make bash-tools folder available for db scripts
+export BASH_TOOLS_FOLDER
 
 if [[  "${USER}" = "root" ]]; then
     Log::displayError "The script must not be run as root"
@@ -23,15 +26,12 @@ trap 'exit 130' INT
 
 #default values
 SCRIPT_NAME=${0##*/}
-PARAMETERS=$@
-QUERY_FILE="default"
 JOBS_NUMBER=1
 REMOTE=0
 MYSQL_OPTIONS=""
-OUTPUT_DIR="${__rootSrcPath__}/dbCheckStructs"
+OUTPUT_DIR="${HOME}/.bash-tools/dbCheckStructs"
 DB_NAME=""
 VERBOSE=0
-SCRIPTS_FOLDER="${CURRENT_DIR}/dbScripts"
 SCRIPT="${SCRIPTS_FOLDER}/dbCheckStructOneDatabase.sh"
 
 # Usage info
