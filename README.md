@@ -2,19 +2,17 @@
 
 Build status: [![Build Status](https://travis-ci.com/fchastanet/bash-tools.svg?branch=master)](https://travis-ci.com/fchastanet/bash-tools)
 
-## 1. Table of contents 
-- [1. Table of contents](#1-table-of-contents)
-- [2. Exerpt](#2-exerpt)
-- [3. Installation/Configuration](#3-installationconfiguration)
-- [4. The tools](#4-the-tools)
-  - [4.1. bin/dbQueryAllDatabases](#41-bindbqueryalldatabases)
-  - [4.2. bin/dbImport](#42-bindbimport)
-  - [4.3. bin/dbImportTable](#43-bindbimporttable)
-  - [4.4. bin/cli](#44-bincli)
-- [5. Bash Framework](#5-bash-framework)
-- [6. Acknowledgements](#6-acknowledgements)
+- [1. Exerpt](#1-exerpt)
+- [2. Installation/Configuration](#2-installationconfiguration)
+- [3. The tools](#3-the-tools)
+  - [3.1. bin/dbQueryAllDatabases](#31-bindbqueryalldatabases)
+  - [3.2. bin/dbImport](#32-bindbimport)
+  - [3.3. bin/dbImportTable](#33-bindbimporttable)
+  - [3.4. bin/cli](#34-bincli)
+- [4. Bash Framework](#4-bash-framework)
+- [5. Acknowledgements](#5-acknowledgements)
 
-## 2. Exerpt
+## 1. Exerpt
 
 This is a collection of several bash tools using a bash framework allowing to easily import bash script, log, display log messages, database manipulation, user interation, version comparison, ...
 
@@ -29,7 +27,7 @@ List of tools:
 * **waitforIt** : useful in docker container to know if another container port is accessible
 * **waitForMysql** : useful in docker container to know if mysql server is ready to receive queries
 
-## 3. Installation/Configuration
+## 2. Installation/Configuration
 
 clone this repository and create configuration files in your home directory
 ```bash
@@ -62,9 +60,9 @@ mkdir ~/.parallel
 touch ~/.parallel/will-cite
 ```
 
-## 4. The tools
+## 3. The tools
 
-### 4.1. bin/dbQueryAllDatabases
+### 3.1. bin/dbQueryAllDatabases
 
 Execute a query on multiple database in order to generate a report, query can be parallelized on multiple databases
 ```bash
@@ -100,7 +98,7 @@ REMOTE_MYSQL_PASSWORD=""
     remote DB connection : root:hidden@127.0.0.1:3306
 ```
 
-### 4.2. bin/dbImport
+### 3.2. bin/dbImport
 Import remote db into local db
 ```bash
 dbImport ExampleDbName
@@ -135,7 +133,7 @@ Command: dbImport <remoteDbName> [<localDbName>] [-f|--force]
     Aws s3 location       : s3://example/exports/
 ```
 
-### 4.3. bin/dbImportTable
+### 3.3. bin/dbImportTable
 Import remote db table into local db
 ```bash
 dbImportTable ExampleDbName ExampleTableName
@@ -167,7 +165,7 @@ Command: dbImportTable <remoteDbName> <tableName> [<localDbName>]
     Aws s3 location       : s3://example/exports/
 ```
 
-### 4.4. bin/cli
+### 3.4. bin/cli
 
 easy connection to docker container
 
@@ -216,7 +214,7 @@ notice that as input is given to the command, tty option is not provided to dock
     and should provide value for the following variables finalUserArg finalContainerArg finalCommandArg
 ```
 
-## 5. Bash Framework
+## 4. Bash Framework
 
 All these tools are based on *Bash framework* with the following features:
  * A boostrap that allows to import automatically .env file in home folder or ~/.bash-tools folder in order to load some environment variables
@@ -294,7 +292,7 @@ All the methods of this framework are unit tested, you can run the unit tests us
 ./test.sh
 ```
 
-## 6. Acknowledgements
+## 5. Acknowledgements
 Like so many projects, this effort has roots in many places. 
 
 I would like to thank particularly  Bazyli Brzóska for his work on the project [Bash Infinity](https://github.com/niieani/bash-oo-framework).
