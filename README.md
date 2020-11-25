@@ -30,11 +30,12 @@ List of tools:
 ## 2. Installation/Configuration
 
 clone this repository and create configuration files in your home directory
+alternatively you can use the **install.sh** script
 ```bash
 git clone git@github.com:fchastanet/bash-tools.git
 cd bash-tools
 mkdir -p ~/.bash-tools && cp -R conf/. ~/.bash-tools
-sed -i -E "s/^BASH_TOOLS_FOLDER=.*$/BASH_TOOLS_FOLDER=$(pwd)" ~/.bash-tools/.env
+sed -i -e "s@^BASH_TOOLS_FOLDER=.*@BASH_TOOLS_FOLDER=$(pwd)@g" ~/.bash-tools/.env
 ```
 
 The following structure will be created in your home directory
