@@ -67,7 +67,7 @@ touch ~/.parallel/will-cite
 
 Execute a query on multiple database in order to generate a report, query can be parallelized on multiple databases
 ```bash
-bin/dbQueryAllDatabases -e conf/db/localhost-root.env conf/dbQueries/databaseSize.sql
+bin/dbQueryAllDatabases -e conf/dsn/localhost-root.env conf/dbQueries/databaseSize.sql
 ```
 
 **Help**
