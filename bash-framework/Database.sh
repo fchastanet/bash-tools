@@ -119,7 +119,7 @@ Database::createAuthFile() {
   printf "%b" "${conf}" >"${instance2['AUTH_FILE']}"
 
   # shellcheck disable=SC2064
-  #trap "rm -f '${instance2['AUTH_FILE']}' 2>/dev/null" EXIT
+  trap "rm -f '${instance2['AUTH_FILE']}' 2>/dev/null" EXIT
 }
 
 # Public: check if given database exists
@@ -154,7 +154,7 @@ Database::ifDbExists() {
 # * 0 if table $3 exists
 # * 1 else
 Database::isTableExists() {
-  # shellcheck disable=SC2178
+  # shellcheck disable=SC2178,SC2034
   local -n instanceIsTableExists=$1
   local dbName="$2"
   local tableThatShouldExists="$3"
