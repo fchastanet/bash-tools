@@ -10,3 +10,13 @@ CURRENT_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
     git checkout ${BATS_VERSION}
     ./install.sh "${CURRENT_DIR}/vendor/bats"
 )
+
+[[ ! -d "${CURRENT_DIR}/vendor/bats-support/.git" ]] && (
+    rm -Rf "${CURRENT_DIR}/vendor/bats-support"
+    git clone git@github.com:bats-core/bats-support.git "${CURRENT_DIR}/vendor/bats-support"
+)
+
+[[ ! -d "${CURRENT_DIR}/vendor/bats-assert/.git" ]] && (
+    rm -Rf "${CURRENT_DIR}/vendor/bats-assert"
+    git clone git@github.com:bats-core/bats-assert.git "${CURRENT_DIR}/vendor/bats-assert"
+)

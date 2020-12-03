@@ -31,10 +31,10 @@ declare -g mysqlMockedStep=0
 }
 
 @test "parallel not installed" {
-    local out=$(${toolsDir}/dbQueryAllDatabases \
+    run ${toolsDir}/dbQueryAllDatabases \
         -j2 \
         "${BATS_TEST_DIRNAME}/data/databaseSize.sql" 2>&1
-    )
+    
     # could fail if run outside docker because parallel could be installed
-    [[ "${out}" == *"ERROR - parallel is not installed, please install it"* ]]
+    [[ "${output}" == *"ERROR - parallel is not installed, please install it"* ]]
 }

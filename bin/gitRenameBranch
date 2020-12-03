@@ -67,7 +67,7 @@ shift || true
 oldName="${1:-}"
 shift || true
 if [ $# -gt 0 ]; then
-  Log::displayError "too much argument provided"
+  Log::displayError "too much arguments provided"
   showHelp
   exit 1
 fi
