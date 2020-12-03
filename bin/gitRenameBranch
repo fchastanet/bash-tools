@@ -74,13 +74,22 @@ fi
 
 if [ -z "${oldName}" ]; then
   oldName="$(git branch --show-current)"
+  if [ -z "${oldName}" ]; then
+    Log::displayError "Impossible to calculate current branch name"
+    exit 1
+  fi
+fi
+if [ "${oldName}" = "master" ]; then
+  Log::displayError "master branch not supported by this command, please do it manually"
+  exit 1
+fi
+
+if [ "${newName}" = "master" ]; then
+  Log::displayError "master branch not supported by this command, please do it manually"
+  exit 1
 fi
 if [ -z "${newName}" ]; then
   Log::displayError "new branch name not provided"
-  exit 1
-fi
-if [ -z "${oldName}" ]; then
-  Log::displayError "Impossible to calculate current branch name"
   exit 1
 fi
 if [ "${oldName}" = "${newName}" ]; then
@@ -89,12 +98,19 @@ if [ "${oldName}" = "${newName}" ]; then
 fi
 
 Log::displayInfo "Renaming branch locally from ${oldName} to ${newName}"
-git branch -m "${oldName}" "${newName}"
+CMD="git branch -m \"${oldName}\" \"${newName}\""
+Log::displayDebug "Running '${CMD}'"
+eval "${CMD}"
+
 if [ "${DELETE}" = "1" ]; then
   Log::displayInfo "Removing eventual old remote branch ${oldName}"
-  git push origin ":${oldName}" || true
+  CMD="git push origin \":${oldName}\""
+  Log::displayDebug "Running '${CMD}'"
+  eval "${CMD}" || true
 fi
 if [ "${PUSH}" = "1" ]; then
   Log::displayInfo "Pushing new branch name ${newName}"
-  git push --set-upstream origin "${newName}"
+  CMD="git push --set-upstream origin \"${newName}\""
+  Log::displayDebug "Running '${CMD}'"
+  eval "${CMD}" || true
 fi
