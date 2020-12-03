@@ -1,22 +1,25 @@
-# bash-tools
+# 1. bash-tools
 
 Build status: [![Build Status](https://travis-ci.com/fchastanet/bash-tools.svg?branch=master)](https://travis-ci.com/fchastanet/bash-tools)
 
-- [1. Exerpt](#1-exerpt)
-- [2. Installation/Configuration](#2-installationconfiguration)
-- [3. The tools](#3-the-tools)
-  - [3.1. bin/dbQueryAllDatabases](#31-bindbqueryalldatabases)
-  - [3.2. bin/dbImport](#32-bindbimport)
-  - [3.3. bin/dbImportTable](#33-bindbimporttable)
-  - [3.4. bin/cli](#34-bincli)
-- [4. Bash Framework](#4-bash-framework)
-- [5. Acknowledgements](#5-acknowledgements)
+- [1. bash-tools](#1-bash-tools)
+  - [1.1. Exerpt](#11-exerpt)
+  - [1.2. Installation/Configuration](#12-installationconfiguration)
+  - [1.3. The tools](#13-the-tools)
+    - [1.3.1. bin/gitRenameBranch](#131-bingitrenamebranch)
+    - [1.3.2. bin/dbQueryAllDatabases](#132-bindbqueryalldatabases)
+    - [1.3.3. bin/dbImport](#133-bindbimport)
+    - [1.3.4. bin/dbImportTable](#134-bindbimporttable)
+    - [1.3.5. bin/cli](#135-bincli)
+  - [1.4. Bash Framework](#14-bash-framework)
+  - [1.5. Acknowledgements](#15-acknowledgements)
 
-## 1. Exerpt
+## 1.1. Exerpt
 
 This is a collection of several bash tools using a bash framework allowing to easily import bash script, log, display log messages, database manipulation, user interation, version comparison, ...
 
 List of tools:
+* **gitRenameBranch** : easy rename git local branch, use options to push new branch and delete old branch
 * **cli** : easy connection to docker container
 * **dbImport** : Import db from aws dump or remote db into local db
 * **dbImportTable** : Import remote db table into local db
@@ -27,7 +30,7 @@ List of tools:
 * **waitforIt** : useful in docker container to know if another container port is accessible
 * **waitForMysql** : useful in docker container to know if mysql server is ready to receive queries
 
-## 2. Installation/Configuration
+## 1.2. Installation/Configuration
 
 clone this repository and create configuration files in your home directory
 alternatively you can use the **install.sh** script
@@ -61,9 +64,21 @@ mkdir ~/.parallel
 touch ~/.parallel/will-cite
 ```
 
-## 3. The tools
+## 1.3. The tools
 
-### 3.1. bin/dbQueryAllDatabases
+### 1.3.1. bin/gitRenameBranch
+
+Description: rename git local branch, use options to push new branch and delete old branch
+
+Usage: gitRenameBranch [-h|--help] prints this help and exits
+Usage: gitRenameBranch <newBranchName> [<oldBranchName>] [--push|-p] [--delete|-d] 
+    --help,-h prints this help and exits
+    --push,-p push new branch
+    --delete,-d delete old remote branch
+    <newBranchName> the new branch name to give to current branch
+    <oldBranchName> (optional) the name of the old branch if not current one
+
+### 1.3.2. bin/dbQueryAllDatabases
 
 Execute a query on multiple database in order to generate a report, query can be parallelized on multiple databases
 ```bash
@@ -99,7 +114,7 @@ REMOTE_MYSQL_PASSWORD=""
     remote DB connection : root:hidden@127.0.0.1:3306
 ```
 
-### 3.2. bin/dbImport
+### 1.3.3. bin/dbImport
 Import remote db into local db
 ```bash
 dbImport ExampleDbName
@@ -134,7 +149,7 @@ Command: dbImport <remoteDbName> [<localDbName>] [-f|--force]
     Aws s3 location       : s3://example/exports/
 ```
 
-### 3.3. bin/dbImportTable
+### 1.3.4. bin/dbImportTable
 Import remote db table into local db
 ```bash
 dbImportTable ExampleDbName ExampleTableName
@@ -166,7 +181,7 @@ Command: dbImportTable <remoteDbName> <tableName> [<localDbName>]
     Aws s3 location       : s3://example/exports/
 ```
 
-### 3.4. bin/cli
+### 1.3.5. bin/cli
 
 easy connection to docker container
 
@@ -215,7 +230,7 @@ notice that as input is given to the command, tty option is not provided to dock
     and should provide value for the following variables finalUserArg finalContainerArg finalCommandArg
 ```
 
-## 4. Bash Framework
+## 1.4. Bash Framework
 
 All these tools are based on *Bash framework* with the following features:
  * A boostrap that allows to import automatically .env file in home folder or ~/.bash-tools folder in order to load some environment variables
@@ -293,7 +308,7 @@ All the methods of this framework are unit tested, you can run the unit tests us
 ./test.sh
 ```
 
-## 5. Acknowledgements
+## 1.5. Acknowledgements
 Like so many projects, this effort has roots in many places. 
 
 I would like to thank particularly  Bazyli Brzóska for his work on the project [Bash Infinity](https://github.com/niieani/bash-oo-framework).
