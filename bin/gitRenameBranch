@@ -5,10 +5,13 @@ CURRENT_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 # shellcheck source=../bash-framework/_bootstrap.sh
 source "$( cd "${CURRENT_DIR}/.." && pwd )/bash-framework/_bootstrap.sh"
 
+import bash-framework/UI
+
 #default values
 SCRIPT_NAME=${0##*/}
 PUSH="0"
 DELETE="0"
+INTERACTIVE="1"
 
 # Usage info
 showHelp() {
@@ -16,8 +19,11 @@ cat << EOF
 Description: rename git local branch, use options to push new branch and delete old branch
 
 Usage: ${SCRIPT_NAME} [-h|--help] prints this help and exits
-Usage: ${SCRIPT_NAME} <newBranchName> [<oldBranchName>] [--push|-p] [--delete|-d] 
+Usage: ${SCRIPT_NAME} <newBranchName> [<oldBranchName>] [--push|-p] [--delete|-d] [--assume-yes|-yes|-y]
     --help,-h prints this help and exits
+     -y, --yes, --assume-yes do not ask for confirmation (use with caution)
+        Automatic yes to prompts; assume "y" as answer to all prompts
+        and run non-interactively. 
     --push,-p push new branch
     --delete,-d delete old remote branch
     <newBranchName> the new branch name to give to current branch
@@ -30,7 +36,7 @@ EOF
 # -o is for short options like -h
 # -l is for long options with double dash like --help
 # the comma separates different long options
-options=$(getopt -l help,push,delete -o hpd -- "$@" 2>/dev/null) || {
+options=$(getopt -l help,push,delete,yes,assume-yes -o hpdy -- "$@" 2>/dev/null) || {
     Log::displayError "invalid options specified"
     showHelp
     exit 1
@@ -49,6 +55,9 @@ case $1 in
     ;;
 --delete|-d)
     DELETE="1"
+    ;;
+--assume-yes|-yes|-y)
+    INTERACTIVE="0"
     ;;
 --)
     shift
@@ -79,13 +88,13 @@ if [ -z "${oldName}" ]; then
     exit 1
   fi
 fi
-if [ "${oldName}" = "master" ]; then
-  Log::displayError "master branch not supported by this command, please do it manually"
+if [[ "${oldName}" =~ ^(master|main)$ ]]; then
+  Log::displayError "master/main branch not supported by this command, please do it manually"
   exit 1
 fi
 
-if [ "${newName}" = "master" ]; then
-  Log::displayError "master branch not supported by this command, please do it manually"
+if [[ "${newName}" =~ ^(master|main)$ ]]; then
+  Log::displayError "master/main branch not supported by this command, please do it manually"
   exit 1
 fi
 if [ -z "${newName}" ]; then
@@ -103,14 +112,24 @@ Log::displayDebug "Running '${CMD}'"
 eval "${CMD}"
 
 if [ "${DELETE}" = "1" ]; then
-  Log::displayInfo "Removing eventual old remote branch ${oldName}"
-  CMD="git push origin \":${oldName}\""
-  Log::displayDebug "Running '${CMD}'"
-  eval "${CMD}" || true
+  deleteBranch() {
+    Log::displayInfo "Removing eventual old remote branch ${oldName}"
+    CMD="git push origin \":${oldName}\""
+    Log::displayDebug "Running '${CMD}'"
+    eval "${CMD}" || true
+  }
+  if [[ "${INTERACTIVE}" = "0" ]] || UI::askYesNo "remove eventual old remote branch ${oldName}" ; then
+    deleteBranch
+  fi
 fi
 if [ "${PUSH}" = "1" ]; then
-  Log::displayInfo "Pushing new branch name ${newName}"
-  CMD="git push --set-upstream origin \"${newName}\""
-  Log::displayDebug "Running '${CMD}'"
-  eval "${CMD}" || true
+  push() {
+    Log::displayInfo "Pushing new branch name ${newName}"
+    CMD="git push --set-upstream origin \"${newName}\""
+    Log::displayDebug "Running '${CMD}'"
+    eval "${CMD}" || true
+  }
+  if [[ "${INTERACTIVE}" = "0" ]] || UI::askYesNo "Push new branch name ${newName}"; then
+    push
+  fi
 fi
