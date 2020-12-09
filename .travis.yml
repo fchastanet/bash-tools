@@ -10,8 +10,7 @@ env:
 
 before_script:
   - docker build --build-arg BASH_IMAGE=${BASH_IMAGE} -t git-${BASH_IMAGE} .docker
-  - docker pull bash:$BASH
-  - docker run bash:$BASH --version
+  - docker run git-${BASH_IMAGE} --version
 
 script:
   - docker run --rm -v $PWD:/bash --user $(id -u):$(id -g) git-${BASH_IMAGE} /bash/test.sh
