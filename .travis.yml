@@ -5,9 +5,6 @@ env:
   - BASH=5.0.17
   - BASH=rc
 
-install:
-  - bash test-install.sh
-
 before_script:
   - docker pull bash:$BASH
   - docker run bash:$BASH --version
