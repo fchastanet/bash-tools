@@ -2,16 +2,11 @@
 
 CURRENT_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 
-if [ ! -d "${CURRENT_DIR}/vendor/bats" ]; then
-  (>&2 echo "please run ./test-install.sh")
-  exit 1
+if [ "${IN_BASH_DOCKER:-}" != "You're in docker" ]; then
+  docker build --build-arg BASH_IMAGE=amd64/bash:4.4 -t git-amd64/bash:4.4 .docker
+  docker run -it --rm -v "$(pwd):/bash" --user "$(id -u):$(id -g)" git-amd64/bash:4.4 /bash/test.sh
+  exit 0
 fi
-
-#[[ ! -f "vendor/bats-support/load.bash" ]] && git clone https://github.com/ztombol/bats-support.git "${CURRENT_DIR}/vendor/bats-support"
-#[[ ! -f "vendor/bats-assert/load.bash" ]] && git clone https://github.com/ztombol/bats-assert.git "${CURRENT_DIR}/vendor/bats-assert"
-# https://github.com/grayhemp/bats-mock
-# https://github.com/mbland/go-script-bash#introduction
-
 (
   cd "${CURRENT_DIR}" || exit 1
   if (( $# < 1)); then
