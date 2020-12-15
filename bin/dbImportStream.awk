@@ -1,5 +1,3 @@
-# TODO import script directly to mysql server
-# TODO pass mysql parameters to awk script
 BEGIN{ 
   write=1
 }
@@ -15,7 +13,7 @@ BEGIN{
       close(profileCmd)
     }
     if (map[tableName]) {
-      print "begin insert " tableName  > "/dev/stderr"
+      print "\033[44mbegin insert " tableName "\033[0m"  > "/dev/stderr"
       write=1
     } else {
       print "ignore table " tableName  > "/dev/stderr"
@@ -31,7 +29,7 @@ BEGIN{
     write=1
   }
 
-  if (write == 1) {
+   if (write == 1) {
     print line
   }
 }
