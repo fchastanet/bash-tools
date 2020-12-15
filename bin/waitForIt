@@ -170,7 +170,7 @@ else
         RESULT=$?
     fi
 fi
-if [[ ! -z "${CLI+x}" && "${CLI[*]}" != "" ]]; then
+if [[ -n "${CLI+x}" && "${CLI[*]}" != "" ]]; then
     if [[ "${RESULT}" != "0" && "${STRICT}" = "1" ]]; then
         Log::displayError "${cmdName}: strict mode, refusing to execute sub-process"
         exit ${RESULT}

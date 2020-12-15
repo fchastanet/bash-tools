@@ -6,10 +6,7 @@ import bash-framework/Log
 #
 # **Arguments**:
 # * $1 - (passed by reference) database instance to create
-# * $2 - mysqlHostName
-# * $3 - mysqlHostPort
-# * $4 - mysqlHostUser
-# * $5 - mysqlHostPassword
+# * $2 - dsn profile
 #
 # **Example:**
 # ```shell
@@ -20,10 +17,7 @@ import bash-framework/Log
 # Returns immediately if the instance is already initialized
 Database::newInstance() {
   local -n instance=$1
-  local mysqlHostName="$2"
-  local mysqlHostPort="$3"
-  local mysqlUser="$4"
-  local mysqlPasswd="$5"
+  local dsn="$2"
 
   if [[ "${instance['INITIALIZED']:-0}" == "1" ]]; then
     return
@@ -37,15 +31,100 @@ Database::newInstance() {
   instance['MYSQL_COMMAND']="/usr/bin/mysql"
   instance['MYSQLDUMP_COMMAND']="/usr/bin/mysqldump"
   instance['MYSQLSHOW_COMMAND']="/usr/bin/mysqlshow"
+  instance['DSN_FILE']=""
 
-  instance['MYSQL_HOST']="${mysqlHostName}"
-  instance['MYSQL_PORT']="${mysqlHostPort}"
-  instance['MYSQL_USER']="${mysqlUser}"
-  instance['MYSQL_PASSWORD']="${mysqlPasswd}"
+  # check dsn file
+  # load dsn from home folder, then bash framework folder, then absolute file
+  # shellcheck source=/conf/dsn/default.local.env
+  DSN_FILE="$(Database::getHomeConfDsnFolder)/${dsn}.env"
+  if [ ! -f "${DSN_FILE}" ]; then
+    DSN_FILE="$(Database::getDefaultConfDsnFolder)/${dsn}.env"
+    if [ ! -f "${DSN_FILE}" ]; then
+      DSN_FILE="${dsn}"
+      if [ ! -f "${DSN_FILE}" ]; then
+        Log::displayError "dsn file ${dsn} not found"
+        return 1    
+      fi
+    fi
+  fi
+  Database::checkDsnFile "${DSN_FILE}"
 
-  Database::createAuthFile instance
+  instance['DSN_FILE']="${DSN_FILE}"
 
   instance['INITIALIZED']=1
+}
+
+# Internal: check if dsn file has all the mandatory variables set
+# Mandatory variables are: HOSTNAME, USER, PASSWORD, PORT
+#
+# **Arguments**:
+# * $1 - dsn absolute filename 
+#
+# Returns 0 on valid file, 1 otherwise with log output
+Database::checkDsnFile() {
+  DSN_FILENAME="$1"
+  if [[ ! -f "${DSN_FILENAME}" ]]; then
+    Log::displayError "dsn file ${DSN_FILENAME} not found"
+    return 1
+  fi
+
+  (
+    unset HOSTNAME PORT PASSWORD USER
+    # shellcheck source=/conf/dsn/default.local.env
+    source "${DSN_FILENAME}"  
+    if [[ -z ${HOSTNAME+x} ]]; then
+      Log::displayError "dsn file ${DSN_FILENAME} : HOSTNAME not provided"
+      return 1
+    fi
+    if [[ -z "${HOSTNAME}" ]]; then
+      Log::displayWarning "dsn file ${DSN_FILENAME} : HOSTNAME value not provided"
+    fi
+    if [[ "${HOSTNAME}" = "localhost" ]]; then
+      Log::displayWarning "dsn file ${DSN_FILENAME} : check that HOSTNAME should not be 127.0.0.1 instead of localhost"
+    fi
+    if [[ -z "${PORT+x}" ]]; then
+      Log::displayError "dsn file ${DSN_FILENAME} : PORT not provided"
+      return 1
+    fi
+    if ! [[ ${PORT} =~ ^[0-9]+$ ]] ; then
+      Log::displayError "dsn file ${DSN_FILENAME} : PORT invalid"
+      return 1
+    fi
+    if [[ -z "${USER+x}" ]]; then
+      Log::displayError "dsn file ${DSN_FILENAME} : USER not provided"
+      return 1
+    fi
+    if [[ -z "${PASSWORD+x}" ]]; then
+      Log::displayError "dsn file ${DSN_FILENAME} : PASSWORD not provided"
+      return 1
+    fi
+  )
+}
+
+# Public
+# Returns the default conf dsn folder
+Database::getDefaultConfDsnFolder() {
+  echo "${__bash_framework_rootVendorPath}/conf/dsn"
+}
+
+# Public
+# Returns the overriden conf dsn folder in user home folder 
+Database::getHomeConfDsnFolder() {
+  echo "${HOME}/.bash-tools/dsn"
+}
+
+# Public: list the dsn available in bash-tools/conf/dsn folder
+# and those overriden in $HOME/.bash-tools/dsn folder
+Database::getDsnList() {
+  DEFAULT_CONF_DIR="$(Database::getDefaultConfDsnFolder)"
+  HOME_CONF_DIR="$(Database::getHomeConfDsnFolder)"
+  (
+    (cd "${DEFAULT_CONF_DIR}" && find . -type f -name \*.env | sed 's/\.env$//g' | sed 's#^./##g' )
+
+    if [[ -d "${HOME_CONF_DIR}" ]]; then
+        (cd "${HOME_CONF_DIR}" && find . -type f -name \*.env | sed 's/\.env$//g' | sed 's#^./##g')
+    fi
+  ) | sort | uniq
 }
 
 # Public: set the general options to use on mysql command to query the database
@@ -104,22 +183,18 @@ Database::setMysqlCommands() {
 #
 # **Arguments**:
 # * $1 (passed by reference) database instance to use
-Database::createAuthFile() {
-  local -n instance2=$1
+Database::authFile() {
+  local -n instance3=$1
 
-  instance2['AUTH_FILE']=$(mktemp -p "${TMPDIR:-/tmp}" -t "mysql.XXXXXXXXXXXX")
-
-  local conf=""
-  conf+="[client]\n"
-  conf+="user = ${instance2['MYSQL_USER']}\n"
-  conf+="password = ${instance2['MYSQL_PASSWORD']}\n"
-  conf+="host = ${instance2['MYSQL_HOST']}\n"
-  conf+="port = ${instance2['MYSQL_PORT']}\n"
-
-  printf "%b" "${conf}" >"${instance2['AUTH_FILE']}"
-
-  # shellcheck disable=SC2064
-  trap "rm -f '${instance2['AUTH_FILE']}' 2>/dev/null" EXIT
+  (
+      # shellcheck source=/conf/dsn/default.local.env
+      source "${instance3['DSN_FILE']}"
+      echo "[client]"
+      echo "user = ${USER}"
+      echo "password = ${PASSWORD}"
+      echo "host = ${HOSTNAME}"
+      echo "port = ${PORT}"
+  )
 }
 
 # Public: check if given database exists
@@ -135,7 +210,8 @@ Database::ifDbExists() {
   local result
   local mysqlCommand=""
 
-  mysqlCommand="${instance['MYSQLSHOW_COMMAND']} --defaults-extra-file='${instance['AUTH_FILE']}' ${instance['SSL_OPTIONS']} "
+
+  mysqlCommand="${instance['MYSQLSHOW_COMMAND']} --defaults-extra-file=<(Database::authFile instance) ${instance['SSL_OPTIONS']} "
   mysqlCommand+="'${dbName}' | grep -v Wildcard | grep -o '${dbName}'"
   Log::displayDebug "execute command: '${mysqlCommand}'"
   result=$(MSYS_NO_PATHCONV=1 eval "${mysqlCommand}")
@@ -264,7 +340,7 @@ Database::query() {
   local -n instanceQuery=$1
   local mysqlCommand=""
 
-  mysqlCommand+="${instanceQuery['MYSQL_COMMAND']} --defaults-extra-file='${instanceQuery['AUTH_FILE']}' ${instanceQuery['QUERY_OPTIONS']} ${instanceQuery['OPTIONS']}"
+  mysqlCommand+="${instanceQuery['MYSQL_COMMAND']} --defaults-extra-file=<(Database::authFile instance) ${instanceQuery['QUERY_OPTIONS']} ${instanceQuery['OPTIONS']}"
   # add optional db name
   if [[ -n "${3+x}" ]]; then
     mysqlCommand+=" '$3'"
@@ -314,7 +390,7 @@ Database::dump() {
     dumpAdditionalOptions="$*"
   fi
 
-  mysqlCommand+="${instance['MYSQLDUMP_COMMAND']} --defaults-extra-file='${instance['AUTH_FILE']}' "
+  mysqlCommand+="${instance['MYSQLDUMP_COMMAND']} --defaults-extra-file=<(Database::authFile instance) "
   mysqlCommand+="${instance['DUMP_OPTIONS']} ${dumpAdditionalOptions} ${db} ${optionalTableList}"
 
   Log::displayDebug "execute command: '${mysqlCommand}'"

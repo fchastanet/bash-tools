@@ -30,7 +30,6 @@ teardown() {
 @test "display help" {
     run ${toolsDir}/gitRenameBranch --help 2>&1
     [ "$status" -eq 0 ]
-    (>&2 echo coucou $output)
     [[ "${output}" == *"Description: rename git local branch, use options to push new branch and delete old branch"* ]]
 }
 

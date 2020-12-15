@@ -1,0 +1,11 @@
+default.local
+default.remote
+dsn_hostname_localhost
+dsn_invalid_port
+dsn_missing_hostname
+dsn_missing_password
+dsn_missing_port
+dsn_missing_user
+dsn_valid
+localhost-root
+other.local
