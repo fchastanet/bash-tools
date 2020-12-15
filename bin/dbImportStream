@@ -10,8 +10,6 @@ DB_NAME="$2"
 PROFILE_COMMAND="${3}"
 CHARACTER_SET="${4:-utf8}"
 
-
-# TODO fullstream aws s3 cp --quiet s3://ck-dev-frsa-devsql/exports/PANDORA_FF.tar.gz /dev/stdout | tar zxOf -
 tar xOfz "${DUMP_FILE}" | awk \
   -v PROFILE_COMMAND="${PROFILE_COMMAND}" \
   -v CHARACTER_SET="${CHARACTER_SET}" \

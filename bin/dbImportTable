@@ -216,17 +216,16 @@ fi
 read -r -d '\0' DUMP_HEADER <<- EOM
     SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS = 0;
     SET @OLD_AUTOCOMMIT=@@AUTOCOMMIT, AUTOCOMMIT = 0;
-    SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS = 0;
-    DELETE IGNORE FROM \`${TABLE}\`;\0
+    SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS = 0;\0
 EOM
 
 read -r -d '\0' DUMP_FOOTER <<- EOM2
-    COMMIT;
     SET AUTOCOMMIT=@OLD_AUTOCOMMIT;
     SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS;
     SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS;\0
 EOM2
 
+SECONDS=0
 if [[ "${DOWNLOAD_DUMP}" = "1" ]]; then
     Log::displayInfo "Download dump"
 
@@ -254,7 +253,7 @@ if [[ "${DOWNLOAD_DUMP}" = "1" ]]; then
                 "${AWS_DUMP_FILE}" \
                 "${TABLE}" \
                 "${CHARACTER_SET}"
-             
+            
             echo "${DUMP_FOOTER}"
         ) > "${REMOTE_DB_DUMP_TEMP_FILE}"
         Log::displayInfo "Table dump extracted : ${REMOTE_DB_DUMP_TEMP_FILE}"
@@ -294,7 +293,7 @@ if [[ "${DOWNLOAD_DUMP}" = "1" ]]; then
         Log::displayInfo "Dump the table ${TABLE} from database $REMOTE_DB (Size:${REMOTE_DB_DUMP_SIZE}MB) ... to file ${REMOTE_DB_DUMP_TEMP_FILE}";
         echo "${DUMP_HEADER}" > "${REMOTE_DB_DUMP_TEMP_FILE}"
         DUMP_SIZE_PV_ESTIMATION=$(awk "BEGIN {printf \"%.0f\",${REMOTE_DB_DUMP_SIZE}/1.5}")
-        time Database::dump dbRemoteInstance "${REMOTE_DB}" "${TABLE}" --skip-add-drop-table --single-transaction=TRUE | \
+        Database::dump dbRemoteInstance "${REMOTE_DB}" "${TABLE}" --skip-add-drop-table --single-transaction=TRUE | \
             pv --progress --size "${DUMP_SIZE_PV_ESTIMATION}m" >> "${REMOTE_DB_DUMP_TEMP_FILE}"
         echo "${DUMP_FOOTER}" >> "${REMOTE_DB_DUMP_TEMP_FILE}"
         sed -i -r -e 's/CREATE TABLE `/CREATE TABLE IF NOT EXISTS `/g' "${REMOTE_DB_DUMP_TEMP_FILE}"
@@ -307,9 +306,7 @@ else
 fi
 
 Log::displayDebug "import remote to local from file ${REMOTE_DB_DUMP_TEMP_FILE}"
-time ( \
-    pv "${REMOTE_DB_DUMP_TEMP_FILE}" | \
-        Database::query dbLocalInstance "" "${LOCAL_DB}"
-)
+pv "${REMOTE_DB_DUMP_TEMP_FILE}" | \
+    Database::query dbLocalInstance "" "${LOCAL_DB}"
 
-Log::displayInfo "Done";
+Log::displayInfo "Import table duration : $(date -u -d @${SECONDS} +"%T")"

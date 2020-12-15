@@ -284,7 +284,7 @@ EOM2
 
 Log::displayInfo "tables list will calculated using profile ${PROFILE} => ${PROFILE_COMMAND}"
 chmod 755 "${PROFILE_COMMAND}"
-
+SECONDS=0
 if [[ "${DOWNLOAD_DUMP}" = "1" ]]; then
     Log::displayInfo "Download dump"
 
@@ -388,4 +388,4 @@ else
     )
 fi
 
-Log::displayInfo "Done";
+Log::displayInfo "Import table duration : $(date -u -d @${SECONDS} +"%T")"
