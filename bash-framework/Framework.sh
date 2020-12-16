@@ -76,6 +76,10 @@ Framework::GetAbsolutePath() {
 Framework::WrapSource() {
   local libPath="$1"
   shift
+  if [[ -z "${libPath}" ]]; then
+    return
+  fi
+
 
   builtin source "$libPath" "$@" || {
     Log::displayError "Unable to load $libPath"
@@ -92,6 +96,9 @@ Framework::WrapSource() {
 Framework::SourceFile() {
   local libPath="$1"
   shift
+  if [[ -z "${libPath}" ]]; then
+    return
+  fi
 
   [[ ! -f "$libPath" ]] && return 1 # && e="Cannot import $libPath" throw
 
@@ -130,6 +137,10 @@ Framework::SourceFile() {
 Framework::SourcePath() {
   local libPath="$1"
   shift
+  if [[ -z "${libPath}" ]]; then
+    return
+  fi
+
   # echo trying $libPath
   if [[ -d "$libPath" ]]
   then
@@ -158,6 +169,10 @@ Framework::SourcePath() {
 Framework::ImportOne() {
   local libPath="$1"
   shift
+  if [[ -z "${libPath}" ]]; then
+    return
+  fi
+
 
   # try local library
   # try vendor dir
