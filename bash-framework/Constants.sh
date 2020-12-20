@@ -3,9 +3,9 @@
 #
 # for color constants,
 # check colors applicable https://misc.flogisoft.com/bash/tip_colors_and_formatting
-readonly CONSTANTS_MODULE_VERSION="1.0"
 
-if [[ "${BASH_FRAMEWORK_LOG_INITIALIZED:-0}" = "0" ]]; then
+if [[ "${CONSTANTS_MODULE_VERSION:+xxx}" != "xxx" ]]; then
+  readonly CONSTANTS_MODULE_VERSION="1.0"
   # Public: log level off
   readonly __LEVEL_OFF=0
   # Public: log level error
@@ -32,4 +32,3 @@ if [[ "${BASH_FRAMEWORK_LOG_INITIALIZED:-0}" = "0" ]]; then
   # Internal: reset color
   readonly __RESET_COLOR='\e[0m'
 fi
-BASH_FRAMEWORK_LOG_INITIALIZED=1

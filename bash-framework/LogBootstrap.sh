@@ -12,10 +12,14 @@ if (( logLevel > __LEVEL_OFF )); then
       logLevel=${__LEVEL_OFF}
       BASH_FRAMEWORK_LOG_LEVEL=${__LEVEL_OFF}
   else
-      if ! touch --no-create "${BASH_FRAMEWORK_LOG_FILE}" 2>/dev/null ; then
-          Log::displayError "Log file ${BASH_FRAMEWORK_LOG_FILE} is not writable"
-         logLevel=${__LEVEL_OFF}
-         BASH_FRAMEWORK_LOG_LEVEL=${__LEVEL_OFF}
+      if ! mkdir -p "$(dirname "${BASH_FRAMEWORK_LOG_FILE}")" 2>/dev/null ; then
+        Log::displayError "Log file directory '$(dirname "${BASH_FRAMEWORK_LOG_FILE}")' cannot be created"
+        logLevel=${__LEVEL_OFF}
+        BASH_FRAMEWORK_LOG_LEVEL=${__LEVEL_OFF}
+      elif ! touch --no-create "${BASH_FRAMEWORK_LOG_FILE}" 2>/dev/null ; then
+        Log::displayError "Log file ${BASH_FRAMEWORK_LOG_FILE} is not writable"
+        logLevel=${__LEVEL_OFF}
+        BASH_FRAMEWORK_LOG_LEVEL=${__LEVEL_OFF}
       fi
   fi
   if (( logLevel >= __LEVEL_ERROR )); then
