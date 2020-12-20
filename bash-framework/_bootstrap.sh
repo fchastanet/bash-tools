@@ -46,7 +46,9 @@ alias .="__bash_framework__allowFileReloading=true Framework::ImportOne"
 ## * BASH_FRAMEWORK_LOG_LEVEL(default value: __LEVEL_OFF)
 ## * BASH_FRAMEWORK_LOG_FILE(default value: ""}
 ##
-## all these variables can be overridden by a .env file that will be searched in the following directories
+## default conf/.env file is loaded
+## 
+## then all these variables can be overridden by a .env file that will be searched in the following directories
 ## in this order (stop on first file found):
 ## * __bash_framework_rootCallingScriptPath: upper directory
 ## * ~/ : home path
@@ -67,15 +69,18 @@ Framework::bootstrap() {
     # shellcheck disable=SC2034
     BASH_FRAMEWORK_LOG_FILE="${BASH_FRAMEWORK_LOG_FILE:-${BASH_FRAMEWORK_LOG_FILE}}"
 
-    # import .env file
+    # import default .env file
+    source "${__bash_framework_rootCallingScriptPath}/conf/.env" || exit 1
+
+    # import custom .env file
     if [[ -z "${__bash_framework_envFile+xxx}" ]]; then
         # __bash_framework_envFile not defined
         if [[ -f "${__bash_framework_rootCallingScriptPath}/.env" ]]; then
             source "${__bash_framework_rootCallingScriptPath}/.env" || exit 1
-        elif [[ -z "${BATS_VERSION+xxx}" && -f "${HOME}/.env" ]]; then
+        elif [[ -f "${HOME}/.env" ]]; then
             # shellcheck source=~/.env
             source "${HOME}/.env" || exit 1
-        elif [[ -z "${BATS_VERSION+xxx}" && -f "${HOME}/.bash-tools/.env" ]]; then
+        elif [[ -f "${HOME}/.bash-tools/.env" ]]; then
             # shellcheck source=~/.bash-tools/.env
             source "${HOME}/.bash-tools/.env" || exit 1
         fi
