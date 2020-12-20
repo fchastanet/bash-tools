@@ -70,7 +70,8 @@ Framework::bootstrap() {
     BASH_FRAMEWORK_LOG_FILE="${BASH_FRAMEWORK_LOG_FILE:-${BASH_FRAMEWORK_LOG_FILE}}"
 
     # import default .env file
-    source "${__bash_framework_rootCallingScriptPath}/conf/.env" || exit 1
+    # shellcheck source=/conf/.env
+    source "${__bash_framework_rootVendorPath}/conf/.env" || exit 1
 
     # import custom .env file
     if [[ -z "${__bash_framework_envFile+xxx}" ]]; then
