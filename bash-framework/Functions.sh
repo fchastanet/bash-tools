@@ -106,3 +106,24 @@ Functions::quote() {
     local quoted=${1//\'/\'\\\'\'};
     printf "'%s'" "$quoted"
 }
+
+# Public: list files of dir with given extension and display it as a list one by line
+#
+# **Arguments**:
+# * $1 the directory to list
+# * $2 the extension (eg: sh)
+# * $3 the indentation ('       - ' by default) can be any string compatible with sed not containing any /
+# **Output**: list of files without extension/directory
+# eg:
+#       - default.local
+#       - default.remote
+#       - localhost-root
+Functions::getList() {
+    DIR="$1"
+    EXT="$2"
+    INDENT_STR="${3:-       - }"
+
+    (
+        cd "${DIR}" && find . -type f -name "*.${EXT}" | sort | sed 's#^./##g' | sed "s/\.${EXT}\$//g" | sed "s/^/${INDENT_STR}/"
+    )
+}
