@@ -66,3 +66,24 @@ import bash-framework/Functions
     (>&2 echo $(env) )
     [[ "${lines[0]}" = "$(echo -e "${__ERROR_COLOR}ERROR - qsfdsfds is not installed, please install it${__RESET_COLOR}")" ]]
 }
+
+@test "Functions::getList" {
+    run Functions::getList "${BATS_TEST_DIRNAME}/dataGetList" "sh"
+    [[ "$status" -eq 0 ]]
+    [[ "${#lines[@]}" = "2" ]]
+    [[ "${lines[0]}" = "       - test" ]]
+    [[ "${lines[1]}" = "       - test2" ]]
+
+    run Functions::getList "${BATS_TEST_DIRNAME}/dataGetList" "sh" "-"
+    [[ "$status" -eq 0 ]]
+    [[ "${#lines[@]}" = "2" ]]
+    [[ "${lines[0]}" = "-test" ]]
+    [[ "${lines[1]}" = "-test2" ]]
+
+    run Functions::getList "${BATS_TEST_DIRNAME}/dataGetList" "dsn" "*"
+    [[ "$status" -eq 0 ]]
+    [[ "${output}" = "*hello" ]]
+    
+    run Functions::getList "${BATS_TEST_DIRNAME}/unknown" "sh" "*"
+    [[ "$status" -eq 1 ]]
+}

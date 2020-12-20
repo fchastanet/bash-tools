@@ -26,7 +26,12 @@ LOCAL_DB=""
 COLLATION_NAME=""
 CHARACTER_SET=""
 TABLE=""
+FROM_DSN=""
+DEFAULT_FROM_DSN="default.remote"
+TARGET_DSN="default.local"
 TIMEFORMAT='time spent : %3R'
+# remove last slash
+DB_IMPORT_DUMP_DIR=${DB_IMPORT_DUMP_DIR%/}
 
 # check dependencies
 if ! which pv > /dev/null || ! which mysql > /dev/null || ! which mysqlshow > /dev/null || ! which mysqldump > /dev/null ; then
@@ -40,14 +45,18 @@ Description: Import remote db table into local db
 
 Command: ${SCRIPT_NAME} [-h|--help] prints this help and exits
 Command: ${SCRIPT_NAME} <remoteDbName> <tableName> [<localDbName>] 
-    [-d|--download-dump] [-f|--force] [-a|--from-aws]
+    [-d|--download-dump] [--force] [-a|--from-aws]
+    [-t|--target-dsn dsn] [-f|--from-dsn dsn]
     [-o|--collation-name utf8_general_ci] [-c|--character-set utf8]
 
     download the remote table data and install data in local database (the schema should exists)
 
     <tableName>   : table name to import
     <localDbName> : use remote db name if not provided
-    -f|--force If local table exists, it will overwrite it
+    --force If local table exists, it will overwrite it
+    -t|--target-dsn dsn         dsn to use for target database (Default: ${TARGET_DSN}) 
+    -f|--from-dsn dsn           dsn to use for source database (Default: ${DEFAULT_FROM_DSN})
+        this option is incompatible with -a|--from-aws option
     -a|--from-aws db dump will be downloaded from s3 instead of using remote db, 
         remoteDBName will represent the name of the file
         profile will be calculated against the dump itself
@@ -55,8 +64,6 @@ Command: ${SCRIPT_NAME} <remoteDbName> <tableName> [<localDbName>]
     -o|--collation-name change the collation name used during database creation (default value: collation name used by remote db)
     -c|--character-set change the character set used during database creation (default value: character set used by remote db)
 
-    local DB connection  : ${MYSQL_ROOT_USER}:Hidden@${MYSQL_HOSTNAME}:${MYSQL_PORT}
-    remote DB connection : ${REMOTE_MYSQL_USER}:Hidden@${REMOTE_MYSQL_HOSTNAME}:${REMOTE_MYSQL_PORT}
     Aws s3 location       : ${S3_BASE_URL}
 EOF
 }
@@ -66,7 +73,7 @@ EOF
 # -o is for short options like -h
 # -l is for long options with double dash like --help
 # the comma separates different long options
-options=$(getopt -l help,force,from-aws,download-dump,collation-name:,character-set: -o ahfdc:o: -- "$@" 2> /dev/null) || {
+options=$(getopt -l help,force,target-dsn:,from-dsn:,from-aws,download-dump,collation-name:,character-set: -o aht:f:dc:o: -- "$@" 2> /dev/null) || {
     Log::displayError "invalid options specified"
     showHelp
     exit 1
@@ -80,9 +87,17 @@ case $1 in
     showHelp
     exit 0
     ;;
--f|--force)
+--force)
     Log::displayInfo "If local db exists, it will overwrite it"
     FORCE=1
+    ;;
+-t|--target-dsn)
+    shift
+    TARGET_DSN="$1"
+    ;;
+-f|--from-dsn)
+    shift
+    FROM_DSN="${1:-${DEFAULT_FROM_DSN}}"
     ;;
 -a|--from-aws)
     FROM_AWS="1"
@@ -156,50 +171,55 @@ if [[ "${MYSQL_HOSTNAME}" = "localhost" ]]; then
 fi
 
 # check s3 parameter
+if [[ "${FROM_AWS}" = "1" && -n "${FROM_DSN}" ]]; then
+    Log::displayError "you cannot use from-dsn and from-aws at the same time"
+    exit 1
+fi
 if [[ "${FROM_AWS}" = "1" && -z "${S3_BASE_URL}" ]]; then
     Log::displayError "missing S3_BASE_URL, please provide a value in .env file"
     exit 1
 fi
 
-# create db instances
-declare -Agx dbRemoteInstance dbLocalInstance
-Database::newInstance dbLocalInstance "${MYSQL_HOSTNAME}" "${MYSQL_PORT}" "${MYSQL_ROOT_USER}" "${MYSQL_ROOT_PASSWORD}"
-Database::setOptions dbLocalInstance "${MYSQL_OPTIONS} --connect-timeout=5"
-Database::newInstance dbRemoteInstance "${REMOTE_MYSQL_HOSTNAME}" "${REMOTE_MYSQL_PORT}" "${REMOTE_MYSQL_USER}" "${REMOTE_MYSQL_PASSWORD}"
-Database::setOptions dbRemoteInstance "${MYSQL_OPTIONS} --connect-timeout=5"
-
-# check if local db exists
-Database::ifDbExists dbLocalInstance "${LOCAL_DB}" || {
-    Log::displayError "Local Database ${LOCAL_DB} does not exist !"
-}
-
-# check if local table exists
-LOCAL_TABLE_EXISTS='0'
-Database::isTableExists dbLocalInstance "${LOCAL_DB}" "${TABLE}" && {
-    Log::displayInfo "Local table ${LOCAL_DB}/${TABLE} already exists"
-    if [[ "${FORCE}" = "0" ]]; then
-        Log::displayError "use --force to drop it"
-        exit 1
-    else
-      LOCAL_TABLE_EXISTS='1'
-    fi
-}
-
-Log::displayInfo "import table ${TABLE} from ${REMOTE_DB} to ${LOCAL_DB}"
+# default value for FROM_DSN if from-aws not set
+if [[ "${FROM_AWS}" = "0" && -z "${FROM_DSN}" ]]; then
+    FROM_DSN="${DEFAULT_FROM_DSN}"
+fi
 
 if [[ -z "${DB_IMPORT_DUMP_DIR}" ]]; then
     Log::displayError "you have to specify a value for DB_IMPORT_DUMP_DIR env variable"
     exit 1
 fi
-# remove last slash
-DB_IMPORT_DUMP_DIR=${DB_IMPORT_DUMP_DIR%/}
-
 if [[ ! -d "${DB_IMPORT_DUMP_DIR}" ]]; then
     mkdir -p "${DB_IMPORT_DUMP_DIR}" || {
         Log::displayError "impossible to create directory ${DB_IMPORT_DUMP_DIR} specified by DB_IMPORT_DUMP_DIR env variable"
         exit 1
     }
 fi
+
+# create db instances
+declare -Agx dbRemoteInstance dbLocalInstance
+Database::newInstance dbTargetDatabase "${TARGET_DSN}"
+Database::setOptions dbTargetDatabase "${MYSQL_OPTIONS} --connect-timeout=5"
+if [[ "${FROM_AWS}" = "0" ]]; then
+    Database::newInstance dbFromInstance "${FROM_DSN}"
+    Database::setOptions dbFromInstance "${MYSQL_OPTIONS} --connect-timeout=5"
+fi
+
+# check if local db exists
+Database::ifDbExists dbTargetDatabase "${LOCAL_DB}" || {
+    Log::displayError "Local Database ${LOCAL_DB} does not exist !"
+}
+
+# check if local table exists
+Database::isTableExists dbLocalInstance "${LOCAL_DB}" "${TABLE}" && {
+    Log::displayInfo "Local table ${LOCAL_DB}/${TABLE} already exists"
+    if [[ "${FORCE}" = "0" ]]; then
+        Log::displayError "use --force to drop it"
+        exit 1
+    fi
+}
+
+Log::displayInfo "import table ${TABLE} from ${REMOTE_DB} to ${LOCAL_DB}"
 
 # check if local dump exists
 REMOTE_DB_DUMP_TEMP_FILE="${DB_IMPORT_DUMP_DIR}/importTable_${REMOTE_DB}_${TABLE}.sql"

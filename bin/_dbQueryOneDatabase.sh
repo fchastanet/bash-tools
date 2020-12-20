@@ -16,14 +16,11 @@ trap 'exit 130' INT
 
 import bash-framework/Database
 
-declare HOSTNAME="$1"
-declare PORT="$2"
-declare USER="$3"
-declare PASSWORD="$4"
-declare DB="$5"
+declare DSN_FILE="$1"
+declare DB="$2"
 
 declare -Agx dbInstance
-Database::newInstance dbInstance "${HOSTNAME}" "${PORT}" "${USER}" "${PASSWORD}"
+Database::newInstance dbInstance "${DSN_FILE}"
 Database::setQueryOptions dbInstance "${MYSQL_OPTIONS} --connect-timeout=5"
 
 # identify columns header

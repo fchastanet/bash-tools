@@ -1,16 +1,15 @@
 #!/usr/bin/env bash
 
+CURRENT_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 # load bash-framework
 # shellcheck source=bash-framework/_bootstrap.sh
-CURRENT_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 source "$( cd "${CURRENT_DIR}/.." && pwd )/bash-framework/_bootstrap.sh"
 
 Framework::expectNonRootUser
 
 import bash-framework/Database
 import bash-framework/Array
-
-#initialize Database lib in order to use to docker
+import bash-framework/Functions
 
 # ensure that Ctrl-C is trapped by this script and not sub mysql process
 trap 'exit 130' INT
@@ -19,38 +18,43 @@ trap 'exit 130' INT
 SCRIPT_NAME=${0##*/}
 JOBS_NUMBER=1
 QUERY=0
-REMOTE=0
 MYSQL_OPTIONS=""
+DSN="default.local"
+QUERIES_DIR="$(cd "${CURRENT_DIR}/.." && pwd)/conf/dbQueries"
+HOME_QUERIES_DIR="${HOME}/.bash-tools/dbQueries"
+
 declare -a PARALLEL_OPTIONS
+# check dependencies
+Functions::checkCommandExists mysql "sudo apt-get install mysql-client"
+Functions::checkCommandExists mysqlshow "sudo apt-get install mysql-client"
+Functions::checkCommandExists pv "sudo apt-get install -y pv"
 
 # Usage info
 showHelp() {
+DSN_LIST="$(Database::getDsnList  | sed 's/^/       - /')"
+local queriesList="$(Functions::getList "${QUERIES_DIR}" "sql" || true)"
+local homeQueriesList="$(Functions::getList "${HOME_QUERIES_DIR}" "sql" || true)"
 cat << EOF
-Description: Execute a query on multiple database in order to generate a report, query can be parallelized on multiple databases
+Description: Execute a query on multiple databases in order to generate a report, query can be parallelized on multiple databases
 
 Usage: ${SCRIPT_NAME} [-h|--help] prints this help and exits
-Usage: ${SCRIPT_NAME} <query|queryFile> [--env-file|-e <envfile>] [-t|--as-tsv] [-q|--query] [--jobs|-j <numberOfJobs>] [--bar|-b]
-    --help,-h prints this help and exits
-    --as-tsv,-t show results as tsv file (separated by tabulations)
-    --query,-q implies <query> parameter is a mysql query string
-    -r|--remote checks remote db, local db otherwise
-    --jobs,-j <numberOfJobs> specify the number of db to query in parallel (this needs the use of gnu parallel)
-    --bar,-b Show progress as a progress bar. In the bar is shown: % of jobs completed, estimated seconds left, and number of jobs started.
+Usage: ${SCRIPT_NAME} <query|queryFile> [-d|--dsn <dsn>] [-t|--as-tsv] [-q|--query] [--jobs|-j <jobsCount>] [--bar|-b]
+
+    -t|--as-tsv           show results as tsv file (separated by tabulations)
+    -q|--query            implies <query> parameter is a mysql query string
+    -d|--dsn <dsn>        to use for target mysql server (Default: ${DSN}) 
+    -j|--jobs <jobsCount> specify the number of db to query in parallel (this needs the use of gnu parallel)
+    -b|--bar              Show progress as a progress bar. In the bar is shown: % of jobs completed, estimated seconds left, and number of jobs started.
     <query|queryFile>
         if -q option is provided this parameter is a mysql query string
         else a file must be specified
-    --env-file,-e <envfile> load <envfile>, this file must contains these variables in order to connect to the mysql server
-MYSQL_HOSTNAME=""
-MYSQL_USER=""
-MYSQL_PASSWORD=""
-MYSQL_PORT=""
-REMOTE_MYSQL_HOSTNAME=""
-REMOTE_MYSQL_PORT=""
-REMOTE_MYSQL_USER=""
-REMOTE_MYSQL_PASSWORD=""
 
-    local DB connection  : ${MYSQL_USER}:hidden@${MYSQL_HOSTNAME}:${MYSQL_PORT}
-    remote DB connection : ${REMOTE_MYSQL_USER}:hidden@${REMOTE_MYSQL_HOSTNAME}:${REMOTE_MYSQL_PORT}
+    List of available dsn: 
+${DSN_LIST}
+    List of available home queries (${HOME_QUERIES_DIR}): 
+${homeQueriesList}
+    List of available queries : 
+${queriesList}
 EOF
 }
 
@@ -59,7 +63,7 @@ EOF
 # -o is for short options like -h
 # -l is for long options with double dash like --help
 # the comma separates different long options
-options=$(getopt -l help,as-tsv,query,remote,bar,jobs:,with-headers,env-file: -o htqrbj:we: -- "$@" 2> /dev/null) || {
+options=$(getopt -l help,as-tsv,query,bar,jobs:,dsn: -o htqbj:d: -- "$@" 2> /dev/null) || {
     Log::displayError "invalid options specified"
     showHelp
     exit 1
@@ -86,12 +90,9 @@ case $1 in
 --query|-q)
     QUERY=1
     ;;
---remote|-r)
-    REMOTE=1
-    ;;
---env-file|-e)
+--dsn|-d)
     shift
-    ENV_FILE=$1
+    DSN=${1:-:-default.local}
     ;;
 --)
     shift
@@ -117,54 +118,19 @@ if [[ -z "${queryFile}" ]]; then
     exit 1
 fi
 
-declare query=""
+declare query="${queryFile}"
 if [[ "${QUERY}" = "0" ]]; then
     if [[ ! -f "${queryFile}" ]]; then
         Log::displayError "the file ${queryFile} does not exist"
         exit 1
     fi
-    query=$(cat "${queryFile}")
-else
-    query="${queryFile}"
+    query="$(cat "${queryFile}")"
 fi
 
-if [[ "${REMOTE}" = "1" ]] ; then
-    HOSTNAME="${REMOTE_MYSQL_HOSTNAME}"
-    USER="${REMOTE_MYSQL_USER}"
-    PASSWORD="${REMOTE_MYSQL_PASSWORD}"
-    PORT="${REMOTE_MYSQL_PORT}"
-else
-    HOSTNAME="${MYSQL_HOSTNAME}"
-    USER="${MYSQL_USER}"
-    PASSWORD="${MYSQL_PASSWORD}"
-    PORT="${MYSQL_PORT}"
-fi
 
 if ! [[ ${JOBS_NUMBER} =~ ^[0-9]+$ ]] ; then
    Log::displayError "number of jobs is incorrect"
    exit 1
-fi
-
-if [[ -n "${ENV_FILE}" ]]; then
-  if [[ ! -f "${ENV_FILE}" ]]; then
-      Log::displayError "env file ${ENV_FILE} does not exist"
-      exit 1
-  fi
-
-  # load env file
-  source "${ENV_FILE}"
-
-  # check that expected env variables are set
-  expectedEnvVars=(HOSTNAME USER PASSWORD PORT)
-  allEnvVarSet=1
-  for var in "${expectedEnvVars[@]}"
-  do
-      [[ -v "${var}" ]] || {
-          Log::displayError "env file ${ENV_FILE} should define variable ${var}"
-          allEnvVarSet=0
-      }
-  done
-  [[ "${allEnvVarSet}" = "0" ]] && exit 1
 fi
 
 if [[ ${JOBS_NUMBER} -lt 1 ]] ; then
@@ -175,16 +141,9 @@ if [[ ${JOBS_NUMBER} -gt 1 ]] ; then
     Functions::checkCommandExists parallel "sudo apt-get install parallel"
 fi
 
-# mysql command is needed
-Functions::checkCommandExists mysql "sudo apt-get install mysql-client"
-
 declare -Agx dbInstance
-Database::newInstance dbInstance "${HOSTNAME}" "${PORT}" "${USER}" "${PASSWORD}"
-Database::setOptions dbInstance "${MYSQL_OPTIONS}"
-Database::setMysqlCommands dbInstance \
-    "${MYSQL_COMMAND:-${dbInstance['MYSQL_COMMAND']}}" \
-    "${MYSQLDUMP_COMMAND:-${dbInstance['MYSQLDUMP_COMMAND']}}" \
-    "${MYSQLSHOW_COMMAND:-${dbInstance['MYSQLSHOW_COMMAND']}}" \
+Database::newInstance dbInstance "${DSN}"
+Database::setOptions dbInstance "${MYSQL_OPTIONS} --connect-timeout=5"
 
 # list of all databases
 if [[ "${JOBS_NUMBER}" = "1" ]] ; then

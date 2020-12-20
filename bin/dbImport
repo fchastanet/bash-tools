@@ -5,13 +5,7 @@ CURRENT_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 # shellcheck source=bash-framework/_bootstrap.sh
 source "$( cd "${CURRENT_DIR}/.." && pwd )/bash-framework/_bootstrap.sh"
 
-if [[  "$USER" = "root" ]]; then
-    Log::displayError "The script must not be run as root"
-    exit 1
-fi
-
-PROFILES_DIR="$(cd "${CURRENT_DIR}/.." && pwd)/conf/dbImportProfiles"
-HOME_PROFILES_DIR="${HOME}/.bash-tools/dbImportProfiles"
+Framework::expectNonRootUser
 
 import bash-framework/Database
 
@@ -30,25 +24,28 @@ LOCAL_DB=""
 COLLATION_NAME=""
 CHARACTER_SET=""
 FROM_DSN=""
+DEFAULT_FROM_DSN="default.remote"
 TARGET_DSN="default.local"
 TIMEFORMAT='time spent : %3R'
+# remove last slash
+DB_IMPORT_DUMP_DIR=${DB_IMPORT_DUMP_DIR%/}
+PROFILES_DIR="$(cd "${CURRENT_DIR}/.." && pwd)/conf/dbImportProfiles"
+HOME_PROFILES_DIR="${HOME}/.bash-tools/dbImportProfiles"
 
 # check dependencies
-if ! which pv > /dev/null || ! which mysql > /dev/null || ! which mysqlshow > /dev/null || ! which mysqldump > /dev/null ; then
-    Log::displayError "one of pv/mysql/mysqldump/mysqlshow programs is not installed, run 'sudo apt install -y pv mysql-client' or use docker container"
-    exit 1
-fi
+Functions::checkCommandExists mysql "sudo apt-get install -y mysql-client"
+Functions::checkCommandExists mysqlshow "sudo apt-get install -y mysql-client"
+Functions::checkCommandExists mysqldump "sudo apt-get install -y mysql-client"
+Functions::checkCommandExists pv "sudo apt-get install -y pv"
 
 showHelp() {
-    local profilesList=""
-    local homeProfilesList=""
+DSN_LIST="$(Database::getDsnList  | sed 's/^/       - /')"
 
-    profilesList=$(cd "${PROFILES_DIR}" && find . -type f -name \*.sh | sed 's#^./##g' | sed 's/\.sh$//g' | paste -sd "," - | sed -e 's/,/, /g')
+local profilesList=""
+local homeProfilesList=""
 
-    if [[ -d "${HOME_PROFILES_DIR}" ]]; then
-        homeProfilesList=$(cd "${HOME_PROFILES_DIR}" && find . -type f -name \*.sh | sed 's#^./##g' | sed 's/\.sh$//g' | paste -sd "," - | sed -e 's/,/, /g')
-    fi
-
+profilesList="$(Functions::getList "${PROFILES_DIR}" "sh" || true)"
+homeProfilesList="$(Functions::getList "${HOME_PROFILES_DIR}" "sh" || true)"
 
 cat << EOF
 Description: Import source db into target db
@@ -69,23 +66,25 @@ Usage: ${SCRIPT_NAME} <fromDbName> [<targetDbName>]
     -o|--collation-name         change the collation name used during database creation 
         (default value: collation name used by remote db)
     -c|--character-set          change the character set used during database creation 
-        (default value: character set used by remote db)
+        (default value: character set used by remote db or dump file if aws)
     -p|--profile profileName    the name of the profile to use in order to include or exclude tables
         (if not specified ${HOME_PROFILES_DIR}/default.sh  is used if exists otherwise ${PROFILES_DIR}/default.sh)
-        list of available home profiles (${HOME_PROFILES_DIR}): ${homeProfilesList}
-        list of available profiles : ${profilesList}
-    -t|--target-dsn dsn         dsn to use for target database 
-    -f|--from-dsn dsn           dsn to use for source database
+    -t|--target-dsn dsn         dsn to use for target database (Default: ${TARGET_DSN}) 
+    -f|--from-dsn dsn           dsn to use for source database (Default: ${DEFAULT_FROM_DSN})
         this option is incompatible with -a|--from-aws option
     -a|--from-aws               db dump will be downloaded from s3 instead of using remote db, 
         remoteDBName will represent the name of the file
         profile will be calculated against the dump itself
         this option is incompatible with -f|--from-dsn option
 
-
-    local DB connection   : ${MYSQL_ROOT_USER}:Hidden@${MYSQL_HOSTNAME}:${MYSQL_PORT}
-    remote DB connection  : ${REMOTE_MYSQL_USER}:Hidden@${REMOTE_MYSQL_HOSTNAME}:${REMOTE_MYSQL_PORT}
     Aws s3 location       : ${S3_BASE_URL}
+
+    List of available home profiles (${HOME_PROFILES_DIR}): 
+${homeProfilesList}
+    List of available profiles : 
+${profilesList}
+    List of available dsn: 
+${DSN_LIST}
 EOF
 }
 
@@ -109,7 +108,6 @@ case $1 in
     exit 0
     ;;
 --force)
-    Log::displayInfo "If local db exists, it will overwrite it"
     FORCE=1
     ;;
 -d|--download-dump)
@@ -192,7 +190,7 @@ fi
 
 # default value for FROM_DSN if from-aws not set
 if [[ "${FROM_AWS}" = "0" && -z "${FROM_DSN}" ]]; then
-    FROM_DSN="default.remote"
+    FROM_DSN="${DEFAULT_FROM_DSN}"
 fi
 
 # load the profile
@@ -211,12 +209,24 @@ else
     exit 1
 fi
 
+if [[ -z "${DB_IMPORT_DUMP_DIR}" ]]; then
+    Log::displayError "you have to specify a value for DB_IMPORT_DUMP_DIR env variable"
+    exit 1
+fi
+if [[ ! -d "${DB_IMPORT_DUMP_DIR}" ]]; then
+    mkdir -p "${DB_IMPORT_DUMP_DIR}" || {
+        Log::displayError "impossible to create directory ${DB_IMPORT_DUMP_DIR} specified by DB_IMPORT_DUMP_DIR env variable"
+        exit 1
+    }
+fi
+
+
 # create db instances
 declare -Agx dbFromInstance dbTargetDatabase
 
 Database::newInstance dbTargetDatabase "${TARGET_DSN}"
 Database::setOptions dbTargetDatabase "${MYSQL_OPTIONS} --connect-timeout=5"
-if [[ "${FROM_AWS}" = "0" ]; then
+if [[ "${FROM_AWS}" = "0" ]]; then
     Database::newInstance dbFromInstance "${FROM_DSN}"
     Database::setOptions dbFromInstance "${MYSQL_OPTIONS} --connect-timeout=5"
 fi
@@ -231,20 +241,6 @@ Database::ifDbExists dbTargetDatabase "${LOCAL_DB}" && {
     fi
     LOCAL_DB_EXISTS='1'
 }
-
-if [[ -z "${DB_IMPORT_DUMP_DIR}" ]]; then
-    Log::displayError "you have to specify a value for DB_IMPORT_DUMP_DIR env variable"
-    exit 1
-fi
-# remove last slash
-DB_IMPORT_DUMP_DIR=${DB_IMPORT_DUMP_DIR%/}
-
-if [[ ! -d "${DB_IMPORT_DUMP_DIR}" ]]; then
-    mkdir -p "${DB_IMPORT_DUMP_DIR}" || {
-        Log::displayError "impossible to create directory ${DB_IMPORT_DUMP_DIR} specified by DB_IMPORT_DUMP_DIR env variable"
-        exit 1
-    }
-fi
 
 if [[ "${FROM_AWS}" = "1" ]]; then
     REMOTE_DB_DUMP_TEMP_FILE="${DB_IMPORT_DUMP_DIR}/${REMOTE_DB}.tar.gz"
@@ -359,7 +355,6 @@ if [[ "${LOCAL_DB_EXISTS}" = "1" ]]; then
     Log::displayInfo "drop local database ${LOCAL_DB}";
     Database::query dbTargetDatabase "DROP DATABASE IF EXISTS ${LOCAL_DB}"
 fi
-
 Log::displayInfo "create local database ${LOCAL_DB}";
 Database::query dbTargetDatabase "CREATE DATABASE ${LOCAL_DB}/*!40100 COLLATE \"${COLLATION_NAME}\" */"
 
@@ -368,6 +363,7 @@ if [[ "${FROM_AWS}" = "1" ]]; then
         "${REMOTE_DB_DUMP_TEMP_FILE}" \
         "${LOCAL_DB}" \
         "${PROFILE_COMMAND}" \
+        "${dbTargetDatabase['AUTH_FILE']}" \
         "${CHARACTER_SET}"
 else
     Log::displayInfo "Importing remote db '${REMOTE_DB}' to local db '${LOCAL_DB}'"
