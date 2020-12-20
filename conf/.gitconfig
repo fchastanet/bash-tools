@@ -1,0 +1,6 @@
+[alias]
+    # https://stackoverflow.com/a/43585658/3045926
+    # or use git show-branch
+    reverse-tree = 'log --graph --decorate --simplify-by-decoration --oneline'
+
+    set-remote-branch = !f() {git branch --set-upstream-to="origin/$(git branch --show-current)" "$(git branch --show-current)"; }; f; unset f;)
