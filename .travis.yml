@@ -1,16 +1,24 @@
 language: bash
 
 env:
-  - BASH_IMAGE=bash:4.4
-  - BASH_IMAGE=bash:5.0.17
-  - BASH_IMAGE=bash:rc
-  - BASH_IMAGE=amd64/bash:4.4
-  - BASH_IMAGE=amd64/bash:5.0.17
-  - BASH_IMAGE=amd64/bash:rc
+  - VENDOR=ubuntu BASH_TAR_VERSION=4.4    BASH_IMAGE=ubuntu:20.04
+  - VENDOR=ubuntu BASH_TAR_VERSION=5.0.17 BASH_IMAGE=ubuntu:20.04 
+  - VENDOR=ubuntu BASH_TAR_VERSION=rc     BASH_IMAGE=ubuntu:20.04
+  - VENDOR=alpine BASH_TAR_VERSION=4.4    BASH_IMAGE=bash:4.4 
+  - VENDOR=alpine BASH_TAR_VERSION=5.0.17 BASH_IMAGE=bash:5.0.17
+  - VENDOR=alpine BASH_TAR_VERSION=rc     BASH_IMAGE=bash:rc
+  - VENDOR=alpine BASH_TAR_VERSION=4.4    BASH_IMAGE=amd64/bash:4.4
+  - VENDOR=alpine BASH_TAR_VERSION=5.0.17 BASH_IMAGE=amd64/bash:5.0.17
+  - VENDOR=alpine BASH_TAR_VERSION=rc     BASH_IMAGE=amd64/bash:rc
 
 before_script:
-  - docker build --build-arg BASH_IMAGE=${BASH_IMAGE} -t git-${BASH_IMAGE} .docker
-  - docker run git-${BASH_IMAGE} --version
+  - > 
+    docker build 
+    -f .docker/Dockerfile.${VENDOR} 
+    --build-arg BASH_TAR_VERSION=${BASH_TAR_VERSION} 
+    --build-arg BASH_IMAGE=${BASH_IMAGE} 
+    -t git-${VENDOR}-${BASH_IMAGE} .docker
+  - docker run git-${VENDOR}-${BASH_IMAGE} --version
 
 script:
-  - docker run --rm -v $PWD:/bash --user $(id -u):$(id -g) git-${BASH_IMAGE} /bash/test.sh
+  - docker run --rm -v $PWD:/bash --user $(id -u):$(id -g) git-${VENDOR}-${BASH_IMAGE} /bash/test.sh

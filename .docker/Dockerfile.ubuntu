@@ -1,0 +1,31 @@
+ARG BASH_IMAGE=ubuntu:20.04
+FROM ${BASH_IMAGE}
+
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+ARG BASH_TAR_VERSION=5.1
+RUN set -x \
+  && set -o errexit \
+  && echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selections \
+  && apt-get update \
+  && apt-get install -y -q --no-install-recommends \
+    build-essential \ 
+    curl \
+    bison \
+    git \
+    gzip \
+    \
+  && ( \
+    cd /tmp \
+    && curl -o bash.tar.gz "http://ftp.gnu.org/gnu/bash/bash-${BASH_TAR_VERSION}.tar.gz" \
+    && tar xzf bash.tar.gz \
+    && cd bash-${BASH_TAR_VERSION} \
+    && ./configure \
+    && make install \
+  ) \
+  \
+  # clean apt packages
+  && apt-get remove -y curl bison build-essential \
+  && apt-get -y clean \
+  && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* /usr/share/doc/*
+
+ENV IN_BASH_DOCKER="You're in docker"
