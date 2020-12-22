@@ -8,8 +8,18 @@ load "${vendorDir}/bats-mock-Flamefire/load.bash"
 setup() {
     export HOME="/tmp/home"
     (
-        mkdir -p ${HOME}/.bash-tools/dsn ${HOME}/.bash-tools/dbImportDumps/
+        mkdir -p "${HOME}" 
+        cd "${HOME}"
+        mkdir -p \
+            bin \
+            .bash-tools/dsn \
+            .bash-tools/dbImportDumps \
+            .bash-tools/dbImportProfiles
+        cp "${BATS_TEST_DIRNAME}/mocks/pv" bin
+        touch bin/mysql bin/mysqldump bin/mysqlshow
+        chmod +x bin/*
     )
+    export PATH="$PATH:/tmp/home/bin"
 }
 
 teardown() {
@@ -19,7 +29,6 @@ teardown() {
 
 @test "display help" {
     run ${toolsDir}/dbImport --help 2>&1
-    (>&3 echo $output)
     [[ "${output}" == *"Description: Import source db into target db"* ]]
 }
 
@@ -85,8 +94,8 @@ teardown() {
     stub mysqldump \
         "\* --default-character-set=utf8 --compress --compact --hex-blob --routines --triggers --single-transaction --set-gtid-purged=OFF --column-statistics=0 --ssl-mode=DISABLED --no-create-info --skip-add-drop-table --single-transaction=TRUE fromDb 'table1' : echo '####data####'" \
         "\* --default-character-set=utf8 --compress --compact --hex-blob --routines --triggers --single-transaction --set-gtid-purged=OFF --column-statistics=0 --ssl-mode=DISABLED --no-data --skip-add-drop-table --single-transaction=TRUE fromDb : echo '####structure####'"
-    
-    run ${toolsDir}/dbImport -f default.local fromDb toDb 2>&1
+
+    run ${toolsDir}/dbImport -f default.local fromDb toDb 2>&1 
     [[ "${output}" == *"Import database duration : "* ]]
     [[ -f "${HOME}/.bash-tools/dbImportDumps/fromDb_default.sql" ]]
     [[ -f "${HOME}/.bash-tools/dbImportDumps/fromDb_default_structure.sql" ]]
