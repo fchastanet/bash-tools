@@ -10,12 +10,6 @@
 [submodule "vendor/fchastanet.tomdoc.sh"]
 	path = vendor/fchastanet.tomdoc.sh
 	url = https://github.com/fchastanet/tomdoc.sh.git
-[submodule "vendor/bats-mock"]
-	path = vendor/bats-mock
-	url = https://github.com/grayhemp/bats-mock.git
-[submodule "vendor/bats-stub"]
-	path = vendor/bats-stub
-	url = https://github.com/jasonkarns/bats-mock
 [submodule "vendor/bats-mock-Flamefire"]
 	path = vendor/bats-mock-Flamefire
 	url = https://github.com/Flamefire/bats-mock.git
