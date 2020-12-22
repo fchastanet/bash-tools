@@ -1,10 +1,5 @@
 # bash-framework/Constants.sh
 # Constants
-# constant `CONSTANTS_MODULE_VERSION`
-Module: Framework constants definition
-
-for color constants,
- check colors applicable https://misc.flogisoft.com/bash/tip_colors_and_formatting
 # constant `__LEVEL_OFF`
 > ***Public***
 

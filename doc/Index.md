@@ -9,6 +9,8 @@
 
 [bash-framework/Functions.sh](Functions.md)
 
+[bash-framework/Git.sh](Git.md)
+
 [bash-framework/UI.sh](UI.md)
 
 [bash-framework/Version.sh](Version.md)

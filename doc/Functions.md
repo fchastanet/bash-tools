@@ -32,3 +32,17 @@ quote a string
 * $1 the string to quote
 
 **Output**: the string quoted
+# function `Functions::getList`
+> ***Public***
+
+list files of dir with given extension and display it as a list one by line
+
+**Arguments**:
+* $1 the directory to list
+* $2 the extension (eg: sh)
+* $3 the indentation ('       - ' by default) can be any string compatible with sed not containing any /
+ **Output**: list of files without extension/directory
+ eg:
+        - default.local
+        - default.remote
+        - localhost-root

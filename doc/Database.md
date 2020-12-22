@@ -7,10 +7,7 @@ create a new db instance
 
 **Arguments**:
 * $1 - (passed by reference) database instance to create
-* $2 - mysqlHostName
-* $3 - mysqlHostPort
-* $4 - mysqlHostUser
-* $5 - mysqlHostPassword
+* $2 - dsn profile
 
 **Example:**
 ```shell
@@ -19,6 +16,27 @@ create a new db instance
 ```
 
 Returns immediately if the instance is already initialized
+# function `Database::checkDsnFile`
+> ***Internal***
+
+check if dsn file has all the mandatory variables set
+ Mandatory variables are: HOSTNAME, USER, PASSWORD, PORT
+
+**Arguments**:
+* $1 - dsn absolute filename
+
+Returns 0 on valid file, 1 otherwise with log output
+# function `Database::getDefaultConfDsnFolder`
+Public
+ Returns the default conf dsn folder
+# function `Database::getHomeConfDsnFolder`
+Public
+ Returns the overriden conf dsn folder in user home folder
+# function `Database::getDsnList`
+> ***Public***
+
+list the dsn available in bash-tools/conf/dsn folder
+ and those overriden in $HOME/.bash-tools/dsn folder
 # function `Database::setOptions`
 > ***Public***
 
@@ -46,7 +64,7 @@ set the general options to use on mysql command to query the database
 **Arguments**:
 * $1 - (passed by reference) database instance to use
 * $2 - options list
-# function `Database::createAuthFile`
+# function `Database::authFile`
 > ***Internal***
 
 generate temp file for easy authentication
