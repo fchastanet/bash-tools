@@ -1,0 +1,5 @@
+[client]
+user = userOverriden
+password = passOverriden
+host = hostOverriden
+port = 3306

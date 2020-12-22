@@ -146,25 +146,23 @@ Database::newInstance dbInstance "${DSN}"
 Database::setOptions dbInstance "${MYSQL_OPTIONS} --connect-timeout=5"
 
 # list of all databases
+allDbs="$(Database::query dbInstance "show databases" "mysql" | tail -n +2 | grep -Ev "performance_schema|information_schema|mysql")"
 if [[ "${JOBS_NUMBER}" = "1" ]] ; then
     (
-        allDbs="$(Database::query dbInstance "show databases" | tail -n +2)"
         headerLineDisplayed=0
         declare db
         echo "${allDbs}" | while IFS=" " read db; do
-            if ! Array::contains "${db}" "performance_schema" "information_schema" "mysql" ; then
-                # errors will be shown on stderr, result on stdout
-                if [[ "${headerLineDisplayed}" = "0" ]]; then
-                    Database::query dbInstance "${query}" "${db}" || (
-                      Log::displayError "database ${db} error" >&2
-                    )
-                    headerLineDisplayed=1
-                else
-                    # remove first header line
-                    (Database::query dbInstance "${query}" "${db}" | sed 1d) || (
-                      Log::displayError "database ${db} error" >&2
-                    )
-                fi
+            # errors will be shown on stderr, result on stdout
+            if [[ "${headerLineDisplayed}" = "0" ]]; then
+                Database::query dbInstance "${query}" "${db}" || (
+                    Log::displayError "database ${db} error" >&2
+                )
+                headerLineDisplayed=1
+            else
+                # remove first header line
+                (Database::query dbInstance "${query}" "${db}" | sed 1d) || (
+                    Log::displayError "database ${db} error" >&2
+                )
             fi
         done
     )
@@ -173,9 +171,8 @@ else
 
     export query
     export MYSQL_OPTIONS
-    Database::query dbInstance "show databases" "mysql" |
-        parallel "${PARALLEL_OPTIONS[@]}" "${CURRENT_DIR}/_dbQueryOneDatabase.sh" \
-            "${HOSTNAME}" "${PORT}" "${USER}" "${PASSWORD}" \
+    echo "${allDbs}" |
+        parallel "${PARALLEL_OPTIONS[@]}" "${CURRENT_DIR}/_dbQueryOneDatabase.sh" "${DSN}" \
             | sed -E '1!{/^@@@/d}' \
             | sed 's/^@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@//'
 fi

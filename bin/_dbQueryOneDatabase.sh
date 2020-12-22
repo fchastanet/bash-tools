@@ -16,6 +16,7 @@ trap 'exit 130' INT
 
 import bash-framework/Database
 
+# query is passed via export
 declare DSN_FILE="$1"
 declare DB="$2"
 
@@ -26,7 +27,6 @@ Database::setQueryOptions dbInstance "${MYSQL_OPTIONS} --connect-timeout=5"
 # identify columns header
 echo -n "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
 
-# errors will be shown on stderr, result on stdout
 # shellcheck disable=SC2154
 Database::query dbInstance "${query}" "${DB}" ||
     Log::displayError "database ${DB} error" 1>&2
