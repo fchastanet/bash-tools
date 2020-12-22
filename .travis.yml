@@ -1,30 +1,32 @@
 language: bash
-
 services:
   - docker
 
 env:
+  matrix:
   - VENDOR=ubuntu BASH_TAR_VERSION=4.4    BASH_IMAGE=ubuntu:20.04
-  - VENDOR=ubuntu BASH_TAR_VERSION=5.0.17 BASH_IMAGE=ubuntu:20.04 
+  - VENDOR=ubuntu BASH_TAR_VERSION=5.0.17 BASH_IMAGE=ubuntu:20.04
   - VENDOR=ubuntu BASH_TAR_VERSION=rc     BASH_IMAGE=ubuntu:20.04
-  - VENDOR=alpine BASH_TAR_VERSION=4.4    BASH_IMAGE=bash:4.4 
+  - VENDOR=alpine BASH_TAR_VERSION=4.4    BASH_IMAGE=bash:4.4
   - VENDOR=alpine BASH_TAR_VERSION=5.0.17 BASH_IMAGE=bash:5.0.17
   - VENDOR=alpine BASH_TAR_VERSION=rc     BASH_IMAGE=bash:rc
+  global:
+    secure: nP65h/oVg20j5Vg7vwwhJPB3fJvUgZkoAJgvU5qyz0mv02wHkNeHyCLV7kqTEbqHgA+lwtpS9TbIKi39ZEg7EkkgQqYVsdtRcfNj7FtK4jVDPO4kPT/aLCHxbB9tmMIbAb+QC/LlNBihU1o6NabdQDoWie7CmCkWonm7NCA1XshPSjepwXeqig3gLm4XCOve/AZY7E51pvmjUpDzWJvV27Cww5wQTRPooavzLW7iq2tRPRWOkIZnGIAgnuJTOxFa3wweY7BBWhaSPm4M7Ngxme5Wbi3dv40ZQmN9VldtaqKE35MedZrAAHSHFALph/1teJOfqH06cYaKNt+hx9TDWuq3K14KtzBcAEtlxreHT4l0cJGvjRjsi5YZViJFSuOrvQ5stFNuOTes3spiaBx+MrivyUUwRhLN77xKUnDIwsVUsAEkxeEu5Q53B9wfW5mgzodtLQ94hx0LC68NCU669+BbJ902HA0v5Je+T8qBixkDn3+gHu7YOFHZaqV00DpT3n7D076Z1jmmFDmJDXpl1F+2pgETQsoiOJLR9RXzWq9endcQbQ8GtEk9MVirfInVaWFRlxaZ+eoB44VSbfpmDhhMSqq+MQIVpVAlW0dXO/FBFbSJm9gGOlWUrKRaIQJi65+ZTdRk8QnTfk4qNTD/73yT2722Bjm7LjOp+Jn4W5Q=
 
 before_script:
-  - ./installBuildDeps.sh
+  - "./installBuildDeps.sh"
   - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
   - docker pull scranups/build:bash-tools-${VENDOR}-${BASH_TAR_VERSION} || true
   - > 
-    docker build 
-    -f .docker/Dockerfile.${VENDOR} 
-    --build-arg BASH_TAR_VERSION=${BASH_TAR_VERSION} 
-    --build-arg BASH_IMAGE=${BASH_IMAGE} 
-    -t bash-tools-${VENDOR}-${BASH_TAR_VERSION} .docker
+      docker build 
+      -f .docker/Dockerfile.${VENDOR} 
+      --build-arg BASH_TAR_VERSION=${BASH_TAR_VERSION} 
+      --build-arg BASH_IMAGE=${BASH_IMAGE} 
+      -t bash-tools-${VENDOR}-${BASH_TAR_VERSION} .docker
   - docker run bash-tools-${VENDOR}-${BASH_TAR_VERSION} bash --version
   - docker push scranups/build:bash-tools-${VENDOR}-${BASH_TAR_VERSION}
 
 script:
-  - docker run --rm -v $PWD:/bash --user $(id -u):$(id -g) bash-tools-${VENDOR}-${BASH_TAR_VERSION} /bash/test.sh
+- docker run --rm -v $PWD:/bash --user $(id -u):$(id -g) bash-tools-${VENDOR}-${BASH_TAR_VERSION}
+  /bash/test.sh
 
-secure: "HE/PTuxoRq0YyjzJkUVbjO5zI9w0jK9XVjL1cKVFkb0ygkAzVejFn9544Ii12SeyqQZ3dZB5H4RJndBiyJrF1Njd2CuujwEWWPmR/2YS3qIqTJl7RtOQu/NJE4KEKZob0kgN45E/2CZVJIvFjiW4IciCRrZdcRlj2xeJv9TMtRStdFK+72QHKtSq2iGIcICW0gGhnmsoZDxcULAw77v9Ev+zt96HOTnJt5TEVhWIzpjoiFAdZ4Z2gZA1z4/ZD4GqDVshoqVFlSfXSH/OldUEUI/NKY5Ev2Mle2v3qOLngncFYGcBjVr4aeU9aQQlLwtcqGj/Q1O+CVF56QrB62Th17fa/Hvhjfm6l6mVRaTXNWDnU2jl94eRHB7asEm9Ern6gWVUAeiOaijsJ00rylLXbnCQSqElYqrmhmJSvGhHPfsBPwtUFd+6RwekJSqtV8vDjCX5qqVyuZBIjm7serTRZz3fwqcjp3RUFRKP1+ZjwVKCr8yfl/0Dq26AU6P1rxkJD3bmiItGt+9kOFdNGgEfL1N1kTMBmQv2mXD0Ap1XayGL2wWSptpBKxJEoo1Gapo+pJkRTv2+CxhJVzgysyONiZz1dj/iHwL3a67HjNerkfhew//1BuT2da3NxU0fAdQPuyMuDO51KYFijj0sIzMN76J7oi43wSOhhQr1mrieWoI="
