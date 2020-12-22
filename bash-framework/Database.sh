@@ -200,14 +200,12 @@ Database::ifDbExists() {
   local result
   local -a mysqlCommand=()
 
-
   mysqlCommand+=(mysqlshow)
   mysqlCommand+=(--defaults-extra-file="${instanceIfDbExists['AUTH_FILE']}")
   mysqlCommand+=(${instanceIfDbExists['SSL_OPTIONS']})
   mysqlCommand+=("${dbName}")
   Log::displayDebug "execute command: '${mysqlCommand[*]}'"
-  result="$(MSYS_NO_PATHCONV=1 "${mysqlCommand[@]}" | grep -v Wildcard | grep -o "${dbName}" )"
-
+  result="$(MSYS_NO_PATHCONV=1 "${mysqlCommand[@]}" 2>/dev/null | grep '^Database: ' | grep -o "${dbName}" )"
   [[ "${result}" == "${dbName}" ]]
 }
 
@@ -338,7 +336,7 @@ Database::query() {
   mysqlCommand+=(${instanceQuery['OPTIONS']})
   # add optional db name
   if [[ -n "${3+x}" ]]; then
-    mysqlCommand+=(" '$3'")
+    mysqlCommand+=("$3")
   fi
   # add optional sql query
   if [[ -n "${2+x}" && -n "$2" ]]; then

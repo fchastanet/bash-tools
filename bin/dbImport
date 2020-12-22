@@ -285,6 +285,7 @@ if [[ "${DOWNLOAD_DUMP}" = "1" ]]; then
     Log::displayInfo "Download dump"
 
     if [[ "${FROM_AWS}" = "1" ]]; then
+        CHARACTER_SET="${CHARACTER_SET:-utf8}"
         # download dump from s3
         S3_URL="${S3_BASE_URL%/}/${REMOTE_DB}.tar.gz"
         Log::displayInfo "Download dump from ${S3_URL} ...";
@@ -293,6 +294,12 @@ if [[ "${DOWNLOAD_DUMP}" = "1" ]]; then
             exit 1
         }
     else
+        # check if remote db exists
+        Database::ifDbExists dbFromInstance "${REMOTE_DB}" || {
+            Log::displayError "Remote Database ${REMOTE_DB} does not exist"
+            exit 1
+        }
+        
         # get remote db collation name
         if [[ -z "${COLLATION_NAME}" ]]; then
             COLLATION_NAME=$(Database::query dbFromInstance \
@@ -307,16 +314,10 @@ if [[ "${DOWNLOAD_DUMP}" = "1" ]]; then
 
         DUMP_HEADER=$(printf "${DUMP_HEADER}\nSET names '${CHARACTER_SET}';\n")
 
-        # check if remote db exists
-        Database::ifDbExists dbFromInstance "${REMOTE_DB}" || {
-            Log::displayError "Remote Database ${REMOTE_DB} does not exist"
-            exit 1
-        }
-
         # calculate remote db dump size
         FULL_LIST_TABLES="$(Database::query dbFromInstance "show tables" "${REMOTE_DB}")"
         LIST_TABLES="$(echo "${FULL_LIST_TABLES}" | ${PROFILE_COMMAND})"
-        readarray -t LIST_TABLES_ARRAY <<< ${LIST_TABLES}
+        readarray -t LIST_TABLES_ARRAY <<< "${LIST_TABLES}"
         IFS=$'\n' eval 'LIST_TABLES_ARRAY=(${LIST_TABLES})'
         LIST_TABLES_DUMP=$(printf "'%q'," "${LIST_TABLES_ARRAY[@]}")
 
@@ -334,7 +335,8 @@ if [[ "${DOWNLOAD_DUMP}" = "1" ]]; then
         Log::displayInfo "Dump the database $REMOTE_DB (Size:${REMOTE_DB_DUMP_SIZE}MB) ...";
         echo "${DUMP_HEADER}" > "${REMOTE_DB_DUMP_TEMP_FILE}"
         DUMP_SIZE_PV_ESTIMATION=$(awk "BEGIN {printf \"%.0f\",${REMOTE_DB_DUMP_SIZE}/1.5}")
-        time Database::dump dbFromInstance "${REMOTE_DB}" "${LIST_TABLES_DUMP//[,]/ }" --no-create-info --skip-add-drop-table --single-transaction=TRUE | \
+        LIST_TABLES_DUMP=$(printf "%q " "${LIST_TABLES_ARRAY[@]}")
+        time Database::dump dbFromInstance "${REMOTE_DB}" "${LIST_TABLES_DUMP}" --no-create-info --skip-add-drop-table --single-transaction=TRUE | \
             pv --progress --size ${DUMP_SIZE_PV_ESTIMATION}m >> "${REMOTE_DB_DUMP_TEMP_FILE}"
         echo "${DUMP_FOOTER}" >> "${REMOTE_DB_DUMP_TEMP_FILE}"
 
@@ -346,9 +348,10 @@ if [[ "${DOWNLOAD_DUMP}" = "1" ]]; then
     fi
     Log::displayInfo "Dump done.";
 fi
-if [[ -z "${COLLATION_NAME}" ]]; then
-    COLLATION_NAME="utf8_general_ci"
-fi
+
+# TODO Collation and character set should be retrieved from dump files if possible
+COLLATION_NAME="${COLLATION_NAME:-utf8_general_ci}"
+CHARACTER_SET="${CHARACTER_SET:-utf8}"
 
 # drop local db
 if [[ "${LOCAL_DB_EXISTS}" = "1" ]]; then
@@ -356,7 +359,7 @@ if [[ "${LOCAL_DB_EXISTS}" = "1" ]]; then
     Database::query dbTargetDatabase "DROP DATABASE IF EXISTS ${LOCAL_DB}"
 fi
 Log::displayInfo "create local database ${LOCAL_DB}";
-Database::query dbTargetDatabase "CREATE DATABASE ${LOCAL_DB}/*!40100 COLLATE \"${COLLATION_NAME}\" */"
+Database::query dbTargetDatabase "CREATE DATABASE \`${LOCAL_DB}\` CHARACTER SET \"${CHARACTER_SET}\" COLLATE \"${COLLATION_NAME}\""
 
 if [[ "${FROM_AWS}" = "1" ]]; then
     "${CURRENT_DIR}/dbImportStream" \
@@ -384,4 +387,4 @@ else
     )
 fi
 
-Log::displayInfo "Import table duration : $(date -u -d @${SECONDS} +"%T")"
+Log::displayInfo "Import database duration : $(date -u -d @${SECONDS} +"%T")"

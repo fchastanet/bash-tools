@@ -12,6 +12,7 @@ setup() {
 
 teardown() {
   rm -f "${logFile}" || true
+  rm -Rf /tmp/home || true
 }
 
 assertDisplayLogs() {

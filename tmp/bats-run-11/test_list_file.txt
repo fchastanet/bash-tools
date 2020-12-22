@@ -1,0 +1,5 @@
+/bash/tests/tools/dbImport.bats	test_display_help
+/bash/tests/tools/dbImport.bats	test_remoteDbName_not_provided
+/bash/tests/tools/dbImport.bats	test_-2d-2dfrom-2daws_and_-2d-2dfrom-2ddsn_are_incompatible
+/bash/tests/tools/dbImport.bats	test_-2d-2dfrom-2daws_missing_S3-2d5fBASE-2d5fURL
+/bash/tests/tools/dbImport.bats	test_-2da_and_-2df_are_incompatible

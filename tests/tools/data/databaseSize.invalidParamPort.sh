@@ -3,4 +3,4 @@
 HOSTNAME="hostOverriden"
 USER="userOverriden"
 PASSWORD="passOverriden"
-PORT="3306"
+PORT="portOverriden"

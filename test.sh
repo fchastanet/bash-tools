@@ -5,7 +5,7 @@ DEBUG_ARGS=""
 DOCKER_DEBUG_ARGS=()
 set -x
 if [ "${DEBUG:-0}" = "1" ]; then
-  DEBUG_ARGS="--no-tempdir-cleanup"
+  DEBUG_ARGS=(--no-tempdir-cleanup)
   mkdir -p tmp
   DOCKER_DEBUG_ARGS=(-v "$(pwd)/tmp:/tmp")
 fi
@@ -20,7 +20,7 @@ if [ "${IN_BASH_DOCKER:-}" != "You're in docker" ]; then
     -v "$(pwd):/bash" \
     "${DOCKER_DEBUG_ARGS[@]}" \
     --user "$(id -u):$(id -g)" \
-    git-ubuntu:5.1 /bash/test.sh ${DEBUG_ARGS} $@
+    git-ubuntu:5.1 /bash/test.sh ${DEBUG_ARGS[@]} "$@"
   exit 0
 fi
 (
