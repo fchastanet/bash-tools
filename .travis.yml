@@ -1,5 +1,8 @@
 language: bash
 
+services:
+  - docker
+
 env:
   - VENDOR=ubuntu BASH_TAR_VERSION=4.4    BASH_IMAGE=ubuntu:20.04
   - VENDOR=ubuntu BASH_TAR_VERSION=5.0.17 BASH_IMAGE=ubuntu:20.04 
@@ -10,13 +13,18 @@ env:
 
 before_script:
   - ./installBuildDeps.sh
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+  - docker pull scranups/build:bash-tools-${VENDOR}-${BASH_TAR_VERSION} || true
   - > 
     docker build 
     -f .docker/Dockerfile.${VENDOR} 
     --build-arg BASH_TAR_VERSION=${BASH_TAR_VERSION} 
     --build-arg BASH_IMAGE=${BASH_IMAGE} 
-    -t git-${VENDOR}-${BASH_TAR_VERSION} .docker
-  - docker run git-${VENDOR}-${BASH_TAR_VERSION} bash --version
+    -t bash-tools-${VENDOR}-${BASH_TAR_VERSION} .docker
+  - docker run bash-tools-${VENDOR}-${BASH_TAR_VERSION} bash --version
+  - docker push scranups/build:bash-tools-${VENDOR}-${BASH_TAR_VERSION}
 
 script:
-  - docker run --rm -v $PWD:/bash --user $(id -u):$(id -g) git-${VENDOR}-${BASH_TAR_VERSION} /bash/test.sh
+  - docker run --rm -v $PWD:/bash --user $(id -u):$(id -g) bash-tools-${VENDOR}-${BASH_TAR_VERSION} /bash/test.sh
+
+secure: "HE/PTuxoRq0YyjzJkUVbjO5zI9w0jK9XVjL1cKVFkb0ygkAzVejFn9544Ii12SeyqQZ3dZB5H4RJndBiyJrF1Njd2CuujwEWWPmR/2YS3qIqTJl7RtOQu/NJE4KEKZob0kgN45E/2CZVJIvFjiW4IciCRrZdcRlj2xeJv9TMtRStdFK+72QHKtSq2iGIcICW0gGhnmsoZDxcULAw77v9Ev+zt96HOTnJt5TEVhWIzpjoiFAdZ4Z2gZA1z4/ZD4GqDVshoqVFlSfXSH/OldUEUI/NKY5Ev2Mle2v3qOLngncFYGcBjVr4aeU9aQQlLwtcqGj/Q1O+CVF56QrB62Th17fa/Hvhjfm6l6mVRaTXNWDnU2jl94eRHB7asEm9Ern6gWVUAeiOaijsJ00rylLXbnCQSqElYqrmhmJSvGhHPfsBPwtUFd+6RwekJSqtV8vDjCX5qqVyuZBIjm7serTRZz3fwqcjp3RUFRKP1+ZjwVKCr8yfl/0Dq26AU6P1rxkJD3bmiItGt+9kOFdNGgEfL1N1kTMBmQv2mXD0Ap1XayGL2wWSptpBKxJEoo1Gapo+pJkRTv2+CxhJVzgysyONiZz1dj/iHwL3a67HjNerkfhew//1BuT2da3NxU0fAdQPuyMuDO51KYFijj0sIzMN76J7oi43wSOhhQr1mrieWoI="
