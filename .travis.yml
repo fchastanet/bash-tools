@@ -9,8 +9,8 @@ env:
   - VENDOR=alpine BASH_TAR_VERSION=rc     BASH_IMAGE=bash:rc
 
 before_script:
+  - ./installBuildDeps.sh
   - > 
-    ./installBuildDeps.sh
     docker build 
     -f .docker/Dockerfile.${VENDOR} 
     --build-arg BASH_TAR_VERSION=${BASH_TAR_VERSION} 
