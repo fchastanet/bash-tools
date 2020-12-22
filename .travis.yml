@@ -21,7 +21,9 @@ before_script:
       -f .docker/Dockerfile.${VENDOR} 
       --build-arg BASH_TAR_VERSION=${BASH_TAR_VERSION} 
       --build-arg BASH_IMAGE=${BASH_IMAGE} 
-      -t bash-tools-${VENDOR}-${BASH_TAR_VERSION} .docker
+      -t bash-tools-${VENDOR}-${BASH_TAR_VERSION} 
+      -t scranups/build:bash-tools-${VENDOR}-${BASH_TAR_VERSION}
+      .docker
   - docker run bash-tools-${VENDOR}-${BASH_TAR_VERSION} bash --version
   - docker push scranups/build:bash-tools-${VENDOR}-${BASH_TAR_VERSION}
 
