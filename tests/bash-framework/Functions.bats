@@ -5,6 +5,14 @@ __bash_framework_envFile="" source "$(cd "${BATS_TEST_DIRNAME}/../.." && pwd)/ba
 
 import bash-framework/Functions
 
+setup() {
+    mkdir -p /tmp/home
+}
+
+teardown() {
+    rm -Rf /tmp/home || true 
+}
+
 @test "framework is loaded" {
     [[ "${BASH_FRAMEWORK_INITIALIZED}" = "1" ]]
 }
@@ -86,4 +94,22 @@ import bash-framework/Functions
     
     run Functions::getList "${BATS_TEST_DIRNAME}/unknown" "sh" "*"
     [[ "$status" -eq 1 ]]
+}
+
+@test "Functions::trapAdd" {
+    trap 'echo "SIGUSR1 original" >> /tmp/home/trap' SIGUSR1
+    Functions::trapAdd 'echo "SIGUSR1 overriden" >> /tmp/home/trap' SIGUSR1
+    kill -SIGUSR1 $$
+    [ "$(cat /tmp/home/trap)" = "$(cat ${BATS_TEST_DIRNAME}/data/Functions_addTrap_expected)" ]
+}
+
+@test "Functions::trapAdd 2 events at once" {
+    trap 'echo "SIGUSR1 original" >> /tmp/home/trap' SIGUSR1
+    trap 'echo "SIGUSR2 original" >> /tmp/home/trap' SIGUSR2
+    Functions::trapAdd 'echo "SIGUSR1&2 overriden" >> /tmp/home/trap' SIGUSR1 SIGUSR2
+    kill -SIGUSR1 $$
+    [ "$(cat /tmp/home/trap)" = "$(cat ${BATS_TEST_DIRNAME}/data/Functions_addTrap2_1_expected)" ]
+    rm /tmp/home/trap
+    kill -SIGUSR2 $$
+    [ "$(cat /tmp/home/trap)" = "$(cat ${BATS_TEST_DIRNAME}/data/Functions_addTrap2_2_expected)" ]
 }

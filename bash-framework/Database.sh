@@ -161,7 +161,6 @@ Database::setQueryOptions() {
   instanceSetQueryOptions['QUERY_OPTIONS']="$2"
 }
 
-
 # Internal: generate temp file for easy authentication
 #
 # **Arguments**:
@@ -183,7 +182,8 @@ Database::authFile() {
       echo "host = ${HOSTNAME}"
       echo "port = ${PORT}"
   ) > "${instanceAuthFile['AUTH_FILE']}"
-  trap "rm -f '${instanceAuthFile['AUTH_FILE']}' 2>/dev/null || true" ERR EXIT
+  # shellcheck disable=SC2064
+  Functions::trapAdd "rm -f \"${instanceAuthFile['AUTH_FILE']}\" 2>/dev/null || true" ERR EXIT
   
 }
 
@@ -206,7 +206,7 @@ Database::ifDbExists() {
   mysqlCommand+=("${dbName}")
   Log::displayDebug "execute command: '${mysqlCommand[*]}'"
   result="$(MSYS_NO_PATHCONV=1 "${mysqlCommand[@]}" 2>/dev/null | grep '^Database: ' | grep -o "${dbName}" )"
-  [[ "${result}" == "${dbName}" ]]
+  [[ "${result}" = "${dbName}" ]]
 }
 
 # Public: check if table exists on given db

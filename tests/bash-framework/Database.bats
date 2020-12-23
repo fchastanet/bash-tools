@@ -6,6 +6,9 @@ __bash_framework_envFile="" source "${BASH_FRAMEWORK_FOLDER}/_bootstrap.sh" || e
 
 import bash-framework/Database
 
+declare -g vendorDir="$( cd "${BATS_TEST_DIRNAME}/../../vendor" && pwd )"
+load "${vendorDir}/bats-mock-Flamefire/load.bash"
+
 setup() {
     (
         mkdir -p /tmp/home/.bash-tools/dsn
@@ -17,7 +20,9 @@ setup() {
 }
 
 teardown() {
+    set +x
     rm -Rf /tmp/home || true 
+    unstub_all
 }
 
 @test "framework is loaded" {
@@ -153,13 +158,53 @@ teardown() {
 }
 
 @test "Database::setQueryOptions" {
-    declare -Agx dbFromInstance
+    declare -Ax dbFromInstance
     export HOME=/tmp/home
     Database::newInstance dbFromInstance "dsn_valid"
     status=$?
     [ "$status" -eq 0 ]
     Database::setQueryOptions dbFromInstance "test"
     [ "${dbFromInstance['QUERY_OPTIONS']}" = "test" ]
+}
+
+@test "Database::newInstance auth files should be deleted" {
+    declare authFile1=""
+    declare authFile2=""
+    (
+        declare -Ax dbFromInstance1
+        declare -Ax dbFromInstance2
+        export HOME=/tmp/home
+        Database::newInstance dbFromInstance1 "dsn_valid"
+        Database::newInstance dbFromInstance2 "dsn_valid"
+        authFile1="${dbFromInstance1['AUTH_FILE']}"
+        authFile2="${dbFromInstance2['AUTH_FILE']}"
+        [[ -f "${authFile1}" ]]
+        [[ -f "${authFile2}" ]]
+        # we write variables in files as values will be lost outside of this subshell
+        echo -n "${authFile1}" > /tmp/home/authFile1
+        echo -n "${authFile2}" > /tmp/home/authFile2
+    )
+    [[ -f /tmp/home/authFile1 ]] 
+    [[ -f /tmp/home/authFile2 ]]
+    authFile1="$(cat /tmp/home/authFile1)"
+    authFile2="$(cat /tmp/home/authFile2)"
+    [[ -n "${authFile1}" ]]
+    [[ -n "${authFile2}" ]]
+    [[ ! -f "${authFile1}" ]]
+    [[ ! -f "${authFile2}" ]]
+}
+
+@test "Database::ifDbExists exists" {
+    # call 2: check if from db exists, this time we answer no
+    stub mysqlshow \
+        '* --ssl-mode=DISABLED mydb : echo "Database: mydb"' 
+
+    declare -Ax dbFromInstance
+    export HOME=/tmp/home
+    Database::newInstance dbFromInstance "dsn_valid"
+
+    run Database::ifDbExists dbFromInstance 'mydb'
+    [ "$status" -eq 0 ]
 }
 
 # TODO Database::ifDbExists
