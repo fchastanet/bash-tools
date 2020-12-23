@@ -69,6 +69,7 @@ import bash-framework/Functions
 
 @test "Functions::getList" {
     run Functions::getList "${BATS_TEST_DIRNAME}/dataGetList" "sh"
+    (>&3 echo "$output")
     [[ "$status" -eq 0 ]]
     [[ "${#lines[@]}" = "2" ]]
     [[ "${lines[0]}" = "       - test" ]]

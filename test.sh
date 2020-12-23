@@ -16,7 +16,7 @@ if [ "${IN_BASH_DOCKER:-}" != "You're in docker" ]; then
     -f .docker/Dockerfile.ubuntu \
     -t git-ubuntu:5.1 \
     .docker
-  docker run -it --rm \
+  docker run --rm \
     -v "$(pwd):/bash" \
     "${DOCKER_DEBUG_ARGS[@]}" \
     --user "$(id -u):$(id -g)" \
