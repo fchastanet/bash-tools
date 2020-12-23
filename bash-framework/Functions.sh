@@ -119,7 +119,6 @@ Functions::quote() {
 #       - default.remote
 #       - localhost-root
 Functions::getList() {
-    set -x
     DIR="$1"
     EXT="$2"
     INDENT_STR="${3:-       - }"
@@ -127,5 +126,4 @@ Functions::getList() {
     (
         cd "${DIR}" && find . -type f -name "*.${EXT}" | sort | sed 's#^./##g' | sed "s/\.${EXT}\$//g" | sed "s/^/${INDENT_STR}/"
     )
-    set +x
 }
