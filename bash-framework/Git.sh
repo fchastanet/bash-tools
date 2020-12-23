@@ -18,7 +18,7 @@ Git::ShallowClone() {
   INSTALL_DIR="$2"
   REVISION="$3"
   FORCE_DELETION="${4:-0}"
-  set -x
+  
   if [[ -d "${INSTALL_DIR}/.git" ]]; then
     Log::displayInfo "Repository ${INSTALL_DIR} already installed"
   else
