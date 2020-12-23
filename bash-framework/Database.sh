@@ -225,14 +225,12 @@ Database::isTableExists() {
   local dbName="$2"
   local tableThatShouldExists="$3"
 
-  local sql=$"select count(*) from information_schema.tables where table_schema='${dbName}' and table_name='${tableThatShouldExists}'"
+  local sql="select count(*) from information_schema.tables where table_schema='${dbName}' and table_name='${tableThatShouldExists}'"
   local result
-  result=$(Database::query instanceIsTableExists "${sql}")
-  if [[ "${result}" == "0" ]]; then
-    Log::displayWarning "Db ${dbName} not initialized"
+  result="$(Database::query instanceIsTableExists "${sql}")"
+  if [ "${result}" != "1" ]; then
     return 1
   fi
-  Log::displayInfo "Db ${dbName} already initialized"
   return 0
 }
 
@@ -345,7 +343,7 @@ Database::query() {
       mysqlCommand+=("$2")
     fi
   fi
-  Log::displayDebug "execute command: '${mysqlCommand[*]}'"
+  Log::displayDebug "execute command: '${mysqlCommand[@]}'"
 
   if [[ -f "$2" ]]; then
     "${mysqlCommand[@]}" < "$2"

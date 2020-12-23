@@ -207,6 +207,79 @@ teardown() {
     [ "$status" -eq 0 ]
 }
 
+@test "${BATS_TEST_FILENAME#/bash/tests/} Database::isTableExists exists" {
+    # call 2: check if from db exists, this time we answer no
+    stub mysql \
+        '* -s --skip-column-names --default-character-set=utf8 -e * : echo $6 > /tmp/home/query ; echo "1"'
+
+    declare -Ax dbFromInstance
+    export HOME=/tmp/home
+    Database::newInstance dbFromInstance "dsn_valid"
+
+    run Database::isTableExists dbFromInstance 'mydb' 'mytable'
+    [ "$status" -eq 0 ]
+    [ -f "/tmp/home/query" ]
+    [[ "$(cat /tmp/home/query)" == "$(cat "${BATS_TEST_DIRNAME}/data/isTableExists.query")" ]]
+}
+
+@test "${BATS_TEST_FILENAME#/bash/tests/} Database::isTableExists not exists" {
+    # call 2: check if from db exists, this time we answer no
+    stub mysql \
+        '* -s --skip-column-names --default-character-set=utf8 -e * : echo $6 > /tmp/home/query ; echo ""'
+
+    declare -Ax dbFromInstance
+    export HOME=/tmp/home
+    Database::newInstance dbFromInstance "dsn_valid"
+
+    run Database::isTableExists dbFromInstance 'mydb' 'mytable'
+    [ "$status" -eq 1 ]
+    [ -f "/tmp/home/query" ]
+    [[ "$(cat /tmp/home/query)" == "$(cat "${BATS_TEST_DIRNAME}/data/isTableExists.query")" ]]
+}
+
+@test "${BATS_TEST_FILENAME#/bash/tests/} Database::createDb " {
+    stub mysql \
+        '* -s --skip-column-names --default-character-set=utf8 -e * : echo $6 > /tmp/home/query ; echo "Database: mydb"'
+
+    declare -Ax dbFromInstance
+    export HOME=/tmp/home
+    Database::newInstance dbFromInstance "dsn_valid"
+
+    run Database::createDb dbFromInstance 'mydb'
+    [ "$status" -eq 0 ]
+    [[ "$output" == *"Db mydb has been created"* ]]
+    [ -f "/tmp/home/query" ]
+    [[ "$(cat /tmp/home/query)" == "$(cat "${BATS_TEST_DIRNAME}/data/createDb.query")" ]]
+}
+
+@test "${BATS_TEST_FILENAME#/bash/tests/} Database::dropDb " {
+    stub mysql \
+        '* -s --skip-column-names --default-character-set=utf8 -e * : echo $6 > /tmp/home/query ; echo "Database: mydb"'
+
+    declare -Ax dbFromInstance
+    export HOME=/tmp/home
+    Database::newInstance dbFromInstance "dsn_valid"
+
+    run Database::dropDb dbFromInstance 'mydb'
+    [ "$status" -eq 0 ]
+    [[ "$output" == *"Db mydb has been dropped"* ]]
+    [ -f "/tmp/home/query" ]
+    [[ "$(cat /tmp/home/query)" == "$(cat "${BATS_TEST_DIRNAME}/data/dropDb.query")" ]]
+}
+
+@test "${BATS_TEST_FILENAME#/bash/tests/} Database::dropTable " {
+    stub mysql \
+        '* -s --skip-column-names --default-character-set=utf8 mydb -e * : echo $7 > /tmp/home/query ; echo "Database: mydb"'
+
+    declare -Ax dbFromInstance
+    export HOME=/tmp/home
+    Database::newInstance dbFromInstance "dsn_valid"
+    run Database::dropTable dbFromInstance 'mydb' 'mytable'
+    [ "$status" -eq 0 ]
+    [[ "$output" == *"Table mydb.mytable has been dropped"* ]]
+    [ -f "/tmp/home/query" ]
+    [[ "$(cat /tmp/home/query)" == "$(cat "${BATS_TEST_DIRNAME}/data/dropTable.query")" ]]
+}
 # TODO Database::ifDbExists
 # TODO Database::isTableExists
 # TODO Database::createDb
