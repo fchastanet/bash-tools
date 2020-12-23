@@ -14,18 +14,20 @@ env:
 before_script:
   - "./installBuildDeps.sh"
   - echo "$DOCKER_USERNAME"
-  - docker pull scranups/build:bash-tools-${VENDOR}-${BASH_TAR_VERSION} || true
+  - docker pull scrasnups/build:bash-tools-${VENDOR}-${BASH_TAR_VERSION} || true
   - > 
       docker build 
       -f .docker/Dockerfile.${VENDOR} 
+      --pull 
+      --cache-from "scrasnups/build:bash-tools-${VENDOR}-${BASH_TAR_VERSION}" 
       --build-arg BASH_TAR_VERSION=${BASH_TAR_VERSION} 
       --build-arg BASH_IMAGE=${BASH_IMAGE} 
       -t bash-tools-${VENDOR}-${BASH_TAR_VERSION} 
       .docker
   - docker run bash-tools-${VENDOR}-${BASH_TAR_VERSION} bash --version
-  - docker tag bash-tools-${VENDOR}-${BASH_TAR_VERSION}:latest scranups/build:bash-tools-${VENDOR}-${BASH_TAR_VERSION}
+  - docker tag bash-tools-${VENDOR}-${BASH_TAR_VERSION}:latest scrasnups/build:bash-tools-${VENDOR}-${BASH_TAR_VERSION}
   - echo "$DOCKER_PASSWORD" | docker login --username "$DOCKER_USERNAME" --password-stdin
-  - docker push scranups/build:bash-tools-${VENDOR}-${BASH_TAR_VERSION}
+  - docker push scraSnups/build:bash-tools-${VENDOR}-${BASH_TAR_VERSION}
 
 script:
 - docker run --rm -v $PWD:/bash --user $(id -u):$(id -g) bash-tools-${VENDOR}-${BASH_TAR_VERSION}
