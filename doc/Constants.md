@@ -24,6 +24,10 @@ log level success
 > ***Public***
 
 log level debug
+# constant `__FATAL_COLOR`
+> ***Internal***
+
+color used f error level (red bold)
 # constant `__ERROR_COLOR`
 > ***Internal***
 

@@ -46,3 +46,11 @@ list files of dir with given extension and display it as a list one by line
         - default.local
         - default.remote
         - localhost-root
+# function `Functions::trapAdd`
+appends a command to a trap
+
+- 1st arg:  code to add
+ - remaining args:  names of traps to modify
+# function `extract_trap_cmd`
+helper fn to get existing trap command from output
+ of trap -p
