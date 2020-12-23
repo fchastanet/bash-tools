@@ -13,24 +13,19 @@ Framework::expectUser() {
     local currentUserName
 
     currentUserName=$(id -u -n)
-    if [  "${currentUserName}" != "${expectedUserName}" ]; then
-        Log::displayError "The script must be run as ${expectedUserName}"
-        exit 1
-    fi
+    [  "${currentUserName}" != "${expectedUserName}" ] &&
+        Log::fatal "The script must be run as ${expectedUserName}"
 }
 
 # Public: exits with message if current user is root
 #
 # **Exit**: code 1 if current user is root
 Framework::expectNonRootUser() {
-    local expectedUserName="$1"
     local currentUserName
 
     currentUserId=$(id -u)
-    if [  "${currentUserId}" = "0" ]; then
-        Log::displayError "The script must not be run as root"
-        exit 1
-    fi
+    [  "${currentUserId}" = "0" ] &&
+        Log::fatal "The script must not be run as root"
 }
 
 # Public: exits with message if expected global variable is not set
@@ -42,10 +37,7 @@ Framework::expectNonRootUser() {
 Framework::expectGlobalVariables() {
     for var in "${@}"
     do
-        [[ -v "${var}" ]] || {
-            Log::displayError "Variable ${var} is unset"
-            exit 1
-        }
+        [[ -v "${var}" ]] || Log::fatal "Variable ${var} is unset"
     done
 }
 
@@ -81,10 +73,7 @@ Framework::WrapSource() {
   fi
 
 
-  builtin source "$libPath" "$@" || {
-    Log::displayError "Unable to load $libPath"
-    exit 1
-  }
+  builtin source "$libPath" "$@" || Log::fatal "Unable to load $libPath"
 }
 
 # Internal: source given file. Do not source it again if it has already been sourced.
@@ -185,11 +174,7 @@ Framework::ImportOne() {
   } || \
   Framework::SourcePath "${__bash_framework_rootVendorPath}/${libPath}" "$@" || \
   Framework::SourcePath "${__bash_framework_rootCallingScriptPath}/${libPath}" "$@" || \
-  Framework::SourcePath "${libPath}" "$@" || \
-  {
-    Log::displayError "Cannot import $libPath"
-    exit 1
-  }
+  Framework::SourcePath "${libPath}" "$@" || Log::fatal "Cannot import $libPath"
 }
 
 # Public: source given files using Framework::ImportOne.

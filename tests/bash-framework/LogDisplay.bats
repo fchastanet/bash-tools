@@ -142,6 +142,15 @@ assertDisplayLogs() {
     assertDisplayLogs ${__LEVEL_ERROR}
 }
 
+@test "Log::fatal" {
+    export BASH_FRAMEWORK_INITIALIZED=0 BASH_FRAMEWORK_DISPLAY_LEVEL=${__LEVEL_ERROR} 
+    source "$(cd "${BATS_TEST_DIRNAME}/../.." && pwd)/bash-framework/_bootstrap.sh" || exit 1
+    run Log::fatal 'fatal msg'
+    [ "$status" -eq 1 ]
+    [ "$(echo -e "${__FATAL_COLOR}FATAL - fatal msg${__RESET_COLOR}")" = "${output}" ] 
+}
+
+
 @test "display off with env file" {
     export BASH_FRAMEWORK_INITIALIZED=0  __bash_framework_envFile="${BATS_TEST_DIRNAME}/data/Log.off.env" 
     source "$(cd "${BATS_TEST_DIRNAME}/../.." && pwd)/bash-framework/_bootstrap.sh" || exit 1

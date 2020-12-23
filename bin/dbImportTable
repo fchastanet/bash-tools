@@ -5,10 +5,7 @@ CURRENT_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 # shellcheck source=bash-framework/_bootstrap.sh
 source "$( cd "${CURRENT_DIR}/.." && pwd )/bash-framework/_bootstrap.sh"
 
-if [[  "$USER" = "root" ]]; then
-    Log::displayError "The script must not be run as root"
-    exit 1
-fi
+Framework::expectNonRootUser
 
 
 import bash-framework/Database
@@ -34,10 +31,10 @@ TIMEFORMAT='time spent : %3R'
 DB_IMPORT_DUMP_DIR=${DB_IMPORT_DUMP_DIR%/}
 
 # check dependencies
-if ! which pv > /dev/null || ! which mysql > /dev/null || ! which mysqlshow > /dev/null || ! which mysqldump > /dev/null ; then
-    Log::displayError "one of pv/mysql/mysqldump/mysqlshow programs is not installed, run 'sudo apt install -y pv mysql-client' or use docker container"
-    exit 1
-fi
+Functions::checkCommandExists mysql "sudo apt-get install mysql-client"
+Functions::checkCommandExists mysqlshow "sudo apt-get install mysql-client"
+Functions::checkCommandExists mysqldump "sudo apt-get install mysql-client"# check dependencies
+Functions::checkCommandExists pv "sudo apt-get install -y pv"
 
 showHelp() {
 cat << EOF
@@ -74,9 +71,8 @@ EOF
 # -l is for long options with double dash like --help
 # the comma separates different long options
 options=$(getopt -l help,force,target-dsn:,from-dsn:,from-aws,download-dump,collation-name:,character-set: -o aht:f:dc:o: -- "$@" 2> /dev/null) || {
-    Log::displayError "invalid options specified"
     showHelp
-    exit 1
+    Log::fatal "invalid options specified"
 }
 
 eval set -- "${options}"
@@ -117,9 +113,8 @@ case $1 in
     shift
     break;;
 *)
-    Log::displayError "invalid argument $1"
     showHelp
-    exit 1
+    Log::fatal "invalid argument $1"
 esac
 shift
 done
@@ -145,25 +140,17 @@ while true; do
 done
 
 if [[ -z "${REMOTE_DB}" ]]; then
-    Log::displayError "you must provide remoteDbName"
     showHelp
-    exit 1
+    Log::fatal "you must provide remoteDbName"
 fi
 
 if [[ -z "${TABLE}" ]]; then
-    Log::displayError "you must provide tableName"
     showHelp
-    exit 1
+    Log::fatal "you must provide tableName"
 fi
 
 if [[ -z "${LOCAL_DB}" ]]; then
     LOCAL_DB=${REMOTE_DB}
-fi
-
-#check that remote db env variables are set
-if [[ -z "${REMOTE_MYSQL_HOSTNAME}" || -z "${REMOTE_MYSQL_PORT}" || -z "${REMOTE_MYSQL_USER}" || -z "${REMOTE_MYSQL_PASSWORD}" ]]; then
-    Log::displayError "missing remote mysql parameters, please do a 'make configure' in order to set .env file correctly"
-    exit 1
 fi
 
 if [[ "${MYSQL_HOSTNAME}" = "localhost" ]]; then
@@ -172,12 +159,10 @@ fi
 
 # check s3 parameter
 if [[ "${FROM_AWS}" = "1" && -n "${FROM_DSN}" ]]; then
-    Log::displayError "you cannot use from-dsn and from-aws at the same time"
-    exit 1
+    Log::fatal "you cannot use from-dsn and from-aws at the same time"
 fi
 if [[ "${FROM_AWS}" = "1" && -z "${S3_BASE_URL}" ]]; then
-    Log::displayError "missing S3_BASE_URL, please provide a value in .env file"
-    exit 1
+    Log::fatal "missing S3_BASE_URL, please provide a value in .env file"
 fi
 
 # default value for FROM_DSN if from-aws not set
@@ -186,14 +171,11 @@ if [[ "${FROM_AWS}" = "0" && -z "${FROM_DSN}" ]]; then
 fi
 
 if [[ -z "${DB_IMPORT_DUMP_DIR}" ]]; then
-    Log::displayError "you have to specify a value for DB_IMPORT_DUMP_DIR env variable"
-    exit 1
+    Log::fatal "you have to specify a value for DB_IMPORT_DUMP_DIR env variable"
 fi
 if [[ ! -d "${DB_IMPORT_DUMP_DIR}" ]]; then
-    mkdir -p "${DB_IMPORT_DUMP_DIR}" || {
-        Log::displayError "impossible to create directory ${DB_IMPORT_DUMP_DIR} specified by DB_IMPORT_DUMP_DIR env variable"
-        exit 1
-    }
+    mkdir -p "${DB_IMPORT_DUMP_DIR}" || 
+        Log::fatal "impossible to create directory ${DB_IMPORT_DUMP_DIR} specified by DB_IMPORT_DUMP_DIR env variable"
 fi
 
 # create db instances
@@ -207,16 +189,13 @@ fi
 
 # check if local db exists
 Database::ifDbExists dbTargetDatabase "${LOCAL_DB}" || {
-    Log::displayError "Local Database ${LOCAL_DB} does not exist !"
+    Log::displayWarning "Local Database ${LOCAL_DB} does not exist !"
 }
 
 # check if local table exists
 Database::isTableExists dbLocalInstance "${LOCAL_DB}" "${TABLE}" && {
     Log::displayInfo "Local table ${LOCAL_DB}/${TABLE} already exists"
-    if [[ "${FORCE}" = "0" ]]; then
-        Log::displayError "use --force to drop it"
-        exit 1
-    fi
+    [[ "${FORCE}" = "0" ]] && Log::fatal "use --force to drop it"
 }
 
 Log::displayInfo "import table ${TABLE} from ${REMOTE_DB} to ${LOCAL_DB}"
@@ -255,10 +234,8 @@ if [[ "${DOWNLOAD_DUMP}" = "1" ]]; then
         if [[ ! -f "${AWS_DUMP_FILE}" ]]; then
             S3_URL="${S3_BASE_URL%/}/${REMOTE_DB}.tar.gz"
             Log::displayInfo "Download dump from ${S3_URL} ...";
-            TMPDIR="${TEMP_FOLDER:-/tmp}" aws s3 cp "${S3_URL}" "${AWS_DUMP_FILE}" || {
-                Log::displayError "unable to download dump from S3 : ${S3_URL}"
-                exit 1
-            }
+            TMPDIR="${TEMP_FOLDER:-/tmp}" aws s3 cp "${S3_URL}" "${AWS_DUMP_FILE}" ||
+                Log::fatal "unable to download dump from S3 : ${S3_URL}"
         else
             Log::displayInfo "Local full dump exists : ${AWS_DUMP_FILE}"
         fi
@@ -293,10 +270,8 @@ if [[ "${DOWNLOAD_DUMP}" = "1" ]]; then
         DUMP_HEADER=$(printf "${DUMP_HEADER}\nSET names '${CHARACTER_SET}';\n")
 
         # check if remote db exists
-        Database::ifDbExists dbRemoteInstance "${REMOTE_DB}" || {
-            Log::displayError "Remote Database ${REMOTE_DB} does not exist"
-            exit 1
-        }
+        Database::ifDbExists dbRemoteInstance "${REMOTE_DB}" || 
+            Log::fatal "Remote Database ${REMOTE_DB} does not exist"
 
         # calculate remote table dump size
         Log::displayDebug "Calculate dump size for table ${TABLE}"

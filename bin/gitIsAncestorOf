@@ -14,9 +14,8 @@ EOF
 }
 
 if [[ "$#" != "2" ]]; then
-    Log::displayError "${SCRIPT_NAME}: invalid arguments"
     showHelp
-    exit 1
+    Log::fatal "${SCRIPT_NAME}: invalid arguments"
 fi
 
 claimedBranch="$1"
@@ -27,5 +26,4 @@ merge_base="$(git merge-base "${commit}" "${claimedBranch}")" &&
   test "$merge_base" = "$(git rev-parse --verify "${commit}")" &&
   exit 0
 
-Log::displayError "${commit} is not an ancestor of ${claimedBranch}"
-exit 1
+Log::fatal "${commit} is not an ancestor of ${claimedBranch}"

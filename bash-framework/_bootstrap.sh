@@ -12,26 +12,22 @@ declare -g __bash_framework_rootCallingScriptPath="$( cd "$(dirname "$0")" && pw
 declare -g __bash_framework_rootVendorPath="$( cd "${__bash_framework_rootLibPath}/.." && pwd )"
 
 ## stubs in case either exception or log is not loaded
-Log::displayError() {
-  (>&2 echo "Error: $1")
+Log::fatal() {
+  (>&2 echo "FATAL  : $1")
+  exit 1
 }
 
 # shellcheck source=bash-framework/Constants.sh
-source "${__bash_framework_rootLibPath}/Constants.sh" || {
-    Log::displayError "FATAL ERROR: Unable to bootstrap (missing lib directory?)"
-    exit 1
-}
+source "${__bash_framework_rootLibPath}/Constants.sh" || 
+    Log::fatal "Unable to bootstrap (missing lib directory?)"
 
 # shellcheck source=bash-framework/Framework.sh
-source "${__bash_framework_rootLibPath}/Framework.sh" || {
-    Log::displayError "FATAL ERROR: Unable to bootstrap (missing bash-framework directory?)"
-    exit 1
-}
+source "${__bash_framework_rootLibPath}/Framework.sh" || 
+    Log::fatal "Unable to bootstrap (missing bash-framework directory?)"
+
 # shellcheck source=bash-framework/Array.sh
-source "${__bash_framework_rootLibPath}/Array.sh" || {
-    Log::displayError "FATAL ERROR: Unable to bootstrap (missing lib directory?)"
-    exit 1
-}
+source "${__bash_framework_rootLibPath}/Array.sh" || 
+    Log::fatal "Unable to bootstrap (missing lib directory?)"
 
 shopt -s expand_aliases
 alias import="__bash_framework__allowFileReloading=false Framework::Import"
@@ -90,10 +86,8 @@ Framework::bootstrap() {
         true
     else
         # load __bash_framework_envFile
-        [[ ! -f "${__bash_framework_envFile}" ]] && {
-            Log::displayError "env file not not found - ${__bash_framework_envFile}"
-            exit 1
-        }
+        [[ ! -f "${__bash_framework_envFile}" ]] && 
+            Log::fatal "env file not not found - ${__bash_framework_envFile}"
         source "${__bash_framework_envFile}"
     fi
 

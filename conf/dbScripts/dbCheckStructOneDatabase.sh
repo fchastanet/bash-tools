@@ -4,10 +4,7 @@
 # INTERNAL USE ONLY
 # USED BY bin/dbScriptAllDatabases
 ############################################################
-if [[  "${USER}" = "root" ]]; then
-    Log::displayError "The script must not be run as root"
-    exit 1
-fi
+Framework::expectNonRootUser
 
 declare REMOTE="$1"
 declare VERBOSE="$2"
@@ -50,10 +47,8 @@ Log::displayInfo "process db '${db}'"
 Database::setMysqlOptions "${MYSQL_OPTIONS}"
 
 # errors will be shown on stderr, result on stdout
-Database::ifDbInitialized "${HOSTNAME}" "${PORT}" "${USER}" "${PASSWORD}" "${db}" >/dev/null 2>/dev/null || {
-    (>&2 Log::displayError "DB '${db}' is not initialized")
-    exit 1
-}
+Database::ifDbInitialized "${HOSTNAME}" "${PORT}" "${USER}" "${PASSWORD}" "${db}" >/dev/null 2>/dev/null || 
+    Log::fatal "DB '${db}' is not initialized"
 
 Log::displayInfo "check DB structure of '${db}'"
 rm -f "${repairScript}" 2>/dev/null || true
@@ -74,13 +69,11 @@ echo "$error"
 Log::displayInfo "DB structure of '${db}' checked in ${duration}s"
 
 if [[ "${ret}" != "0" ]]; then
-    Log::displayError "error when checking DB structure of '${db}' : ${error}"
-    exit 1
+    Log::fatal "error when checking DB structure of '${db}' : ${error}"
 elif [[ "$(cat "${repairScript}" 2>/dev/null || echo -n "")" = "" ]]; then
     #rm -f "${repairScript}" 2>/dev/null
     Log::displaySuccess "DB structure of '${db}' is OK"
     exit 0
 else
-    Log::displayError "DB repair script : ${repairScript}"
-    exit 1
+    Log::fatal "DB repair script : ${repairScript}"
 fi

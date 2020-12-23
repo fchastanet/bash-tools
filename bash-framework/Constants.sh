@@ -19,6 +19,8 @@ if [[ "${CONSTANTS_MODULE_VERSION:+xxx}" != "xxx" ]]; then
   # Public: log level debug
   readonly __LEVEL_DEBUG=4
 
+  # Internal: color used f error level (red bold)
+  readonly __FATAL_COLOR='\e[31m\e[1m'
   # Internal: color used for error level (red)
   readonly __ERROR_COLOR='\e[31m'
   # Internal: color used for info level (white on lightBlue)

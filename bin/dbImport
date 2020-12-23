@@ -94,9 +94,8 @@ EOF
 # -l is for long options with double dash like --help
 # the comma separates different long options
 options=$(getopt -l help,force,target-dsn:,from-dsn:,from-aws,download-dump,skip-schema,profile:,collation-name:,character-set: -o aht:f:dsp:c:o: -- "$@" 2> /dev/null) || {
-    Log::displayError "invalid options specified"
     showHelp
-    exit 1
+    Log::fatal "invalid options specified"
 }
 
 eval set -- "${options}"
@@ -145,9 +144,8 @@ case $1 in
     shift
     break;;
 *)
-    Log::displayError "invalid argument $1"
     showHelp
-    exit 1
+    Log::fatal "invalid argument $1"
 esac
 shift
 done
@@ -169,9 +167,8 @@ while true; do
 done
 
 if [[ -z "${REMOTE_DB}" ]]; then
-    Log::displayError "you must provide remoteDbName"
     showHelp
-    exit 1
+    Log::fatal "you must provide remoteDbName"
 fi
 
 if [[ -z "${LOCAL_DB}" ]]; then
@@ -179,14 +176,10 @@ if [[ -z "${LOCAL_DB}" ]]; then
 fi
 
 # check s3 parameter
-if [[ "${FROM_AWS}" = "1" && -n "${FROM_DSN}" ]]; then
-    Log::displayError "you cannot use from-dsn and from-aws at the same time"
-    exit 1
-fi
-if [[ "${FROM_AWS}" = "1" && -z "${S3_BASE_URL}" ]]; then
-    Log::displayError "missing S3_BASE_URL, please provide a value in .env file"
-    exit 1
-fi
+[[ "${FROM_AWS}" = "1" && -n "${FROM_DSN}" ]] &&
+    Log::fatal "you cannot use from-dsn and from-aws at the same time"
+[[ "${FROM_AWS}" = "1" && -z "${S3_BASE_URL}" ]] &&
+    Log::fatal "missing S3_BASE_URL, please provide a value in .env file"
 
 # default value for FROM_DSN if from-aws not set
 if [[ "${FROM_AWS}" = "0" && -z "${FROM_DSN}" ]]; then
@@ -195,9 +188,8 @@ fi
 
 # load the profile
 if [[ -z "${PROFILE}" ]]; then
-    Log::displayError "you should specify a profile"
     showHelp
-    exit 1
+    Log::fatal "you should specify a profile"
 fi
 
 if [[ -f "${HOME_PROFILES_DIR}/${PROFILE}.sh" ]]; then
@@ -205,19 +197,15 @@ if [[ -f "${HOME_PROFILES_DIR}/${PROFILE}.sh" ]]; then
 elif [[ -f "${PROFILES_DIR}/${PROFILE}.sh" ]]; then
     PROFILE_COMMAND="${PROFILES_DIR}/${PROFILE}.sh"
 else
-    Log::displayError "the profile ${PROFILES_DIR}/${PROFILE}.sh does not exist"
-    exit 1
+    Log::fatal "the profile ${PROFILES_DIR}/${PROFILE}.sh does not exist"
 fi
 
-if [[ -z "${DB_IMPORT_DUMP_DIR}" ]]; then
-    Log::displayError "you have to specify a value for DB_IMPORT_DUMP_DIR env variable"
-    exit 1
-fi
+[[ -z "${DB_IMPORT_DUMP_DIR}" ]] &&
+    Log::fatal "you have to specify a value for DB_IMPORT_DUMP_DIR env variable"
+
 if [[ ! -d "${DB_IMPORT_DUMP_DIR}" ]]; then
-    mkdir -p "${DB_IMPORT_DUMP_DIR}" || {
-        Log::displayError "impossible to create directory ${DB_IMPORT_DUMP_DIR} specified by DB_IMPORT_DUMP_DIR env variable"
-        exit 1
-    }
+    mkdir -p "${DB_IMPORT_DUMP_DIR}" ||
+        Log::fatal "impossible to create directory ${DB_IMPORT_DUMP_DIR} specified by DB_IMPORT_DUMP_DIR env variable"
 fi
 
 
@@ -235,10 +223,7 @@ fi
 LOCAL_DB_EXISTS=0
 Database::ifDbExists dbTargetDatabase "${LOCAL_DB}" && {
     Log::displayInfo "Local Database ${LOCAL_DB} already exists !"
-    if [[ "${FORCE}" = "0" ]]; then
-        Log::displayError "use --force to drop it"
-        exit 1
-    fi
+    [[ "${FORCE}" = "0" ]] && Log::fatal "use --force to drop it"
     LOCAL_DB_EXISTS='1'
 }
 
@@ -290,14 +275,12 @@ if [[ "${DOWNLOAD_DUMP}" = "1" ]]; then
         S3_URL="${S3_BASE_URL%/}/${REMOTE_DB}.tar.gz"
         Log::displayInfo "Download dump from ${S3_URL} ...";
         TMPDIR="${TEMP_FOLDER:-/tmp}" aws s3 cp "${S3_URL}" "${REMOTE_DB_DUMP_TEMP_FILE}" || {
-            Log::displayError "unable to download dump from S3 : ${S3_URL}"
-            exit 1
+            Log::fatal "unable to download dump from S3 : ${S3_URL}"
         }
     else
         # check if remote db exists
         Database::ifDbExists dbFromInstance "${REMOTE_DB}" || {
-            Log::displayError "Remote Database ${REMOTE_DB} does not exist"
-            exit 1
+            Log::fatal "Remote Database ${REMOTE_DB} does not exist"
         }
         
         # get remote db collation name

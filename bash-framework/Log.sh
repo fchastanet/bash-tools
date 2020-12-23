@@ -28,6 +28,18 @@ __logMessage() {
     echo "${date}${levelMsg} - ${msg}" >> "${BASH_FRAMEWORK_LOG_FILE}"
 }
 
+# Public: display fatal message on stderr
+#
+# **Arguments**:
+# * $1 - messsage
+# **Output**: using fatal color
+# ERROR - message
+__displayFatal() {
+    local msg="FATAL - ${1}"
+    (>&2 echo -e "${__FATAL_COLOR}${msg}${__RESET_COLOR}")
+    Log::logError "${1}"
+}
+
 # Public: display error message on stderr
 #
 # **Arguments**:

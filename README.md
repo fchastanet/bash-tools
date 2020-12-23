@@ -258,6 +258,7 @@ All these tools are based on *Bash framework* with the following features:
     * **Functions::checkCommandExists** check if command specified exists or exits with error message if not
     * **Functions::isWindows** determine if the script is executed under windows (git bash, wsl)
     * **Functions::quote** quote a string replace ' with \'
+    * **Functions::addTrap** add a trap to existing trap or simply set the trap if no existing trap
   * UI
     * **UI::askToContinue** ask the user if he wishes to continue a process
     * **UI::askYesNo** ask the user a confirmation
@@ -266,6 +267,7 @@ All these tools are based on *Bash framework* with the following features:
     * **Version::checkMinimal** ensure that command exists with expected version
     * **Version::compare** compares two versions
   * Log::display* output colored message on error output and log the message 
+    * **Log::fatal** error message in red bold and exits with code 1
     * **Log::displayError** error message in red
     * **Log::displayWarning** warning message  in yellow
     * **Log::displayInfo** info message in white on lightBlue

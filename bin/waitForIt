@@ -130,15 +130,15 @@ do
         usage
         ;;
         *)
-        Log::displayError "Unknown argument: $1"
         usage
+        Log::fatal "Unknown argument: $1"
         ;;
     esac
 done
 
 if [[ "${HOST}" = "" || "${PORT}" = "" ]]; then
-    Log::displayError "Error: you need to provide a host and port to test."
     usage
+    Log::fatal "Error: you need to provide a host and port to test."
 fi
 
 TIMEOUT=${TIMEOUT:-15}

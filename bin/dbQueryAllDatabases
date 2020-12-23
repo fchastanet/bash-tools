@@ -64,9 +64,8 @@ EOF
 # -l is for long options with double dash like --help
 # the comma separates different long options
 options=$(getopt -l help,as-tsv,query,bar,jobs:,dsn: -o htqbj:d: -- "$@" 2> /dev/null) || {
-    Log::displayError "invalid options specified"
     showHelp
-    exit 1
+    Log::fatal "invalid options specified"
 }
 
 eval set -- "${options}"
@@ -98,9 +97,8 @@ case $1 in
     shift
     break;;
 *)
-    Log::displayError "invalid argument $1"
     showHelp
-    exit 1
+    Log::fatal "invalid argument $1"
 esac
 shift
 done
@@ -111,35 +109,26 @@ shift $(( OPTIND - 1 ))
 queryFile=$1
 if [[ -z "${queryFile}" ]]; then
     if [[ "${QUERY}" = "0" ]]; then
-        Log::displayError "You must provide the sql file to be executed"
-    else
-        Log::displayError "You must provide the sql string to be executed"
+        Log::fatal "You must provide the sql file to be executed"
     fi
-    exit 1
+    Log::fatal "You must provide the sql string to be executed"
 fi
 
 declare query="${queryFile}"
 if [[ "${QUERY}" = "0" ]]; then
     if [[ ! -f "${queryFile}" ]]; then
-        Log::displayError "the file ${queryFile} does not exist"
-        exit 1
+        Log::fatal "the file ${queryFile} does not exist"
     fi
     query="$(cat "${queryFile}")"
 fi
 
 
 if ! [[ ${JOBS_NUMBER} =~ ^[0-9]+$ ]] ; then
-   Log::displayError "number of jobs is incorrect"
-   exit 1
+   Log::fatal "number of jobs is incorrect"
 fi
 
-if [[ ${JOBS_NUMBER} -lt 1 ]] ; then
-    Log::displayError "number of jobs must be greater than 0"
-    exit 1
-fi
-if [[ ${JOBS_NUMBER} -gt 1 ]] ; then
-    Functions::checkCommandExists parallel "sudo apt-get install parallel"
-fi
+[[ ${JOBS_NUMBER} -lt 1 ]] && Log::fatal "number of jobs must be greater than 0"
+[[ ${JOBS_NUMBER} -gt 1 ]] && Functions::checkCommandExists parallel "sudo apt-get install parallel"
 
 declare -Agx dbInstance
 Database::newInstance dbInstance "${DSN}"

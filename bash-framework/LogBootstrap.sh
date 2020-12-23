@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+Log::fatal() { __displayFatal "$@"; exit 1; }
+
 Log::logError() { :;}
 Log::logWarning() { :;}
 Log::logInfo() { :;}

@@ -5,10 +5,7 @@
 # USED BY bin/dbScriptAllDatabases
 ############################################################
 
-if [[  "${USER}" = "root" ]]; then
-    Log::displayError "The script must not be run as root"
-    exit 1
-fi
+Framework::expectNonRootUser
 
 declare REMOTE="$1"
 declare VERBOSE="$2"
