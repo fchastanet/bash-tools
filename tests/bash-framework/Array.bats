@@ -6,11 +6,11 @@ set +o errexit
 
 import bash-framework/Array
 
-@test "framework is loaded" {
+@test "${BATS_TEST_FILENAME#/bash/tests/} framework is loaded" {
     [[ "${BASH_FRAMEWORK_INITIALIZED}" = "1" ]]
 }
 
-@test "Array::contains" {
+@test "${BATS_TEST_FILENAME#/bash/tests/} Array::contains" {
     declare -a tab=("elem1" "elem2" "elem3")
 
     Array::contains "elem0" "${tab[@]}"

@@ -24,8 +24,9 @@ Framework::expectNonRootUser() {
     local currentUserName
 
     currentUserId=$(id -u)
-    [  "${currentUserId}" = "0" ] &&
-        Log::fatal "The script must not be run as root"
+    if [  "${currentUserId}" = "0" ]; then
+      Log::fatal "The script must not be run as root"
+    fi
 }
 
 # Public: exits with message if expected global variable is not set

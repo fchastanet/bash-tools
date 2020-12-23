@@ -13,11 +13,11 @@ teardown() {
     rm -Rf /tmp/home || true 
 }
 
-@test "framework is loaded" {
+@test "${BATS_TEST_FILENAME#/bash/tests/} framework is loaded" {
     [[ "${BASH_FRAMEWORK_INITIALIZED}" = "1" ]]
 }
 
-@test "Functions::isWindows" {
+@test "${BATS_TEST_FILENAME#/bash/tests/} Functions::isWindows" {
     unameMocked() {
         echo "Msys"
     }
@@ -26,7 +26,7 @@ teardown() {
     [[ "$(Functions::isWindows)" = "1" ]]
 }
 
-@test "Functions::checkDnsHostname localhost" {
+@test "${BATS_TEST_FILENAME#/bash/tests/} Functions::checkDnsHostname localhost" {
     unameMocked() {
         echo "Linux"
     }
@@ -43,7 +43,7 @@ teardown() {
     fi
 }
 
-@test "Functions::checkDnsHostname external host" {
+@test "${BATS_TEST_FILENAME#/bash/tests/} Functions::checkDnsHostname external host" {
     unameMocked() {
         echo "Linux"
     }
@@ -64,18 +64,18 @@ teardown() {
     Functions::checkDnsHostname "willywonka.fchastanet.lan" || false
 }
 
-@test "Functions::checkCommandExists exists" {
+@test "${BATS_TEST_FILENAME#/bash/tests/} Functions::checkCommandExists exists" {
    (Functions::checkCommandExists "bash") || false
 }
 
-@test "Functions::checkCommandExists not exists" {
+@test "${BATS_TEST_FILENAME#/bash/tests/} Functions::checkCommandExists not exists" {
     run Functions::checkCommandExists "qsfdsfds"
     [[ "$status" -eq 1 ]]
     (>&2 echo $(env) )
     [[ "${lines[0]}" = "$(echo -e "${__ERROR_COLOR}ERROR - qsfdsfds is not installed, please install it${__RESET_COLOR}")" ]]
 }
 
-@test "Functions::getList" {
+@test "${BATS_TEST_FILENAME#/bash/tests/} Functions::getList" {
     run Functions::getList "${BATS_TEST_DIRNAME}/dataGetList" "sh"
     [[ "$status" -eq 0 ]]
     [[ "${#lines[@]}" = "2" ]]
@@ -96,14 +96,14 @@ teardown() {
     [[ "$status" -eq 1 ]]
 }
 
-@test "Functions::trapAdd" {
+@test "${BATS_TEST_FILENAME#/bash/tests/} Functions::trapAdd" {
     trap 'echo "SIGUSR1 original" >> /tmp/home/trap' SIGUSR1
     Functions::trapAdd 'echo "SIGUSR1 overriden" >> /tmp/home/trap' SIGUSR1
     kill -SIGUSR1 $$
     [ "$(cat /tmp/home/trap)" = "$(cat ${BATS_TEST_DIRNAME}/data/Functions_addTrap_expected)" ]
 }
 
-@test "Functions::trapAdd 2 events at once" {
+@test "${BATS_TEST_FILENAME#/bash/tests/} Functions::trapAdd 2 events at once" {
     trap 'echo "SIGUSR1 original" >> /tmp/home/trap' SIGUSR1
     trap 'echo "SIGUSR2 original" >> /tmp/home/trap' SIGUSR2
     Functions::trapAdd 'echo "SIGUSR1&2 overriden" >> /tmp/home/trap' SIGUSR1 SIGUSR2

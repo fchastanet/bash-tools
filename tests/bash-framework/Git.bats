@@ -20,7 +20,7 @@ teardown() {
 }
 
 
-@test "Git::ShallowClone first time" {
+@test "${BATS_TEST_FILENAME#/bash/tests/} Git::ShallowClone first time" {
     stub git \
         "init : true" \
         "remote add origin https://github.com/fchastanet/fakeRepo.git : true" \
@@ -38,7 +38,7 @@ teardown() {
     [[ "${output}" == *"INFO  - Installing /tmp/home/fakeRepo ..."* ]]
 }
 
-@test "Git::ShallowClone second time update" {
+@test "${BATS_TEST_FILENAME#/bash/tests/} Git::ShallowClone second time update" {
     mkdir -p "${HOME}/fakeRepo/.git"    
     stub git \
         "-c advice.detachedHead=false fetch --depth 1 origin master : true" \
@@ -55,7 +55,7 @@ teardown() {
     [[ "${output}" == *"INFO  - Repository ${HOME}/fakeRepo already installed"* ]]
 }
 
-@test "Git::ShallowClone on non git folder (not forced)" {
+@test "${BATS_TEST_FILENAME#/bash/tests/} Git::ShallowClone on non git folder (not forced)" {
     mkdir -p "${HOME}/fakeRepo"    
     run Git::ShallowClone \
         "https://github.com/fchastanet/fakeRepo.git" \
@@ -70,7 +70,7 @@ teardown() {
     [[ -d "${HOME}/fakeRepo" ]]
 }
 
-@test "Git::ShallowClone on non git folder (forced)" {
+@test "${BATS_TEST_FILENAME#/bash/tests/} Git::ShallowClone on non git folder (forced)" {
     mkdir -p "${HOME}/fakeRepo"    
     stub git \
         "init : true" \

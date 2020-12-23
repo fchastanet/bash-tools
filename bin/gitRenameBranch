@@ -78,6 +78,10 @@ if [ $# -gt 0 ]; then
   Log::fatal "too much arguments provided"
 fi
 
+if ! git rev-parse --git-dir >/dev/null 2>&1; then 
+  Log::fatal "not a git repository (or any of the parent directories)"
+fi
+
 if [ -z "${oldName}" ]; then
   oldName="$(git branch --show-current)"
   [ -z "${oldName}" ] && Log::fatal "Impossible to calculate current branch name"

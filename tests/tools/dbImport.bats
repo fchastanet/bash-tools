@@ -27,47 +27,47 @@ teardown() {
     unstub_all
 }
 
-@test "display help" {
+@test "${BATS_TEST_FILENAME#/bash/tests/} display help" {
     run ${toolsDir}/dbImport --help 2>&1
     [[ "${output}" == *"Description: Import source db into target db"* ]]
 }
 
-@test "remoteDbName not provided" {
+@test "${BATS_TEST_FILENAME#/bash/tests/} remoteDbName not provided" {
     run ${toolsDir}/dbImport  2>&1
-    [[ "${output}" == *"ERROR - you must provide remoteDbName"* ]]
+    [[ "${output}" == *"FATAL - you must provide remoteDbName"* ]]
 }
 
-@test "--from-aws and --from-dsn are incompatible" {
+@test "${BATS_TEST_FILENAME#/bash/tests/} --from-aws and --from-dsn are incompatible" {
     run ${toolsDir}/dbImport --from-dsn default --from-aws fromDb 2>&1
-    [[ "${output}" == *"ERROR - you cannot use from-dsn and from-aws at the same time"* ]]
+    [[ "${output}" == *"FATAL - you cannot use from-dsn and from-aws at the same time"* ]]
 }
 
-@test "--from-aws missing S3_BASE_URL" {
+@test "${BATS_TEST_FILENAME#/bash/tests/} --from-aws missing S3_BASE_URL" {
     run ${toolsDir}/dbImport --from-aws fromDb 2>&1
-    [[ "${output}" == *"ERROR - missing S3_BASE_URL, please provide a value in .env file"* ]]
+    [[ "${output}" == *"FATAL - missing S3_BASE_URL, please provide a value in .env file"* ]]
 }
 
-@test "-a and -f are incompatible" {
+@test "${BATS_TEST_FILENAME#/bash/tests/} -a and -f are incompatible" {
     run ${toolsDir}/dbImport -f default -a fromDb 2>&1
-    [[ "${output}" == *"ERROR - you cannot use from-dsn and from-aws at the same time"* ]]
+    [[ "${output}" == *"FATAL - you cannot use from-dsn and from-aws at the same time"* ]]
 }
 
-@test "dsn file not found" {
+@test "${BATS_TEST_FILENAME#/bash/tests/} dsn file not found" {
     run ${toolsDir}/dbImport -f notFound fromDb 2>&1
     [[ "${output}" == *"ERROR - dsn file notFound not found"* ]]
 }
 
-@test "remote db(fromDb) doesn't exist" {
+@test "${BATS_TEST_FILENAME#/bash/tests/} remote db(fromDb) doesn't exist" {
     # call 1: check if target db exists to know if it should be created, no error
     # call 2: check if from db exists, this time we answer no
     stub mysqlshow \
         '* * toDb : echo ""' \
         '* * fromDb : echo ""' 
     run ${toolsDir}/dbImport -f default.local fromDb toDb 2>&1
-    [[ "${output}" == *"ERROR - Remote Database fromDb does not exist"* ]]
+    [[ "${output}" == *"FATAL - Remote Database fromDb does not exist"* ]]
 }
 
-@test "remote db(fromDb) fully functional" {
+@test "${BATS_TEST_FILENAME#/bash/tests/} remote db(fromDb) fully functional" {
     # call 1 (order 1): check if target db exists to know if it should be created, no error
     # call 2 (order 2): check if from db exists, answers yes
     stub mysqlshow \
@@ -103,7 +103,7 @@ teardown() {
     [[ "$(cat "${HOME}/.bash-tools/dbImportDumps/fromDb_default_structure.sql" | grep '####structure####')" = "####structure####" ]]
 }
 
-@test "remote db(fromDb) dump already present" {
+@test "${BATS_TEST_FILENAME#/bash/tests/} remote db(fromDb) dump already present" {
     touch "${HOME}/.bash-tools/dbImportDumps/fromDb_default.sql"
     touch "${HOME}/.bash-tools/dbImportDumps/fromDb_default_structure.sql"
     # call 1 (order 1): check if target db exists to know if it should be created, no error

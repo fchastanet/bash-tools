@@ -11,6 +11,7 @@ declare -g mysqlMockedStep=0
 setup() {
     rm -Rf /tmp/gitRepo || true 
     mkdir /tmp/gitRepo
+    mkdir /tmp/gitRepoFake
     cd /tmp/gitRepo 
     git init
     git config --local user.email "you@example.com"
@@ -24,85 +25,85 @@ setup() {
 }
 
 teardown() {
-  rm -Rf /tmp/gitRepo || true 
+  rm -Rf /tmp/gitRepo* || true 
 }
 
-@test "display help" {
+@test "${BATS_TEST_FILENAME#/bash/tests/} display help" {
     run ${toolsDir}/gitRenameBranch --help 2>&1
     [ "$status" -eq 0 ]
     [[ "${output}" == *"Description: rename git local branch, use options to push new branch and delete old branch"* ]]
 }
 
-@test "not a git repository" {
-    cd /tmp
-    run ${toolsDir}/gitRenameBranch  2>&1
-    [ "$status" -eq 128 ]
-    [[ ${output} == "fatal: not a git repository (or any of the parent directories): .git" ]]
+@test "${BATS_TEST_FILENAME#/bash/tests/} not a git repository" {
+    cd /tmp/gitRepoFake
+    run "${toolsDir}/gitRenameBranch" "test"  2>&1
+    [ "$status" -eq 1 ]
+    [[ ${output} == *"FATAL - not a git repository (or any of the parent directories)"* ]]
 }
 
-@test "master branch not supported" {
+@test "${BATS_TEST_FILENAME#/bash/tests/} master branch not supported" {
     git checkout master
     run ${toolsDir}/gitRenameBranch 2>&1
     [ "$status" -eq 1 ]
-    [[ ${output} == *"ERROR - master/main branch not supported by this command, please do it manually"* ]]
+    [[ ${output} == *"FATAL - master/main branch not supported by this command, please do it manually"* ]]
 }
 
-@test "main branch not supported" {
+@test "${BATS_TEST_FILENAME#/bash/tests/} main branch not supported" {
     git checkout main
     run ${toolsDir}/gitRenameBranch 2>&1
     [ "$status" -eq 1 ]
-    [[ ${output} == *"ERROR - master/main branch not supported by this command, please do it manually"* ]]
+    [[ ${output} == *"FATAL - master/main branch not supported by this command, please do it manually"* ]]
 }
 
-@test "master branch not supported as argument" {
+@test "${BATS_TEST_FILENAME#/bash/tests/} master branch not supported as argument" {
     run ${toolsDir}/gitRenameBranch master 2>&1
     [ "$status" -eq 1 ]
-    [[ ${output} == *"ERROR - master/main branch not supported by this command, please do it manually"* ]]
+    [[ ${output} == *"FATAL - master/main branch not supported by this command, please do it manually"* ]]
 }
 
-@test "main branch not supported as argument" {
+@test "${BATS_TEST_FILENAME#/bash/tests/} main branch not supported as argument" {
     run ${toolsDir}/gitRenameBranch main 2>&1
     [ "$status" -eq 1 ]
-    [[ ${output} == *"ERROR - master/main branch not supported by this command, please do it manually"* ]]
+    [[ ${output} == *"FATAL - master/main branch not supported by this command, please do it manually"* ]]
 }
 
-@test "new branch name not provided" {
+@test "${BATS_TEST_FILENAME#/bash/tests/} new branch name not provided" {
     run ${toolsDir}/gitRenameBranch 2>&1
     [ "$status" -eq 1 ]
-    [[ ${output} == *"ERROR - new branch name not provided"* ]]
+    [[ ${output} == *"FATAL - new branch name not provided"* ]]
 }
 
-@test "branch not provided" {
+@test "${BATS_TEST_FILENAME#/bash/tests/} branch not provided" {
     run ${toolsDir}/gitRenameBranch  2>&1
     [ "$status" -eq 1 ]
-    [[ ${output} == *"ERROR - new branch name not provided"* ]]
+    [[ ${output} == *"FATAL - new branch name not provided"* ]]
 }
 
-@test "branch master provided" {
+@test "${BATS_TEST_FILENAME#/bash/tests/} branch master provided" {
     run ${toolsDir}/gitRenameBranch master 2>&1
     [ "$status" -eq 1 ]
-    [[ ${output} == *"ERROR - master/main branch not supported by this command, please do it manually"* ]]
+    [[ ${output} == *"FATAL - master/main branch not supported by this command, please do it manually"* ]]
 }
 
-@test "branch main provided" {
+@test "${BATS_TEST_FILENAME#/bash/tests/} branch main provided" {
     run ${toolsDir}/gitRenameBranch main 2>&1
     [ "$status" -eq 1 ]
-    [[ ${output} == *"ERROR - master/main branch not supported by this command, please do it manually"* ]]
+    [[ ${output} == *"FATAL - master/main branch not supported by this command, please do it manually"* ]]
 }
 
-@test "branch master provided as oldBranch" {
+@test "${BATS_TEST_FILENAME#/bash/tests/} branch master provided as oldBranch" {
     run ${toolsDir}/gitRenameBranch newBranch master 2>&1
     [ "$status" -eq 1 ]
-    [[ ${output} == *"ERROR - master/main branch not supported by this command, please do it manually"* ]]
+    [[ ${output} == *"FATAL - master/main branch not supported by this command, please do it manually"* ]]
 }
 
-@test "too much parameters" {
+@test "${BATS_TEST_FILENAME#/bash/tests/} too much parameters" {
     run ${toolsDir}/gitRenameBranch newBranch oldBranch toomuch 2>&1
     [ "$status" -eq 1 ]
-    [[ ${output} == *"ERROR - too much arguments provided"* ]]
+    [[ ${output} == *"FATAL - too much arguments provided"* ]]
 }
 
-@test "rename local and push branch" {
+@test "${BATS_TEST_FILENAME#/bash/tests/} rename local and push branch" {
     git() {
         if [ "$2" = "--show-current" ]; then
             echo "oldBranch"
@@ -121,7 +122,7 @@ teardown() {
     [ ${#lines[@]} -eq 4 ]
 }
 
-@test "rename local, push, delete remote branch" {
+@test "${BATS_TEST_FILENAME#/bash/tests/} rename local, push, delete remote branch" {
     git() {
         if [ "$2" = "--show-current" ]; then
             echo "oldBranch"
@@ -141,7 +142,7 @@ teardown() {
     [ ${#lines[@]} -eq 6 ]
 }
 
-@test "rename local, and delete remote branch" {
+@test "${BATS_TEST_FILENAME#/bash/tests/} rename local, and delete remote branch" {
     git() {
         if [ "$2" = "--show-current" ]; then
             # should not call this as oldBranch provided
@@ -162,7 +163,7 @@ teardown() {
     [ ${#lines[@]} -eq 4 ]
 }
     
-@test "rename local, and delete remote branch without oldName" {
+@test "${BATS_TEST_FILENAME#/bash/tests/} rename local, and delete remote branch without oldName" {
     git() {
         if [ "$2" = "--show-current" ]; then
             echo "oldBranch"
@@ -181,7 +182,7 @@ teardown() {
     [ ${#lines[@]} -eq 4 ]
 }
 
-@test "rename local and push branch (assume-yes)" {
+@test "${BATS_TEST_FILENAME#/bash/tests/} rename local and push branch (assume-yes)" {
     git() {
         if [ "$2" = "--show-current" ]; then
             echo "oldBranch"
@@ -200,7 +201,7 @@ teardown() {
     [ ${#lines[@]} -eq 4 ]
 }
 
-@test "rename local, push, delete remote branch (assume-yes)" {
+@test "${BATS_TEST_FILENAME#/bash/tests/} rename local, push, delete remote branch (assume-yes)" {
     git() {
         if [ "$2" = "--show-current" ]; then
             echo "oldBranch"
@@ -220,7 +221,7 @@ teardown() {
     [ ${#lines[@]} -eq 6 ]
 }
 
-@test "rename local, and delete remote branch (assume-yes)" {
+@test "${BATS_TEST_FILENAME#/bash/tests/} rename local, and delete remote branch (assume-yes)" {
     git() {
         if [ "$2" = "--show-current" ]; then
             # should not call this as oldBranch provided
@@ -241,7 +242,7 @@ teardown() {
     [ ${#lines[@]} -eq 4 ]
 }
     
-@test "rename local, and delete remote branch without oldName (assume-yes)" {
+@test "${BATS_TEST_FILENAME#/bash/tests/} rename local, and delete remote branch without oldName (assume-yes)" {
     git() {
         if [ "$2" = "--show-current" ]; then
             echo "oldBranch"

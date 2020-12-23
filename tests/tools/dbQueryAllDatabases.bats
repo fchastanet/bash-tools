@@ -30,17 +30,17 @@ teardown() {
     unstub_all
 }
 
-# @test "display help" {
+# @test "${BATS_TEST_FILENAME#/bash/tests/} display help" {
 #     run ${toolsDir}/dbQueryAllDatabases --help
 #     [[ "${lines[2]}" == *"Usage: dbQueryAllDatabases <query|queryFile> [-d|--dsn <dsn>] [-t|--as-tsv] [-q|--query] [--jobs|-j <jobsCount>] [--bar|-b]"* ]]
 # }
 
-# @test "query file not provided" {
+# @test "${BATS_TEST_FILENAME#/bash/tests/} query file not provided" {
 #     HOME=/tmp/home run ${toolsDir}/dbQueryAllDatabases  2>&1
 #     [[ ${output} == *"ERROR - You must provide the sql file to be executed"* ]]
 # }
 
-# @test "providing env-file port invalid" {
+# @test "${BATS_TEST_FILENAME#/bash/tests/} providing env-file port invalid" {
 #     run ${toolsDir}/dbQueryAllDatabases \
 #         -d "${BATS_TEST_DIRNAME}/data/databaseSize.invalidParamPort.sh" \
 #         "${BATS_TEST_DIRNAME}/data/databaseSize.sql" 2>&1
@@ -48,7 +48,7 @@ teardown() {
 # }
 # TODO other invalid data
 
-@test "providing env-file changes the db connection parameters + retrieve db size" {
+@test "${BATS_TEST_FILENAME#/bash/tests/} providing env-file changes the db connection parameters + retrieve db size" {
     stub mysql \
         '\* -s --skip-column-names --connect-timeout=5 mysql -e show\ databases : cp ${1##*=} /tmp/connectionParameters ; '"cat ${BATS_TEST_DIRNAME}/data/databaseSize.dbList" \
         "\* -s --skip-column-names --connect-timeout=5 db1 -e \* : cat ${BATS_TEST_DIRNAME}/data/databaseSize.result_db1" \
@@ -62,7 +62,7 @@ teardown() {
     [[ "${output}" == "$(cat ${BATS_TEST_DIRNAME}/data/databaseSize.expectedResult)" ]]
 }
 
-@test "parallel not installed" {
+@test "${BATS_TEST_FILENAME#/bash/tests/} parallel not installed" {
     run ${toolsDir}/dbQueryAllDatabases \
         -j2 \
         "${BATS_TEST_DIRNAME}/data/databaseSize.sql" 2>&1
@@ -71,7 +71,7 @@ teardown() {
     [[ "${output}" == *"ERROR - parallel is not installed, please install it"* ]]
 }
 
-@test "parallel query" {
+@test "${BATS_TEST_FILENAME#/bash/tests/} parallel query" {
     cp "${BATS_TEST_DIRNAME}/mocks/parallel" "${HOME}/bin"
     stub mysql \
         "\* -s --skip-column-names --connect-timeout=5 mysql -e show\ databases : cat ${BATS_TEST_DIRNAME}/data/databaseSize.dbList" \
