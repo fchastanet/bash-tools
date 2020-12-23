@@ -6,11 +6,8 @@ BATS_TEST_DIRNAME=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 declare -g vendorDir="$( cd "${BATS_TEST_DIRNAME}/../../vendor" && pwd )"
 declare -g toolsDir="$( cd "${BATS_TEST_DIRNAME}/../../bin" && pwd )"
 
-# shellcheck source=bash-framework/Constants.sh
-source "$(cd "${BATS_TEST_DIRNAME}/../.." && pwd)/bash-framework/Constants.sh" || exit 1
-export HOME="/tmp/home"
-mkdir -p /tmp/home
 source "$(cd "${BATS_TEST_DIRNAME}/../.." && pwd)/bash-framework/_bootstrap.sh" || exit 1
+import bash-framework/Database
 source "${vendorDir}/bats-mock-Flamefire/load.bash" || exit 1
 
 export HOME="/tmp/home"
@@ -25,35 +22,27 @@ export HOME="/tmp/home"
     cp "${BATS_TEST_DIRNAME}/../tools/mocks/pv" bin
     touch bin/mysql bin/mysqldump bin/mysqlshow
     chmod +x bin/*
+    mkdir -p /tmp/home/.bash-tools/dsn
+    cd /tmp/home/.bash-tools/dsn
+    cp ${BATS_TEST_DIRNAME}/data/dsn_* /tmp/home/.bash-tools/dsn
+    touch default.local.env
+    touch other.local.env
 )
 export PATH="$PATH:/tmp/home/bin"
 
+declare -Ax dbFromInstance
+    HOME=/tmp/home Database::newInstance dbFromInstance "dsn_valid"    
+    status=$?
+            set -x
+    [[ "$status" -eq 0 ]]
+    [ "${dbFromInstance['INITIALIZED']}" = "1" ]
+    [ "${dbFromInstance['OPTIONS']}" = "--default-character-set=utf8" ]
+    [ "${dbFromInstance['SSL_OPTIONS']}" = "--ssl-mode=DISABLED" ]
+    [ "${dbFromInstance['DUMP_OPTIONS']}" = "--default-character-set=utf8 --compress --compact --hex-blob --routines --triggers --single-transaction --set-gtid-purged=OFF --column-statistics=0 --ssl-mode=DISABLED" ]
+    [ "${dbFromInstance['DSN_FILE']}" = "/tmp/home/.bash-tools/dsn/dsn_valid.env" ]
 
-# call 1 (order 1): check if target db exists to know if it should be created, no error
-# call 2 (order 2): check if from db exists, answers yes
-stub mysqlshow \
-    '* * toDb : echo ""' \
-    '* * fromDb : echo "Database: fromDb"' 
-# call 1 (order 3): from db default_collation_name
-# call 2 (order 4): from db default_character_set_name
-# call 3 (order 5): from db list tables
-# call 4 (order 6): estimate dump size
-# call 5 (order 9): create target db (after dumps have been done)
-# call 6 (order 10): import structure dump into db
-# call 7 (order 11): import data dump into db
-stub mysql \
-    "\* \* \* \* information_schema -e 'SELECT default_collation_name FROM information_schema.SCHEMATA WHERE schema_name = \"fromDb\";' : echo 'collation'" \
-    "\* \* \* \* information_schema -e 'SELECT default_character_set_name FROM information_schema.SCHEMATA WHERE schema_name = \"fromDb\";' : echo 'charset'" \
-    "\* \* \* \* fromDb -e 'show tables' : echo 'table1'" \
-    "\* -s --skip-column-names --connect-timeout=5 : echo '100'" \
-    "\* -s --skip-column-names --connect-timeout=5 -e 'CREATE DATABASE \`toDb\` CHARACTER SET \"charset\" COLLATE \"collation\"' : echo 'db created'" \
-    "\* -s --skip-column-names --connect-timeout=5 toDb : echo 'import structure dump'" \
-    "\* -s --skip-column-names --connect-timeout=5 toDb : echo 'import data dump'"
-
-# call 1 (order 7): dump data
-# call 2 (order 8): dump structure
-stub mysqldump \
-    "\* --default-character-set=utf8 --compress --compact --hex-blob --routines --triggers --single-transaction --set-gtid-purged=OFF --column-statistics=0 --ssl-mode=DISABLED --no-create-info --skip-add-drop-table --single-transaction=TRUE fromDb 'table1' : echo '####data####'" \
-    "\* --default-character-set=utf8 --compress --compact --hex-blob --routines --triggers --single-transaction --set-gtid-purged=OFF --column-statistics=0 --ssl-mode=DISABLED --no-data --skip-add-drop-table --single-transaction=TRUE fromDb : echo '####structure####'"
-set -x
-${toolsDir}/dbImport -f default.local fromDb toDb 2>&1
+    [[ ${dbFromInstance['AUTH_FILE']} = /tmp/mysql.* ]]
+    [ -f "${dbFromInstance['AUTH_FILE']}" ]
+    [ "${dbFromInstance['DEFAULT_QUERY_OPTIONS']}" = "-s --skip-column-names --ssl-mode=DISABLED " ]
+    [[ "${dbFromInstance['QUERY_OPTIONS']}" = "-s --skip-column-names --ssl-mode=DISABLED " ]]
+    [ "$(cat "${dbFromInstance['DSN_FILE']}")" = "$(cat "${BATS_TEST_DIRNAME}/data/mysql_auth_file.cnf")" ]

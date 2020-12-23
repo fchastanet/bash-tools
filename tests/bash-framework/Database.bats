@@ -105,21 +105,20 @@ teardown() {
 }
 
 @test "Database::newInstance valid dsn file from home" {
-    declare -Agx dbFromInstance
-    export HOME=/tmp/home
-    Database::newInstance dbFromInstance "dsn_valid"    
+    declare -Ax dbFromInstance
+    HOME=/tmp/home Database::newInstance dbFromInstance "dsn_valid"    
     status=$?
-    [ "$status" -eq 0 ]
+    [[ "$status" -eq 0 ]]
     [ "${dbFromInstance['INITIALIZED']}" = "1" ]
     [ "${dbFromInstance['OPTIONS']}" = "--default-character-set=utf8" ]
     [ "${dbFromInstance['SSL_OPTIONS']}" = "--ssl-mode=DISABLED" ]
-    [ "${dbFromInstance['DEFAULT_QUERY_OPTIONS']}" = "-s --skip-column-names --ssl-mode=DISABLED " ]
-    [ "${dbFromInstance['QUERY_OPTIONS']}" = "-s --skip-column-names --ssl-mode=DISABLED " ]
     [ "${dbFromInstance['DUMP_OPTIONS']}" = "--default-character-set=utf8 --compress --compact --hex-blob --routines --triggers --single-transaction --set-gtid-purged=OFF --column-statistics=0 --ssl-mode=DISABLED" ]
     [ "${dbFromInstance['DSN_FILE']}" = "/tmp/home/.bash-tools/dsn/dsn_valid.env" ]
     [[ ${dbFromInstance['AUTH_FILE']} = /tmp/mysql.* ]]
     [ -f "${dbFromInstance['AUTH_FILE']}" ]
-    [ "$(cat "${dbFromInstance['DSN_FILE']}")" = "$(cat "${BATS_TEST_DIRNAME}/data/mysql_auth_file.cnf")" ]
+    [[ "${dbFromInstance["DEFAULT_QUERY_OPTIONS"]}" = "-s --skip-column-names" ]]
+    [[ "${dbFromInstance['QUERY_OPTIONS']}" = "-s --skip-column-names" ]]
+    [ "$(cat "${dbFromInstance['AUTH_FILE']}")" = "$(cat "${BATS_TEST_DIRNAME}/data/mysql_auth_file.cnf")" ]
 }
 
 @test "Database::authFile valid dsn file from home" {
@@ -129,7 +128,8 @@ teardown() {
     status=$?
     [ "$status" -eq 0 ]
     run Database::authFile dbFromInstance
-    [ "${output}" = "$(cat "${BATS_TEST_DIRNAME}/data/mysql_auth_file.cnf")" ]
+
+    [ "$(cat "${dbFromInstance['AUTH_FILE']}")" = "$(cat "${BATS_TEST_DIRNAME}/data/mysql_auth_file.cnf")" ]
 }
 
 @test "Database::setOptions" {
