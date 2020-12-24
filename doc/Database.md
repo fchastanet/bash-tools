@@ -150,6 +150,7 @@ dump db limited to optional table list
 * $1 (passed by reference) database instance to use
 * $2 the db to dump
 * _$3(optional)_ string containing table list
+        (can be empty string in order to specify additional options)
 * _$4(optional)_ ... additional dump options
 
 **Returns**: mysqldump command status code
