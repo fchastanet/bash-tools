@@ -30,23 +30,15 @@ teardown() {
     unstub_all
 }
 
-# @test "${BATS_TEST_FILENAME#/bash/tests/} display help" {
-#     run ${toolsDir}/dbQueryAllDatabases --help
-#     [[ "${lines[2]}" == *"Usage: dbQueryAllDatabases <query|queryFile> [-d|--dsn <dsn>] [-t|--as-tsv] [-q|--query] [--jobs|-j <jobsCount>] [--bar|-b]"* ]]
-# }
+@test "${BATS_TEST_FILENAME#/bash/tests/} display help" {
+    run ${toolsDir}/dbQueryAllDatabases --help
+    [[ "${lines[2]}" == *"Usage: dbQueryAllDatabases <query|queryFile> [-d|--dsn <dsn>] [-t|--as-tsv] [-q|--query] [--jobs|-j <jobsCount>] [--bar|-b]"* ]]
+}
 
-# @test "${BATS_TEST_FILENAME#/bash/tests/} query file not provided" {
-#     HOME=/tmp/home run ${toolsDir}/dbQueryAllDatabases  2>&1
-#     [[ ${output} == *"ERROR - You must provide the sql file to be executed"* ]]
-# }
-
-# @test "${BATS_TEST_FILENAME#/bash/tests/} providing env-file port invalid" {
-#     run ${toolsDir}/dbQueryAllDatabases \
-#         -d "${BATS_TEST_DIRNAME}/data/databaseSize.invalidParamPort.sh" \
-#         "${BATS_TEST_DIRNAME}/data/databaseSize.sql" 2>&1
-#     [[ "${output}" == *"ERROR - dsn file /bash/tests/tools/data/databaseSize.invalidParamPort.sh : PORT invalid"* ]]
-# }
-# TODO other invalid data
+@test "${BATS_TEST_FILENAME#/bash/tests/} query file not provided" {
+    HOME=/tmp/home run ${toolsDir}/dbQueryAllDatabases  2>&1
+    [[ ${output} == *"FATAL - You must provide the sql file to be executed"* ]]
+}
 
 @test "${BATS_TEST_FILENAME#/bash/tests/} providing env-file changes the db connection parameters + retrieve db size" {
     stub mysql \

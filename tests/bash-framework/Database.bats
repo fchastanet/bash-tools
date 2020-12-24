@@ -280,11 +280,42 @@ teardown() {
     [ -f "/tmp/home/query" ]
     [[ "$(cat /tmp/home/query)" == "$(cat "${BATS_TEST_DIRNAME}/data/dropTable.query")" ]]
 }
-# TODO Database::ifDbExists
-# TODO Database::isTableExists
-# TODO Database::createDb
-# TODO Database::dropDb
-# TODO Database::dropTable
-# TODO Database::dropTable
-# TODO Database::dump
 
+@test "${BATS_TEST_FILENAME#/bash/tests/} Database::dump" {
+    stub mysqldump \
+        '* --default-character-set=utf8 --compress --compact --hex-blob --routines --triggers --single-transaction --set-gtid-purged=OFF --column-statistics=0 --ssl-mode=DISABLED mydb : echo "dump"'
+
+    declare -Ax dbFromInstance
+    export HOME=/tmp/home
+    Database::newInstance dbFromInstance "dsn_valid"
+    run Database::dump dbFromInstance 'mydb'
+
+    [ "$status" -eq 0 ]
+    [[ "$output" = "dump" ]]
+}
+
+@test "${BATS_TEST_FILENAME#/bash/tests/} Database::dump with table list" {
+    stub mysqldump \
+        '* --default-character-set=utf8 --compress --compact --hex-blob --routines --triggers --single-transaction --set-gtid-purged=OFF --column-statistics=0 --ssl-mode=DISABLED mydb table1 table2 : echo "dump table1 table2"'
+
+    declare -Ax dbFromInstance
+    export HOME=/tmp/home
+    Database::newInstance dbFromInstance "dsn_valid"
+    run Database::dump dbFromInstance 'mydb' "table1 table2"
+
+    [ "$status" -eq 0 ]
+    [[ "$output" = "dump table1 table2" ]]
+}
+
+@test "${BATS_TEST_FILENAME#/bash/tests/} Database::dump with additional options" {
+    stub mysqldump \
+        '* --default-character-set=utf8 --compress --compact --hex-blob --routines --triggers --single-transaction --set-gtid-purged=OFF --column-statistics=0 --ssl-mode=DISABLED --no-create-info --skip-add-drop-table --single-transaction=TRUE mydb : echo "dump additional options"'
+
+    declare -Ax dbFromInstance
+    export HOME=/tmp/home
+    Database::newInstance dbFromInstance "dsn_valid"
+    run Database::dump dbFromInstance 'mydb' "" --no-create-info --skip-add-drop-table --single-transaction=TRUE
+
+    [ "$status" -eq 0 ]
+    [[ "$output" = "dump additional options" ]]
+}
