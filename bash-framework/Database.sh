@@ -6,12 +6,15 @@ import bash-framework/Log
 #
 # **Arguments**:
 # * $1 - (passed by reference) database instance to create
-# * $2 - dsn profile
+# * $2 - dsn profile - load the dsn.env profile in this order
+#          * using absolute/relative file
+#          * from home folder
+#          * from framework conf/dsn folder
 #
 # **Example:**
 # ```shell
 # declare -Agx dbInstance
-# Database::newInstance dbInstance "${HOSTNAME}" "${PORT}" "${USER}" "${PASSWORD}"
+# Database::newInstance dbInstance "defaul.local"
 # ```
 #
 # Returns immediately if the instance is already initialized
@@ -33,12 +36,14 @@ Database::newInstance() {
 
   # check dsn file
   # load dsn from home folder, then bash framework folder, then absolute file
-  # shellcheck source=/conf/dsn/default.local.env
-  DSN_FILE="$(Database::getHomeConfDsnFolder)/${dsn}.env"
-  if [ ! -f "${DSN_FILE}" ]; then
-    DSN_FILE="$(Database::getDefaultConfDsnFolder)/${dsn}.env"
+  if [[ "${dsn}" == */* ]]; then
+    # file contains /, consider it as absolute filename
+    DSN_FILE="${dsn}"
+  else
+    # shellcheck source=/conf/dsn/default.local.env
+    DSN_FILE="$(Database::getHomeConfDsnFolder)/${dsn}.env"
     if [ ! -f "${DSN_FILE}" ]; then
-      DSN_FILE="${dsn}"
+      DSN_FILE="$(Database::getDefaultConfDsnFolder)/${dsn}.env"
       if [ ! -f "${DSN_FILE}" ]; then
         Log::displayError "dsn file ${dsn} not found"
         return 1    

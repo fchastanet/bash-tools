@@ -13,6 +13,7 @@ Build status: [![Build Status](https://travis-ci.com/fchastanet/bash-tools.svg?b
     - [1.3.5. bin/cli](#135-bincli)
   - [1.4. Bash Framework](#14-bash-framework)
   - [1.5. Acknowledgements](#15-acknowledgements)
+- [TODO](#todo)
 
 ## 1.1. Exerpt
 
@@ -71,8 +72,11 @@ touch ~/.parallel/will-cite
 Description: rename git local branch, use options to push new branch and delete old branch
 
 Usage: gitRenameBranch [-h|--help] prints this help and exits
-Usage: gitRenameBranch <newBranchName> [<oldBranchName>] [--push|-p] [--delete|-d] 
+Usage: gitRenameBranch <newBranchName> [<oldBranchName>] [--push|-p] [--delete|-d] [--assume-yes|-yes|-y]
     --help,-h prints this help and exits
+     -y, --yes, --assume-yes do not ask for confirmation (use with caution)
+        Automatic yes to prompts; assume "y" as answer to all prompts
+        and run non-interactively. 
     --push,-p push new branch
     --delete,-d delete old remote branch
     <newBranchName> the new branch name to give to current branch
@@ -87,31 +91,28 @@ bin/dbQueryAllDatabases -e conf/dsn/localhost-root.env conf/dbQueries/databaseSi
 
 **Help**
 ```
-Description: Execute a query on multiple database in order to generate a report, query can be parallelized on multiple databases
+Description: Execute a query on multiple databases in order to generate a report, query can be parallelized on multiple databases
 
-Usage: dbQueryAllDatabases [-h|--help]
-Usage: dbQueryAllDatabases <query|queryFile> [--env-file|-e <envfile>] [-t|--as-tsv] [-q|--query] [--jobs|-j <numberOfJobs>] [--bar|-b]
-    --help,-h prints this help and exits
-    --as-tsv,-t show results as tsv file (separated by tabulations)
-    --query,-q implies <query> parameter is a mysql query string
-    -r|--remote checks remote db, local db otherwise
-    --jobs,-j <numberOfJobs> specify the number of db to query in parallel (this needs the use of gnu parallel)
-    --bar,-b Show progress as a progress bar. In the bar is shown: % of jobs completed, estimated seconds left, and number of jobs started.
+Usage: dbQueryAllDatabases [-h|--help] prints this help and exits
+Usage: dbQueryAllDatabases <query|queryFile> [-d|--dsn <dsn>] [-t|--as-tsv] [-q|--query] [--jobs|-j <jobsCount>] [--bar|-b]
+
+    -t|--as-tsv           show results as tsv file (separated by tabulations)
+    -q|--query            implies <query> parameter is a mysql query string
+    -d|--dsn <dsn>        to use for target mysql server (Default: default.local) 
+    -j|--jobs <jobsCount> specify the number of db to query in parallel (this needs the use of gnu parallel)
+    -b|--bar              Show progress as a progress bar. In the bar is shown: % of jobs completed, estimated seconds left, and number of jobs started.
     <query|queryFile>
         if -q option is provided this parameter is a mysql query string
         else a file must be specified
-    --env-file,-e <envfile> load <envfile>, this file must contains these variables in order to connect to the mysql server
-MYSQL_HOSTNAME=""
-MYSQL_USER=""
-MYSQL_PASSWORD=""
-MYSQL_PORT=""
-REMOTE_MYSQL_HOSTNAME=""
-REMOTE_MYSQL_PORT=""
-REMOTE_MYSQL_USER=""
-REMOTE_MYSQL_PASSWORD=""
 
-    local DB connection  : root:hidden@127.0.0.1:3306
-    remote DB connection : root:hidden@127.0.0.1:3306
+    List of available dsn: 
+       - default.local
+       - default.remote
+       - localhost-root
+    List of available home queries (/home/vagrant/.bash-tools/dbQueries): 
+       - databaseSize
+    List of available queries : 
+       - databaseSize
 ```
 
 ### 1.3.3. bin/dbImport
@@ -122,31 +123,49 @@ dbImport ExampleDbName
 
 **Help**
 ```
-Description: Import remote db into local db
+Description: Import source db into target db
 
-Command: dbImport --help prints this help and exits
-Command: dbImport <remoteDbName> [<localDbName>] [-f|--force] 
+Usage: dbImport --help prints this help and exits
+Usage: dbImport <fromDbName> [<targetDbName>] 
+                        [--force] 
                         [-d|--download-dump] [-a|--from-aws]
                         [-s|--skip-schema] [-p|--profile profileName] 
                         [-o|--collation-name utf8_general_ci] [-c|--character-set utf8]
+                        [-t|--target-dsn dsn] [-f|--from-dsn dsn]
 
     <localDbName> : use remote db name if not provided
-    -f|--force If local db exists, it will overwrite it
-    -d|--download-dump force remote db dump (default: use already downloaded dump in /home/vagrant/.bash-tools/dbImportDumps if available)
-    -a|--from-aws db dump will be downloaded from s3 instead of using remote db, 
+    -f|--force                  If local db exists, it will overwrite it
+    -d|--download-dump          force remote db dump (default: use already downloaded dump 
+        in /home/vagrant/.bash-tools/dbImportDumps if available)
+    -s|--skip-schema            avoid to import the schema
+    -o|--collation-name         change the collation name used during database creation 
+        (default value: collation name used by remote db)
+    -c|--character-set          change the character set used during database creation 
+        (default value: character set used by remote db or dump file if aws)
+    -p|--profile profileName    the name of the profile to use in order to include or exclude tables
+        (if not specified /home/vagrant/.bash-tools/dbImportProfiles/default.sh  is used if exists otherwise /home/vagrant/projects/bash-tools/conf/dbImportProfiles/default.sh)
+    -t|--target-dsn dsn         dsn to use for target database (Default: default.local) 
+    -f|--from-dsn dsn           dsn to use for source database (Default: default.remote)
+        this option is incompatible with -a|--from-aws option
+    -a|--from-aws               db dump will be downloaded from s3 instead of using remote db, 
         remoteDBName will represent the name of the file
         profile will be calculated against the dump itself
-    -s|--skip-schema avoid to import the schema
-    -o|--collation-name change the collation name used during database creation (default value: collation name used by remote db)
-    -c|--character-set change the character set used during database creation (default value: character set used by remote db)
-    -p|--profile profileName the name of the profile to use in order to include or exclude tables
-        (if not specified /home/vagrant/.bash-tools/dbImportProfiles/default.sh  is used if exists otherwise /home/vagrant/projects/bash-tools/conf/dbImportProfiles/default.sh)
-        list of available home profiles (/home/vagrant/.bash-tools/dbImportProfiles): ing, precomputeLearnerTimezone, all, none, sample, default
-        list of available profiles : all, none, default
+        this option is incompatible with -f|--from-dsn option
 
-    local DB connection   : root:Hidden@127.0.0.1:3306
-    remote DB connection  : root:Hidden@127.0.0.1:3306
-    Aws s3 location       : s3://example/exports/
+    Aws s3 location       : s3://example.com/exports/
+
+    List of available home profiles (/home/vagrant/.bash-tools/dbImportProfiles): 
+       - all
+       - none
+       - sample
+    List of available profiles : 
+       - all
+       - default
+       - none
+    List of available dsn: 
+       - default.local
+       - default.remote
+       - localhost-root
 ```
 
 ### 1.3.4. bin/dbImportTable
@@ -159,16 +178,20 @@ dbImportTable ExampleDbName ExampleTableName
 ```
 Description: Import remote db table into local db
 
-Command: dbImportTable [--help] prints this help and exits
+Command: dbImportTable [-h|--help] prints this help and exits
 Command: dbImportTable <remoteDbName> <tableName> [<localDbName>] 
-    [-d|--download-dump] [-f|--force] [-a|--from-aws]
+    [-d|--download-dump] [--force] [-a|--from-aws]
+    [-t|--target-dsn dsn] [-f|--from-dsn dsn]
     [-o|--collation-name utf8_general_ci] [-c|--character-set utf8]
 
     download the remote table data and install data in local database (the schema should exists)
 
     <tableName>   : table name to import
     <localDbName> : use remote db name if not provided
-    -f|--force If local table exists, it will overwrite it
+    --force If local table exists, it will overwrite it
+    -t|--target-dsn dsn         dsn to use for target database (Default: default.local) 
+    -f|--from-dsn dsn           dsn to use for source database (Default: default.remote)
+        this option is incompatible with -a|--from-aws option
     -a|--from-aws db dump will be downloaded from s3 instead of using remote db, 
         remoteDBName will represent the name of the file
         profile will be calculated against the dump itself
@@ -176,12 +199,32 @@ Command: dbImportTable <remoteDbName> <tableName> [<localDbName>]
     -o|--collation-name change the collation name used during database creation (default value: collation name used by remote db)
     -c|--character-set change the character set used during database creation (default value: character set used by remote db)
 
-    local DB connection  : root:Hidden@127.0.0.1:3306
-    remote DB connection : root:Hidden@127.0.0.1:3306
-    Aws s3 location       : s3://example/exports/
+    Aws s3 location       : s3://example.com/exports/
 ```
 
 ### 1.3.5. bin/cli
+
+**Help**
+```
+Description: easy connection to docker container
+
+Command: cli [-h|--help] prints this help and exits
+Command: cli <container> [user] [command]
+
+    <container> : container should be one of these values : express_1
+
+examples:
+    to connect to mysql container in bash mode with user mysql
+        cli mysql mysql "//bin/bash"
+    to connect to web container with user root
+        cli web root
+
+these mappings are provided by default using /home/vagrant/projects/bash-tools/conf/cliProfile/default.sh
+you can override these mappings by providing your own profile in /home/vagrant/.bash-tools/cliProfile/default.sh
+    
+This script will be executed with the variables userArg containerArg commandArg set as specified in command line
+and should provide value for the following variables finalUserArg finalContainerArg finalCommandArg
+```
 
 easy connection to docker container
 
@@ -315,3 +358,8 @@ Like so many projects, this effort has roots in many places.
 
 I would like to thank particularly  Bazyli Brzóska for his work on the project [Bash Infinity](https://github.com/niieani/bash-oo-framework).
 Framework part of this project is largely inspired by his work(some parts copied). You can see his [blog](https://invent.life/project/bash-infinity-framework) too that is really interesting 
+
+# TODO
+cli one config per container in conf
+dbScriptAllDatabase migrate to dsn + UT + dbCheckStructOneDatabase + dbPropelMigration
+dbQueryAllDatabase refact using awk streaming

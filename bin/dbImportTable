@@ -153,10 +153,6 @@ if [[ -z "${LOCAL_DB}" ]]; then
     LOCAL_DB=${REMOTE_DB}
 fi
 
-if [[ "${MYSQL_HOSTNAME}" = "localhost" ]]; then
-    Log::displayWarning "check that MYSQL_HOSTNAME should not be 127.0.0.1 instead of localhost"
-fi
-
 # check s3 parameter
 if [[ "${FROM_AWS}" = "1" && -n "${FROM_DSN}" ]]; then
     Log::fatal "you cannot use from-dsn and from-aws at the same time"

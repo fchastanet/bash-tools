@@ -13,7 +13,6 @@ env:
 
 before_script:
   - "./installBuildDeps.sh"
-  - echo "$DOCKER_USERNAME"
   - docker pull scrasnups/build:bash-tools-${VENDOR}-${BASH_TAR_VERSION} || true
   - > 
       docker build 
