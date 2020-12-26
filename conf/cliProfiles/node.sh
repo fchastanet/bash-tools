@@ -2,7 +2,7 @@
 
 # shellcheck disable=SC2034
 # shellcheck disable=SC2154
-finalContainerArg="ckls-node"
+finalContainerArg="project-node"
 
 # shellcheck disable=SC2034
 # shellcheck disable=SC2154

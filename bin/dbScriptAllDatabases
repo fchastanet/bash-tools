@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 CURRENT_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
-# load ckls-bootstrap
+# load bootstrap
 # shellcheck source=vendor/bash-framework/_bootstrap.sh
 source "$( cd "${CURRENT_DIR}/.." && pwd )/vendor/bash-framework/_bootstrap.sh"
 

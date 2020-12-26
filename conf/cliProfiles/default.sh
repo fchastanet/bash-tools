@@ -6,7 +6,7 @@
 # provide default container in case no container is provided
 # shellcheck disable=SC2034
 # shellcheck disable=SC2154
-finalContainerArg="${finalContainerArg:-ckls-apache2}"
+finalContainerArg="${finalContainerArg:-project-apache2}"
 
 # shellcheck disable=SC2034
 # shellcheck disable=SC2154

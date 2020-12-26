@@ -103,14 +103,14 @@ teardown() {
     Functions::loadConf "anyFolder" "/tmp/home/.bash-tools/cliProfiles/default.sh"
     [[ "${finalUserArg}" = "www-data" ]]
     [[ "${finalCommandArg}" = "//bin/bash" ]]
-    [[ "${finalContainerArg}" = "ckls-apache2" ]]  
+    [[ "${finalContainerArg}" = "project-apache2" ]]  
 }
 
 @test "${BATS_TEST_FILENAME#/bash/tests/} Functions::loadConf default" {
     Functions::loadConf "cliProfiles" "default"
     [[ "${finalUserArg}" = "www-data" ]]
     [[ "${finalCommandArg}" = "//bin/bash" ]]
-    [[ "${finalContainerArg}" = "ckls-apache2" ]]  
+    [[ "${finalContainerArg}" = "project-apache2" ]]  
 }
 
 @test "${BATS_TEST_FILENAME#/bash/tests/} Functions::loadConf dsn" {

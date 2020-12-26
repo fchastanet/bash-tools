@@ -244,17 +244,17 @@ will actually execute this command : MSYS_NO_PATHCONV=1 MSYS2_ARG_CONV_EXCL='*' 
 ```bash
 cli mysql root bash
 ```
-will actually execute this command : MSYS_NO_PATHCONV=1 MSYS2_ARG_CONV_EXCL='*' docker exec -e COLUMNS="$(tput cols)" -e LINES="$(tput lines)" -it --user=root ckls-mysql bash
+will actually execute this command : MSYS_NO_PATHCONV=1 MSYS2_ARG_CONV_EXCL='*' docker exec -e COLUMNS="$(tput cols)" -e LINES="$(tput lines)" -it --user=root project-mysql bash
 
 **Example 3: connect to mysql server in order to execute a query**
 
-will actually execute this command : MSYS_NO_PATHCONV=1 MSYS2_ARG_CONV_EXCL='*' docker exec -it -e COLUMNS="$(tput cols)" -e LINES="$(tput lines)" --user=mysql ckls-mysql //bin/bash -c 'mysql -h127.0.0.1 -uroot -proot -P3306'
+will actually execute this command : MSYS_NO_PATHCONV=1 MSYS2_ARG_CONV_EXCL='*' docker exec -it -e COLUMNS="$(tput cols)" -e LINES="$(tput lines)" --user=mysql project-mysql //bin/bash -c 'mysql -h127.0.0.1 -uroot -proot -P3306'
 
 **Example 4: pipe sql command to mysql container** 
 ```bash
 echo 'SELECT table_schema AS "Database",ROUND(SUM(data_length + index_length) / 1024 / 1024, 2) AS "Size (MB)" FROM information_schema.TABLES' | bin/cli mysql
 ```
-will actually execute this command : MSYS_NO_PATHCONV=1 MSYS2_ARG_CONV_EXCL='*' docker exec -i -e COLUMNS="$(tput cols)" -e LINES="$(tput lines)" --user=mysql ckls-mysql //bin/bash -c 'mysql -h127.0.0.1 -uroot -proot -P3306'
+will actually execute this command : MSYS_NO_PATHCONV=1 MSYS2_ARG_CONV_EXCL='*' docker exec -i -e COLUMNS="$(tput cols)" -e LINES="$(tput lines)" --user=mysql project-mysql //bin/bash -c 'mysql -h127.0.0.1 -uroot -proot -P3306'
 notice that as input is given to the command, tty option is not provided to docker exec
 
 ## 1.4. Bash Framework
@@ -346,4 +346,4 @@ Framework part of this project is largely inspired by his work(some parts copied
 # TODO
 * cli UT
 * dbScriptAllDatabase migrate to dsn + UT + dbCheckStructOneDatabase + dbPropelMigration
-* dbQueryAllDatabase refact using awk streaming
+* dbQueryAllDatabase refact using awk streaming 

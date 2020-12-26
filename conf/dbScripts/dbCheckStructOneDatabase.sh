@@ -11,7 +11,7 @@ declare VERBOSE="$2"
 declare outputDir="$3"
 declare db="$4"
 
-# load ckls-bootstrap
+# load bootstrap
 # shellcheck source=/bash-framework/_bootstrap.sh
 source "${BASH_TOOLS_FOLDER}/vendor/bash-framework/_bootstrap.sh"
 

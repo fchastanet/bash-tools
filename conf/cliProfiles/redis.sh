@@ -2,7 +2,7 @@
 
 # shellcheck disable=SC2034
 # shellcheck disable=SC2154
-finalContainerArg="ckls-redis"
+finalContainerArg="project-redis"
 
 # shellcheck disable=SC2034
 # shellcheck disable=SC2154

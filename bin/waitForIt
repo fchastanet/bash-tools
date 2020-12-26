@@ -2,7 +2,7 @@
 #   Use this script to test if a given TCP host/port are available
 #  https://github.com/vishnubob/wait-for-it
 
-# load ckls-bootstrap
+# load bootstrap
 # shellcheck source=vendor/bash-framework/_bootstrap.sh
 source "$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." && pwd )/vendor/bash-framework/_bootstrap.sh"
 

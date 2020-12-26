@@ -2,7 +2,7 @@
 
 # shellcheck disable=SC2034
 # shellcheck disable=SC2154
-finalContainerArg="ckls-mysql8"
+finalContainerArg="project-mysql8"
 
 # shellcheck disable=SC2034
 # shellcheck disable=SC2154

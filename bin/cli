@@ -13,6 +13,9 @@ import bash-framework/Database
 # ensure that Ctrl-C is trapped by this script
 trap 'exit 130' INT
 
+# check dependencies
+Functions::checkCommandExists docker "check https://docs.docker.com/engine/install/ubuntu/"
+
 SCRIPT_NAME=${0##*/}
 PROFILES_DIR="$(cd "${CURRENT_DIR}/.." && pwd)/conf/cliProfiles"
 HOME_PROFILES_DIR="${HOME}/.bash-tools/cliProfiles"
@@ -123,5 +126,5 @@ cmd+="docker exec ${INTERACTIVE_MODE} "
 cmd+='-e COLUMNS="$(tput cols)" -e LINES="$(tput lines)" '
 
 cmd+="--user=${finalUserArg} "${finalContainerArg}" ${finalCommandArg}"
-echo "MSYS_NO_PATHCONV=1 MSYS2_ARG_CONV_EXCL='*' ${cmd}"
+(>&2 echo "MSYS_NO_PATHCONV=1 MSYS2_ARG_CONV_EXCL='*' ${cmd}")
 eval "MSYS_NO_PATHCONV=1 MSYS2_ARG_CONV_EXCL='*' ${cmd}"
