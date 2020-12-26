@@ -11,3 +11,14 @@ enabled = true
 [[analyzers]]
 name = "shell"
 enabled = true
+  [analyzers.meta]
+    dialect = "bash"
+
+[[analyzers]]
+name = "docker"
+enabled = true
+  [analyzers.meta]
+    dockerfile_paths = [
+      ".docker/Dockerfile.alpine",
+      ".docker/Dockerfile.ubuntu"
+    ]

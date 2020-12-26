@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 CURRENT_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
-DEBUG_ARGS=""
+DEBUG_ARGS=()
 DOCKER_DEBUG_ARGS=()
 set -x
 if [ "${DEBUG:-0}" = "1" ]; then
@@ -21,7 +21,7 @@ if [ "${IN_BASH_DOCKER:-}" != "You're in docker" ]; then
     -v "$(pwd):/bash" \
     "${DOCKER_DEBUG_ARGS[@]}" \
     --user "$(id -u):$(id -g)" \
-    git-ubuntu:5.1 /bash/test.sh ${DEBUG_ARGS[@]} "$@"
+    git-ubuntu:5.1 /bash/test.sh "${DEBUG_ARGS[@]}" "$@"
   exit 0
 fi
 (
