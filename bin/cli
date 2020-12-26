@@ -110,10 +110,10 @@ if [[ -n "${containerArg}" ]]; then
     }
 fi
 
-declare cmd=""
+declare -a cmd=()
 if [[ "$(Functions::isWindows; echo $?)" = "1" ]]; then
     # open tty for git bash
-    cmd+="winpty "
+    cmd+=(winpty)
 fi
 INTERACTIVE_MODE="-i"
 if ! read -t 0; then
@@ -121,10 +121,17 @@ if ! read -t 0; then
   INTERACTIVE_MODE+="t"
 fi
 
-cmd+="docker exec ${INTERACTIVE_MODE} "
+cmd+=(docker)
+cmd+=(exec)
+cmd+=("${INTERACTIVE_MODE}")
 # ensure column/lines will be updated upon terminal resize
-cmd+='-e COLUMNS="$(tput cols)" -e LINES="$(tput lines)" '
+cmd+=(-e)
+cmd+=(COLUMNS="$(tput cols)")
+cmd+=(-e)
+cmd+=(LINES="$(tput lines)")
 
-cmd+="--user=${finalUserArg} "${finalContainerArg}" ${finalCommandArg}"
-(>&2 echo "MSYS_NO_PATHCONV=1 MSYS2_ARG_CONV_EXCL='*' ${cmd}")
-eval "MSYS_NO_PATHCONV=1 MSYS2_ARG_CONV_EXCL='*' ${cmd}"
+cmd+=(--user="${finalUserArg}")
+cmd+=("${finalContainerArg}")
+cmd+=("${finalCommandArg[@]}")
+(>&2 echo MSYS_NO_PATHCONV=1 MSYS2_ARG_CONV_EXCL='*' "${cmd[@]}")
+MSYS_NO_PATHCONV=1 MSYS2_ARG_CONV_EXCL='*' "${cmd[@]}"
