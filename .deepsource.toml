@@ -1,0 +1,13 @@
+version = 1
+
+test_patterns = ["tests/**"]
+
+exclude_patterns = ["doc/**"]
+
+[[analyzers]]
+name = "test-coverage"
+enabled = true
+
+[[analyzers]]
+name = "shell"
+enabled = true
