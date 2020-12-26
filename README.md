@@ -69,6 +69,7 @@ touch ~/.parallel/will-cite
 
 ### 1.3.1. bin/gitRenameBranch
 
+```
 Description: rename git local branch, use options to push new branch and delete old branch
 
 Usage: gitRenameBranch [-h|--help] prints this help and exits
@@ -81,6 +82,7 @@ Usage: gitRenameBranch <newBranchName> [<oldBranchName>] [--push|-p] [--delete|-
     --delete,-d delete old remote branch
     <newBranchName> the new branch name to give to current branch
     <oldBranchName> (optional) the name of the old branch if not current one
+```
 
 ### 1.3.2. bin/dbQueryAllDatabases
 
@@ -105,13 +107,13 @@ Usage: dbQueryAllDatabases <query|queryFile> [-d|--dsn <dsn>] [-t|--as-tsv] [-q|
         if -q option is provided this parameter is a mysql query string
         else a file must be specified
 
+List of available dsn: 
     List of available dsn: 
+List of available dsn: 
        - default.local
        - default.remote
        - localhost-root
-    List of available home queries (/home/vagrant/.bash-tools/dbQueries): 
-       - databaseSize
-    List of available queries : 
+List of available queries (default dir /home/vagrant/projects/bash-tools/conf/dbQueries overridable in home dir /home/vagrant/.bash-tools/dbQueries):
        - databaseSize
 ```
 
@@ -154,15 +156,11 @@ Usage: dbImport <fromDbName> [<targetDbName>]
 
     Aws s3 location       : s3://example.com/exports/
 
-    List of available home profiles (/home/vagrant/.bash-tools/dbImportProfiles): 
-       - all
-       - none
-       - sample
-    List of available profiles : 
+List of available profiles (default profiles dir /home/vagrant/projects/bash-tools/conf/dbImportProfiles overridable in home profiles /home/vagrant/.bash-tools/dbImportProfiles): 
        - all
        - default
        - none
-    List of available dsn: 
+List of available dsn: 
        - default.local
        - default.remote
        - localhost-root
@@ -186,18 +184,18 @@ Command: dbImportTable <remoteDbName> <tableName> [<localDbName>]
 
     download the remote table data and install data in local database (the schema should exists)
 
-    <tableName>   : table name to import
-    <localDbName> : use remote db name if not provided
-    --force If local table exists, it will overwrite it
-    -t|--target-dsn dsn         dsn to use for target database (Default: default.local) 
-    -f|--from-dsn dsn           dsn to use for source database (Default: default.remote)
+    <tableName>   :      table name to import
+    <localDbName> :      use remote db name if not provided
+    --force              If local table exists, it will overwrite it
+    -t|--target-dsn dsn  dsn to use for target database (Default: default.local) 
+    -f|--from-dsn dsn    dsn to use for source database (Default: default.remote)
         this option is incompatible with -a|--from-aws option
-    -a|--from-aws db dump will be downloaded from s3 instead of using remote db, 
+    -a|--from-aws        db dump will be downloaded from s3 instead of using remote db, 
         remoteDBName will represent the name of the file
         profile will be calculated against the dump itself
-    -d|--download-dump force remote db dump (default: use already downloaded dump in /home/vagrant/.bash-tools/dbImportDumps if available)
-    -o|--collation-name change the collation name used during database creation (default value: collation name used by remote db)
-    -c|--character-set change the character set used during database creation (default value: character set used by remote db)
+    -d|--download-dump   force remote db dump (default: use already downloaded dump in /home/vagrant/.bash-tools/dbImportDumps if available)
+    -o|--collation-name  change the collation name used during database creation (default value: collation name used by remote db)
+    -c|--character-set   change the character set used during database creation (default value: character set used by remote db)
 
     Aws s3 location       : s3://example.com/exports/
 ```
@@ -209,9 +207,10 @@ Command: dbImportTable <remoteDbName> <tableName> [<localDbName>]
 Description: easy connection to docker container
 
 Command: cli [-h|--help] prints this help and exits
-Command: cli <container> [user] [command]
+Command: cli [<container>] [user] [command]
 
     <container> : container should be one of these values : express_1
+        if not provided, it will load the container specified in default configuration
 
 examples:
     to connect to mysql container in bash mode with user mysql
@@ -219,11 +218,18 @@ examples:
     to connect to web container with user root
         cli web root
 
-these mappings are provided by default using /home/vagrant/projects/bash-tools/conf/cliProfile/default.sh
-you can override these mappings by providing your own profile in /home/vagrant/.bash-tools/cliProfile/default.sh
+you can override these mappings by providing your own profile in 
     
 This script will be executed with the variables userArg containerArg commandArg set as specified in command line
 and should provide value for the following variables finalUserArg finalContainerArg finalCommandArg
+
+List of available profiles (from /home/vagrant/projects/bash-tools/conf/cliProfiles and overridable in /home/vagrant/.bash-tools/cliProfiles): 
+       - default
+       - mysql
+       - mysql.remote
+       - node
+       - redis
+       - web
 ```
 
 easy connection to docker container
@@ -250,28 +256,6 @@ echo 'SELECT table_schema AS "Database",ROUND(SUM(data_length + index_length) / 
 ```
 will actually execute this command : MSYS_NO_PATHCONV=1 MSYS2_ARG_CONV_EXCL='*' docker exec -i -e COLUMNS="$(tput cols)" -e LINES="$(tput lines)" --user=mysql ckls-mysql //bin/bash -c 'mysql -h127.0.0.1 -uroot -proot -P3306'
 notice that as input is given to the command, tty option is not provided to docker exec
-
-**Help**
-```
-    Description: easy connection to docker container
-
-    Command: cli [-h|--help] prints this help and exits
-    Command: cli <container> [user] [command]
-
-    <container> : container should be one of these values : apache2,mysql8,mailhog,redis,proxysql
-
-    examples:
-    to connect to mysql container in bash mode with user mysql
-        cli mysql mysql "//bin/bash"
-    to connect to web container with user root
-        cli web root
-
-    these mappings are provided by default using /home/vagrant/projects/bash-tools/cliProfile/default.sh
-    you can override these mappings by providing your own profile in /home/vagrant/.bash-tools/cliProfile/default.sh
-
-    This script will be executed with the variables userArg containerArg commandArg set as specified in command line
-    and should provide value for the following variables finalUserArg finalContainerArg finalCommandArg
-```
 
 ## 1.4. Bash Framework
 

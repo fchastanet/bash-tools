@@ -48,18 +48,18 @@ Command: ${SCRIPT_NAME} <remoteDbName> <tableName> [<localDbName>]
 
     download the remote table data and install data in local database (the schema should exists)
 
-    <tableName>   : table name to import
-    <localDbName> : use remote db name if not provided
-    --force If local table exists, it will overwrite it
-    -t|--target-dsn dsn         dsn to use for target database (Default: ${TARGET_DSN}) 
-    -f|--from-dsn dsn           dsn to use for source database (Default: ${DEFAULT_FROM_DSN})
+    <tableName>   :      table name to import
+    <localDbName> :      use remote db name if not provided
+    --force              If local table exists, it will overwrite it
+    -t|--target-dsn dsn  dsn to use for target database (Default: ${TARGET_DSN}) 
+    -f|--from-dsn dsn    dsn to use for source database (Default: ${DEFAULT_FROM_DSN})
         this option is incompatible with -a|--from-aws option
-    -a|--from-aws db dump will be downloaded from s3 instead of using remote db, 
+    -a|--from-aws        db dump will be downloaded from s3 instead of using remote db, 
         remoteDBName will represent the name of the file
         profile will be calculated against the dump itself
-    -d|--download-dump force remote db dump (default: use already downloaded dump in ${DB_IMPORT_DUMP_DIR} if available)
-    -o|--collation-name change the collation name used during database creation (default value: collation name used by remote db)
-    -c|--character-set change the character set used during database creation (default value: character set used by remote db)
+    -d|--download-dump   force remote db dump (default: use already downloaded dump in ${DB_IMPORT_DUMP_DIR} if available)
+    -o|--collation-name  change the collation name used during database creation (default value: collation name used by remote db)
+    -c|--character-set   change the character set used during database creation (default value: character set used by remote db)
 
     Aws s3 location       : ${S3_BASE_URL}
 EOF
