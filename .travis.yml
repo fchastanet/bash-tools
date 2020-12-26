@@ -16,22 +16,22 @@ before_script:
   - |
    if [[ "${TRAVIS_OS_NAME:-}" == 'linux' && "$SHELLCHECK" == 'true' ]]; then
      sudo apt-get install -y shellcheck
-   fi
-  - "./installBuildDeps.sh"
-  - docker pull scrasnups/build:bash-tools-${VENDOR}-${BASH_TAR_VERSION} || true
-  - > 
-      docker build 
-      -f .docker/Dockerfile.${VENDOR} 
-      --pull 
-      --cache-from "scrasnups/build:bash-tools-${VENDOR}-${BASH_TAR_VERSION}" 
-      --build-arg BASH_TAR_VERSION=${BASH_TAR_VERSION} 
-      --build-arg BASH_IMAGE=${BASH_IMAGE} 
-      -t bash-tools-${VENDOR}-${BASH_TAR_VERSION} 
-      .docker
-  - docker run bash-tools-${VENDOR}-${BASH_TAR_VERSION} bash --version
-  - docker tag bash-tools-${VENDOR}-${BASH_TAR_VERSION}:latest scrasnups/build:bash-tools-${VENDOR}-${BASH_TAR_VERSION}
-  - echo "$DOCKER_PASSWORD" | docker login --username "$DOCKER_USERNAME" --password-stdin
-  - docker push scrasnups/build:bash-tools-${VENDOR}-${BASH_TAR_VERSION}
+   else 
+    "./installBuildDeps.sh"
+    docker pull scrasnups/build:bash-tools-${VENDOR}-${BASH_TAR_VERSION} || true 
+    docker build 
+    -f .docker/Dockerfile.${VENDOR} 
+    --pull 
+    --cache-from "scrasnups/build:bash-tools-${VENDOR}-${BASH_TAR_VERSION}" 
+    --build-arg BASH_TAR_VERSION=${BASH_TAR_VERSION} 
+    --build-arg BASH_IMAGE=${BASH_IMAGE} 
+    -t bash-tools-${VENDOR}-${BASH_TAR_VERSION} 
+    .docker
+    docker run bash-tools-${VENDOR}-${BASH_TAR_VERSION} bash --version
+    docker tag bash-tools-${VENDOR}-${BASH_TAR_VERSION}:latest scrasnups/build:bash-tools-${VENDOR}-${BASH_TAR_VERSION}
+    echo "$DOCKER_PASSWORD" | docker login --username "$DOCKER_USERNAME" --password-stdin
+    docker push scrasnups/build:bash-tools-${VENDOR}-${BASH_TAR_VERSION}
+  fi
 
 script:
 - |
@@ -45,6 +45,7 @@ script:
     ./bin/deepsource report --analyzer shell --key shellcheck --value-file ./shellcheck.log
 
     exit $?
+  else
+    docker run --rm -it -v $PWD:/bash --user $(id -u):$(id -g) --workdir /bash bash-tools-${VENDOR}-${BASH_TAR_VERSION}
+      /bash/vendor/bats/bin/bats -r tests
   fi
-  docker run --rm -it -v $PWD:/bash --user $(id -u):$(id -g) --workdir /bash bash-tools-${VENDOR}-${BASH_TAR_VERSION}
-    /bash/vendor/bats/bin/bats -r tests
