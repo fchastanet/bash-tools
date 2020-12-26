@@ -29,6 +29,6 @@ before_script:
   - docker push scrasnups/build:bash-tools-${VENDOR}-${BASH_TAR_VERSION}
 
 script:
-- docker run --rm -it -v $PWD:/bash --user $(id -u):$(id -g) bash-tools-${VENDOR}-${BASH_TAR_VERSION}
+- docker run --rm -it -v $PWD:/bash --user $(id -u):$(id -g) --workdir /bash bash-tools-${VENDOR}-${BASH_TAR_VERSION}
   /bash/vendor/bats/bin/bats -r tests
 
