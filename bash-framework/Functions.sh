@@ -128,6 +128,67 @@ Functions::getList() {
     )
 }
 
+# Public: get absolute file from name deduced using these rules
+#   * using absolute/relative <conf> file (ignores <confFolder> and <extension>
+#   * from home/.bash-tools/<confFolder>/<conf><extension> file
+#   * from framework conf/<conf><extension> file
+# 
+# **Arguments**:
+# * $1 confFolder to use below bash-tools conf folder
+# * $2 conf file to use without extension
+# * $3 file extension to use (default: .sh)
+#
+# Returns 1 if file not found or error during file loading
+Functions::loadConf() {
+  local confFolder="$1"
+  local conf="$2"
+  local extension="${3:-.sh}"
+  local confFile=""
+
+  # if conf is absolute
+  if [[ "${conf}" == /* ]]; then
+    # file contains /, consider it as absolute filename
+    confFile="${conf}"
+  else
+    # shellcheck source=/conf/dsn/default.local.env
+    confFile="${HOME}/.bash-tools/${confFolder}/${conf}${extension}"
+    if [ ! -f "${confFile}" ]; then
+      confFile="${__bash_framework_rootVendorPath}/conf/${confFolder}/${conf}${extension}"
+    fi
+  fi
+  if [ ! -f "${confFile}" ]; then
+    return 1
+  fi
+  source "${confFile}"
+}
+
+# Public: list the conf files list available in bash-tools/conf/<conf> folder
+# and those overriden in $HOME/.bash-tools/<conf> folder
+# **Arguments**:
+# * $1 confFolder the directory name (not the path) to list
+# * $2 the extension (.sh by default)
+# * $3 the indentation ('       - ' by default) can be any string compatible with sed not containing any /
+#
+# **Output**: list of files without extension/directory
+# eg:
+#       - default.local
+#       - default.remote
+#       - localhost-root
+Functions::getConfMergedList() {
+    local confFolder="$1"
+    local extension="${2:-.sh}"
+    local indentStr="${3:-       - }"
+    DEFAULT_CONF_DIR="${__bash_framework_rootVendorPath}/conf/${confFolder}"
+    HOME_CONF_DIR="${HOME}/.bash-tools/${confFolder}"
+    listFiles() {
+        [[ -d "$1" ]] &&
+            (cd "$1" && find . -type f -name \*${extension} | sed "s/\.[^.]*$//g" | sed 's#^./##g' | sed "s/^/${indentStr}/")
+    }
+    (
+        listFiles "${DEFAULT_CONF_DIR}"
+        listFiles "${HOME_CONF_DIR}"
+    ) | sort | uniq
+}
 
 # appends a command to a trap
 #

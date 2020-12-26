@@ -31,9 +31,8 @@ Functions::checkCommandExists pv "sudo apt-get install -y pv"
 
 # Usage info
 showHelp() {
-DSN_LIST="$(Database::getDsnList  | sed 's/^/       - /')"
-local queriesList="$(Functions::getList "${QUERIES_DIR}" "sql" || true)"
-local homeQueriesList="$(Functions::getList "${HOME_QUERIES_DIR}" "sql" || true)"
+local dsnList="$(Functions::getConfMergedList "dsn" ".env")"
+local queriesList="$(Functions::getConfMergedList "dbQueries" ".sql" || true)"
 cat << EOF
 Description: Execute a query on multiple databases in order to generate a report, query can be parallelized on multiple databases
 
@@ -49,11 +48,9 @@ Usage: ${SCRIPT_NAME} <query|queryFile> [-d|--dsn <dsn>] [-t|--as-tsv] [-q|--que
         if -q option is provided this parameter is a mysql query string
         else a file must be specified
 
-    List of available dsn: 
-${DSN_LIST}
-    List of available home queries (${HOME_QUERIES_DIR}): 
-${homeQueriesList}
-    List of available queries : 
+List of available dsn: 
+${dsnList}
+List of available queries (default dir ${QUERIES_DIR} overridable in home dir ${HOME_QUERIES_DIR}):
 ${queriesList}
 EOF
 }

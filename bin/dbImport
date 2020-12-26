@@ -39,13 +39,12 @@ Functions::checkCommandExists mysqldump "sudo apt-get install -y mysql-client"
 Functions::checkCommandExists pv "sudo apt-get install -y pv"
 
 showHelp() {
-DSN_LIST="$(Database::getDsnList  | sed 's/^/       - /')"
-
 local profilesList=""
-local homeProfilesList=""
+local dsnList=""
+dsnList="$(Functions::getConfMergedList "dsn" ".env" | sed 's/^/       - /')"
 
-profilesList="$(Functions::getList "${PROFILES_DIR}" "sh" || true)"
-homeProfilesList="$(Functions::getList "${HOME_PROFILES_DIR}" "sh" || true)"
+
+profilesList="$(Functions::getConfMergedList "dbImportProfiles" ".sh" || true)"
 
 cat << EOF
 Description: Import source db into target db
@@ -79,12 +78,10 @@ Usage: ${SCRIPT_NAME} <fromDbName> [<targetDbName>]
 
     Aws s3 location       : ${S3_BASE_URL}
 
-    List of available home profiles (${HOME_PROFILES_DIR}): 
-${homeProfilesList}
-    List of available profiles : 
+List of available profiles (default profiles dir ${PROFILES_DIR} overridable in home profiles ${HOME_PROFILES_DIR}): 
 ${profilesList}
-    List of available dsn: 
-${DSN_LIST}
+List of available dsn: 
+${dsnList}
 EOF
 }
 

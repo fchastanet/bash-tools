@@ -6,10 +6,8 @@ import bash-framework/Log
 #
 # **Arguments**:
 # * $1 - (passed by reference) database instance to create
-# * $2 - dsn profile - load the dsn.env profile in this order
-#          * using absolute/relative file
-#          * from home folder
-#          * from framework conf/dsn folder
+# * $2 - dsn profile - load the dsn.env profile 
+#     absolute file is deduced using rules defined in Database::getAbsoluteDsnFile
 #
 # **Example:**
 # ```shell
@@ -35,10 +33,25 @@ Database::newInstance() {
   instanceNewInstance['DSN_FILE']=""
 
   # check dsn file
+  DSN_FILE="$(Database::getAbsoluteDsnFile "${dsn}")"
+  Database::checkDsnFile "${DSN_FILE}"
+
+  instanceNewInstance['DSN_FILE']="${DSN_FILE}"
+  Database::authFile instanceNewInstance
+  instanceNewInstance['INITIALIZED']=1
+}
+
+# Public: get absolute dsn file from dsn name dedcued using thes rules
+#   * using absolute/relative file
+#   * from home/.bash-tools/dsn folder
+#   * from framework conf/dsn folder
+# Returns absolute dsn filename
+Database::getAbsoluteDsnFile() {
+  local dsn="$1"
   # load dsn from home folder, then bash framework folder, then absolute file
   if [[ "${dsn}" == */* ]]; then
     # file contains /, consider it as absolute filename
-    DSN_FILE="${dsn}"
+    echo "${dsn}"
   else
     # shellcheck source=/conf/dsn/default.local.env
     DSN_FILE="$(Database::getHomeConfDsnFolder)/${dsn}.env"
@@ -49,12 +62,8 @@ Database::newInstance() {
         return 1    
       fi
     fi
+    echo "${DSN_FILE}"
   fi
-  Database::checkDsnFile "${DSN_FILE}"
-
-  instanceNewInstance['DSN_FILE']="${DSN_FILE}"
-  Database::authFile instanceNewInstance
-  instanceNewInstance['INITIALIZED']=1
 }
 
 # Internal: check if dsn file has all the mandatory variables set
@@ -114,20 +123,6 @@ Database::getDefaultConfDsnFolder() {
 # Returns the overriden conf dsn folder in user home folder 
 Database::getHomeConfDsnFolder() {
   echo "${HOME}/.bash-tools/dsn"
-}
-
-# Public: list the dsn available in bash-tools/conf/dsn folder
-# and those overriden in $HOME/.bash-tools/dsn folder
-Database::getDsnList() {
-  DEFAULT_CONF_DIR="$(Database::getDefaultConfDsnFolder)"
-  HOME_CONF_DIR="$(Database::getHomeConfDsnFolder)"
-  (
-    (cd "${DEFAULT_CONF_DIR}" && find . -type f -name \*.env | sed 's/\.env$//g' | sed 's#^./##g' )
-
-    if [[ -d "${HOME_CONF_DIR}" ]]; then
-        (cd "${HOME_CONF_DIR}" && find . -type f -name \*.env | sed 's/\.env$//g' | sed 's#^./##g')
-    fi
-  ) | sort | uniq
 }
 
 # Public: set the general options to use on mysql command to query the database

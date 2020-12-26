@@ -37,11 +37,6 @@ teardown() {
     [ "$(HOME=/home Database::getHomeConfDsnFolder)" = "/home/.bash-tools/dsn" ]
 }
 
-@test "${BATS_TEST_FILENAME#/bash/tests/} Database::getDsnList" {
-    output="$(HOME=/tmp/home Database::getDsnList)"
-    [ "$(cat "${BATS_TEST_DIRNAME}/data/database.dsnList1")" = "${output}" ]
-}
-
 @test "${BATS_TEST_FILENAME#/bash/tests/} Database::checkDsnFile file not found" {
     run Database::checkDsnFile "notfound" 2>&1
     [ "$status" -eq 1 ]

@@ -1,12 +1,15 @@
 #!/usr/bin/env bash
 
+FRAMEWORK_DIR="$(cd "${BATS_TEST_DIRNAME}/../.." && pwd)"
 # shellcheck source=bash-framework/_bootstrap.sh
-__bash_framework_envFile="" source "$(cd "${BATS_TEST_DIRNAME}/../.." && pwd)/bash-framework/_bootstrap.sh" || exit 1
+__bash_framework_envFile="" source "${FRAMEWORK_DIR}/bash-framework/_bootstrap.sh" || exit 1
 
 import bash-framework/Functions
 
-setup() {
-    mkdir -p /tmp/home
+setup() {    
+    mkdir -p /tmp/home/.bash-tools/cliProfiles
+    mkdir -p /tmp/home/.bash-tools/dsn
+    cp -v ${FRAMEWORK_DIR}/conf/cliProfiles/default.sh /tmp/home/.bash-tools/cliProfiles
 }
 
 teardown() {
@@ -94,6 +97,43 @@ teardown() {
     
     run Functions::getList "${BATS_TEST_DIRNAME}/unknown" "sh" "*"
     [[ "$status" -eq 1 ]]
+}
+
+@test "${BATS_TEST_FILENAME#/bash/tests/} Functions::loadConf absolute file" {
+    Functions::loadConf "anyFolder" "/tmp/home/.bash-tools/cliProfiles/default.sh"
+    [[ "${finalUserArg}" = "www-data" ]]
+    [[ "${finalCommandArg}" = "//bin/bash" ]]
+    [[ "${finalContainerArg}" = "ckls-apache2" ]]  
+}
+
+@test "${BATS_TEST_FILENAME#/bash/tests/} Functions::loadConf default" {
+    Functions::loadConf "cliProfiles" "default"
+    [[ "${finalUserArg}" = "www-data" ]]
+    [[ "${finalCommandArg}" = "//bin/bash" ]]
+    [[ "${finalContainerArg}" = "ckls-apache2" ]]  
+}
+
+@test "${BATS_TEST_FILENAME#/bash/tests/} Functions::loadConf dsn" {
+    Functions::loadConf "dsn" "default.local" ".env"
+    [[ "${HOSTNAME}" = "127.0.0.1" ]]
+    [[ "${USER}" = "root" ]]
+    [[ "${PASSWORD}" = "root" ]]  
+    [[ "${PORT}" = "3306" ]]  
+}
+
+@test "${BATS_TEST_FILENAME#/bash/tests/} Functions::loadConf file not found" {
+    run Functions::loadConf "dsn" "default.local" ".sh"
+    [ "$status" -eq 1 ]
+    [[ "${output}" == *"conf file 'default.local' not found under 'dsn' using extension '.sh'"* ]]
+}
+
+@test "${BATS_TEST_FILENAME#/bash/tests/} Functions::getConfMergedList" {
+    cp -v ${FRAMEWORK_DIR}/conf/dsn/* /tmp/home/.bash-tools/dsn
+    touch /tmp/home/.bash-tools/dsn/dsn_invalid_port.env
+    touch /tmp/home/.bash-tools/dsn/otherInvalidExt.ext
+    touch /tmp/home/.bash-tools/dsn/otherInvalidExt2.sh
+    output="$(HOME=/tmp/home Functions::getConfMergedList "dsn" ".env")"
+    [ "$(cat "${BATS_TEST_DIRNAME}/data/database.dsnList1")" = "${output}" ]
 }
 
 @test "${BATS_TEST_FILENAME#/bash/tests/} Functions::trapAdd" {
