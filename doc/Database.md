@@ -7,15 +7,24 @@ create a new db instance
 
 **Arguments**:
 * $1 - (passed by reference) database instance to create
-* $2 - dsn profile
+* $2 - dsn profile - load the dsn.env profile
+      absolute file is deduced using rules defined in Database::getAbsoluteDsnFile
 
 **Example:**
 ```shell
  declare -Agx dbInstance
- Database::newInstance dbInstance "${HOSTNAME}" "${PORT}" "${USER}" "${PASSWORD}"
+ Database::newInstance dbInstance "defaul.local"
 ```
 
 Returns immediately if the instance is already initialized
+# function `Database::getAbsoluteDsnFile`
+> ***Public***
+
+get absolute dsn file from dsn name dedcued using thes rules
+    * using absolute/relative file
+    * from home/.bash-tools/dsn folder
+    * from framework conf/dsn folder
+ Returns absolute dsn filename
 # function `Database::checkDsnFile`
 > ***Internal***
 
@@ -32,11 +41,6 @@ Public
 # function `Database::getHomeConfDsnFolder`
 Public
  Returns the overriden conf dsn folder in user home folder
-# function `Database::getDsnList`
-> ***Public***
-
-list the dsn available in bash-tools/conf/dsn folder
- and those overriden in $HOME/.bash-tools/dsn folder
 # function `Database::setOptions`
 > ***Public***
 
