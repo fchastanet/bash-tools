@@ -33,7 +33,7 @@ Database::newInstance() {
   instanceNewInstance['DSN_FILE']=""
 
   # check dsn file
-  DSN_FILE="$(Database::getAbsoluteDsnFile "${dsn}")"
+  DSN_FILE="$(Database::getAbsoluteDsnFile "${dsn}")" || exit 1
   Database::checkDsnFile "${DSN_FILE}"
 
   instanceNewInstance['DSN_FILE']="${DSN_FILE}"
@@ -58,7 +58,7 @@ Database::getAbsoluteDsnFile() {
     if [ ! -f "${DSN_FILE}" ]; then
       DSN_FILE="$(Database::getDefaultConfDsnFolder)/${dsn}.env"
       if [ ! -f "${DSN_FILE}" ]; then
-        Log::displayError "dsn file ${dsn} not found"
+        Log::displayError "dsn file '${dsn}' not found"
         return 1    
       fi
     fi

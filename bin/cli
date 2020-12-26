@@ -52,7 +52,6 @@ EOF
 loadDsn() {
     local dsn="$1"
     local dsnFile
-    set -x
     dsnFile="$(Database::getAbsoluteDsnFile "${dsn}")"
     Database::checkDsnFile "${dsnFile}"
     source "${dsnFile}"

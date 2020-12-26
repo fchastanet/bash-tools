@@ -122,9 +122,8 @@ teardown() {
 }
 
 @test "${BATS_TEST_FILENAME#/bash/tests/} Functions::loadConf file not found" {
-    run Functions::loadConf "dsn" "default.local" ".sh"
+    run Functions::loadConf "dsn" "not found" ".sh"
     [ "$status" -eq 1 ]
-    [[ "${output}" == *"conf file 'default.local' not found under 'dsn' using extension '.sh'"* ]]
 }
 
 @test "${BATS_TEST_FILENAME#/bash/tests/} Functions::getConfMergedList" {

@@ -20,7 +20,6 @@ setup() {
 }
 
 teardown() {
-    set +x
     rm -Rf /tmp/home || true 
     unstub_all
 }
@@ -87,7 +86,8 @@ teardown() {
 
 @test "${BATS_TEST_FILENAME#/bash/tests/} Database::newInstance unknown dsn file" {
     local -A dbFromInstance
-    run Database::newInstance dbFromInstance "unknown"    
+    export HOME=/tmp/home 
+    run Database::newInstance dbFromInstance "unknown"
     [ "$status" -eq 1 ]
 }
 

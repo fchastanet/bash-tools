@@ -360,6 +360,6 @@ I would like to thank particularly  Bazyli Brzóska for his work on the project 
 Framework part of this project is largely inspired by his work(some parts copied). You can see his [blog](https://invent.life/project/bash-infinity-framework) too that is really interesting 
 
 # TODO
-cli one config per container in conf
-dbScriptAllDatabase migrate to dsn + UT + dbCheckStructOneDatabase + dbPropelMigration
-dbQueryAllDatabase refact using awk streaming
+* cli UT
+* dbScriptAllDatabase migrate to dsn + UT + dbCheckStructOneDatabase + dbPropelMigration
+* dbQueryAllDatabase refact using awk streaming
