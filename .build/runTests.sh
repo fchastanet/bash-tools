@@ -6,10 +6,9 @@ set -o pipefail
 BASE_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." && pwd )
 VENDOR="$1"
 BASH_TAR_VERSION="$2"
-BASH_BASE_IMAGE="$3"
 
-if [[ -z "${VENDOR}" || -z "${BASH_TAR_VERSION}" || -z "${BASH_BASE_IMAGE}" ]]; then
-  (>&2 echo "please provide these paramters VENDOR, BASH_TAR_VERSION, BASH_BASE_IMAGE")
+if [[ -z "${VENDOR}" || -z "${BASH_TAR_VERSION}" ]]; then
+  (>&2 echo "please provide these paramters VENDOR, BASH_TAR_VERSION")
   exit 1
 fi
 
