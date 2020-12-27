@@ -13,30 +13,40 @@ env:
   - VENDOR=alpine BASH_TAR_VERSION=5.1    BASH_IMAGE=bash:rc
 
 before_script:
-  - |
-   if [[ "${TRAVIS_OS_NAME:-}" == 'linux' && "$SHELLCHECK" == 'true' ]]; then
-     sudo apt-get install -y shellcheck
-   else 
-    "./installBuildDeps.sh"
-    # build image and push it ot registry
-    docker pull scrasnups/build:bash-tools-${VENDOR}-${BASH_TAR_VERSION} || true 
-    docker build 
-    -f .docker/Dockerfile.${VENDOR} 
-    --pull 
-    --cache-from "scrasnups/build:bash-tools-${VENDOR}-${BASH_TAR_VERSION}" 
-    --build-arg BASH_TAR_VERSION=${BASH_TAR_VERSION} 
-    --build-arg BASH_IMAGE=${BASH_IMAGE} 
-    -t bash-tools-${VENDOR}-${BASH_TAR_VERSION} 
-    .docker
-    docker run bash-tools-${VENDOR}-${BASH_TAR_VERSION} bash --version
-    docker tag bash-tools-${VENDOR}-${BASH_TAR_VERSION}:latest  ${VENDOR}-${BASH_TAR_VERSION}
-    echo "$DOCKER_PASSWORD" | docker login --username "$DOCKER_USERNAME" --password-stdin
-    docker push scrasnups/build:bash-tools-${VENDOR}-${BASH_TAR_VERSION}
-  fi
+  - >
+    if [[ "$SHELLCHECK" == 'true' ]]; then
+      if [[ "${TRAVIS_OS_NAME:-}" = 'linux' ]]; then
+        (>&2 echo "unsupported os type: ${TRAVIS_OS_NAME:-}")
+        exit 1
+      fi
+      sudo apt-get install -y shellcheck
+    else 
+      ./installBuildDeps.sh
+      # build image and push it ot registry
+      docker pull scrasnups/build:bash-tools-${VENDOR}-${BASH_TAR_VERSION} || true 
+      docker build 
+        -f .docker/Dockerfile.${VENDOR} 
+        --pull 
+        --cache-from "scrasnups/build:bash-tools-${VENDOR}-${BASH_TAR_VERSION}" 
+        --build-arg BASH_TAR_VERSION=${BASH_TAR_VERSION} 
+        --build-arg BASH_IMAGE=${BASH_IMAGE} 
+        -t bash-tools-${VENDOR}-${BASH_TAR_VERSION} 
+        .docker
+      docker run bash-tools-${VENDOR}-${BASH_TAR_VERSION} bash --version
+      docker tag bash-tools-${VENDOR}-${BASH_TAR_VERSION}:latest  ${VENDOR}-${BASH_TAR_VERSION}
+      echo "$DOCKER_PASSWORD" | docker login --username "$DOCKER_USERNAME" --password-stdin
+      docker push scrasnups/build:bash-tools-${VENDOR}-${BASH_TAR_VERSION}
+    fi
 
 script:
-- |
-  if [[ "${TRAVIS_OS_NAME:-}" == 'linux' && "$SHELLCHECK" == 'true' ]]; then
+- >
+  set -o errexit
+  set -o pipefail
+  if [[ "$SHELLCHECK" == 'true' ]]; then
+    if [[ "${TRAVIS_OS_NAME:-}" == 'linux' ]]; then
+      (>&2 echo "unsupported os type: ${TRAVIS_OS_NAME:-}")
+      exit 1
+    fi
     ./shellcheck.sh > shellcheck.log
     
     # Install deepsource CLI
@@ -44,8 +54,6 @@ script:
     
     # Report coverage artifact to 'test-coverage' analyzer
     ./bin/deepsource report --analyzer shell --key shellcheck --value-file ./shellcheck.log
-
-    exit $?
   else
     # build docker image with user configuration
     docker build 
@@ -53,13 +61,13 @@ script:
       --build-arg USER_ID="$(id -u)"
       --build-arg GROUP_ID="$(id -g)"
       -f .docker/DockerfileUser     
-      -t bash-tools-${VENDOR}-${BASH_TAR_VERSION}-user
+      -t "bash-tools-${VENDOR}-${BASH_TAR_VERSION}-user"
       .docker
     # run tests
     docker run 
       --rm -it -v $PWD:/bash 
       --user $(id -u):$(id -g) 
       --workdir /bash 
-      bash-tools-${VENDOR}-${BASH_TAR_VERSION}-user
+      "bash-tools-${VENDOR}-${BASH_TAR_VERSION}-user"
       /bash/vendor/bats/bin/bats -r tests
   fi

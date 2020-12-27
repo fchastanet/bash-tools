@@ -349,3 +349,5 @@ Framework part of this project is largely inspired by his work(some parts copied
 * cli UT
 * dbScriptAllDatabase migrate to dsn + UT + dbCheckStructOneDatabase + dbPropelMigration
 * dbQueryAllDatabase refact using awk streaming 
+* docker slim
+* 
