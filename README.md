@@ -15,7 +15,6 @@ Build status: [![Build Status](https://travis-ci.com/fchastanet/bash-tools.svg?b
     - [1.3.5. bin/cli](#135-bincli)
   - [1.4. Bash Framework](#14-bash-framework)
   - [1.5. Acknowledgements](#15-acknowledgements)
-- [TODO](#todo)
 
 ## 1.1. Exerpt
 
@@ -344,10 +343,3 @@ Like so many projects, this effort has roots in many places.
 
 I would like to thank particularly  Bazyli Brzóska for his work on the project [Bash Infinity](https://github.com/niieani/bash-oo-framework).
 Framework part of this project is largely inspired by his work(some parts copied). You can see his [blog](https://invent.life/project/bash-infinity-framework) too that is really interesting 
-
-# TODO
-* cli UT
-* dbScriptAllDatabase migrate to dsn + UT + dbCheckStructOneDatabase + dbPropelMigration
-* dbQueryAllDatabase refact using awk streaming 
-* docker slim
-* 
