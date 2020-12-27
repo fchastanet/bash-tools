@@ -15,10 +15,6 @@ env:
 before_script:
   - >
     if [[ "$SHELLCHECK" == 'true' ]]; then
-      if [[ "${TRAVIS_OS_NAME:-}" = 'linux' ]]; then
-        (>&2 echo "unsupported os type: ${TRAVIS_OS_NAME:-}")
-        exit 1
-      fi
       sudo apt-get install -y shellcheck
     else 
       ./.build/installBuildDeps.sh
@@ -30,10 +26,6 @@ script:
   set -o errexit
   set -o pipefail
   if [[ "$SHELLCHECK" == 'true' ]]; then
-    if [[ "${TRAVIS_OS_NAME:-}" == 'linux' ]]; then
-      (>&2 echo "unsupported os type: ${TRAVIS_OS_NAME:-}")
-      exit 1
-    fi
     ./.build/shellcheck.sh > shellcheck.log
     ./.build/publishDeepsourceArtifact.sh ./shellcheck.log
   else
