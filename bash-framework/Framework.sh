@@ -163,19 +163,23 @@ Framework::ImportOne() {
     return
   fi
 
-
-  # try local library
-  # try vendor dir
-  # try from project root
-  # try absolute path
-  {
-    local localPath="${__bash_framework_rootVendorPath}"
-    localPath="${localPath}/${libPath}"
-    Framework::SourcePath "${localPath}" "$@"
-  } || \
-  Framework::SourcePath "${__bash_framework_rootVendorPath}/${libPath}" "$@" || \
-  Framework::SourcePath "${__bash_framework_rootCallingScriptPath}/${libPath}" "$@" || \
-  Framework::SourcePath "${libPath}" "$@" || Log::fatal "Cannot import $libPath"
+  # absolute file
+  if [[ "${libPath}" == /* ]]; then
+    Framework::SourcePath "${libPath}" "$@"
+  else
+    # try local library
+    # try vendor dir
+    # try from project root
+    # try absolute path
+    {
+      local localPath="${__bash_framework_rootVendorPath}"
+      localPath="${localPath}/${libPath}"
+      Framework::SourcePath "${localPath}" "$@"
+    } || \
+    Framework::SourcePath "${__bash_framework_rootVendorPath}/${libPath}" "$@" || \
+    Framework::SourcePath "${__bash_framework_rootCallingScriptPath}/${libPath}" "$@" || \
+    Framework::SourcePath "${libPath}" "$@" || Log::fatal "Cannot import $libPath"
+  fi
 }
 
 # Public: source given files using Framework::ImportOne.
