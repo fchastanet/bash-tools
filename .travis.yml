@@ -18,6 +18,7 @@ before_script:
      sudo apt-get install -y shellcheck
    else 
     "./installBuildDeps.sh"
+    # build image and push it ot registry
     docker pull scrasnups/build:bash-tools-${VENDOR}-${BASH_TAR_VERSION} || true 
     docker build 
     -f .docker/Dockerfile.${VENDOR} 
@@ -28,7 +29,7 @@ before_script:
     -t bash-tools-${VENDOR}-${BASH_TAR_VERSION} 
     .docker
     docker run bash-tools-${VENDOR}-${BASH_TAR_VERSION} bash --version
-    docker tag bash-tools-${VENDOR}-${BASH_TAR_VERSION}:latest scrasnups/build:bash-tools-${VENDOR}-${BASH_TAR_VERSION}
+    docker tag bash-tools-${VENDOR}-${BASH_TAR_VERSION}:latest  ${VENDOR}-${BASH_TAR_VERSION}
     echo "$DOCKER_PASSWORD" | docker login --username "$DOCKER_USERNAME" --password-stdin
     docker push scrasnups/build:bash-tools-${VENDOR}-${BASH_TAR_VERSION}
   fi
@@ -46,6 +47,19 @@ script:
 
     exit $?
   else
-    docker run --rm -it -v $PWD:/bash --user $(id -u):$(id -g) --workdir /bash bash-tools-${VENDOR}-${BASH_TAR_VERSION}
+    # build docker image with user configuration
+    docker build 
+      --build-arg "BASH_IMAGE=scrasnups/build:bash-tools-${VENDOR}-${BASH_TAR_VERSION}"     
+      --build-arg USER_ID="$(id -u)"
+      --build-arg GROUP_ID="$(id -g)"
+      -f .docker/DockerfileUser     
+      -t bash-tools-${VENDOR}-${BASH_TAR_VERSION}-user
+      .docker
+    # run tests
+    docker run 
+      --rm -it -v $PWD:/bash 
+      --user $(id -u):$(id -g) 
+      --workdir /bash 
+      bash-tools-${VENDOR}-${BASH_TAR_VERSION}-user
       /bash/vendor/bats/bin/bats -r tests
   fi

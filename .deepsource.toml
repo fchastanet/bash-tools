@@ -20,5 +20,6 @@ enabled = true
   [analyzers.meta]
     dockerfile_paths = [
       ".docker/Dockerfile.alpine",
-      ".docker/Dockerfile.ubuntu"
+      ".docker/Dockerfile.ubuntu",
+      ".docker/DockerfileUser"
     ]
