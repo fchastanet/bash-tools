@@ -1,20 +1,22 @@
 ARG BASH_IMAGE=ubuntu:20.04
+# hadolint ignore=DL3006
 FROM ${BASH_IMAGE}
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 ARG BASH_TAR_VERSION=5.1
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+# hadolint ignore=DL3003
 RUN set -x \
   && set -o errexit \
   && echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selections \
   && apt-get update \
   && apt-get install -y -q --no-install-recommends \
-    build-essential \ 
-    ca-certificates \
-    curl \
-    bison \
-    git \
-    gzip \
+    build-essential=12.8ubuntu1.1 \ 
+    ca-certificates=20201027ubuntu0.20.04.1 \
+    curl=7.68.0-1ubuntu2.4 \
+    bison=2:3.5.1+dfsg-1 \
+    git=1:2.25.1-1ubuntu3 \
+    gzip=1.10-0ubuntu4 \
     \
   && ( \
     cd /tmp \

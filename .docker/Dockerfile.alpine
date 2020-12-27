@@ -1,7 +1,8 @@
 ARG BASH_IMAGE=amd64/bash:5.0.17
+# hadolint ignore=DL3006
 FROM ${BASH_IMAGE}
 
-RUN apk add --no-cache git
+RUN apk add --no-cache "git=2.26.2-r0"
 ENV IN_BASH_DOCKER="You're in docker"
 
 ONBUILD ARG USER_ID=1000
