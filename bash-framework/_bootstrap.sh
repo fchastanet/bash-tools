@@ -56,15 +56,7 @@ Framework::bootstrap() {
     if [[ "${BASH_FRAMEWORK_INITIALIZED:-0}" = "1" ]]; then
         return
     fi
-
-    # default values
-    # shellcheck disable=SC2034
-    BASH_FRAMEWORK_DISPLAY_LEVEL=${BASH_FRAMEWORK_DISPLAY_LEVEL:-${__LEVEL_INFO}}
-    # shellcheck disable=SC2034
-    BASH_FRAMEWORK_LOG_LEVEL=${BASH_FRAMEWORK_LOG_LEVEL:-${__LEVEL_OFF}}
-    # shellcheck disable=SC2034
-    BASH_FRAMEWORK_LOG_FILE="${BASH_FRAMEWORK_LOG_FILE:-${BASH_FRAMEWORK_LOG_FILE}}"
-
+   
     # import default .env file
     # shellcheck source=/conf/.env
     source "${__bash_framework_rootVendorPath}/conf/.env" || exit 1
