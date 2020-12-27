@@ -11,7 +11,7 @@ if [[ -z "${DOCKER_PASSWORD}" || -z "${DOCKER_USERNAME}" ]]; then
 fi
 
 if [[ -z "${VENDOR}" || -z "${BASH_TAR_VERSION}" || -z "${BASH_BASE_IMAGE}" ]]; then
-  (>&2 echo "please provide these paramters VENDOR, BASH_TAR_VERSION, BASH_BASE_IMAGE")
+  (>&2 echo "please provide these parameters VENDOR, BASH_TAR_VERSION, BASH_BASE_IMAGE")
   exit 1
 fi
 
