@@ -19,6 +19,9 @@ if [ "${IN_BASH_DOCKER:-}" = "You're in docker" ]; then
     fi
   )
 else
+  if [[ ! -d "${CURRENT_DIR}/vendor" ]]; then
+    ./.build/installBuildDeps.sh
+  fi
   docker build \
     --build-arg "BASH_IMAGE=scrasnups/build:bash-tools-ubuntu-5.1" \
     --build-arg USER_ID="$(id -u)" \

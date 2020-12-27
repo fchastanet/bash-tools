@@ -21,21 +21,8 @@ before_script:
       fi
       sudo apt-get install -y shellcheck
     else 
-      ./installBuildDeps.sh
-      # build image and push it ot registry
-      docker pull scrasnups/build:bash-tools-${VENDOR}-${BASH_TAR_VERSION} || true 
-      docker build 
-        -f .docker/Dockerfile.${VENDOR} 
-        --pull 
-        --cache-from "scrasnups/build:bash-tools-${VENDOR}-${BASH_TAR_VERSION}" 
-        --build-arg BASH_TAR_VERSION=${BASH_TAR_VERSION} 
-        --build-arg BASH_IMAGE=${BASH_IMAGE} 
-        -t bash-tools-${VENDOR}-${BASH_TAR_VERSION} 
-        .docker
-      docker run bash-tools-${VENDOR}-${BASH_TAR_VERSION} bash --version
-      docker tag bash-tools-${VENDOR}-${BASH_TAR_VERSION}:latest  ${VENDOR}-${BASH_TAR_VERSION}
-      echo "$DOCKER_PASSWORD" | docker login --username "$DOCKER_USERNAME" --password-stdin
-      docker push scrasnups/build:bash-tools-${VENDOR}-${BASH_TAR_VERSION}
+      ./.build/installBuildDeps.sh
+      ./.build/buildPushDockerImages.sh "${VENDOR}" "${BASH_TAR_VERSION}" "${BASH_BASE_IMAGE}"
     fi
 
 script:
@@ -47,27 +34,8 @@ script:
       (>&2 echo "unsupported os type: ${TRAVIS_OS_NAME:-}")
       exit 1
     fi
-    ./shellcheck.sh > shellcheck.log
-    
-    # Install deepsource CLI
-    curl https://deepsource.io/cli | sh
-    
-    # Report coverage artifact to 'test-coverage' analyzer
-    ./bin/deepsource report --analyzer shell --key shellcheck --value-file ./shellcheck.log
+    ./.build/shellcheck.sh > shellcheck.log
+    ./.build/publishDeepsourceArtifact.sh ./shellcheck.log
   else
-    # build docker image with user configuration
-    docker build 
-      --build-arg "BASH_IMAGE=scrasnups/build:bash-tools-${VENDOR}-${BASH_TAR_VERSION}"     
-      --build-arg USER_ID="$(id -u)"
-      --build-arg GROUP_ID="$(id -g)"
-      -f .docker/DockerfileUser     
-      -t "bash-tools-${VENDOR}-${BASH_TAR_VERSION}-user"
-      .docker
-    # run tests
-    docker run 
-      --rm -it -v $PWD:/bash 
-      --user $(id -u):$(id -g) 
-      --workdir /bash 
-      "bash-tools-${VENDOR}-${BASH_TAR_VERSION}-user"
-      /bash/vendor/bats/bin/bats -r tests
+    ./.build/runTests.sh "${VENDOR}" "${BASH_TAR_VERSION}"
   fi
