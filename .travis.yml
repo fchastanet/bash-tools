@@ -23,8 +23,6 @@ before_script:
 
 script:
 - >
-  set -o errexit
-  set -o pipefail
   if [[ "$SHELLCHECK" == 'true' ]]; then
     ./.build/shellcheck.sh > shellcheck.log
     ./.build/publishDeepsourceArtifact.sh ./shellcheck.log
