@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 
-declare -g toolsDir="$( cd "${BATS_TEST_DIRNAME}/../../bin" && pwd )"
-declare -g vendorDir="$( cd "${BATS_TEST_DIRNAME}/../../vendor" && pwd )"
+declare toolsDir="$( cd "${BATS_TEST_DIRNAME}/../../bin" && pwd )"
+declare vendorDir="$( cd "${BATS_TEST_DIRNAME}/../../vendor" && pwd )"
 
 # shellcheck source=bash-framework/_bootstrap.sh
-__bash_framework_envFile="" source "$(cd "${BATS_TEST_DIRNAME}/../.." && pwd)/bash-framework/_bootstrap.sh" || exit 1
+__BASH_FRAMEWORK_ENV_FILEPATH="" source "$(cd "${BATS_TEST_DIRNAME}/../.." && pwd)/bash-framework/_bootstrap.sh" || exit 1
 import bash-framework/Git
 
 load "${vendorDir}/bats-mock-Flamefire/load.bash"

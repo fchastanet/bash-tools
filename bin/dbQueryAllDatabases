@@ -31,8 +31,9 @@ Functions::checkCommandExists pv "sudo apt-get install -y pv"
 
 # Usage info
 showHelp() {
-local dsnList="$(Functions::getConfMergedList "dsn" ".env")"
-local queriesList="$(Functions::getConfMergedList "dbQueries" ".sql" || true)"
+local dsnList queriesList 
+dsnList="$(Functions::getConfMergedList "dsn" ".env")"
+queriesList="$(Functions::getConfMergedList "dbQueries" ".sql" || true)"
 cat << EOF
 Description: Execute a query on multiple databases in order to generate a report, query can be parallelized on multiple databases
 
@@ -137,7 +138,7 @@ if [[ "${JOBS_NUMBER}" = "1" ]] ; then
     (
         headerLineDisplayed=0
         declare db
-        echo "${allDbs}" | while IFS=" " read db; do
+        echo "${allDbs}" | while IFS=" " read -r db; do
             # errors will be shown on stderr, result on stdout
             if [[ "${headerLineDisplayed}" = "0" ]]; then
                 Database::query dbInstance "${query}" "${db}" || (

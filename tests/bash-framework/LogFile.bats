@@ -3,7 +3,7 @@
 # shellcheck source=bash-framework/Constants.sh
 source "$(cd "${BATS_TEST_DIRNAME}/../.." && pwd)/bash-framework/Constants.sh" || exit 1
 
-declare -g logFile
+declare logFile
 setup() {
   logFile="$(mktemp -p "${TMPDIR:-/tmp}" -t "bash.framework.XXXXXXXXXXXX")"
 }
@@ -100,19 +100,19 @@ assertFileLogs() {
 }
 
 @test "${BATS_TEST_FILENAME#/bash/tests/} Log::log... log file not specified" {
-    BASH_FRAMEWORK_LOG_FILE="" BASH_FRAMEWORK_INITIALIZED=0  __bash_framework_envFile="${BATS_TEST_DIRNAME}/data/Log.debug.env" source "$(cd "${BATS_TEST_DIRNAME}/../.." && pwd)/bash-framework/_bootstrap.sh" || exit 1
+    BASH_FRAMEWORK_LOG_FILE="" BASH_FRAMEWORK_INITIALIZED=0  __BASH_FRAMEWORK_ENV_FILEPATH="${BATS_TEST_DIRNAME}/data/Log.debug.env" source "$(cd "${BATS_TEST_DIRNAME}/../.." && pwd)/bash-framework/_bootstrap.sh" || exit 1
     [[ "${BASH_FRAMEWORK_LOG_LEVEL}" == "${__LEVEL_OFF}" ]]
 }
 
 @test "${BATS_TEST_FILENAME#/bash/tests/} Log::log... log file not writable" {
     chmod 400 "${logFile}"
-    BASH_FRAMEWORK_LOG_FILE="" BASH_FRAMEWORK_INITIALIZED=0  __bash_framework_envFile="${BATS_TEST_DIRNAME}/data/Log.debug.env" source "$(cd "${BATS_TEST_DIRNAME}/../.." && pwd)/bash-framework/_bootstrap.sh" || exit 1
+    BASH_FRAMEWORK_LOG_FILE="" BASH_FRAMEWORK_INITIALIZED=0  __BASH_FRAMEWORK_ENV_FILEPATH="${BATS_TEST_DIRNAME}/data/Log.debug.env" source "$(cd "${BATS_TEST_DIRNAME}/../.." && pwd)/bash-framework/_bootstrap.sh" || exit 1
     [[ "${BASH_FRAMEWORK_LOG_LEVEL}" == "${__LEVEL_OFF}" ]]
 }
 
 @test "${BATS_TEST_FILENAME#/bash/tests/} Log::logDebug activated with envfile" {
     BASH_FRAMEWORK_LOG_FILE="${logFile}"
-    BASH_FRAMEWORK_INITIALIZED=0  __bash_framework_envFile="${BATS_TEST_DIRNAME}/data/Log.debug.env" source "$(cd "${BATS_TEST_DIRNAME}/../.." && pwd)/bash-framework/_bootstrap.sh" || exit 1
+    BASH_FRAMEWORK_INITIALIZED=0  __BASH_FRAMEWORK_ENV_FILEPATH="${BATS_TEST_DIRNAME}/data/Log.debug.env" source "$(cd "${BATS_TEST_DIRNAME}/../.." && pwd)/bash-framework/_bootstrap.sh" || exit 1
 
     assertFileLogs ${__LEVEL_DEBUG}
     [[ "$?" == "0" ]]
@@ -127,7 +127,7 @@ assertFileLogs() {
 
 @test "${BATS_TEST_FILENAME#/bash/tests/} Log::logInfo activated with envfile" {
     BASH_FRAMEWORK_LOG_FILE="${logFile}"
-    BASH_FRAMEWORK_INITIALIZED=0  __bash_framework_envFile="${BATS_TEST_DIRNAME}/data/Log.info.env" source "$(cd "${BATS_TEST_DIRNAME}/../.." && pwd)/bash-framework/_bootstrap.sh" || exit 1
+    BASH_FRAMEWORK_INITIALIZED=0  __BASH_FRAMEWORK_ENV_FILEPATH="${BATS_TEST_DIRNAME}/data/Log.info.env" source "$(cd "${BATS_TEST_DIRNAME}/../.." && pwd)/bash-framework/_bootstrap.sh" || exit 1
     run assertFileLogs ${__LEVEL_INFO}
     [[ "$?" == "0" ]]
 }
@@ -141,7 +141,7 @@ assertFileLogs() {
 
 @test "${BATS_TEST_FILENAME#/bash/tests/} Log::logSuccess activated with envfile" {
     BASH_FRAMEWORK_LOG_FILE="${logFile}"
-    BASH_FRAMEWORK_INITIALIZED=0  __bash_framework_envFile="${BATS_TEST_DIRNAME}/data/Log.success.env" source "$(cd "${BATS_TEST_DIRNAME}/../.." && pwd)/bash-framework/_bootstrap.sh" || exit 1
+    BASH_FRAMEWORK_INITIALIZED=0  __BASH_FRAMEWORK_ENV_FILEPATH="${BATS_TEST_DIRNAME}/data/Log.success.env" source "$(cd "${BATS_TEST_DIRNAME}/../.." && pwd)/bash-framework/_bootstrap.sh" || exit 1
     run assertFileLogs ${__LEVEL_SUCCESS}
     [[ "$?" == "0" ]]
 }
@@ -155,7 +155,7 @@ assertFileLogs() {
 
 @test "${BATS_TEST_FILENAME#/bash/tests/} Log::logWarning activated with envfile" {
     BASH_FRAMEWORK_LOG_FILE="${logFile}"
-    BASH_FRAMEWORK_INITIALIZED=0  __bash_framework_envFile="${BATS_TEST_DIRNAME}/data/Log.warning.env" source "$(cd "${BATS_TEST_DIRNAME}/../.." && pwd)/bash-framework/_bootstrap.sh" || exit 1
+    BASH_FRAMEWORK_INITIALIZED=0  __BASH_FRAMEWORK_ENV_FILEPATH="${BATS_TEST_DIRNAME}/data/Log.warning.env" source "$(cd "${BATS_TEST_DIRNAME}/../.." && pwd)/bash-framework/_bootstrap.sh" || exit 1
     run assertFileLogs ${__LEVEL_WARNING}
     [[ "$?" == "0" ]]
 }
@@ -169,7 +169,7 @@ assertFileLogs() {
 
 @test "${BATS_TEST_FILENAME#/bash/tests/} Log::logError activated with envfile" {
     BASH_FRAMEWORK_LOG_FILE="${logFile}"
-    BASH_FRAMEWORK_INITIALIZED=0  __bash_framework_envFile="${BATS_TEST_DIRNAME}/data/Log.error.env" source "$(cd "${BATS_TEST_DIRNAME}/../.." && pwd)/bash-framework/_bootstrap.sh" || exit 1
+    BASH_FRAMEWORK_INITIALIZED=0  __BASH_FRAMEWORK_ENV_FILEPATH="${BATS_TEST_DIRNAME}/data/Log.error.env" source "$(cd "${BATS_TEST_DIRNAME}/../.." && pwd)/bash-framework/_bootstrap.sh" || exit 1
     run assertFileLogs ${__LEVEL_ERROR}
     [[ "$?" == "0" ]]
 }
@@ -183,7 +183,7 @@ assertFileLogs() {
 
 @test "${BATS_TEST_FILENAME#/bash/tests/} log off with env file" {
     BASH_FRAMEWORK_LOG_FILE="${logFile}"
-    BASH_FRAMEWORK_INITIALIZED=0  __bash_framework_envFile="${BATS_TEST_DIRNAME}/data/Log.off.env" source "$(cd "${BATS_TEST_DIRNAME}/../.." && pwd)/bash-framework/_bootstrap.sh" || exit 1
+    BASH_FRAMEWORK_INITIALIZED=0  __BASH_FRAMEWORK_ENV_FILEPATH="${BATS_TEST_DIRNAME}/data/Log.off.env" source "$(cd "${BATS_TEST_DIRNAME}/../.." && pwd)/bash-framework/_bootstrap.sh" || exit 1
     run assertFileLogs ${__LEVEL_OFF}
     [[ "$?" == "0" ]]
 }

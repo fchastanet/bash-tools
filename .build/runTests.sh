@@ -31,5 +31,3 @@ fi
     "bash-tools-${VENDOR}-${BASH_TAR_VERSION}-user" \
     /bash/vendor/bats/bin/bats -r tests
 )
-status=$?
-exit ${status}

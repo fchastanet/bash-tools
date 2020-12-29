@@ -13,5 +13,3 @@ FILE="$1"
   # Report coverage artifact to 'test-coverage' analyzer
   ./bin/deepsource report --analyzer shell --key shellcheck --value-file "${FILE}"
 )
-status=$?
-exit ${status}

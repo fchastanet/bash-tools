@@ -9,7 +9,8 @@ Framework::expectNonRootUser
 declare REMOTE="$1"
 declare VERBOSE="$2"
 declare outputDir="$3"
-declare db="$4"
+declare callingDir="$4"
+declare db="$5"
 
 # load bootstrap
 # shellcheck source=/bash-framework/_bootstrap.sh
@@ -18,7 +19,6 @@ source "${BASH_TOOLS_FOLDER}/vendor/bash-framework/_bootstrap.sh"
 # ensure that Ctrl-C is trapped by this script and not sub mysql process
 trap 'exit 130' INT
 
-CONTAINER="${PROJECT_NAMESPACE}-${WEB_HOSTNAME}"
 MYSQL_OPTIONS=""
 
 if [[ "${REMOTE}" = "1" ]] ; then
@@ -34,10 +34,6 @@ else
 fi
 
 import bash-framework/Database
-#initialize Database lib in order to use to docker
-if which docker; then
-    Database::setMysqlPrefix "docker exec -i ${CONTAINER}"
-fi
 
 declare repairScript="${outputDir}/checkStruct_${db}.sql"
 
@@ -52,17 +48,19 @@ Database::ifDbInitialized "${HOSTNAME}" "${PORT}" "${USER}" "${PASSWORD}" "${db}
 
 Log::displayInfo "check DB structure of '${db}'"
 rm -f "${repairScript}" 2>/dev/null || true
-checkStructParams="-u"${USER}" -p"${PASSWORD}" --host="${HOSTNAME}" --no-interaction --full-check --do-repair --repair-script-filename="${repairScript}""
+declare -a checkStructParams
+checkStructParams=("-u${USER}" "-p${PASSWORD}" "--host=${HOSTNAME}" --no-interaction --full-check --do-repair "--repair-script-filename=${repairScript}")
 if [[ "${VERBOSE}" = "1" ]]; then
-    checkStructParams+=" -vv"
+    checkStructParams+=(-vv)
 fi
 
-let start=$(date +%s)
+declare -i start, end, duration
+start=$(date +%s)
 ret=0
-error=$("${__rootSrcPath__}/bin/console" crossknowledge:database:check-struct ${checkStructParams} "${db}" 2>&1) || {
+error=$("${callingDir}/bin/console" crossknowledge:database:check-struct "${checkStructParams[@]}" "${db}" 2>&1) || {
     ret=$?
 }
-let end=$(date +%s)
+end=$(date +%s)
 duration=$(( end - start ))
 
 echo "$error"

@@ -83,6 +83,7 @@ Database::checkDsnFile() {
   (
     unset HOSTNAME PORT PASSWORD USER
     # shellcheck source=/conf/dsn/default.local.env
+    # shellcheck disable=SC1091
     source "${DSN_FILENAME}"  
     if [[ -z ${HOSTNAME+x} ]]; then
       Log::displayError "dsn file ${DSN_FILENAME} : HOSTNAME not provided"
@@ -116,7 +117,7 @@ Database::checkDsnFile() {
 # Public
 # Returns the default conf dsn folder
 Database::getDefaultConfDsnFolder() {
-  echo "${__bash_framework_rootVendorPath}/conf/dsn"
+  echo "${__BASH_FRAMEWORK_VENDOR_PATH:?}/conf/dsn"
 }
 
 # Public
@@ -133,8 +134,8 @@ Database::getHomeConfDsnFolder() {
 # * $1 - (passed by reference) database instance to use
 # * $2 - options list
 Database::setOptions() {
-  # shellcheck disable=SC2178
   local -n instanceSetOptions=$1
+  # shellcheck disable=SC2034
   instanceSetOptions['OPTIONS']="$2"
 }
 
@@ -144,8 +145,8 @@ Database::setOptions() {
 # * $1 - (passed by reference) database instance to use
 # * $2 - options list
 Database::setDumpOptions() {
-  # shellcheck disable=SC2178
   local -n instanceSetDumpOptions=$1
+  # shellcheck disable=SC2034
   instanceSetDumpOptions['DUMP_OPTIONS']="$2"
 }
 
@@ -156,8 +157,8 @@ Database::setDumpOptions() {
 # * $1 - (passed by reference) database instance to use
 # * $2 - options list
 Database::setQueryOptions() {
-  # shellcheck disable=SC2178
   local -n instanceSetQueryOptions=$1
+  # shellcheck disable=SC2034
   instanceSetQueryOptions['QUERY_OPTIONS']="$2"
 }
 
@@ -175,6 +176,7 @@ Database::authFile() {
   instanceAuthFile['AUTH_FILE']=$(mktemp -p "${TMPDIR:-/tmp}" -t "mysql.XXXXXXXXXXXX")
   (
       # shellcheck source=/conf/dsn/default.local.env
+      # shellcheck disable=SC1091
       source "${instanceAuthFile['DSN_FILE']}"
       echo "[client]"
       echo "user = ${USER}"
@@ -201,7 +203,8 @@ Database::ifDbExists() {
   local -a mysqlCommand=()
 
   mysqlCommand+=(mysqlshow)
-  mysqlCommand+=(--defaults-extra-file="${instanceIfDbExists['AUTH_FILE']}")
+  mysqlCommand+=("--defaults-extra-file=${instanceIfDbExists['AUTH_FILE']}")
+  # shellcheck disable=SC2206
   mysqlCommand+=(${instanceIfDbExists['SSL_OPTIONS']})
   mysqlCommand+=("${dbName}")
   Log::displayDebug "execute command: '${mysqlCommand[*]}'"
@@ -244,7 +247,7 @@ Database::isTableExists() {
 # * 0 if success
 # * 1 else
 Database::createDb() {
-  # shellcheck disable=SC2178
+  # shellcheck disable=SC2034
   local -n instanceCreateDb=$1
   local dbName="$2"
 
@@ -270,7 +273,7 @@ Database::createDb() {
 # * 0 if success
 # * 1 else
 Database::dropDb() {
-  # shellcheck disable=SC2178
+  # shellcheck disable=SC2034
   local -n instanceDropDb=$1
   local dbName="$2"
 
@@ -297,7 +300,7 @@ Database::dropDb() {
 # * 0 if success
 # * 1 else
 Database::dropTable() {
-  # shellcheck disable=SC2178
+  # shellcheck disable=SC2034
   local -n instanceDropTable=$1
   local dbName="$2"
   local tableName="$3"
@@ -329,8 +332,10 @@ Database::query() {
   local -a mysqlCommand=()
 
   mysqlCommand+=(mysql)
-  mysqlCommand+=(--defaults-extra-file="${instanceQuery['AUTH_FILE']}")
+  mysqlCommand+=("--defaults-extra-file=${instanceQuery['AUTH_FILE']}")
+  # shellcheck disable=SC2206
   mysqlCommand+=(${instanceQuery['QUERY_OPTIONS']})
+  # shellcheck disable=SC2206
   mysqlCommand+=(${instanceQuery['OPTIONS']})
   # add optional db name
   if [[ -n "${3+x}" ]]; then
@@ -343,7 +348,7 @@ Database::query() {
       mysqlCommand+=("$2")
     fi
   fi
-  Log::displayDebug "execute command: '${mysqlCommand[@]}'"
+  Log::displayDebug "$(printf "execute command: '%s'"  "${mysqlCommand[@]}")"
 
   if [[ -f "$2" ]]; then
     "${mysqlCommand[@]}" < "$2"
@@ -383,10 +388,13 @@ Database::dump() {
   fi
 
   mysqlCommand+=(mysqldump)
-  mysqlCommand+=(--defaults-extra-file="${instanceDump['AUTH_FILE']}")
+  mysqlCommand+=("--defaults-extra-file=${instanceDump['AUTH_FILE']}")
+  # shellcheck disable=SC2206
   mysqlCommand+=(${instanceDump['DUMP_OPTIONS']})
+  # shellcheck disable=SC2206
   mysqlCommand+=(${dumpAdditionalOptions})
   mysqlCommand+=("${db}")
+  # shellcheck disable=SC2206
   mysqlCommand+=(${optionalTableList})
 
   Log::displayDebug "execute command: '${mysqlCommand[*]}'"

@@ -2,11 +2,11 @@
 
 BASH_FRAMEWORK_FOLDER="$(cd "${BATS_TEST_DIRNAME}/../.." && pwd)/bash-framework"
 # shellcheck source=bash-framework/_bootstrap.sh
-__bash_framework_envFile="" source "${BASH_FRAMEWORK_FOLDER}/_bootstrap.sh" || exit 1
+__BASH_FRAMEWORK_ENV_FILEPATH="" source "${BASH_FRAMEWORK_FOLDER}/_bootstrap.sh" || exit 1
 
 import bash-framework/Database
 
-declare -g vendorDir="$( cd "${BATS_TEST_DIRNAME}/../../vendor" && pwd )"
+declare vendorDir="$( cd "${BATS_TEST_DIRNAME}/../../vendor" && pwd )"
 load "${vendorDir}/bats-mock-Flamefire/load.bash"
 
 setup() {
@@ -29,7 +29,7 @@ teardown() {
 }
 
 @test "${BATS_TEST_FILENAME#/bash/tests/} Database::getDefaultConfDsnFolder" {
-    [ "$(Database::getDefaultConfDsnFolder)" = "${__bash_framework_rootVendorPath}/conf/dsn" ]
+    [ "$(Database::getDefaultConfDsnFolder)" = "${__BASH_FRAMEWORK_VENDOR_PATH}/conf/dsn" ]
 }
 
 @test "${BATS_TEST_FILENAME#/bash/tests/} Database::getHomeConfDsnFolder" {

@@ -2,7 +2,7 @@
 
 FRAMEWORK_DIR="$(cd "${BATS_TEST_DIRNAME}/../.." && pwd)"
 # shellcheck source=bash-framework/_bootstrap.sh
-__bash_framework_envFile="" source "${FRAMEWORK_DIR}/bash-framework/_bootstrap.sh" || exit 1
+__BASH_FRAMEWORK_ENV_FILEPATH="" source "${FRAMEWORK_DIR}/bash-framework/_bootstrap.sh" || exit 1
 
 import bash-framework/Functions
 

@@ -85,7 +85,7 @@ teardown() {
         "\* \* \* \* information_schema -e 'SELECT default_character_set_name FROM information_schema.SCHEMATA WHERE schema_name = \"fromDb\";' : echo 'charset'" \
         "\* \* \* \* fromDb -e 'show tables' : echo 'table1'" \
         "\* -s --skip-column-names --connect-timeout=5 : echo '100'" \
-        "\* -s --skip-column-names --connect-timeout=5 -e 'CREATE DATABASE \`toDb\` CHARACTER SET \"charset\" COLLATE \"collation\"' : echo 'db created'" \
+        $'* -s --skip-column-names --connect-timeout=5 -e \'CREATE DATABASE `toDb` CHARACTER SET "charset" COLLATE "collation"\' : echo "db created"' \
         "\* -s --skip-column-names --connect-timeout=5 toDb : echo 'import structure dump'" \
         "\* -s --skip-column-names --connect-timeout=5 toDb : echo 'import data dump'"
 
@@ -113,7 +113,7 @@ teardown() {
     # call 6 (order 3): import structure dump into db
     # call 7 (order 4): import data dump into db
     stub mysql \
-        "\* -s --skip-column-names --connect-timeout=5 -e 'CREATE DATABASE \`toDb\` CHARACTER SET \"utf8\" COLLATE \"utf8_general_ci\"' : echo 'db created'" \
+        $'* -s --skip-column-names --connect-timeout=5 -e \'CREATE DATABASE `toDb` CHARACTER SET "utf8" COLLATE "utf8_general_ci"\' : echo "db created"' \
         "\* -s --skip-column-names --connect-timeout=5 toDb : echo 'import structure dump'" \
         "\* -s --skip-column-names --connect-timeout=5 toDb : echo 'import data dump'"
     

@@ -120,7 +120,7 @@ shift
 done
 
 # additional arguments
-shift $(expr $OPTIND - 1 )
+shift $(( OPTIND - 1 ))
 while true; do
     if [[ -z "$1" ]]; then
         # last argument
@@ -263,7 +263,7 @@ if [[ "${DOWNLOAD_DUMP}" = "1" ]]; then
                 "SELECT default_character_set_name FROM information_schema.SCHEMATA WHERE schema_name = \"${REMOTE_DB}\";" "information_schema")
         fi
 
-        DUMP_HEADER=$(printf "${DUMP_HEADER}\nSET names '${CHARACTER_SET}';\n")
+        DUMP_HEADER=$(printf "%s\nSET names '%s';\n" "${DUMP_HEADER}" "${CHARACTER_SET}")
 
         # check if remote db exists
         Database::ifDbExists dbRemoteInstance "${REMOTE_DB}" || 
@@ -287,7 +287,10 @@ if [[ "${DOWNLOAD_DUMP}" = "1" ]]; then
         Database::dump dbRemoteInstance "${REMOTE_DB}" "${TABLE}" --skip-add-drop-table --single-transaction=TRUE | \
             pv --progress --size "${DUMP_SIZE_PV_ESTIMATION}m" >> "${REMOTE_DB_DUMP_TEMP_FILE}"
         echo "${DUMP_FOOTER}" >> "${REMOTE_DB_DUMP_TEMP_FILE}"
-        sed -i -r -e 's/CREATE TABLE `/CREATE TABLE IF NOT EXISTS `/g' "${REMOTE_DB_DUMP_TEMP_FILE}"
+        # shellcheck disable=SC2016
+        sed -i -r \
+            -e 's/CREATE TABLE `/CREATE TABLE IF NOT EXISTS `/g' \
+            "${REMOTE_DB_DUMP_TEMP_FILE}"
     fi
     Log::displayDebug "Dump done.";
 else

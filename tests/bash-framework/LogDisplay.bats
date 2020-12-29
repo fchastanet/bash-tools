@@ -3,7 +3,7 @@
 # shellcheck source=bash-framework/Constants.sh
 source "$(cd "${BATS_TEST_DIRNAME}/../.." && pwd)/bash-framework/Constants.sh" || exit 1
 
-declare -g logFile
+declare logFile
 setup() {
   export HOME="/tmp/home"
   mkdir -p /tmp/home
@@ -82,7 +82,7 @@ assertDisplayLogs() {
 }
 
 @test "${BATS_TEST_FILENAME#/bash/tests/} Log::displayDebug activated with envfile" {
-    export BASH_FRAMEWORK_INITIALIZED=0  BASH_FRAMEWORK_LOG_FILE="${logFile}" __bash_framework_envFile="${BATS_TEST_DIRNAME}/data/Log.debug.env" 
+    export BASH_FRAMEWORK_INITIALIZED=0  BASH_FRAMEWORK_LOG_FILE="${logFile}" __BASH_FRAMEWORK_ENV_FILEPATH="${BATS_TEST_DIRNAME}/data/Log.debug.env" 
     source "$(cd "${BATS_TEST_DIRNAME}/../.." && pwd)/bash-framework/_bootstrap.sh" || exit 1
     run assertDisplayLogs ${__LEVEL_DEBUG}
     [[ "${status}" == "0" ]]
@@ -96,7 +96,7 @@ assertDisplayLogs() {
 }
 
 @test "${BATS_TEST_FILENAME#/bash/tests/} Log::displayInfo activated with envfile" {
-    export BASH_FRAMEWORK_INITIALIZED=0  __bash_framework_envFile="${BATS_TEST_DIRNAME}/data/Log.info.env" 
+    export BASH_FRAMEWORK_INITIALIZED=0  __BASH_FRAMEWORK_ENV_FILEPATH="${BATS_TEST_DIRNAME}/data/Log.info.env" 
     source "$(cd "${BATS_TEST_DIRNAME}/../.." && pwd)/bash-framework/_bootstrap.sh" || exit 1
     assertDisplayLogs ${__LEVEL_INFO}
 }
@@ -108,7 +108,7 @@ assertDisplayLogs() {
 }
 
 @test "${BATS_TEST_FILENAME#/bash/tests/} Log::displaySuccess activated with envfile" {
-    export BASH_FRAMEWORK_INITIALIZED=0  __bash_framework_envFile="${BATS_TEST_DIRNAME}/data/Log.success.env" 
+    export BASH_FRAMEWORK_INITIALIZED=0  __BASH_FRAMEWORK_ENV_FILEPATH="${BATS_TEST_DIRNAME}/data/Log.success.env" 
     source "$(cd "${BATS_TEST_DIRNAME}/../.." && pwd)/bash-framework/_bootstrap.sh" || exit 1
     assertDisplayLogs ${__LEVEL_SUCCESS}
 }
@@ -119,7 +119,7 @@ assertDisplayLogs() {
 }
 
 @test "${BATS_TEST_FILENAME#/bash/tests/} Log::displayWarning activated with envfile" {
-    export BASH_FRAMEWORK_INITIALIZED=0  __bash_framework_envFile="${BATS_TEST_DIRNAME}/data/Log.warning.env" 
+    export BASH_FRAMEWORK_INITIALIZED=0  __BASH_FRAMEWORK_ENV_FILEPATH="${BATS_TEST_DIRNAME}/data/Log.warning.env" 
     source "$(cd "${BATS_TEST_DIRNAME}/../.." && pwd)/bash-framework/_bootstrap.sh" || exit 1
     assertDisplayLogs ${__LEVEL_WARNING}
 }
@@ -131,7 +131,7 @@ assertDisplayLogs() {
 }
 
 @test "${BATS_TEST_FILENAME#/bash/tests/} Log::displayError activated with envfile" {
-    export BASH_FRAMEWORK_INITIALIZED=0  __bash_framework_envFile="${BATS_TEST_DIRNAME}/data/Log.error.env" 
+    export BASH_FRAMEWORK_INITIALIZED=0  __BASH_FRAMEWORK_ENV_FILEPATH="${BATS_TEST_DIRNAME}/data/Log.error.env" 
     source "$(cd "${BATS_TEST_DIRNAME}/../.." && pwd)/bash-framework/_bootstrap.sh" || exit 1
     assertDisplayLogs ${__LEVEL_ERROR}
 }
@@ -152,7 +152,7 @@ assertDisplayLogs() {
 
 
 @test "${BATS_TEST_FILENAME#/bash/tests/} display off with env file" {
-    export BASH_FRAMEWORK_INITIALIZED=0  __bash_framework_envFile="${BATS_TEST_DIRNAME}/data/Log.off.env" 
+    export BASH_FRAMEWORK_INITIALIZED=0  __BASH_FRAMEWORK_ENV_FILEPATH="${BATS_TEST_DIRNAME}/data/Log.off.env" 
     source "$(cd "${BATS_TEST_DIRNAME}/../.." && pwd)/bash-framework/_bootstrap.sh" || exit 1
     assertDisplayLogs ${__LEVEL_OFF}
 }

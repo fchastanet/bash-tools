@@ -13,10 +13,11 @@ generateShDoc() {
   local basename="${file##*/}"
   local basenameNoExtension="${basename%.*}"
 
-  cd "${currentDir}"
+  cd "${currentDir}" || exit 1
   echo "generate markdown doc for ${relativeFile} in doc/${basenameNoExtension}.md"
 
-  local doc=$("./vendor/fchastanet.tomdoc.sh/tomdoc.sh" "${relativeFile}")
+  local doc
+  doc="$("./vendor/fchastanet.tomdoc.sh/tomdoc.sh" "${relativeFile}")"
   if [[ -n "${doc}" ]]; then
     echo "${doc}" > "${currentDir}/doc/${basenameNoExtension}.md"
 
@@ -31,6 +32,7 @@ generateShDoc() {
 export -f generateShDoc
 
 mkdir -p "${CURRENT_DIR}/doc"
-
-find "${CURRENT_DIR}/bash-framework" -name "*.sh" -exec bash -c "generateShDoc '{}' '${CURRENT_DIR}' '${INDEX_FILE}'" \;
+declare -a cmd
+cmd=(generateShDoc '{}' "${CURRENT_DIR}" "${INDEX_FILE}")
+find "${CURRENT_DIR}/bash-framework" -name "*.sh" -exec bash -c "${cmd[*]}" \;
 

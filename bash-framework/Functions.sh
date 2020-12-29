@@ -153,12 +153,13 @@ Functions::loadConf() {
     # shellcheck source=/conf/dsn/default.local.env
     confFile="${HOME}/.bash-tools/${confFolder}/${conf}${extension}"
     if [ ! -f "${confFile}" ]; then
-      confFile="${__bash_framework_rootVendorPath}/conf/${confFolder}/${conf}${extension}"
+      confFile="${__BASH_FRAMEWORK_VENDOR_PATH:?}/conf/${confFolder}/${conf}${extension}"
     fi
   fi
   if [ ! -f "${confFile}" ]; then
     return 1
   fi
+  # shellcheck disable=SC1090
   source "${confFile}"
 }
 
@@ -178,11 +179,11 @@ Functions::getConfMergedList() {
     local confFolder="$1"
     local extension="${2:-.sh}"
     local indentStr="${3:-       - }"
-    DEFAULT_CONF_DIR="${__bash_framework_rootVendorPath}/conf/${confFolder}"
+    DEFAULT_CONF_DIR="${__BASH_FRAMEWORK_VENDOR_PATH:?}/conf/${confFolder}"
     HOME_CONF_DIR="${HOME}/.bash-tools/${confFolder}"
     listFiles() {
         [[ -d "$1" ]] &&
-            (cd "$1" && find . -type f -name \*${extension} | sed "s/\.[^.]*$//g" | sed 's#^./##g' | sed "s/^/${indentStr}/")
+            (cd "$1" && find . -type f -name \*"${extension}" | sed "s/\.[^.]*$//g" | sed 's#^./##g' | sed "s/^/${indentStr}/")
     }
     (
         listFiles "${DEFAULT_CONF_DIR}"
@@ -197,7 +198,7 @@ Functions::getConfMergedList() {
 #
 Functions::trapAdd() {
     local trapAddCmd="$1" 
-    shift || Log::fatal "${FUNCNAME} usage error"
+    shift || Log::fatal "${FUNCNAME[0]} usage error"
     # helper fn to get existing trap command from output
     # of trap -p
     extract_trap_cmd() { printf '%s\n' "$3"; }

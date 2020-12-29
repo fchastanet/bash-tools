@@ -2,7 +2,7 @@
 
 # load bash-framework
 CURRENT_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
-# shellcheck source=../bash-framework/_bootstrap.sh
+# shellcheck source=/bash-framework/_bootstrap.sh
 source "$( cd "${CURRENT_DIR}/.." && pwd )/bash-framework/_bootstrap.sh"
 
 import bash-framework/UI
@@ -67,7 +67,7 @@ case $1 in
 esac
 shift
 done
-shift $(expr $OPTIND - 1)
+shift $(( OPTIND - 1 ))
 
 newName="$1"
 shift || true
