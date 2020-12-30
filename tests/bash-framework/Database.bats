@@ -116,7 +116,6 @@ teardown() {
     [ "${dbFromInstance['DSN_FILE']}" = "/tmp/home/.bash-tools/dsn/dsn_valid.env" ]
     [[ ${dbFromInstance['AUTH_FILE']} = /tmp/mysql.* ]]
     [ -f "${dbFromInstance['AUTH_FILE']}" ]
-    [[ "${dbFromInstance["DEFAULT_QUERY_OPTIONS"]}" = "-s --skip-column-names" ]]
     [[ "${dbFromInstance['QUERY_OPTIONS']}" = "-s --skip-column-names" ]]
     [ "$(cat "${dbFromInstance['AUTH_FILE']}")" = "$(cat "${BATS_TEST_DIRNAME}/data/mysql_auth_file.cnf")" ]
 }

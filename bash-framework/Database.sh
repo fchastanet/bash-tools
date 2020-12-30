@@ -53,9 +53,8 @@ Database::newInstance() {
   # some of those values can be overridden using the dsn file
   instanceNewInstance['OPTIONS']="${MYSQL_OPTIONS:---default-character-set=utf8}"
   instanceNewInstance['SSL_OPTIONS']="${MYSQL_SSL_OPTIONS:---ssl-mode=DISABLED}"
-  instanceNewInstance['DEFAULT_QUERY_OPTIONS']="${MYSQL_DEFAULT_QUERY_OPTIONS:--s --skip-column-names}"
-  instanceNewInstance['QUERY_OPTIONS']="${instanceNewInstance['DEFAULT_QUERY_OPTIONS']:-}"
-  instanceNewInstance['DUMP_OPTIONS']="${MYSQL_DUMP_OPTIONS:---default-character-set=utf8 --compress --compact --hex-blob --routines --triggers --single-transaction --set-gtid-purged=OFF --column-statistics=0} ${instanceNewInstance['SSL_OPTIONS']}"
+  instanceNewInstance['QUERY_OPTIONS']="${MYSQL_QUERY_OPTIONS:--s --skip-column-names}"
+  instanceNewInstance['DUMP_OPTIONS']="${MYSQL_DUMP_OPTIONS:---default-character-set=utf8 --compress --compact --hex-blob --routines --triggers --single-transaction --set-gtid-purged=OFF --column-statistics=0 ${instanceNewInstance['SSL_OPTIONS']}}"
   
   instanceNewInstance['INITIALIZED']=1
 }
