@@ -29,7 +29,6 @@ Database::newInstance() {
   instanceNewInstance['DSN_FILE']=""
 
   # check dsn file
-  Database::getAbsoluteDsnFile "${dsn}"
   DSN_FILE="$(Database::getAbsoluteDsnFile "${dsn}")" || exit 1
   Database::checkDsnFile "${DSN_FILE}"
   instanceNewInstance['DSN_FILE']="${DSN_FILE}"
@@ -76,7 +75,7 @@ Database::getAbsoluteDsnFile() {
   fi
   
   # relative to where script is executed
-  DSN_FILE="$(readlink -fe "${__BASH_FRAMEWORK_CALLING_SCRIPT}/${dsn}")"
+  DSN_FILE="$(readlink -fe "${__BASH_FRAMEWORK_CALLING_SCRIPT}/${dsn}" || echo "")"
   if [ -f "${DSN_FILE}" ]; then
     echo "${DSN_FILE}"
     return 0
