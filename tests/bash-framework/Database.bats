@@ -127,7 +127,6 @@ teardown() {
     Database::newInstance dbFromInstance "dsn_valid"
     status=$?
     [ "$status" -eq 0 ]
-    run Database::authFile dbFromInstance
 
     [ "$(cat "${dbFromInstance['AUTH_FILE']}")" = "$(cat "${BATS_TEST_DIRNAME}/data/mysql_auth_file.cnf")" ]
 }

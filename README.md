@@ -210,8 +210,9 @@ Description: easy connection to docker container
 Command: cli [-h|--help] prints this help and exits
 Command: cli [<container>] [user] [command]
 
-    <container> : container should be one of these values : express_1
-        if not provided, it will load the container specified in default configuration
+    <container> : container should be one of these values (provided by 'docker ps'): 
+        webserver,mysql,php-fpm,redis,mailhog,mysql8,apache2,redis,mailhog
+        if not provided, it will load the container specified in default configuration (project-apache2)
 
 examples:
     to connect to mysql container in bash mode with user mysql

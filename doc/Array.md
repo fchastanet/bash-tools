@@ -12,7 +12,7 @@ check if an element is contained in an array
 **Examples**:
 
 ```shell
-  Array::contains "$libPath" "${__bash_framework__importedFiles[@]}"
+  Array::contains "$libPath" "${__BASH_FRAMEWORK_IMPORTED_FILES[@]}"
 ```
 
 Returns 0 if found, 1 otherwise

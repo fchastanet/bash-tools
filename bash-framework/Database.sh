@@ -23,11 +23,7 @@ Database::newInstance() {
   if [[ "${instanceNewInstance['INITIALIZED']:-0}" == "1" ]]; then
     return
   fi
-  instanceNewInstance['OPTIONS']="${MYSQL_OPTIONS:---default-character-set=utf8}"
-  instanceNewInstance['SSL_OPTIONS']="${MYSQL_SSL_OPTIONS:---ssl-mode=DISABLED}"
-  instanceNewInstance['DEFAULT_QUERY_OPTIONS']="${MYSQL_DEFAULT_QUERY_OPTIONS:--s --skip-column-names}"
-  instanceNewInstance['QUERY_OPTIONS']="${instanceNewInstance['DEFAULT_QUERY_OPTIONS']:-}"
-  instanceNewInstance['DUMP_OPTIONS']="${MYSQL_DUMP_OPTIONS:---default-character-set=utf8 --compress --compact --hex-blob --routines --triggers --single-transaction --set-gtid-purged=OFF --column-statistics=0} ${instanceNewInstance['SSL_OPTIONS']}"
+  
   # final auth file generated from dns file
   instanceNewInstance['AUTH_FILE']=""
   instanceNewInstance['DSN_FILE']=""
@@ -35,35 +31,72 @@ Database::newInstance() {
   # check dsn file
   DSN_FILE="$(Database::getAbsoluteDsnFile "${dsn}")" || exit 1
   Database::checkDsnFile "${DSN_FILE}"
-
   instanceNewInstance['DSN_FILE']="${DSN_FILE}"
-  Database::authFile instanceNewInstance
+
+  # shellcheck source=/conf/dsn/default.local.env
+  # shellcheck disable=SC1091
+  source "${instanceNewInstance['DSN_FILE']}"
+  
+  # generate authfile for easy authentication
+  # shellcheck disable=SC2064
+  instanceNewInstance['AUTH_FILE']=$(mktemp -p "${TMPDIR:-/tmp}" -t "mysql.XXXXXXXXXXXX")
+  (
+      echo "[client]"
+      echo "user = ${USER}"
+      echo "password = ${PASSWORD}"
+      echo "host = ${HOSTNAME}"
+      echo "port = ${PORT}"
+  ) > "${instanceNewInstance['AUTH_FILE']}"
+  # shellcheck disable=SC2064
+  Functions::trapAdd "rm -f \"${instanceNewInstance['AUTH_FILE']}\" 2>/dev/null || true" ERR EXIT
+
+  # some of those values can be overridden using the dsn file
+  instanceNewInstance['OPTIONS']="${MYSQL_OPTIONS:---default-character-set=utf8}"
+  instanceNewInstance['SSL_OPTIONS']="${MYSQL_SSL_OPTIONS:---ssl-mode=DISABLED}"
+  instanceNewInstance['DEFAULT_QUERY_OPTIONS']="${MYSQL_DEFAULT_QUERY_OPTIONS:--s --skip-column-names}"
+  instanceNewInstance['QUERY_OPTIONS']="${instanceNewInstance['DEFAULT_QUERY_OPTIONS']:-}"
+  instanceNewInstance['DUMP_OPTIONS']="${MYSQL_DUMP_OPTIONS:---default-character-set=utf8 --compress --compact --hex-blob --routines --triggers --single-transaction --set-gtid-purged=OFF --column-statistics=0} ${instanceNewInstance['SSL_OPTIONS']}"
+  
   instanceNewInstance['INITIALIZED']=1
 }
 
-# Public: get absolute dsn file from dsn name dedcued using thes rules
-#   * using absolute/relative file
+# Public: get absolute dsn file from dsn name deduced using these rules
+#   * from absolute file
+#   * relative to where script is executed
 #   * from home/.bash-tools/dsn folder
 #   * from framework conf/dsn folder
 # Returns absolute dsn filename
 Database::getAbsoluteDsnFile() {
   local dsn="$1"
-  # load dsn from home folder, then bash framework folder, then absolute file
+  
+  # load dsn from absolute file, then home folder, then bash framework conf folder
   if [[ "${dsn}" == */* ]]; then
     # file contains /, consider it as absolute filename
     echo "${dsn}"
-  else
-    # shellcheck source=/conf/dsn/default.local.env
-    DSN_FILE="$(Database::getHomeConfDsnFolder)/${dsn}.env"
-    if [ ! -f "${DSN_FILE}" ]; then
-      DSN_FILE="$(Database::getDefaultConfDsnFolder)/${dsn}.env"
-      if [ ! -f "${DSN_FILE}" ]; then
-        Log::displayError "dsn file '${dsn}' not found"
-        return 1    
-      fi
-    fi
-    echo "${DSN_FILE}"
+    return 0
   fi
+  
+  # relative to where script is executed
+  if [[ -f "${__BASH_FRAMEWORK_CALLING_SCRIPT}/${dsn}" ]]; then
+    echo "${__BASH_FRAMEWORK_CALLING_SCRIPT}/${dsn}"
+    return 0
+  fi
+
+  # shellcheck source=/conf/dsn/default.local.env
+  DSN_FILE="$(Database::getHomeConfDsnFolder)/${dsn}.env"
+  if [ -f "${DSN_FILE}" ]; then
+    echo "${DSN_FILE}"
+    return 0
+  fi
+  DSN_FILE="$(Database::getDefaultConfDsnFolder)/${dsn}.env"
+  if [ -f "${DSN_FILE}" ]; then
+    echo "${DSN_FILE}"
+    return 0
+  fi
+
+  # file not found
+  Log::displayError "dsn file '${dsn}' not found"
+  return 1    
 }
 
 # Internal: check if dsn file has all the mandatory variables set
@@ -160,33 +193,6 @@ Database::setQueryOptions() {
   local -n instanceSetQueryOptions=$1
   # shellcheck disable=SC2034
   instanceSetQueryOptions['QUERY_OPTIONS']="$2"
-}
-
-# Internal: generate temp file for easy authentication
-#
-# **Arguments**:
-# * $1 (passed by reference) database instance to use
-Database::authFile() {
-  local -nx instanceAuthFile=$1
-
-  if [[ -n "${instanceAuthFile['AUTH_FILE']}" ]]; then
-    return
-  fi
-  # shellcheck disable=SC2064
-  instanceAuthFile['AUTH_FILE']=$(mktemp -p "${TMPDIR:-/tmp}" -t "mysql.XXXXXXXXXXXX")
-  (
-      # shellcheck source=/conf/dsn/default.local.env
-      # shellcheck disable=SC1091
-      source "${instanceAuthFile['DSN_FILE']}"
-      echo "[client]"
-      echo "user = ${USER}"
-      echo "password = ${PASSWORD}"
-      echo "host = ${HOSTNAME}"
-      echo "port = ${PORT}"
-  ) > "${instanceAuthFile['AUTH_FILE']}"
-  # shellcheck disable=SC2064
-  Functions::trapAdd "rm -f \"${instanceAuthFile['AUTH_FILE']}\" 2>/dev/null || true" ERR EXIT
-  
 }
 
 # Public: check if given database exists

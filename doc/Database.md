@@ -20,8 +20,9 @@ Returns immediately if the instance is already initialized
 # function `Database::getAbsoluteDsnFile`
 > ***Public***
 
-get absolute dsn file from dsn name dedcued using thes rules
-    * using absolute/relative file
+get absolute dsn file from dsn name deduced using these rules
+    * from absolute file
+    * relative to where script is executed
     * from home/.bash-tools/dsn folder
     * from framework conf/dsn folder
  Returns absolute dsn filename
@@ -68,13 +69,6 @@ set the general options to use on mysql command to query the database
 **Arguments**:
 * $1 - (passed by reference) database instance to use
 * $2 - options list
-# function `Database::authFile`
-> ***Internal***
-
-generate temp file for easy authentication
-
-**Arguments**:
-* $1 (passed by reference) database instance to use
 # function `Database::ifDbExists`
 > ***Public***
 

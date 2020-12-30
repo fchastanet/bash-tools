@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-declare -ag __bash_framework__importedFiles
+declare -ag __BASH_FRAMEWORK_IMPORTED_FILES
 
 # Public: exits with message if current user is not the expected one
 #
@@ -99,7 +99,7 @@ Framework::SourceFile() {
   then
     ## if already imported let's return
     # if declare -f "Array::contains" &> /dev/null &&
-    if [[ "${__bash_framework__allowFileReloading-}" != true && -n "${__bash_framework__importedFiles[*]}" ]] && Array::contains "$libPath" "${__bash_framework__importedFiles[@]}"
+    if [[ "${__bash_framework__allowFileReloading-}" != true && -n "${__BASH_FRAMEWORK_IMPORTED_FILES[*]}" ]] && Array::contains "$libPath" "${__BASH_FRAMEWORK_IMPORTED_FILES[@]}"
     then
       # DEBUG subject=level3 Log "File previously imported: ${libPath}"
       return 0
@@ -107,7 +107,7 @@ Framework::SourceFile() {
 
     # DEBUG subject=level2 Log "Importing: $libPath"
 
-    __bash_framework__importedFiles+=( "$libPath" )
+    __BASH_FRAMEWORK_IMPORTED_FILES+=( "$libPath" )
     Framework::WrapSource "$libPath" "$@"
 
   else

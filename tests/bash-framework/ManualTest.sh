@@ -4,7 +4,6 @@
 
 BATS_TEST_DIRNAME=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 declare -g vendorDir="$( cd "${BATS_TEST_DIRNAME}/../../vendor" && pwd )"
-declare -g toolsDir="$( cd "${BATS_TEST_DIRNAME}/../../bin" && pwd )"
 
 source "$(cd "${BATS_TEST_DIRNAME}/../.." && pwd)/bash-framework/_bootstrap.sh" || exit 1
 import bash-framework/Database
