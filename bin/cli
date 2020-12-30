@@ -26,7 +26,7 @@ containers=$(docker ps --format '{{.Names}}'| sed -E 's/[^-]+-(.*)/\1/'| paste -
 local profilesList=""
 Functions::loadConf "cliProfiles" "default"
 
-profilesList="$(Functions::getConfMergedList "cliProfiles" ".sh" || true)"
+profilesList="$(Functions::getConfMergedList "cliProfiles" "sh" || true)"
 cat << EOF
 Description: easy connection to docker container
 

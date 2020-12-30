@@ -131,7 +131,8 @@ teardown() {
     touch /tmp/home/.bash-tools/dsn/dsn_invalid_port.env
     touch /tmp/home/.bash-tools/dsn/otherInvalidExt.ext
     touch /tmp/home/.bash-tools/dsn/otherInvalidExt2.sh
-    output="$(HOME=/tmp/home Functions::getConfMergedList "dsn" ".env")"
+    export HOME=/tmp/home
+    run Functions::getConfMergedList "dsn" "env"
     [ "$(cat "${BATS_TEST_DIRNAME}/data/database.dsnList1")" = "${output}" ]
 }
 

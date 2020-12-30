@@ -32,8 +32,8 @@ Functions::checkCommandExists pv "sudo apt-get install -y pv"
 # Usage info
 showHelp() {
 local dsnList queriesList 
-dsnList="$(Functions::getConfMergedList "dsn" ".env")"
-queriesList="$(Functions::getConfMergedList "dbQueries" ".sql" || true)"
+dsnList="$(Functions::getConfMergedList "dsn" "env")"
+queriesList="$(Functions::getConfMergedList "dbQueries" "sql" || true)"
 cat << EOF
 Description: Execute a query on multiple databases in order to generate a report, query can be parallelized on multiple databases
 

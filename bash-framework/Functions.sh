@@ -181,13 +181,10 @@ Functions::getConfMergedList() {
     local indentStr="${3:-       - }"
     DEFAULT_CONF_DIR="${__BASH_FRAMEWORK_VENDOR_PATH:?}/conf/${confFolder}"
     HOME_CONF_DIR="${HOME}/.bash-tools/${confFolder}"
-    listFiles() {
-        [[ -d "$1" ]] &&
-            (cd "$1" && find . -type f -name \*"${extension}" | sed "s/\.[^.]*$//g" | sed 's#^./##g' | sed "s/^/${indentStr}/")
-    }
+    
     (
-        listFiles "${DEFAULT_CONF_DIR}"
-        listFiles "${HOME_CONF_DIR}"
+        Functions::getList "${DEFAULT_CONF_DIR}" "${extension}" "${indentStr}"
+        Functions::getList "${HOME_CONF_DIR}" "${extension}" "${indentStr}"
     ) | sort | uniq
 }
 
