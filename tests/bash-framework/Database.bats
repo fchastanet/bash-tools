@@ -91,6 +91,36 @@ teardown() {
     [ "$status" -eq 1 ]
 }
 
+@test "${BATS_TEST_FILENAME#/bash/tests/} Database::newInstance relative dsn file" {
+    local -A dbFromInstance
+    export HOME=/tmp/home 
+    Database::newInstance dbFromInstance "../../../../tests/bash-framework/data/dsn_valid_relative.env"
+    status=$?
+    [ "$status" -eq 0 ]
+    [ "${dbFromInstance['INITIALIZED']}" = "1" ]
+    [ "${dbFromInstance['OPTIONS']}" = "mysqlOptions" ]
+    [ "${dbFromInstance['SSL_OPTIONS']}" = "sslOptions" ]
+    [ "${dbFromInstance['QUERY_OPTIONS']}" = "queryOptions" ]
+    [ "${dbFromInstance['DUMP_OPTIONS']}" = "dumpOptions" ]
+    [ "${dbFromInstance['DSN_FILE']}" = "${BATS_TEST_DIRNAME}/data/dsn_valid_relative.env" ]
+    [ "$(grep 'user = ' "${dbFromInstance['AUTH_FILE']}")" = "user = relative" ]
+}
+
+@test "${BATS_TEST_FILENAME#/bash/tests/} Database::newInstance absolute dsn file" {
+    local -A dbFromInstance
+    export HOME=/tmp/home 
+    Database::newInstance dbFromInstance "${BATS_TEST_DIRNAME}/data/dsn_valid_absolute.env"
+    status=$?
+    [ "$status" -eq 0 ]
+    [ "${dbFromInstance['INITIALIZED']}" = "1" ]
+    [ "${dbFromInstance['OPTIONS']}" = "mysqlOptionsAbsolute" ]
+    [ "${dbFromInstance['SSL_OPTIONS']}" = "sslOptionsAbsolute" ]
+    [ "${dbFromInstance['QUERY_OPTIONS']}" = "queryOptionsAbsolute" ]
+    [ "${dbFromInstance['DUMP_OPTIONS']}" = "dumpOptionsAbsolute" ]
+    [ "${dbFromInstance['DSN_FILE']}" = "${BATS_TEST_DIRNAME}/data/dsn_valid_absolute.env" ]
+    [ "$(grep 'user = ' "${dbFromInstance['AUTH_FILE']}")" = "user = absolute" ]
+}
+
 @test "${BATS_TEST_FILENAME#/bash/tests/} Database::newInstance invalid dsn file" {
     local -A dbFromInstance
     run Database::newInstance dbFromInstance "dsn_missing_password"    

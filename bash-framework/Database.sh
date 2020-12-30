@@ -29,6 +29,7 @@ Database::newInstance() {
   instanceNewInstance['DSN_FILE']=""
 
   # check dsn file
+  Database::getAbsoluteDsnFile "${dsn}"
   DSN_FILE="$(Database::getAbsoluteDsnFile "${dsn}")" || exit 1
   Database::checkDsnFile "${DSN_FILE}"
   instanceNewInstance['DSN_FILE']="${DSN_FILE}"
@@ -67,17 +68,17 @@ Database::newInstance() {
 # Returns absolute dsn filename
 Database::getAbsoluteDsnFile() {
   local dsn="$1"
-  
   # load dsn from absolute file, then home folder, then bash framework conf folder
-  if [[ "${dsn}" == */* ]]; then
+  if [[ "${dsn}" =~ ^/.* ]]; then
     # file contains /, consider it as absolute filename
     echo "${dsn}"
     return 0
   fi
   
   # relative to where script is executed
-  if [[ -f "${__BASH_FRAMEWORK_CALLING_SCRIPT}/${dsn}" ]]; then
-    echo "${__BASH_FRAMEWORK_CALLING_SCRIPT}/${dsn}"
+  DSN_FILE="$(readlink -fe "${__BASH_FRAMEWORK_CALLING_SCRIPT}/${dsn}")"
+  if [ -f "${DSN_FILE}" ]; then
+    echo "${DSN_FILE}"
     return 0
   fi
 
