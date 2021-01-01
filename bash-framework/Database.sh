@@ -75,7 +75,7 @@ Database::getAbsoluteDsnFile() {
   fi
   
   # relative to where script is executed
-  DSN_FILE="$(readlink -fe "${__BASH_FRAMEWORK_CALLING_SCRIPT}/${dsn}" || echo "")"
+  DSN_FILE="$(realpath "${__BASH_FRAMEWORK_CALLING_SCRIPT}/${dsn}" || echo "")"
   if [ -f "${DSN_FILE}" ]; then
     echo "${DSN_FILE}"
     return 0
