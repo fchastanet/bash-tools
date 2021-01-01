@@ -181,7 +181,7 @@ Command: dbImportTable [-h|--help] prints this help and exits
 Command: dbImportTable <remoteDbName> <tableName> [<localDbName>] 
     [-d|--download-dump] [--force] [-a|--from-aws]
     [-t|--target-dsn dsn] [-f|--from-dsn dsn]
-    [-o|--collation-name utf8_general_ci] [-c|--character-set utf8]
+    [-c|--character-set utf8]
 
     download the remote table data and install data in local database (the schema should exists)
 
@@ -195,10 +195,14 @@ Command: dbImportTable <remoteDbName> <tableName> [<localDbName>]
         remoteDBName will represent the name of the file
         profile will be calculated against the dump itself
     -d|--download-dump   force remote db dump (default: use already downloaded dump in /home/vagrant/.bash-tools/dbImportDumps if available)
-    -o|--collation-name  change the collation name used during database creation (default value: collation name used by remote db)
     -c|--character-set   change the character set used during database creation (default value: character set used by remote db)
 
-    Aws s3 location       : s3://example.com/exports/
+    Aws s3 location       : s3://ck-dev-frsa-devsql/exports/
+
+List of available dsn: 
+       - default.local
+       - default.remote
+       - localhost-root
 ```
 
 ### 1.3.5. bin/cli

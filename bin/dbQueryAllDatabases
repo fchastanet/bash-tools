@@ -104,6 +104,8 @@ done
 # additional arguments
 shift $(( OPTIND - 1 ))
 
+# if -q option provided (QUERY =1), queryFile is supposed to be a file, 
+# else it is a query string by default
 queryFile=$1
 if [[ -z "${queryFile}" ]]; then
     if [[ "${QUERY}" = "0" ]]; then
@@ -112,6 +114,7 @@ if [[ -z "${queryFile}" ]]; then
     Log::fatal "You must provide the sql string to be executed"
 fi
 
+# query contains the sql from queryFile or from query string if -q option is provided
 declare query="${queryFile}"
 if [[ "${QUERY}" = "0" ]]; then
     if [[ ! -f "${queryFile}" ]]; then
@@ -119,7 +122,6 @@ if [[ "${QUERY}" = "0" ]]; then
     fi
     query="$(cat "${queryFile}")"
 fi
-
 
 if ! [[ ${JOBS_NUMBER} =~ ^[0-9]+$ ]] ; then
    Log::fatal "number of jobs is incorrect"

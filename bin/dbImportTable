@@ -20,7 +20,6 @@ FROM_AWS=0
 DOWNLOAD_DUMP=0
 REMOTE_DB=""
 LOCAL_DB=""
-COLLATION_NAME=""
 CHARACTER_SET=""
 TABLE=""
 FROM_DSN=""
@@ -33,10 +32,13 @@ DB_IMPORT_DUMP_DIR=${DB_IMPORT_DUMP_DIR%/}
 # check dependencies
 Functions::checkCommandExists mysql "sudo apt-get install mysql-client"
 Functions::checkCommandExists mysqlshow "sudo apt-get install mysql-client"
-Functions::checkCommandExists mysqldump "sudo apt-get install mysql-client"# check dependencies
+Functions::checkCommandExists mysqldump "sudo apt-get install mysql-client"
 Functions::checkCommandExists pv "sudo apt-get install -y pv"
 
 showHelp() {
+local dsnList=""
+dsnList="$(Functions::getConfMergedList "dsn" "env")"
+
 cat << EOF
 Description: Import remote db table into local db
 
@@ -44,7 +46,7 @@ Command: ${SCRIPT_NAME} [-h|--help] prints this help and exits
 Command: ${SCRIPT_NAME} <remoteDbName> <tableName> [<localDbName>] 
     [-d|--download-dump] [--force] [-a|--from-aws]
     [-t|--target-dsn dsn] [-f|--from-dsn dsn]
-    [-o|--collation-name utf8_general_ci] [-c|--character-set utf8]
+    [-c|--character-set utf8]
 
     download the remote table data and install data in local database (the schema should exists)
 
@@ -58,10 +60,12 @@ Command: ${SCRIPT_NAME} <remoteDbName> <tableName> [<localDbName>]
         remoteDBName will represent the name of the file
         profile will be calculated against the dump itself
     -d|--download-dump   force remote db dump (default: use already downloaded dump in ${DB_IMPORT_DUMP_DIR} if available)
-    -o|--collation-name  change the collation name used during database creation (default value: collation name used by remote db)
     -c|--character-set   change the character set used during database creation (default value: character set used by remote db)
 
     Aws s3 location       : ${S3_BASE_URL}
+
+List of available dsn: 
+${dsnList}
 EOF
 }
 
@@ -70,7 +74,7 @@ EOF
 # -o is for short options like -h
 # -l is for long options with double dash like --help
 # the comma separates different long options
-options=$(getopt -l help,force,target-dsn:,from-dsn:,from-aws,download-dump,collation-name:,character-set: -o aht:f:dc:o: -- "$@" 2> /dev/null) || {
+options=$(getopt -l help,force,target-dsn:,from-dsn:,from-aws,download-dump,character-set: -o aht:f:dc: -- "$@" 2> /dev/null) || {
     showHelp
     Log::fatal "invalid options specified"
 }
@@ -100,10 +104,6 @@ case $1 in
     ;;
 -d|--download-dump)
     DOWNLOAD_DUMP=1
-    ;;
--o|--collation-name)
-    shift
-    COLLATION_NAME="$1"
     ;;
 -c|--character-set)
     shift
@@ -176,11 +176,14 @@ fi
 
 # create db instances
 declare -Agx dbRemoteInstance dbLocalInstance
+
 Database::newInstance dbTargetDatabase "${TARGET_DSN}"
-Database::setOptions dbTargetDatabase "${MYSQL_OPTIONS} --connect-timeout=5"
+# shellcheck disable=SC2154
+Database::setOptions dbTargetDatabase "${dbTargetDatabase[OPTIONS]} --connect-timeout=5"
 if [[ "${FROM_AWS}" = "0" ]]; then
     Database::newInstance dbFromInstance "${FROM_DSN}"
-    Database::setOptions dbFromInstance "${MYSQL_OPTIONS} --connect-timeout=5"
+    # shellcheck disable=SC2154
+    Database::setOptions dbFromInstance "${dbFromInstance[OPTIONS]} --connect-timeout=5"
 fi
 
 # check if local db exists
@@ -251,12 +254,6 @@ if [[ "${DOWNLOAD_DUMP}" = "1" ]]; then
         ) > "${REMOTE_DB_DUMP_TEMP_FILE}"
         Log::displayInfo "Table dump extracted : ${REMOTE_DB_DUMP_TEMP_FILE}"
     else
-        # get remote db collation name
-        if [[ -z "${COLLATION_NAME}" ]]; then
-            COLLATION_NAME=$(Database::query dbRemoteInstance \
-                "SELECT default_collation_name FROM information_schema.SCHEMATA WHERE schema_name = \"${REMOTE_DB}\";" "information_schema")
-        fi
-
         # get remote db character set
         if [[ -z "${CHARACTER_SET}" ]]; then
             CHARACTER_SET=$(Database::query dbRemoteInstance \
@@ -293,10 +290,6 @@ if [[ "${DOWNLOAD_DUMP}" = "1" ]]; then
             "${REMOTE_DB_DUMP_TEMP_FILE}"
     fi
     Log::displayDebug "Dump done.";
-else
-    if [[ -z "${COLLATION_NAME}" ]]; then
-        COLLATION_NAME="utf8_general_ci"
-    fi
 fi
 
 Log::displayDebug "import remote to local from file ${REMOTE_DB_DUMP_TEMP_FILE}"

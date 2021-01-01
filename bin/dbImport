@@ -42,8 +42,6 @@ showHelp() {
 local profilesList=""
 local dsnList=""
 dsnList="$(Functions::getConfMergedList "dsn" "env")"
-
-
 profilesList="$(Functions::getConfMergedList "dbImportProfiles" "sh" || true)"
 
 cat << EOF
