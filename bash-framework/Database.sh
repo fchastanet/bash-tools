@@ -7,7 +7,7 @@ import bash-framework/Log
 # **Arguments**:
 # * $1 - (passed by reference) database instance to create
 # * $2 - dsn profile - load the dsn.env profile 
-#     absolute file is deduced using rules defined in Database::getAbsoluteDsnFile
+#     absolute file is deduced using rules defined in Functions::getAbsoluteConfFile
 #
 # **Example:**
 # ```shell
@@ -29,7 +29,7 @@ Database::newInstance() {
   instanceNewInstance['DSN_FILE']=""
 
   # check dsn file
-  DSN_FILE="$(Database::getAbsoluteDsnFile "${dsn}")" || exit 1
+  DSN_FILE="$(Functions::getAbsoluteConfFile "dsn" "${dsn}" "env")" || exit 1
   Database::checkDsnFile "${DSN_FILE}"
   instanceNewInstance['DSN_FILE']="${DSN_FILE}"
 
@@ -57,45 +57,6 @@ Database::newInstance() {
   instanceNewInstance['DUMP_OPTIONS']="${MYSQL_DUMP_OPTIONS:---default-character-set=utf8 --compress --compact --hex-blob --routines --triggers --single-transaction --set-gtid-purged=OFF --column-statistics=0 ${instanceNewInstance['SSL_OPTIONS']}}"
   
   instanceNewInstance['INITIALIZED']=1
-}
-
-# Public: get absolute dsn file from dsn name deduced using these rules
-#   * from absolute file
-#   * relative to where script is executed
-#   * from home/.bash-tools/dsn folder
-#   * from framework conf/dsn folder
-# Returns absolute dsn filename
-Database::getAbsoluteDsnFile() {
-  local dsn="$1"
-  # load dsn from absolute file, then home folder, then bash framework conf folder
-  if [[ "${dsn}" =~ ^/.* ]]; then
-    # file contains /, consider it as absolute filename
-    echo "${dsn}"
-    return 0
-  fi
-  
-  # relative to where script is executed
-  DSN_FILE="$(realpath "${__BASH_FRAMEWORK_CALLING_SCRIPT}/${dsn}" || echo "")"
-  if [ -f "${DSN_FILE}" ]; then
-    echo "${DSN_FILE}"
-    return 0
-  fi
-
-  # shellcheck source=/conf/dsn/default.local.env
-  DSN_FILE="$(Database::getHomeConfDsnFolder)/${dsn}.env"
-  if [ -f "${DSN_FILE}" ]; then
-    echo "${DSN_FILE}"
-    return 0
-  fi
-  DSN_FILE="$(Database::getDefaultConfDsnFolder)/${dsn}.env"
-  if [ -f "${DSN_FILE}" ]; then
-    echo "${DSN_FILE}"
-    return 0
-  fi
-
-  # file not found
-  Log::displayError "dsn file '${dsn}' not found"
-  return 1    
 }
 
 # Internal: check if dsn file has all the mandatory variables set
@@ -144,18 +105,6 @@ Database::checkDsnFile() {
       return 1
     fi
   )
-}
-
-# Public
-# Returns the default conf dsn folder
-Database::getDefaultConfDsnFolder() {
-  echo "${__BASH_FRAMEWORK_VENDOR_PATH:?}/conf/dsn"
-}
-
-# Public
-# Returns the overriden conf dsn folder in user home folder 
-Database::getHomeConfDsnFolder() {
-  echo "${HOME}/.bash-tools/dsn"
 }
 
 # Public: set the general options to use on mysql command to query the database

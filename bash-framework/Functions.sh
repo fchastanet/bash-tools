@@ -111,7 +111,7 @@ Functions::quote() {
 #
 # **Arguments**:
 # * $1 the directory to list
-# * $2 the extension (eg: sh)
+# * $2 the extension (default: sh)
 # * $3 the indentation ('       - ' by default) can be any string compatible with sed not containing any /
 # **Output**: list of files without extension/directory
 # eg:
@@ -119,12 +119,17 @@ Functions::quote() {
 #       - default.remote
 #       - localhost-root
 Functions::getList() {
-    DIR="$1"
-    EXT="$2"
-    INDENT_STR="${3:-       - }"
+    local DIR="$1"
+    local EXT="${2:-sh}"
+    local INDENT_STR="${3:-       - }"
+
+    local extension="${EXT}"
+    if  [[ -n "${EXT}" && "${EXT:0:1}" != "." ]]; then
+      extension=".${EXT}"
+    fi
 
     (
-        cd "${DIR}" && find . -type f -name "*.${EXT}" | sort | sed 's#^./##g' | sed "s/\.${EXT}\$//g" | sed "s/^/${INDENT_STR}/"
+        cd "${DIR}" && find . -type f -name "*${extension}" | sort | sed 's#^./##g' | sed "s/\.${EXT}\$//g" | sed "s/^/${INDENT_STR}/"
     )
 }
 
@@ -136,14 +141,18 @@ Functions::getList() {
 # **Arguments**:
 # * $1 confFolder to use below bash-tools conf folder
 # * $2 conf file to use without extension
-# * $3 file extension to use (default: .sh)
+# * $3 file extension to use (default: sh)
 #
 # Returns 1 if file not found or error during file loading
 Functions::loadConf() {
   local confFolder="$1"
   local conf="$2"
-  local extension="${3:-.sh}"
+  local extension="${3:-sh}"
   local confFile=""
+
+  if  [[ -n "${extension}" && "${extension:0:1}" != "." ]]; then
+    extension=".${extension}"
+  fi
 
   # if conf is absolute
   if [[ "${conf}" == /* ]]; then
@@ -167,7 +176,7 @@ Functions::loadConf() {
 # and those overriden in $HOME/.bash-tools/<conf> folder
 # **Arguments**:
 # * $1 confFolder the directory name (not the path) to list
-# * $2 the extension (.sh by default)
+# * $2 the extension (sh by default)
 # * $3 the indentation ('       - ' by default) can be any string compatible with sed not containing any /
 #
 # **Output**: list of files without extension/directory
@@ -177,8 +186,9 @@ Functions::loadConf() {
 #       - localhost-root
 Functions::getConfMergedList() {
     local confFolder="$1"
-    local extension="${2:-.sh}"
+    local extension="${2:-sh}"
     local indentStr="${3:-       - }"
+    
     DEFAULT_CONF_DIR="${__BASH_FRAMEWORK_VENDOR_PATH:?}/conf/${confFolder}"
     HOME_CONF_DIR="${HOME}/.bash-tools/${confFolder}"
     
@@ -187,6 +197,62 @@ Functions::getConfMergedList() {
         Functions::getList "${HOME_CONF_DIR}" "${extension}" "${indentStr}"
     ) | sort | uniq
 }
+
+# Public: get absolute conf file from specified conf folder deduced using these rules
+#   * from absolute file (ignores <confFolder> and <extension>)
+#   * relative to where script is executed (ignores <confFolder> and <extension>)
+#   * from home/.bash-tools/<confFolder>
+#   * from framework conf/<confFolder>
+#
+# **Arguments**:
+# * $1 confFolder the directory name (not the path) to list
+# * $2 conf file to use without extension
+# * $3 the extension (sh by default)
+#
+# Returns absolute conf filename
+Functions::getAbsoluteConfFile() {
+  local confFolder="$1"
+  local conf="$2"
+  local extension="${3-.sh}"
+  local absoluteConfFile=""
+
+  # load conf from absolute file, then home folder, then bash framework conf folder
+  absoluteConfFile="${conf}"
+  if [[ "${absoluteConfFile:0:1}" = "/" && -f "${absoluteConfFile}" ]]; then
+    # file contains /, consider it as absolute filename
+    echo "${absoluteConfFile}"
+    return 0
+  fi
+  
+  # relative to where script is executed
+  absoluteConfFile="$(realpath "${__BASH_FRAMEWORK_CALLING_SCRIPT}/${conf}" 2>/dev/null || echo "")"
+  if [ -f "${absoluteConfFile}" ]; then
+    echo "${absoluteConfFile}"
+    return 0
+  fi
+
+  # take extension into account
+  if  [[ -n "${extension}" && "${extension:0:1}" != "." ]]; then
+    extension=".${extension}"
+  fi
+
+  # shellcheck source=/conf/dsn/default.local.env
+  absoluteConfFile="${HOME}/.bash-tools/${confFolder}/${conf}${extension}"
+  if [ -f "${absoluteConfFile}" ]; then
+    echo "${absoluteConfFile}"
+    return 0
+  fi
+  absoluteConfFile="${__BASH_FRAMEWORK_VENDOR_PATH:?}/conf/${confFolder}/${conf}${extension}"
+  if [ -f "${absoluteConfFile}" ]; then
+    echo "${absoluteConfFile}"
+    return 0
+  fi
+
+  # file not found
+  Log::displayError "conf file '${conf}' not found"
+  return 1    
+}
+
 
 # appends a command to a trap
 #

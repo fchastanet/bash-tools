@@ -54,7 +54,7 @@ teardown() {
 
 @test "${BATS_TEST_FILENAME#/bash/tests/} dsn file not found" {
     run ${toolsDir}/dbImport -f notFound fromDb 2>&1
-    [[ "${output}" == *"ERROR - dsn file 'notFound' not found"* ]]
+    [[ "${output}" == *"ERROR - conf file 'notFound' not found"* ]]
 }
 
 @test "${BATS_TEST_FILENAME#/bash/tests/} remote db(fromDb) doesn't exist" {

@@ -136,6 +136,88 @@ teardown() {
     [ "$(cat "${BATS_TEST_DIRNAME}/data/database.dsnList1")" = "${output}" ]
 }
 
+@test "${BATS_TEST_FILENAME#/bash/tests/} Functions::getAbsoluteConfFile env file from home" {
+    touch /tmp/home/.bash-tools/dsn/dsn_invalid_port.env
+    export HOME=/tmp/home
+
+    run Functions::getAbsoluteConfFile "dsn" "dsn_invalid_port" "env"
+    [ "$status" -eq 0 ]
+    [ "/tmp/home/.bash-tools/dsn/dsn_invalid_port.env" = "${output}" ]
+}
+
+@test "${BATS_TEST_FILENAME#/bash/tests/} Functions::getAbsoluteConfFile sh file from home default extension" {
+    touch /tmp/home/.bash-tools/dsn/otherInvalidExt2.sh
+    export HOME=/tmp/home
+
+    run Functions::getAbsoluteConfFile "dsn" "otherInvalidExt2"
+    [ "$status" -eq 0 ]
+    [ "/tmp/home/.bash-tools/dsn/otherInvalidExt2.sh" = "${output}" ]
+}
+
+@test "${BATS_TEST_FILENAME#/bash/tests/} Functions::getAbsoluteConfFile file default in bash-framework conf folder" {
+    export HOME=/tmp/home
+
+    run Functions::getAbsoluteConfFile "dsn" "default.local" "env"
+    [ "$status" -eq 0 ]
+    [ "${FRAMEWORK_DIR}/conf/dsn/default.local.env" = "${output}" ]
+}
+
+@test "${BATS_TEST_FILENAME#/bash/tests/} Functions::getAbsoluteConfFile relative file" {
+    mkdir -p /tmp/home/.bash-tools/data
+    touch /tmp/home/.bash-tools/data/dsn_valid.env
+    export HOME=/tmp/home
+
+    run Functions::getAbsoluteConfFile "data" "../../../../tests/bash-framework/data/dsn_valid.env" "sh"
+
+    [ "$status" -eq 0 ]
+    [ "${BATS_TEST_DIRNAME}/data/dsn_valid.env" = "${output}" ]
+}
+
+@test "${BATS_TEST_FILENAME#/bash/tests/} Functions::getAbsoluteConfFile absolute file 1 (ignores confFolder and ext)" {
+    touch /tmp/home/.bash-tools/dsn/otherInvalidExt.ext
+    export HOME=/tmp/home
+
+    run Functions::getAbsoluteConfFile "data" "/tmp/home/.bash-tools/dsn/otherInvalidExt.ext" "sh"
+    [ "$status" -eq 0 ]
+    [ "/tmp/home/.bash-tools/dsn/otherInvalidExt.ext" = "${output}" ]
+}
+
+@test "${BATS_TEST_FILENAME#/bash/tests/} Functions::getAbsoluteConfFile absolute file 2 (ignores confFolder and ext)" {
+    touch /tmp/home/.bash-tools/dsn/dsn_invalid_port.sh
+    export HOME=/tmp/home
+
+    run Functions::getAbsoluteConfFile "data" "/tmp/home/.bash-tools/dsn/dsn_invalid_port.sh" "env"
+    [ "$status" -eq 0 ]
+    [ "/tmp/home/.bash-tools/dsn/dsn_invalid_port.sh" = "${output}" ]
+}
+
+@test "${BATS_TEST_FILENAME#/bash/tests/} Functions::getAbsoluteConfFile absolute file 3 (ignores confFolder and ext)" {
+    touch /tmp/home/.bash-tools/dsn/otherInvalidExt2.sh
+    export HOME=/tmp/home
+
+    run Functions::getAbsoluteConfFile "data" "/tmp/home/.bash-tools/dsn/otherInvalidExt2.sh" "env"
+    [ "$status" -eq 0 ]
+    [ "/tmp/home/.bash-tools/dsn/otherInvalidExt2.sh" = "${output}" ]
+}
+
+@test "${BATS_TEST_FILENAME#/bash/tests/} Functions::getAbsoluteConfFile file without extension" {
+    touch /tmp/home/.bash-tools/dsn/noExtension
+    export HOME=/tmp/home
+
+    run Functions::getAbsoluteConfFile "dsn" "noExtension" ""
+    [ "$status" -eq 0 ]
+    [ "/tmp/home/.bash-tools/dsn/noExtension" = "${output}" ]
+}
+
+@test "${BATS_TEST_FILENAME#/bash/tests/} Functions::getAbsoluteConfFile file not found" {
+    touch /tmp/home/.bash-tools/dsn/otherInvalidExt2.sh
+    export HOME=/tmp/home
+
+    run Functions::getAbsoluteConfFile "dsn" "invalidFile" "env"
+    [ "$status" -eq 1 ]
+    [[ "${output}" == *"conf file 'invalidFile' not found"* ]]
+}
+
 @test "${BATS_TEST_FILENAME#/bash/tests/} Functions::trapAdd" {
     trap 'echo "SIGUSR1 original" >> /tmp/home/trap' SIGUSR1
     Functions::trapAdd 'echo "SIGUSR1 overriden" >> /tmp/home/trap' SIGUSR1

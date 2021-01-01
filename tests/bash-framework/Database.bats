@@ -28,14 +28,6 @@ teardown() {
     [[ "${BASH_FRAMEWORK_INITIALIZED}" = "1" ]]
 }
 
-@test "${BATS_TEST_FILENAME#/bash/tests/} Database::getDefaultConfDsnFolder" {
-    [ "$(Database::getDefaultConfDsnFolder)" = "${__BASH_FRAMEWORK_VENDOR_PATH}/conf/dsn" ]
-}
-
-@test "${BATS_TEST_FILENAME#/bash/tests/} Database::getHomeConfDsnFolder" {
-    [ "$(HOME=/home Database::getHomeConfDsnFolder)" = "/home/.bash-tools/dsn" ]
-}
-
 @test "${BATS_TEST_FILENAME#/bash/tests/} Database::checkDsnFile file not found" {
     run Database::checkDsnFile "notfound" 2>&1
     [ "$status" -eq 1 ]

@@ -57,7 +57,7 @@ EOF
 loadDsn() {
     local dsn="$1"
     local dsnFile
-    dsnFile="$(Database::getAbsoluteDsnFile "${dsn}")"
+    dsnFile="$(Functions::getAbsoluteConfFile "dsn" "${dsn}" "env")"
     Database::checkDsnFile "${dsnFile}"
     # shellcheck source=/conf/dsn/default.local.env
     # shellcheck disable=SC1091
