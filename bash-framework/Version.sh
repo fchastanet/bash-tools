@@ -35,8 +35,7 @@ Version::checkMinimal() {
         if [[ "${result}" = "1" ]]; then
             Log::displayWarning "${commandName} version is ${version} greater than ${minimalVersion}, OK let's continue"
         elif [[ "${result}" = "2" ]]; then
-            Log::displayError "${commandName} minimal version is ${minimalVersion}, your version is ${version}"
-            exit 1
+            Log::fatal "${commandName} minimal version is ${minimalVersion}, your version is ${version}"
         fi
     }
 

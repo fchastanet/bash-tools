@@ -6,46 +6,156 @@ import bash-framework/Log
 #
 # **Arguments**:
 # * $1 - (passed by reference) database instance to create
-# * $2 - mysqlHostName
-# * $3 - mysqlHostPort
-# * $4 - mysqlHostUser
-# * $5 - mysqlHostPassword
+# * $2 - dsn profile - load the dsn.env profile 
+#     absolute file is deduced using rules defined in Database::getAbsoluteDsnFile
 #
 # **Example:**
 # ```shell
 # declare -Agx dbInstance
-# Database::newInstance dbInstance "${HOSTNAME}" "${PORT}" "${USER}" "${PASSWORD}"
+# Database::newInstance dbInstance "defaul.local"
 # ```
 #
 # Returns immediately if the instance is already initialized
 Database::newInstance() {
-  local -n instance=$1
-  local mysqlHostName="$2"
-  local mysqlHostPort="$3"
-  local mysqlUser="$4"
-  local mysqlPasswd="$5"
+  local -n instanceNewInstance=$1
+  local dsn="$2"
 
-  if [[ "${instance['INITIALIZED']:-0}" == "1" ]]; then
+  if [[ "${instanceNewInstance['INITIALIZED']:-0}" == "1" ]]; then
     return
   fi
-  instance['OPTIONS']="--default-character-set=utf8"
-  instance['SSL_OPTIONS']='--ssl-mode=DISABLED'
-  instance['DEFAULT_QUERY_OPTIONS']="-s --skip-column-names ${instance['SSL_OPTIONS']} "
-  instance['QUERY_OPTIONS']="${instance['DEFAULT_QUERY_OPTIONS']:-}"
-  instance['DUMP_OPTIONS']="--default-character-set=utf8 --compress --compact --hex-blob --routines --triggers --single-transaction --set-gtid-purged=OFF --column-statistics=0 ${instance['SSL_OPTIONS']}"
-  instance['AUTH_FILE']=""
-  instance['MYSQL_COMMAND']="/usr/bin/mysql"
-  instance['MYSQLDUMP_COMMAND']="/usr/bin/mysqldump"
-  instance['MYSQLSHOW_COMMAND']="/usr/bin/mysqlshow"
+  
+  # final auth file generated from dns file
+  instanceNewInstance['AUTH_FILE']=""
+  instanceNewInstance['DSN_FILE']=""
 
-  instance['MYSQL_HOST']="${mysqlHostName}"
-  instance['MYSQL_PORT']="${mysqlHostPort}"
-  instance['MYSQL_USER']="${mysqlUser}"
-  instance['MYSQL_PASSWORD']="${mysqlPasswd}"
+  # check dsn file
+  DSN_FILE="$(Database::getAbsoluteDsnFile "${dsn}")" || exit 1
+  Database::checkDsnFile "${DSN_FILE}"
+  instanceNewInstance['DSN_FILE']="${DSN_FILE}"
 
-  Database::createAuthFile instance
+  # shellcheck source=/conf/dsn/default.local.env
+  # shellcheck disable=SC1091
+  source "${instanceNewInstance['DSN_FILE']}"
+  
+  # generate authfile for easy authentication
+  # shellcheck disable=SC2064
+  instanceNewInstance['AUTH_FILE']=$(mktemp -p "${TMPDIR:-/tmp}" -t "mysql.XXXXXXXXXXXX")
+  (
+      echo "[client]"
+      echo "user = ${USER}"
+      echo "password = ${PASSWORD}"
+      echo "host = ${HOSTNAME}"
+      echo "port = ${PORT}"
+  ) > "${instanceNewInstance['AUTH_FILE']}"
+  # shellcheck disable=SC2064
+  Functions::trapAdd "rm -f \"${instanceNewInstance['AUTH_FILE']}\" 2>/dev/null || true" ERR EXIT
 
-  instance['INITIALIZED']=1
+  # some of those values can be overridden using the dsn file
+  instanceNewInstance['OPTIONS']="${MYSQL_OPTIONS:---default-character-set=utf8}"
+  instanceNewInstance['SSL_OPTIONS']="${MYSQL_SSL_OPTIONS:---ssl-mode=DISABLED}"
+  instanceNewInstance['QUERY_OPTIONS']="${MYSQL_QUERY_OPTIONS:--s --skip-column-names}"
+  instanceNewInstance['DUMP_OPTIONS']="${MYSQL_DUMP_OPTIONS:---default-character-set=utf8 --compress --compact --hex-blob --routines --triggers --single-transaction --set-gtid-purged=OFF --column-statistics=0 ${instanceNewInstance['SSL_OPTIONS']}}"
+  
+  instanceNewInstance['INITIALIZED']=1
+}
+
+# Public: get absolute dsn file from dsn name deduced using these rules
+#   * from absolute file
+#   * relative to where script is executed
+#   * from home/.bash-tools/dsn folder
+#   * from framework conf/dsn folder
+# Returns absolute dsn filename
+Database::getAbsoluteDsnFile() {
+  local dsn="$1"
+  # load dsn from absolute file, then home folder, then bash framework conf folder
+  if [[ "${dsn}" =~ ^/.* ]]; then
+    # file contains /, consider it as absolute filename
+    echo "${dsn}"
+    return 0
+  fi
+  
+  # relative to where script is executed
+  DSN_FILE="$(realpath "${__BASH_FRAMEWORK_CALLING_SCRIPT}/${dsn}" || echo "")"
+  if [ -f "${DSN_FILE}" ]; then
+    echo "${DSN_FILE}"
+    return 0
+  fi
+
+  # shellcheck source=/conf/dsn/default.local.env
+  DSN_FILE="$(Database::getHomeConfDsnFolder)/${dsn}.env"
+  if [ -f "${DSN_FILE}" ]; then
+    echo "${DSN_FILE}"
+    return 0
+  fi
+  DSN_FILE="$(Database::getDefaultConfDsnFolder)/${dsn}.env"
+  if [ -f "${DSN_FILE}" ]; then
+    echo "${DSN_FILE}"
+    return 0
+  fi
+
+  # file not found
+  Log::displayError "dsn file '${dsn}' not found"
+  return 1    
+}
+
+# Internal: check if dsn file has all the mandatory variables set
+# Mandatory variables are: HOSTNAME, USER, PASSWORD, PORT
+#
+# **Arguments**:
+# * $1 - dsn absolute filename 
+#
+# Returns 0 on valid file, 1 otherwise with log output
+Database::checkDsnFile() {
+  DSN_FILENAME="$1"
+  if [[ ! -f "${DSN_FILENAME}" ]]; then
+    Log::displayError "dsn file ${DSN_FILENAME} not found"
+    return 1
+  fi
+
+  (
+    unset HOSTNAME PORT PASSWORD USER
+    # shellcheck source=/conf/dsn/default.local.env
+    # shellcheck disable=SC1091
+    source "${DSN_FILENAME}"  
+    if [[ -z ${HOSTNAME+x} ]]; then
+      Log::displayError "dsn file ${DSN_FILENAME} : HOSTNAME not provided"
+      return 1
+    fi
+    if [[ -z "${HOSTNAME}" ]]; then
+      Log::displayWarning "dsn file ${DSN_FILENAME} : HOSTNAME value not provided"
+    fi
+    if [[ "${HOSTNAME}" = "localhost" ]]; then
+      Log::displayWarning "dsn file ${DSN_FILENAME} : check that HOSTNAME should not be 127.0.0.1 instead of localhost"
+    fi
+    if [[ -z "${PORT+x}" ]]; then
+      Log::displayError "dsn file ${DSN_FILENAME} : PORT not provided"
+      return 1
+    fi
+    if ! [[ ${PORT} =~ ^[0-9]+$ ]] ; then
+      Log::displayError "dsn file ${DSN_FILENAME} : PORT invalid"
+      return 1
+    fi
+    if [[ -z "${USER+x}" ]]; then
+      Log::displayError "dsn file ${DSN_FILENAME} : USER not provided"
+      return 1
+    fi
+    if [[ -z "${PASSWORD+x}" ]]; then
+      Log::displayError "dsn file ${DSN_FILENAME} : PASSWORD not provided"
+      return 1
+    fi
+  )
+}
+
+# Public
+# Returns the default conf dsn folder
+Database::getDefaultConfDsnFolder() {
+  echo "${__BASH_FRAMEWORK_VENDOR_PATH:?}/conf/dsn"
+}
+
+# Public
+# Returns the overriden conf dsn folder in user home folder 
+Database::getHomeConfDsnFolder() {
+  echo "${HOME}/.bash-tools/dsn"
 }
 
 # Public: set the general options to use on mysql command to query the database
@@ -56,9 +166,9 @@ Database::newInstance() {
 # * $1 - (passed by reference) database instance to use
 # * $2 - options list
 Database::setOptions() {
-  # shellcheck disable=SC2178
-  local -n instance2=$1
-  instance2['OPTIONS']="$2"
+  local -n instanceSetOptions=$1
+  # shellcheck disable=SC2034
+  instanceSetOptions['OPTIONS']="$2"
 }
 
 # Public: set the options to use on mysqldump command
@@ -67,9 +177,9 @@ Database::setOptions() {
 # * $1 - (passed by reference) database instance to use
 # * $2 - options list
 Database::setDumpOptions() {
-  # shellcheck disable=SC2178
-  local -n instance=$1
-  instance['DUMP_OPTIONS']="$2"
+  local -n instanceSetDumpOptions=$1
+  # shellcheck disable=SC2034
+  instanceSetDumpOptions['DUMP_OPTIONS']="$2"
 }
 
 # Public: set the general options to use on mysql command to query the database
@@ -79,47 +189,9 @@ Database::setDumpOptions() {
 # * $1 - (passed by reference) database instance to use
 # * $2 - options list
 Database::setQueryOptions() {
-  # shellcheck disable=SC2178
-  local -n instance=$1
-  instance['QUERY_OPTIONS']="$2"
-}
-
-# Public: set the command fullpath for mysql, mysqldump and mysqlshow
-#
-# **Arguments**:
-# * $1 (passed by reference) database instance to use
-# * $2 mysql command
-# * $3 mysqldump command
-# * $4 mysqlshow command
-#---
-Database::setMysqlCommands() {
-  # shellcheck disable=SC2178
-  local -n instance=$1
-  instance['MYSQL_COMMAND']="$2"
-  instance['MYSQLDUMP_COMMAND']="$3"
-  instance['MYSQLSHOW_COMMAND']="$4"
-}
-
-# Internal: generate temp file for easy authentication
-#
-# **Arguments**:
-# * $1 (passed by reference) database instance to use
-Database::createAuthFile() {
-  local -n instance2=$1
-
-  instance2['AUTH_FILE']=$(mktemp -p "${TMPDIR:-/tmp}" -t "mysql.XXXXXXXXXXXX")
-
-  local conf=""
-  conf+="[client]\n"
-  conf+="user = ${instance2['MYSQL_USER']}\n"
-  conf+="password = ${instance2['MYSQL_PASSWORD']}\n"
-  conf+="host = ${instance2['MYSQL_HOST']}\n"
-  conf+="port = ${instance2['MYSQL_PORT']}\n"
-
-  printf "%b" "${conf}" >"${instance2['AUTH_FILE']}"
-
-  # shellcheck disable=SC2064
-  trap "rm -f '${instance2['AUTH_FILE']}' 2>/dev/null" EXIT
+  local -n instanceSetQueryOptions=$1
+  # shellcheck disable=SC2034
+  instanceSetQueryOptions['QUERY_OPTIONS']="$2"
 }
 
 # Public: check if given database exists
@@ -129,18 +201,20 @@ Database::createAuthFile() {
 # * $2 database name
 Database::ifDbExists() {
   # shellcheck disable=SC2178
-  local -n instance=$1
+  local -n instanceIfDbExists=$1
   local dbName="$2"
 
   local result
-  local mysqlCommand=""
+  local -a mysqlCommand=()
 
-  mysqlCommand="${instance['MYSQLSHOW_COMMAND']} --defaults-extra-file='${instance['AUTH_FILE']}' ${instance['SSL_OPTIONS']} "
-  mysqlCommand+="'${dbName}' | grep -v Wildcard | grep -o '${dbName}'"
-  Log::displayDebug "execute command: '${mysqlCommand}'"
-  result=$(MSYS_NO_PATHCONV=1 eval "${mysqlCommand}")
-
-  [[ "${result}" == "${dbName}" ]]
+  mysqlCommand+=(mysqlshow)
+  mysqlCommand+=("--defaults-extra-file=${instanceIfDbExists['AUTH_FILE']}")
+  # shellcheck disable=SC2206
+  mysqlCommand+=(${instanceIfDbExists['SSL_OPTIONS']})
+  mysqlCommand+=("${dbName}")
+  Log::displayDebug "execute command: '${mysqlCommand[*]}'"
+  result="$(MSYS_NO_PATHCONV=1 "${mysqlCommand[@]}" 2>/dev/null | grep '^Database: ' | grep -o "${dbName}" )"
+  [[ "${result}" = "${dbName}" ]]
 }
 
 # Public: check if table exists on given db
@@ -159,14 +233,12 @@ Database::isTableExists() {
   local dbName="$2"
   local tableThatShouldExists="$3"
 
-  local sql=$"select count(*) from information_schema.tables where table_schema='${dbName}' and table_name='${tableThatShouldExists}'"
+  local sql="select count(*) from information_schema.tables where table_schema='${dbName}' and table_name='${tableThatShouldExists}'"
   local result
-  result=$(Database::query instanceIsTableExists "${sql}")
-  if [[ "${result}" == "0" ]]; then
-    Log::displayWarning "Db ${dbName} not initialized"
+  result="$(Database::query instanceIsTableExists "${sql}")"
+  if [ "${result}" != "1" ]; then
     return 1
   fi
-  Log::displayInfo "Db ${dbName} already initialized"
   return 0
 }
 
@@ -180,12 +252,12 @@ Database::isTableExists() {
 # * 0 if success
 # * 1 else
 Database::createDb() {
-  # shellcheck disable=SC2178
-  local -n instance2=$1
+  # shellcheck disable=SC2034
+  local -n instanceCreateDb=$1
   local dbName="$2"
 
   local sql="CREATE DATABASE IF NOT EXISTS ${dbName} CHARACTER SET 'utf8' COLLATE 'utf8_general_ci'"
-  Database::query instance2 "${sql}"
+  Database::query instanceCreateDb "${sql}"
   local result=$?
 
   if [[ "${result}" == "0" ]]; then
@@ -206,12 +278,12 @@ Database::createDb() {
 # * 0 if success
 # * 1 else
 Database::dropDb() {
-  # shellcheck disable=SC2178
-  local -n instance2=$1
+  # shellcheck disable=SC2034
+  local -n instanceDropDb=$1
   local dbName="$2"
 
   local sql="DROP DATABASE IF EXISTS ${dbName}"
-  Database::query instance2 "${sql}"
+  Database::query instanceDropDb "${sql}"
   local result=$?
 
   if [[ "${result}" == "0" ]]; then
@@ -233,13 +305,13 @@ Database::dropDb() {
 # * 0 if success
 # * 1 else
 Database::dropTable() {
-  # shellcheck disable=SC2178
-  local -n instance2=$1
+  # shellcheck disable=SC2034
+  local -n instanceDropTable=$1
   local dbName="$2"
   local tableName="$3"
 
   local sql="DROP TABLE IF EXISTS ${tableName}"
-  Database::query instance2 "${sql}" "${dbName}"
+  Database::query instanceDropTable "${sql}" "${dbName}"
   local result=$?
 
   if [[ "${result}" == "0" ]]; then
@@ -262,26 +334,31 @@ Database::dropTable() {
 Database::query() {
   # shellcheck disable=SC2178
   local -n instanceQuery=$1
-  local mysqlCommand=""
+  local -a mysqlCommand=()
 
-  mysqlCommand+="${instanceQuery['MYSQL_COMMAND']} --defaults-extra-file='${instanceQuery['AUTH_FILE']}' ${instanceQuery['QUERY_OPTIONS']} ${instanceQuery['OPTIONS']}"
+  mysqlCommand+=(mysql)
+  mysqlCommand+=("--defaults-extra-file=${instanceQuery['AUTH_FILE']}")
+  IFS=' ' read -r -a queryOptions <<< "${instanceQuery['QUERY_OPTIONS']}"
+  mysqlCommand+=("${queryOptions[@]}")
+  IFS=' ' read -r -a options <<< "${instanceQuery['OPTIONS']}"
+  mysqlCommand+=("${options[@]}")
   # add optional db name
   if [[ -n "${3+x}" ]]; then
-    mysqlCommand+=" '$3'"
+    mysqlCommand+=("$3")
   fi
   # add optional sql query
   if [[ -n "${2+x}" && -n "$2" ]]; then
     if [[ ! -f "$2" ]]; then
-      mysqlCommand+=" -e "
-      mysqlCommand+=$(Functions::quote "$2")
+      mysqlCommand+=("-e")
+      mysqlCommand+=("$2")
     fi
   fi
-  Log::displayDebug "execute command: '${mysqlCommand}'"
+  Log::displayDebug "$(printf "execute command: '%s'"  "${mysqlCommand[*]}")"
 
   if [[ -f "$2" ]]; then
-    eval "${mysqlCommand}" < "$2"
+    "${mysqlCommand[@]}" < "$2"
   else
-    eval "${mysqlCommand}"
+    "${mysqlCommand[@]}"
   fi
 }
 
@@ -290,17 +367,18 @@ Database::query() {
 # **Arguments**:
 # * $1 (passed by reference) database instance to use
 # * $2 the db to dump
-# * _$3(optional)_ string containing table list
+# * _$3(optional)_ string containing table list 
+#       (can be empty string in order to specify additional options)
 # * _$4(optional)_ ... additional dump options
 #
 # **Returns**: mysqldump command status code
 Database::dump() {
   # shellcheck disable=SC2178
-  local -n instance=$1
+  local -n instanceDump=$1
   local db="$2"
   local optionalTableList=""
-  local dumpAdditionalOptions=""
-  local mysqlCommand=""
+  local dumpAdditionalOptions=()
+  local -a mysqlCommand=()
 
   # optional table list
   shift 2
@@ -311,13 +389,19 @@ Database::dump() {
 
   # additional options
   if [[ -n "${1+x}" ]]; then
-    dumpAdditionalOptions="$*"
+    dumpAdditionalOptions=("$@")
   fi
 
-  mysqlCommand+="${instance['MYSQLDUMP_COMMAND']} --defaults-extra-file='${instance['AUTH_FILE']}' "
-  mysqlCommand+="${instance['DUMP_OPTIONS']} ${dumpAdditionalOptions} ${db} ${optionalTableList}"
+  mysqlCommand+=(mysqldump)
+  mysqlCommand+=("--defaults-extra-file=${instanceDump['AUTH_FILE']}")
+  IFS=' ' read -r -a dumpOptions <<< "${instanceDump['DUMP_OPTIONS']}"
+  mysqlCommand+=("${dumpOptions[@]}")
+  mysqlCommand+=("${dumpAdditionalOptions[@]}")
+  mysqlCommand+=("${db}")
+  # shellcheck disable=SC2206
+  mysqlCommand+=(${optionalTableList})
 
-  Log::displayDebug "execute command: '${mysqlCommand}'"
-  eval "${mysqlCommand}"
+  Log::displayDebug "execute command: '${mysqlCommand[*]}'"
+  "${mysqlCommand[@]}"
   return $?
 }

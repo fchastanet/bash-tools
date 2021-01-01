@@ -8,10 +8,11 @@ source "$( cd "${CURRENT_DIR}/.." && pwd )/bash-framework/_bootstrap.sh"
 DUMP_FILE="$1"
 DB_NAME="$2"
 PROFILE_COMMAND="${3}"
-CHARACTER_SET="${4:-utf8}"
+MYSQL_AUTH_FILE="${4}"
+CHARACTER_SET="${5:-utf8}"
 
 tar xOfz "${DUMP_FILE}" | awk \
   -v PROFILE_COMMAND="${PROFILE_COMMAND}" \
   -v CHARACTER_SET="${CHARACTER_SET}" \
   -f "${CURRENT_DIR}/dbImportStream.awk" \
-  - | mysql -h"${MYSQL_HOSTNAME}" -P"${MYSQL_PORT}" -u"${MYSQL_ROOT_USER}" -p"${MYSQL_ROOT_PASSWORD}" "${DB_NAME}" 
+  - | mysql --defaults-extra-file="${MYSQL_AUTH_FILE}" "${DB_NAME}" 

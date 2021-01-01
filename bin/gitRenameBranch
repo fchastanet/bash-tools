@@ -2,7 +2,7 @@
 
 # load bash-framework
 CURRENT_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
-# shellcheck source=../bash-framework/_bootstrap.sh
+# shellcheck source=/bash-framework/_bootstrap.sh
 source "$( cd "${CURRENT_DIR}/.." && pwd )/bash-framework/_bootstrap.sh"
 
 import bash-framework/UI
@@ -37,9 +37,8 @@ EOF
 # -l is for long options with double dash like --help
 # the comma separates different long options
 options=$(getopt -l help,push,delete,yes,assume-yes -o hpdy -- "$@" 2>/dev/null) || {
-    Log::displayError "invalid options specified"
     showHelp
-    exit 1
+    Log::fatal "invalid options specified"
 }
 
 eval set -- "${options}"
@@ -63,48 +62,36 @@ case $1 in
     shift
     break;;
 *)
-    Log::displayError "invalid argument $1"
     showHelp
-    exit 1
+    Log::fatal "invalid argument $1"
 esac
 shift
 done
-shift $(expr $OPTIND - 1)
+shift $(( OPTIND - 1 ))
 
 newName="$1"
 shift || true
 oldName="${1:-}"
 shift || true
 if [ $# -gt 0 ]; then
-  Log::displayError "too much arguments provided"
   showHelp
-  exit 1
+  Log::fatal "too much arguments provided"
+fi
+
+if ! git rev-parse --git-dir >/dev/null 2>&1; then 
+  Log::fatal "not a git repository (or any of the parent directories)"
 fi
 
 if [ -z "${oldName}" ]; then
   oldName="$(git branch --show-current)"
-  if [ -z "${oldName}" ]; then
-    Log::displayError "Impossible to calculate current branch name"
-    exit 1
-  fi
+  [ -z "${oldName}" ] && Log::fatal "Impossible to calculate current branch name"
 fi
-if [[ "${oldName}" =~ ^(master|main)$ ]]; then
-  Log::displayError "master/main branch not supported by this command, please do it manually"
-  exit 1
-fi
-
-if [[ "${newName}" =~ ^(master|main)$ ]]; then
-  Log::displayError "master/main branch not supported by this command, please do it manually"
-  exit 1
-fi
-if [ -z "${newName}" ]; then
-  Log::displayError "new branch name not provided"
-  exit 1
-fi
-if [ "${oldName}" = "${newName}" ]; then
-  Log::displayError "Branch name has not changed"
-  exit 1
-fi
+[[ "${oldName}" =~ ^(master|main)$ ]] &&
+  Log::fatal "master/main branch not supported by this command, please do it manually"
+[[ "${newName}" =~ ^(master|main)$ ]] &&
+  Log::fatal "master/main branch not supported by this command, please do it manually"
+[ -z "${newName}" ] && Log::fatal "new branch name not provided"
+[ "${oldName}" = "${newName}" ] && Log::fatal "Branch name has not changed"
 
 Log::displayInfo "Renaming branch locally from ${oldName} to ${newName}"
 CMD="git branch -m \"${oldName}\" \"${newName}\""

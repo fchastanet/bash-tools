@@ -7,18 +7,41 @@ create a new db instance
 
 **Arguments**:
 * $1 - (passed by reference) database instance to create
-* $2 - mysqlHostName
-* $3 - mysqlHostPort
-* $4 - mysqlHostUser
-* $5 - mysqlHostPassword
+* $2 - dsn profile - load the dsn.env profile
+      absolute file is deduced using rules defined in Database::getAbsoluteDsnFile
 
 **Example:**
 ```shell
  declare -Agx dbInstance
- Database::newInstance dbInstance "${HOSTNAME}" "${PORT}" "${USER}" "${PASSWORD}"
+ Database::newInstance dbInstance "defaul.local"
 ```
 
 Returns immediately if the instance is already initialized
+# function `Database::getAbsoluteDsnFile`
+> ***Public***
+
+get absolute dsn file from dsn name deduced using these rules
+    * from absolute file
+    * relative to where script is executed
+    * from home/.bash-tools/dsn folder
+    * from framework conf/dsn folder
+ Returns absolute dsn filename
+# function `Database::checkDsnFile`
+> ***Internal***
+
+check if dsn file has all the mandatory variables set
+ Mandatory variables are: HOSTNAME, USER, PASSWORD, PORT
+
+**Arguments**:
+* $1 - dsn absolute filename
+
+Returns 0 on valid file, 1 otherwise with log output
+# function `Database::getDefaultConfDsnFolder`
+Public
+ Returns the default conf dsn folder
+# function `Database::getHomeConfDsnFolder`
+Public
+ Returns the overriden conf dsn folder in user home folder
 # function `Database::setOptions`
 > ***Public***
 
@@ -46,13 +69,6 @@ set the general options to use on mysql command to query the database
 **Arguments**:
 * $1 - (passed by reference) database instance to use
 * $2 - options list
-# function `Database::createAuthFile`
-> ***Internal***
-
-generate temp file for easy authentication
-
-**Arguments**:
-* $1 (passed by reference) database instance to use
 # function `Database::ifDbExists`
 > ***Public***
 
@@ -132,6 +148,7 @@ dump db limited to optional table list
 * $1 (passed by reference) database instance to use
 * $2 the db to dump
 * _$3(optional)_ string containing table list
+        (can be empty string in order to specify additional options)
 * _$4(optional)_ ... additional dump options
 
 **Returns**: mysqldump command status code

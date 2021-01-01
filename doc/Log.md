@@ -19,6 +19,16 @@ common log message
  <pre>
  2020-01-19 19:20:21 - ERROR   - log message
  </pre>
+# function `__displayFatal`
+> ***Public***
+
+display fatal message on stderr
+
+**Arguments**:
+* $1 - messsage
+ **Output**: using fatal color
+
+* ERROR - message
 # function `__displayError`
 > ***Public***
 

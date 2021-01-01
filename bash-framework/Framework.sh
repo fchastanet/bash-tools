@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-declare -ag __bash_framework__importedFiles
+declare -ag __BASH_FRAMEWORK_IMPORTED_FILES
 
 # Public: exits with message if current user is not the expected one
 #
@@ -13,23 +13,19 @@ Framework::expectUser() {
     local currentUserName
 
     currentUserName=$(id -u -n)
-    if [  "${currentUserName}" != "${expectedUserName}" ]; then
-        Log::displayError "The script must be run as ${expectedUserName}"
-        exit 1
-    fi
+    [  "${currentUserName}" != "${expectedUserName}" ] &&
+        Log::fatal "The script must be run as ${expectedUserName}"
 }
 
 # Public: exits with message if current user is root
 #
 # **Exit**: code 1 if current user is root
 Framework::expectNonRootUser() {
-    local expectedUserName="$1"
     local currentUserName
 
     currentUserId=$(id -u)
     if [  "${currentUserId}" = "0" ]; then
-        Log::displayError "The script must not be run as root"
-        exit 1
+      Log::fatal "The script must not be run as root"
     fi
 }
 
@@ -42,10 +38,7 @@ Framework::expectNonRootUser() {
 Framework::expectGlobalVariables() {
     for var in "${@}"
     do
-        [[ -v "${var}" ]] || {
-            Log::displayError "Variable ${var} is unset"
-            exit 1
-        }
+        [[ -v "${var}" ]] || Log::fatal "Variable ${var} is unset"
     done
 }
 
@@ -76,11 +69,12 @@ Framework::GetAbsolutePath() {
 Framework::WrapSource() {
   local libPath="$1"
   shift
+  if [[ -z "${libPath}" ]]; then
+    return
+  fi
 
-  builtin source "$libPath" "$@" || {
-    Log::displayError "Unable to load $libPath"
-    exit 1
-  }
+
+  builtin source "$libPath" "$@" || Log::fatal "Unable to load $libPath"
 }
 
 # Internal: source given file. Do not source it again if it has already been sourced.
@@ -92,6 +86,9 @@ Framework::WrapSource() {
 Framework::SourceFile() {
   local libPath="$1"
   shift
+  if [[ -z "${libPath}" ]]; then
+    return
+  fi
 
   [[ ! -f "$libPath" ]] && return 1 # && e="Cannot import $libPath" throw
 
@@ -102,7 +99,7 @@ Framework::SourceFile() {
   then
     ## if already imported let's return
     # if declare -f "Array::contains" &> /dev/null &&
-    if [[ "${__bash_framework__allowFileReloading-}" != true && -n "${__bash_framework__importedFiles[*]}" ]] && Array::contains "$libPath" "${__bash_framework__importedFiles[@]}"
+    if [[ "${__bash_framework__allowFileReloading-}" != true && -n "${__BASH_FRAMEWORK_IMPORTED_FILES[*]}" ]] && Array::contains "$libPath" "${__BASH_FRAMEWORK_IMPORTED_FILES[@]}"
     then
       # DEBUG subject=level3 Log "File previously imported: ${libPath}"
       return 0
@@ -110,7 +107,7 @@ Framework::SourceFile() {
 
     # DEBUG subject=level2 Log "Importing: $libPath"
 
-    __bash_framework__importedFiles+=( "$libPath" )
+    __BASH_FRAMEWORK_IMPORTED_FILES+=( "$libPath" )
     Framework::WrapSource "$libPath" "$@"
 
   else
@@ -130,6 +127,10 @@ Framework::SourceFile() {
 Framework::SourcePath() {
   local libPath="$1"
   shift
+  if [[ -z "${libPath}" ]]; then
+    return
+  fi
+
   # echo trying $libPath
   if [[ -d "$libPath" ]]
   then
@@ -158,23 +159,27 @@ Framework::SourcePath() {
 Framework::ImportOne() {
   local libPath="$1"
   shift
+  if [[ -z "${libPath}" ]]; then
+    return
+  fi
 
-  # try local library
-  # try vendor dir
-  # try from project root
-  # try absolute path
-  {
-    local localPath="${__bash_framework_rootVendorPath}"
-    localPath="${localPath}/${libPath}"
-    Framework::SourcePath "${localPath}" "$@"
-  } || \
-  Framework::SourcePath "${__bash_framework_rootVendorPath}/${libPath}" "$@" || \
-  Framework::SourcePath "${__bash_framework_rootCallingScriptPath}/${libPath}" "$@" || \
-  Framework::SourcePath "${libPath}" "$@" || \
-  {
-    Log::displayError "Cannot import $libPath"
-    exit 1
-  }
+  # absolute file
+  if [[ "${libPath}" == /* ]]; then
+    Framework::SourcePath "${libPath}" "$@"
+  else
+    # try local library
+    # try vendor dir
+    # try from project root
+    # try absolute path
+    {
+      local localPath="${__BASH_FRAMEWORK_VENDOR_PATH:?}"
+      localPath="${localPath}/${libPath}"
+      Framework::SourcePath "${localPath}" "$@"
+    } || \
+    Framework::SourcePath "${__BASH_FRAMEWORK_VENDOR_PATH:?}/${libPath}" "$@" || \
+    Framework::SourcePath "${__BASH_FRAMEWORK_CALLING_SCRIPT:?}/${libPath}" "$@" || \
+    Framework::SourcePath "${libPath}" "$@" || Log::fatal "Cannot import $libPath"
+  fi
 }
 
 # Public: source given files using Framework::ImportOne.

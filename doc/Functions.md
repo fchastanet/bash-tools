@@ -32,3 +32,54 @@ quote a string
 * $1 the string to quote
 
 **Output**: the string quoted
+# function `Functions::getList`
+> ***Public***
+
+list files of dir with given extension and display it as a list one by line
+
+**Arguments**:
+* $1 the directory to list
+* $2 the extension (eg: sh)
+* $3 the indentation ('       - ' by default) can be any string compatible with sed not containing any /
+ **Output**: list of files without extension/directory
+ eg:
+        - default.local
+        - default.remote
+        - localhost-root
+# function `Functions::loadConf`
+> ***Public***
+
+get absolute file from name deduced using these rules
+    * using absolute/relative <conf> file (ignores <confFolder> and <extension>
+    * from home/.bash-tools/<confFolder>/<conf><extension> file
+    * from framework conf/<conf><extension> file
+
+**Arguments**:
+* $1 confFolder to use below bash-tools conf folder
+* $2 conf file to use without extension
+* $3 file extension to use (default: .sh)
+
+Returns 1 if file not found or error during file loading
+# function `Functions::getConfMergedList`
+> ***Public***
+
+list the conf files list available in bash-tools/conf/<conf> folder
+ and those overriden in $HOME/.bash-tools/<conf> folder
+ **Arguments**:
+* $1 confFolder the directory name (not the path) to list
+* $2 the extension (.sh by default)
+* $3 the indentation ('       - ' by default) can be any string compatible with sed not containing any /
+
+**Output**: list of files without extension/directory
+ eg:
+        - default.local
+        - default.remote
+        - localhost-root
+# function `Functions::trapAdd`
+appends a command to a trap
+
+- 1st arg:  code to add
+ - remaining args:  names of traps to modify
+# function `extract_trap_cmd`
+helper fn to get existing trap command from output
+ of trap -p

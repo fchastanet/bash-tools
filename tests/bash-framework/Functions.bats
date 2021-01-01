@@ -1,15 +1,26 @@
 #!/usr/bin/env bash
 
+FRAMEWORK_DIR="$(cd "${BATS_TEST_DIRNAME}/../.." && pwd)"
 # shellcheck source=bash-framework/_bootstrap.sh
-__bash_framework_envFile="" source "$(cd "${BATS_TEST_DIRNAME}/../.." && pwd)/bash-framework/_bootstrap.sh" || exit 1
+__BASH_FRAMEWORK_ENV_FILEPATH="" source "${FRAMEWORK_DIR}/bash-framework/_bootstrap.sh" || exit 1
 
 import bash-framework/Functions
 
-@test "framework is loaded" {
+setup() {    
+    mkdir -p /tmp/home/.bash-tools/cliProfiles
+    mkdir -p /tmp/home/.bash-tools/dsn
+    cp -v ${FRAMEWORK_DIR}/conf/cliProfiles/default.sh /tmp/home/.bash-tools/cliProfiles
+}
+
+teardown() {
+    rm -Rf /tmp/home || true 
+}
+
+@test "${BATS_TEST_FILENAME#/bash/tests/} framework is loaded" {
     [[ "${BASH_FRAMEWORK_INITIALIZED}" = "1" ]]
 }
 
-@test "Functions::isWindows" {
+@test "${BATS_TEST_FILENAME#/bash/tests/} Functions::isWindows" {
     unameMocked() {
         echo "Msys"
     }
@@ -18,7 +29,7 @@ import bash-framework/Functions
     [[ "$(Functions::isWindows)" = "1" ]]
 }
 
-@test "Functions::checkDnsHostname localhost" {
+@test "${BATS_TEST_FILENAME#/bash/tests/} Functions::checkDnsHostname localhost" {
     unameMocked() {
         echo "Linux"
     }
@@ -35,7 +46,7 @@ import bash-framework/Functions
     fi
 }
 
-@test "Functions::checkDnsHostname external host" {
+@test "${BATS_TEST_FILENAME#/bash/tests/} Functions::checkDnsHostname external host" {
     unameMocked() {
         echo "Linux"
     }
@@ -56,13 +67,89 @@ import bash-framework/Functions
     Functions::checkDnsHostname "willywonka.fchastanet.lan" || false
 }
 
-@test "Functions::checkCommandExists exists" {
+@test "${BATS_TEST_FILENAME#/bash/tests/} Functions::checkCommandExists exists" {
    (Functions::checkCommandExists "bash") || false
 }
 
-@test "Functions::checkCommandExists not exists" {
+@test "${BATS_TEST_FILENAME#/bash/tests/} Functions::checkCommandExists not exists" {
     run Functions::checkCommandExists "qsfdsfds"
     [[ "$status" -eq 1 ]]
     (>&2 echo $(env) )
     [[ "${lines[0]}" = "$(echo -e "${__ERROR_COLOR}ERROR - qsfdsfds is not installed, please install it${__RESET_COLOR}")" ]]
+}
+
+@test "${BATS_TEST_FILENAME#/bash/tests/} Functions::getList" {
+    run Functions::getList "${BATS_TEST_DIRNAME}/dataGetList" "sh"
+    [[ "$status" -eq 0 ]]
+    [[ "${#lines[@]}" = "2" ]]
+    [[ "${lines[0]}" = "       - test" ]]
+    [[ "${lines[1]}" = "       - test2" ]]
+
+    run Functions::getList "${BATS_TEST_DIRNAME}/dataGetList" "sh" "-"
+    [[ "$status" -eq 0 ]]
+    [[ "${#lines[@]}" = "2" ]]
+    [[ "${lines[0]}" = "-test" ]]
+    [[ "${lines[1]}" = "-test2" ]]
+
+    run Functions::getList "${BATS_TEST_DIRNAME}/dataGetList" "dsn" "*"
+    [[ "$status" -eq 0 ]]
+    [[ "${output}" = "*hello" ]]
+    
+    run Functions::getList "${BATS_TEST_DIRNAME}/unknown" "sh" "*"
+    [[ "$status" -eq 1 ]]
+}
+
+@test "${BATS_TEST_FILENAME#/bash/tests/} Functions::loadConf absolute file" {
+    Functions::loadConf "anyFolder" "/tmp/home/.bash-tools/cliProfiles/default.sh"
+    [[ "${finalUserArg}" = "www-data" ]]
+    [[ "${finalCommandArg}" = "//bin/bash" ]]
+    [[ "${finalContainerArg}" = "project-apache2" ]]  
+}
+
+@test "${BATS_TEST_FILENAME#/bash/tests/} Functions::loadConf default" {
+    Functions::loadConf "cliProfiles" "default"
+    [[ "${finalUserArg}" = "www-data" ]]
+    [[ "${finalCommandArg}" = "//bin/bash" ]]
+    [[ "${finalContainerArg}" = "project-apache2" ]]  
+}
+
+@test "${BATS_TEST_FILENAME#/bash/tests/} Functions::loadConf dsn" {
+    Functions::loadConf "dsn" "default.local" ".env"
+    [[ "${HOSTNAME}" = "127.0.0.1" ]]
+    [[ "${USER}" = "root" ]]
+    [[ "${PASSWORD}" = "root" ]]  
+    [[ "${PORT}" = "3306" ]]  
+}
+
+@test "${BATS_TEST_FILENAME#/bash/tests/} Functions::loadConf file not found" {
+    run Functions::loadConf "dsn" "not found" ".sh"
+    [ "$status" -eq 1 ]
+}
+
+@test "${BATS_TEST_FILENAME#/bash/tests/} Functions::getConfMergedList" {
+    cp -v ${FRAMEWORK_DIR}/conf/dsn/* /tmp/home/.bash-tools/dsn
+    touch /tmp/home/.bash-tools/dsn/dsn_invalid_port.env
+    touch /tmp/home/.bash-tools/dsn/otherInvalidExt.ext
+    touch /tmp/home/.bash-tools/dsn/otherInvalidExt2.sh
+    export HOME=/tmp/home
+    run Functions::getConfMergedList "dsn" "env"
+    [ "$(cat "${BATS_TEST_DIRNAME}/data/database.dsnList1")" = "${output}" ]
+}
+
+@test "${BATS_TEST_FILENAME#/bash/tests/} Functions::trapAdd" {
+    trap 'echo "SIGUSR1 original" >> /tmp/home/trap' SIGUSR1
+    Functions::trapAdd 'echo "SIGUSR1 overriden" >> /tmp/home/trap' SIGUSR1
+    kill -SIGUSR1 $$
+    [ "$(cat /tmp/home/trap)" = "$(cat ${BATS_TEST_DIRNAME}/data/Functions_addTrap_expected)" ]
+}
+
+@test "${BATS_TEST_FILENAME#/bash/tests/} Functions::trapAdd 2 events at once" {
+    trap 'echo "SIGUSR1 original" >> /tmp/home/trap' SIGUSR1
+    trap 'echo "SIGUSR2 original" >> /tmp/home/trap' SIGUSR2
+    Functions::trapAdd 'echo "SIGUSR1&2 overriden" >> /tmp/home/trap' SIGUSR1 SIGUSR2
+    kill -SIGUSR1 $$
+    [ "$(cat /tmp/home/trap)" = "$(cat ${BATS_TEST_DIRNAME}/data/Functions_addTrap2_1_expected)" ]
+    rm /tmp/home/trap
+    kill -SIGUSR2 $$
+    [ "$(cat /tmp/home/trap)" = "$(cat ${BATS_TEST_DIRNAME}/data/Functions_addTrap2_2_expected)" ]
 }

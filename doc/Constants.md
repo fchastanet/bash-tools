@@ -1,55 +1,54 @@
 # bash-framework/Constants.sh
-# Constants
-# constant `CONSTANTS_MODULE_VERSION`
-Module: Framework constants definition
-
-for color constants,
- check colors applicable https://misc.flogisoft.com/bash/tip_colors_and_formatting
-# constant `__LEVEL_OFF`
+# Exports
+# export `readonly`
 > ***Public***
 
 log level off
-# constant `__LEVEL_ERROR`
+# export `readonly`
 > ***Public***
 
 log level error
-# constant `__LEVEL_WARNING`
+# export `readonly`
 > ***Public***
 
 log level warning
-# constant `__LEVEL_INFO`
+# export `readonly`
 > ***Public***
 
 log level info
-# constant `__LEVEL_SUCCESS`
+# export `readonly`
 > ***Public***
 
 log level success
-# constant `__LEVEL_DEBUG`
+# export `readonly`
 > ***Public***
 
 log level debug
-# constant `__ERROR_COLOR`
+# export `readonly`
+> ***Internal***
+
+color used f error level (red bold)
+# export `readonly`
 > ***Internal***
 
 color used for error level (red)
-# constant `__INFO_COLOR`
+# export `readonly`
 > ***Internal***
 
 color used for info level (white on lightBlue)
-# constant `__SUCCESS_COLOR`
+# export `readonly`
 > ***Internal***
 
 color used for success level (green)
-# constant `__WARNING_COLOR`
+# export `readonly`
 > ***Internal***
 
 color used for warning level (yellow)
-# constant `__DEBUG_COLOR`
+# export `readonly`
 > ***Internal***
 
 color used for debug level (grey)
-# constant `__RESET_COLOR`
+# export `readonly`
 > ***Internal***
 
 reset color

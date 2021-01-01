@@ -106,3 +106,106 @@ Functions::quote() {
     local quoted=${1//\'/\'\\\'\'};
     printf "'%s'" "$quoted"
 }
+
+# Public: list files of dir with given extension and display it as a list one by line
+#
+# **Arguments**:
+# * $1 the directory to list
+# * $2 the extension (eg: sh)
+# * $3 the indentation ('       - ' by default) can be any string compatible with sed not containing any /
+# **Output**: list of files without extension/directory
+# eg:
+#       - default.local
+#       - default.remote
+#       - localhost-root
+Functions::getList() {
+    DIR="$1"
+    EXT="$2"
+    INDENT_STR="${3:-       - }"
+
+    (
+        cd "${DIR}" && find . -type f -name "*.${EXT}" | sort | sed 's#^./##g' | sed "s/\.${EXT}\$//g" | sed "s/^/${INDENT_STR}/"
+    )
+}
+
+# Public: get absolute file from name deduced using these rules
+#   * using absolute/relative <conf> file (ignores <confFolder> and <extension>
+#   * from home/.bash-tools/<confFolder>/<conf><extension> file
+#   * from framework conf/<conf><extension> file
+# 
+# **Arguments**:
+# * $1 confFolder to use below bash-tools conf folder
+# * $2 conf file to use without extension
+# * $3 file extension to use (default: .sh)
+#
+# Returns 1 if file not found or error during file loading
+Functions::loadConf() {
+  local confFolder="$1"
+  local conf="$2"
+  local extension="${3:-.sh}"
+  local confFile=""
+
+  # if conf is absolute
+  if [[ "${conf}" == /* ]]; then
+    # file contains /, consider it as absolute filename
+    confFile="${conf}"
+  else
+    # shellcheck source=/conf/dsn/default.local.env
+    confFile="${HOME}/.bash-tools/${confFolder}/${conf}${extension}"
+    if [ ! -f "${confFile}" ]; then
+      confFile="${__BASH_FRAMEWORK_VENDOR_PATH:?}/conf/${confFolder}/${conf}${extension}"
+    fi
+  fi
+  if [ ! -f "${confFile}" ]; then
+    return 1
+  fi
+  # shellcheck disable=SC1090
+  source "${confFile}"
+}
+
+# Public: list the conf files list available in bash-tools/conf/<conf> folder
+# and those overriden in $HOME/.bash-tools/<conf> folder
+# **Arguments**:
+# * $1 confFolder the directory name (not the path) to list
+# * $2 the extension (.sh by default)
+# * $3 the indentation ('       - ' by default) can be any string compatible with sed not containing any /
+#
+# **Output**: list of files without extension/directory
+# eg:
+#       - default.local
+#       - default.remote
+#       - localhost-root
+Functions::getConfMergedList() {
+    local confFolder="$1"
+    local extension="${2:-.sh}"
+    local indentStr="${3:-       - }"
+    DEFAULT_CONF_DIR="${__BASH_FRAMEWORK_VENDOR_PATH:?}/conf/${confFolder}"
+    HOME_CONF_DIR="${HOME}/.bash-tools/${confFolder}"
+    
+    (
+        Functions::getList "${DEFAULT_CONF_DIR}" "${extension}" "${indentStr}"
+        Functions::getList "${HOME_CONF_DIR}" "${extension}" "${indentStr}"
+    ) | sort | uniq
+}
+
+# appends a command to a trap
+#
+# - 1st arg:  code to add
+# - remaining args:  names of traps to modify
+#
+Functions::trapAdd() {
+    local trapAddCmd="$1" 
+    shift || Log::fatal "${FUNCNAME[0]} usage error"
+    # helper fn to get existing trap command from output
+    # of trap -p
+    extract_trap_cmd() { printf '%s\n' "$3"; }
+    for trapAddName in "$@"; do
+        trap -- "$(
+            # print existing trap command with newline
+            eval "extract_trap_cmd $(trap -p "${trapAddName}")"
+            # print the new trap command
+            printf '%s\n' "${trapAddCmd}"
+        )" "${trapAddName}" \
+            || Log::fatal "unable to add to trap ${trapAddName}"
+    done
+}

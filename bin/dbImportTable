@@ -5,10 +5,7 @@ CURRENT_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 # shellcheck source=bash-framework/_bootstrap.sh
 source "$( cd "${CURRENT_DIR}/.." && pwd )/bash-framework/_bootstrap.sh"
 
-if [[  "$USER" = "root" ]]; then
-    Log::displayError "The script must not be run as root"
-    exit 1
-fi
+Framework::expectNonRootUser
 
 
 import bash-framework/Database
@@ -23,41 +20,52 @@ FROM_AWS=0
 DOWNLOAD_DUMP=0
 REMOTE_DB=""
 LOCAL_DB=""
-COLLATION_NAME=""
 CHARACTER_SET=""
 TABLE=""
+FROM_DSN=""
+DEFAULT_FROM_DSN="default.remote"
+TARGET_DSN="default.local"
 TIMEFORMAT='time spent : %3R'
+# remove last slash
+DB_IMPORT_DUMP_DIR=${DB_IMPORT_DUMP_DIR%/}
 
 # check dependencies
-if ! which pv > /dev/null || ! which mysql > /dev/null || ! which mysqlshow > /dev/null || ! which mysqldump > /dev/null ; then
-    Log::displayError "one of pv/mysql/mysqldump/mysqlshow programs is not installed, run 'sudo apt install -y pv mysql-client' or use docker container"
-    exit 1
-fi
+Functions::checkCommandExists mysql "sudo apt-get install mysql-client"
+Functions::checkCommandExists mysqlshow "sudo apt-get install mysql-client"
+Functions::checkCommandExists mysqldump "sudo apt-get install mysql-client"
+Functions::checkCommandExists pv "sudo apt-get install -y pv"
 
 showHelp() {
+local dsnList=""
+dsnList="$(Functions::getConfMergedList "dsn" "env")"
+
 cat << EOF
 Description: Import remote db table into local db
 
 Command: ${SCRIPT_NAME} [-h|--help] prints this help and exits
 Command: ${SCRIPT_NAME} <remoteDbName> <tableName> [<localDbName>] 
-    [-d|--download-dump] [-f|--force] [-a|--from-aws]
-    [-o|--collation-name utf8_general_ci] [-c|--character-set utf8]
+    [-d|--download-dump] [--force] [-a|--from-aws]
+    [-t|--target-dsn dsn] [-f|--from-dsn dsn]
+    [-c|--character-set utf8]
 
     download the remote table data and install data in local database (the schema should exists)
 
-    <tableName>   : table name to import
-    <localDbName> : use remote db name if not provided
-    -f|--force If local table exists, it will overwrite it
-    -a|--from-aws db dump will be downloaded from s3 instead of using remote db, 
+    <tableName>   :      table name to import
+    <localDbName> :      use remote db name if not provided
+    --force              If local table exists, it will overwrite it
+    -t|--target-dsn dsn  dsn to use for target database (Default: ${TARGET_DSN}) 
+    -f|--from-dsn dsn    dsn to use for source database (Default: ${DEFAULT_FROM_DSN})
+        this option is incompatible with -a|--from-aws option
+    -a|--from-aws        db dump will be downloaded from s3 instead of using remote db, 
         remoteDBName will represent the name of the file
         profile will be calculated against the dump itself
-    -d|--download-dump force remote db dump (default: use already downloaded dump in ${DB_IMPORT_DUMP_DIR} if available)
-    -o|--collation-name change the collation name used during database creation (default value: collation name used by remote db)
-    -c|--character-set change the character set used during database creation (default value: character set used by remote db)
+    -d|--download-dump   force remote db dump (default: use already downloaded dump in ${DB_IMPORT_DUMP_DIR} if available)
+    -c|--character-set   change the character set used during database creation (default value: character set used by remote db)
 
-    local DB connection  : ${MYSQL_ROOT_USER}:Hidden@${MYSQL_HOSTNAME}:${MYSQL_PORT}
-    remote DB connection : ${REMOTE_MYSQL_USER}:Hidden@${REMOTE_MYSQL_HOSTNAME}:${REMOTE_MYSQL_PORT}
     Aws s3 location       : ${S3_BASE_URL}
+
+List of available dsn: 
+${dsnList}
 EOF
 }
 
@@ -66,10 +74,9 @@ EOF
 # -o is for short options like -h
 # -l is for long options with double dash like --help
 # the comma separates different long options
-options=$(getopt -l help,force,from-aws,download-dump,collation-name:,character-set: -o ahfdc:o: -- "$@" 2> /dev/null) || {
-    Log::displayError "invalid options specified"
+options=$(getopt -l help,force,target-dsn:,from-dsn:,from-aws,download-dump,character-set: -o aht:f:dc: -- "$@" 2> /dev/null) || {
     showHelp
-    exit 1
+    Log::fatal "invalid options specified"
 }
 
 eval set -- "${options}"
@@ -80,19 +87,23 @@ case $1 in
     showHelp
     exit 0
     ;;
--f|--force)
+--force)
     Log::displayInfo "If local db exists, it will overwrite it"
     FORCE=1
+    ;;
+-t|--target-dsn)
+    shift
+    TARGET_DSN="$1"
+    ;;
+-f|--from-dsn)
+    shift
+    FROM_DSN="${1:-${DEFAULT_FROM_DSN}}"
     ;;
 -a|--from-aws)
     FROM_AWS="1"
     ;;
 -d|--download-dump)
     DOWNLOAD_DUMP=1
-    ;;
--o|--collation-name)
-    shift
-    COLLATION_NAME="$1"
     ;;
 -c|--character-set)
     shift
@@ -102,15 +113,14 @@ case $1 in
     shift
     break;;
 *)
-    Log::displayError "invalid argument $1"
     showHelp
-    exit 1
+    Log::fatal "invalid argument $1"
 esac
 shift
 done
 
 # additional arguments
-shift $(expr $OPTIND - 1 )
+shift $(( OPTIND - 1 ))
 while true; do
     if [[ -z "$1" ]]; then
         # last argument
@@ -130,76 +140,64 @@ while true; do
 done
 
 if [[ -z "${REMOTE_DB}" ]]; then
-    Log::displayError "you must provide remoteDbName"
     showHelp
-    exit 1
+    Log::fatal "you must provide remoteDbName"
 fi
 
 if [[ -z "${TABLE}" ]]; then
-    Log::displayError "you must provide tableName"
     showHelp
-    exit 1
+    Log::fatal "you must provide tableName"
 fi
 
 if [[ -z "${LOCAL_DB}" ]]; then
     LOCAL_DB=${REMOTE_DB}
 fi
 
-#check that remote db env variables are set
-if [[ -z "${REMOTE_MYSQL_HOSTNAME}" || -z "${REMOTE_MYSQL_PORT}" || -z "${REMOTE_MYSQL_USER}" || -z "${REMOTE_MYSQL_PASSWORD}" ]]; then
-    Log::displayError "missing remote mysql parameters, please do a 'make configure' in order to set .env file correctly"
-    exit 1
-fi
-
-if [[ "${MYSQL_HOSTNAME}" = "localhost" ]]; then
-    Log::displayWarning "check that MYSQL_HOSTNAME should not be 127.0.0.1 instead of localhost"
-fi
-
 # check s3 parameter
+if [[ "${FROM_AWS}" = "1" && -n "${FROM_DSN}" ]]; then
+    Log::fatal "you cannot use from-dsn and from-aws at the same time"
+fi
 if [[ "${FROM_AWS}" = "1" && -z "${S3_BASE_URL}" ]]; then
-    Log::displayError "missing S3_BASE_URL, please provide a value in .env file"
-    exit 1
+    Log::fatal "missing S3_BASE_URL, please provide a value in .env file"
+fi
+
+# default value for FROM_DSN if from-aws not set
+if [[ "${FROM_AWS}" = "0" && -z "${FROM_DSN}" ]]; then
+    FROM_DSN="${DEFAULT_FROM_DSN}"
+fi
+
+if [[ -z "${DB_IMPORT_DUMP_DIR}" ]]; then
+    Log::fatal "you have to specify a value for DB_IMPORT_DUMP_DIR env variable"
+fi
+if [[ ! -d "${DB_IMPORT_DUMP_DIR}" ]]; then
+    mkdir -p "${DB_IMPORT_DUMP_DIR}" || 
+        Log::fatal "impossible to create directory ${DB_IMPORT_DUMP_DIR} specified by DB_IMPORT_DUMP_DIR env variable"
 fi
 
 # create db instances
 declare -Agx dbRemoteInstance dbLocalInstance
-Database::newInstance dbLocalInstance "${MYSQL_HOSTNAME}" "${MYSQL_PORT}" "${MYSQL_ROOT_USER}" "${MYSQL_ROOT_PASSWORD}"
-Database::setOptions dbLocalInstance "${MYSQL_OPTIONS} --connect-timeout=5"
-Database::newInstance dbRemoteInstance "${REMOTE_MYSQL_HOSTNAME}" "${REMOTE_MYSQL_PORT}" "${REMOTE_MYSQL_USER}" "${REMOTE_MYSQL_PASSWORD}"
-Database::setOptions dbRemoteInstance "${MYSQL_OPTIONS} --connect-timeout=5"
+
+Database::newInstance dbTargetDatabase "${TARGET_DSN}"
+# shellcheck disable=SC2154
+Database::setOptions dbTargetDatabase "${dbTargetDatabase[OPTIONS]} --connect-timeout=5"
+if [[ "${FROM_AWS}" = "0" ]]; then
+    Database::newInstance dbFromInstance "${FROM_DSN}"
+    # shellcheck disable=SC2154
+    Database::setOptions dbFromInstance "${dbFromInstance[OPTIONS]} --connect-timeout=5"
+fi
 
 # check if local db exists
-Database::ifDbExists dbLocalInstance "${LOCAL_DB}" || {
-    Log::displayError "Local Database ${LOCAL_DB} does not exist !"
+Database::ifDbExists dbTargetDatabase "${LOCAL_DB}" || {
+    Log::displayWarning "Local Database ${LOCAL_DB} does not exist !"
 }
 
 # check if local table exists
-LOCAL_TABLE_EXISTS='0'
 Database::isTableExists dbLocalInstance "${LOCAL_DB}" "${TABLE}" && {
     Log::displayInfo "Local table ${LOCAL_DB}/${TABLE} already exists"
-    if [[ "${FORCE}" = "0" ]]; then
-        Log::displayError "use --force to drop it"
-        exit 1
-    else
-      LOCAL_TABLE_EXISTS='1'
-    fi
+    [[ "${FORCE}" = "0" ]] && Log::fatal "use --force to drop it"
 }
 
 Log::displayInfo "import table ${TABLE} from ${REMOTE_DB} to ${LOCAL_DB}"
-
-if [[ -z "${DB_IMPORT_DUMP_DIR}" ]]; then
-    Log::displayError "you have to specify a value for DB_IMPORT_DUMP_DIR env variable"
-    exit 1
-fi
-# remove last slash
-DB_IMPORT_DUMP_DIR=${DB_IMPORT_DUMP_DIR%/}
-
-if [[ ! -d "${DB_IMPORT_DUMP_DIR}" ]]; then
-    mkdir -p "${DB_IMPORT_DUMP_DIR}" || {
-        Log::displayError "impossible to create directory ${DB_IMPORT_DUMP_DIR} specified by DB_IMPORT_DUMP_DIR env variable"
-        exit 1
-    }
-fi
 
 # check if local dump exists
 REMOTE_DB_DUMP_TEMP_FILE="${DB_IMPORT_DUMP_DIR}/importTable_${REMOTE_DB}_${TABLE}.sql"
@@ -235,10 +233,8 @@ if [[ "${DOWNLOAD_DUMP}" = "1" ]]; then
         if [[ ! -f "${AWS_DUMP_FILE}" ]]; then
             S3_URL="${S3_BASE_URL%/}/${REMOTE_DB}.tar.gz"
             Log::displayInfo "Download dump from ${S3_URL} ...";
-            TMPDIR="${TEMP_FOLDER:-/tmp}" aws s3 cp "${S3_URL}" "${AWS_DUMP_FILE}" || {
-                Log::displayError "unable to download dump from S3 : ${S3_URL}"
-                exit 1
-            }
+            TMPDIR="${TEMP_FOLDER:-/tmp}" aws s3 cp "${S3_URL}" "${AWS_DUMP_FILE}" ||
+                Log::fatal "unable to download dump from S3 : ${S3_URL}"
         else
             Log::displayInfo "Local full dump exists : ${AWS_DUMP_FILE}"
         fi
@@ -258,25 +254,17 @@ if [[ "${DOWNLOAD_DUMP}" = "1" ]]; then
         ) > "${REMOTE_DB_DUMP_TEMP_FILE}"
         Log::displayInfo "Table dump extracted : ${REMOTE_DB_DUMP_TEMP_FILE}"
     else
-        # get remote db collation name
-        if [[ -z "${COLLATION_NAME}" ]]; then
-            COLLATION_NAME=$(Database::query dbRemoteInstance \
-                "SELECT default_collation_name FROM information_schema.SCHEMATA WHERE schema_name = \"${REMOTE_DB}\";" "information_schema")
-        fi
-
         # get remote db character set
         if [[ -z "${CHARACTER_SET}" ]]; then
             CHARACTER_SET=$(Database::query dbRemoteInstance \
                 "SELECT default_character_set_name FROM information_schema.SCHEMATA WHERE schema_name = \"${REMOTE_DB}\";" "information_schema")
         fi
 
-        DUMP_HEADER=$(printf "${DUMP_HEADER}\nSET names '${CHARACTER_SET}';\n")
+        DUMP_HEADER=$(printf "%s\nSET names '%s';\n" "${DUMP_HEADER}" "${CHARACTER_SET}")
 
         # check if remote db exists
-        Database::ifDbExists dbRemoteInstance "${REMOTE_DB}" || {
-            Log::displayError "Remote Database ${REMOTE_DB} does not exist"
-            exit 1
-        }
+        Database::ifDbExists dbRemoteInstance "${REMOTE_DB}" || 
+            Log::fatal "Remote Database ${REMOTE_DB} does not exist"
 
         # calculate remote table dump size
         Log::displayDebug "Calculate dump size for table ${TABLE}"
@@ -296,13 +284,12 @@ if [[ "${DOWNLOAD_DUMP}" = "1" ]]; then
         Database::dump dbRemoteInstance "${REMOTE_DB}" "${TABLE}" --skip-add-drop-table --single-transaction=TRUE | \
             pv --progress --size "${DUMP_SIZE_PV_ESTIMATION}m" >> "${REMOTE_DB_DUMP_TEMP_FILE}"
         echo "${DUMP_FOOTER}" >> "${REMOTE_DB_DUMP_TEMP_FILE}"
-        sed -i -r -e 's/CREATE TABLE `/CREATE TABLE IF NOT EXISTS `/g' "${REMOTE_DB_DUMP_TEMP_FILE}"
+        # shellcheck disable=SC2016
+        sed -i -r \
+            -e 's/CREATE TABLE `/CREATE TABLE IF NOT EXISTS `/g' \
+            "${REMOTE_DB_DUMP_TEMP_FILE}"
     fi
     Log::displayDebug "Dump done.";
-else
-    if [[ -z "${COLLATION_NAME}" ]]; then
-        COLLATION_NAME="utf8_general_ci"
-    fi
 fi
 
 Log::displayDebug "import remote to local from file ${REMOTE_DB_DUMP_TEMP_FILE}"

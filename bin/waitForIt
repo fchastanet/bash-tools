@@ -2,11 +2,11 @@
 #   Use this script to test if a given TCP host/port are available
 #  https://github.com/vishnubob/wait-for-it
 
-# load ckls-bootstrap
-# shellcheck source=vendor/bash-framework/_bootstrap.sh
+# load bootstrap
+# shellcheck source=/bash-framework/_bootstrap.sh
 source "$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." && pwd )/vendor/bash-framework/_bootstrap.sh"
 
-cmdName=$(basename $0)
+cmdName=$(basename "$0")
 
 usage()
 {
@@ -28,7 +28,7 @@ USAGE
 wait_for()
 {
     local result=0
-    if (( ${TIMEOUT} > 0 )); then
+    if (( TIMEOUT > 0 )); then
         Log::displayInfo "${cmdName}: waiting ${TIMEOUT} seconds for ${HOST}:${PORT}"
     else
         Log::displayInfo "${cmdName}: waiting for ${HOST}:${PORT} without a timeout"
@@ -39,7 +39,7 @@ wait_for()
         if [[ "${ISBUSY}" = "1" ]]; then
             (nc -z "${HOST}" "${PORT}") >/dev/null 2>&1 || result=$? || true
         else
-            (echo > /dev/tcp/${HOST}/${PORT}) >/dev/null 2>&1 || result=$? || true
+            (echo > "/dev/tcp/${HOST}/${PORT}") >/dev/null 2>&1 || result=$? || true
         fi
         if [[ "${result}" = "0" ]]; then
             local end_ts=${SECONDS}
@@ -55,11 +55,12 @@ wait_for_wrapper()
 {
     local result
     # In order to support SIGINT during timeout: http://unix.stackexchange.com/a/57692
+    local -a ARGS=(--child "--host=${HOST}" "--port=${PORT}" "--timeout=${TIMEOUT}")
     if [[ "${QUIET}" = "1" ]]; then
-        timeout "${BUSYTIMEFLAG}" "${TIMEOUT}" $0 --quiet --child --host="${HOST}" --port="{PORT}" --timeout="${TIMEOUT}" &
-    else
-        timeout ${BUSYTIMEFLAG} ${TIMEOUT} $0 --child --host=${HOST} --port=${PORT} --timeout=${TIMEOUT} &
+        ARGS+=(--quiet)
     fi
+    timeout "${BUSYTIMEFLAG}" "${TIMEOUT}" "$0" "${ARGS[@]}" &
+    
     local pid=$!
     # shellcheck disable=2064
     trap "kill -INT -${pid}" INT
@@ -130,15 +131,15 @@ do
         usage
         ;;
         *)
-        Log::displayError "Unknown argument: $1"
         usage
+        Log::fatal "Unknown argument: $1"
         ;;
     esac
 done
 
 if [[ "${HOST}" = "" || "${PORT}" = "" ]]; then
-    Log::displayError "Error: you need to provide a host and port to test."
     usage
+    Log::fatal "Error: you need to provide a host and port to test."
 fi
 
 TIMEOUT=${TIMEOUT:-15}
@@ -148,7 +149,7 @@ QUIET=${QUIET:-0}
 
 # check to see if timeout is from busybox?
 # check to see if timeout is from busybox?
-TIMEOUT_PATH=$(dirname "$(which timeout)")
+TIMEOUT_PATH=$(dirname "$(command -v timeout)")
 if [[ ${TIMEOUT_PATH} =~ "busybox" ]]; then
         ISBUSY=1
         BUSYTIMEFLAG="-t"
@@ -170,7 +171,7 @@ else
         RESULT=$?
     fi
 fi
-if [[ ! -z "${CLI+x}" && "${CLI[*]}" != "" ]]; then
+if [[ -n "${CLI+x}" && "${CLI[*]}" != "" ]]; then
     if [[ "${RESULT}" != "0" && "${STRICT}" = "1" ]]; then
         Log::displayError "${cmdName}: strict mode, refusing to execute sub-process"
         exit ${RESULT}

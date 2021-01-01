@@ -22,10 +22,14 @@ BEGIN{
   } else if(match(buffer, /^commit;$/, arr) != 0) {
     write=1
   } else if(match(buffer, /SET NAMES ([^ ]+)/, arr) != 0) {
-    sub(/SET NAMES ([^ ]+)/, "SET NAMES " CHARACTER_SET, line)
+    if (CHARACTER_SET != "") {
+      sub(/SET NAMES ([^ ]+)/, "SET NAMES " CHARACTER_SET, line)
+    }
     write=1
   } else if(match(buffer, /SET character_set_client = ([^ ]+)/, arr) != 0 && substr(arr[1], 0, 1) != "@") {
-    sub(/SET character_set_client = ([^ ]+)/, "SET character_set_client = " CHARACTER_SET, line)
+    if (CHARACTER_SET != "") {
+      sub(/SET character_set_client = ([^ ]+)/, "SET character_set_client = " CHARACTER_SET, line)
+    }
     write=1
   }
 

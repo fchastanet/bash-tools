@@ -1,6 +1,8 @@
 # 1. bash-tools
 
 Build status: [![Build Status](https://travis-ci.com/fchastanet/bash-tools.svg?branch=master)](https://travis-ci.com/fchastanet/bash-tools)
+[![DeepSource](https://deepsource.io/gh/fchastanet/bash-tools.svg/?label=active+issues&show_trend=true)](https://deepsource.io/gh/fchastanet/bash-tools/?ref=repository-badge)
+[![DeepSource](https://deepsource.io/gh/fchastanet/bash-tools.svg/?label=resolved+issues&show_trend=true)](https://deepsource.io/gh/fchastanet/bash-tools/?ref=repository-badge)
 
 - [1. bash-tools](#1-bash-tools)
   - [1.1. Exerpt](#11-exerpt)
@@ -68,15 +70,20 @@ touch ~/.parallel/will-cite
 
 ### 1.3.1. bin/gitRenameBranch
 
+```
 Description: rename git local branch, use options to push new branch and delete old branch
 
 Usage: gitRenameBranch [-h|--help] prints this help and exits
-Usage: gitRenameBranch <newBranchName> [<oldBranchName>] [--push|-p] [--delete|-d] 
+Usage: gitRenameBranch <newBranchName> [<oldBranchName>] [--push|-p] [--delete|-d] [--assume-yes|-yes|-y]
     --help,-h prints this help and exits
+     -y, --yes, --assume-yes do not ask for confirmation (use with caution)
+        Automatic yes to prompts; assume "y" as answer to all prompts
+        and run non-interactively. 
     --push,-p push new branch
     --delete,-d delete old remote branch
     <newBranchName> the new branch name to give to current branch
     <oldBranchName> (optional) the name of the old branch if not current one
+```
 
 ### 1.3.2. bin/dbQueryAllDatabases
 
@@ -87,31 +94,28 @@ bin/dbQueryAllDatabases -e conf/dsn/localhost-root.env conf/dbQueries/databaseSi
 
 **Help**
 ```
-Description: Execute a query on multiple database in order to generate a report, query can be parallelized on multiple databases
+Description: Execute a query on multiple databases in order to generate a report, query can be parallelized on multiple databases
 
-Usage: dbQueryAllDatabases [-h|--help]
-Usage: dbQueryAllDatabases <query|queryFile> [--env-file|-e <envfile>] [-t|--as-tsv] [-q|--query] [--jobs|-j <numberOfJobs>] [--bar|-b]
-    --help,-h prints this help and exits
-    --as-tsv,-t show results as tsv file (separated by tabulations)
-    --query,-q implies <query> parameter is a mysql query string
-    -r|--remote checks remote db, local db otherwise
-    --jobs,-j <numberOfJobs> specify the number of db to query in parallel (this needs the use of gnu parallel)
-    --bar,-b Show progress as a progress bar. In the bar is shown: % of jobs completed, estimated seconds left, and number of jobs started.
+Usage: dbQueryAllDatabases [-h|--help] prints this help and exits
+Usage: dbQueryAllDatabases <query|queryFile> [-d|--dsn <dsn>] [-t|--as-tsv] [-q|--query] [--jobs|-j <jobsCount>] [--bar|-b]
+
+    -t|--as-tsv           show results as tsv file (separated by tabulations)
+    -q|--query            implies <query> parameter is a mysql query string
+    -d|--dsn <dsn>        to use for target mysql server (Default: default.local) 
+    -j|--jobs <jobsCount> specify the number of db to query in parallel (this needs the use of gnu parallel)
+    -b|--bar              Show progress as a progress bar. In the bar is shown: % of jobs completed, estimated seconds left, and number of jobs started.
     <query|queryFile>
         if -q option is provided this parameter is a mysql query string
         else a file must be specified
-    --env-file,-e <envfile> load <envfile>, this file must contains these variables in order to connect to the mysql server
-MYSQL_HOSTNAME=""
-MYSQL_USER=""
-MYSQL_PASSWORD=""
-MYSQL_PORT=""
-REMOTE_MYSQL_HOSTNAME=""
-REMOTE_MYSQL_PORT=""
-REMOTE_MYSQL_USER=""
-REMOTE_MYSQL_PASSWORD=""
 
-    local DB connection  : root:hidden@127.0.0.1:3306
-    remote DB connection : root:hidden@127.0.0.1:3306
+List of available dsn: 
+    List of available dsn: 
+List of available dsn: 
+       - default.local
+       - default.remote
+       - localhost-root
+List of available queries (default dir /home/vagrant/projects/bash-tools/conf/dbQueries overridable in home dir /home/vagrant/.bash-tools/dbQueries):
+       - databaseSize
 ```
 
 ### 1.3.3. bin/dbImport
@@ -122,31 +126,45 @@ dbImport ExampleDbName
 
 **Help**
 ```
-Description: Import remote db into local db
+Description: Import source db into target db
 
-Command: dbImport --help prints this help and exits
-Command: dbImport <remoteDbName> [<localDbName>] [-f|--force] 
+Usage: dbImport --help prints this help and exits
+Usage: dbImport <fromDbName> [<targetDbName>] 
+                        [--force] 
                         [-d|--download-dump] [-a|--from-aws]
                         [-s|--skip-schema] [-p|--profile profileName] 
                         [-o|--collation-name utf8_general_ci] [-c|--character-set utf8]
+                        [-t|--target-dsn dsn] [-f|--from-dsn dsn]
 
     <localDbName> : use remote db name if not provided
-    -f|--force If local db exists, it will overwrite it
-    -d|--download-dump force remote db dump (default: use already downloaded dump in /home/vagrant/.bash-tools/dbImportDumps if available)
-    -a|--from-aws db dump will be downloaded from s3 instead of using remote db, 
+    -f|--force                  If local db exists, it will overwrite it
+    -d|--download-dump          force remote db dump (default: use already downloaded dump 
+        in /home/vagrant/.bash-tools/dbImportDumps if available)
+    -s|--skip-schema            avoid to import the schema
+    -o|--collation-name         change the collation name used during database creation 
+        (default value: collation name used by remote db)
+    -c|--character-set          change the character set used during database creation 
+        (default value: character set used by remote db or dump file if aws)
+    -p|--profile profileName    the name of the profile to use in order to include or exclude tables
+        (if not specified /home/vagrant/.bash-tools/dbImportProfiles/default.sh  is used if exists otherwise /home/vagrant/projects/bash-tools/conf/dbImportProfiles/default.sh)
+    -t|--target-dsn dsn         dsn to use for target database (Default: default.local) 
+    -f|--from-dsn dsn           dsn to use for source database (Default: default.remote)
+        this option is incompatible with -a|--from-aws option
+    -a|--from-aws               db dump will be downloaded from s3 instead of using remote db, 
         remoteDBName will represent the name of the file
         profile will be calculated against the dump itself
-    -s|--skip-schema avoid to import the schema
-    -o|--collation-name change the collation name used during database creation (default value: collation name used by remote db)
-    -c|--character-set change the character set used during database creation (default value: character set used by remote db)
-    -p|--profile profileName the name of the profile to use in order to include or exclude tables
-        (if not specified /home/vagrant/.bash-tools/dbImportProfiles/default.sh  is used if exists otherwise /home/vagrant/projects/bash-tools/conf/dbImportProfiles/default.sh)
-        list of available home profiles (/home/vagrant/.bash-tools/dbImportProfiles): ing, precomputeLearnerTimezone, all, none, sample, default
-        list of available profiles : all, none, default
+        this option is incompatible with -f|--from-dsn option
 
-    local DB connection   : root:Hidden@127.0.0.1:3306
-    remote DB connection  : root:Hidden@127.0.0.1:3306
-    Aws s3 location       : s3://example/exports/
+    Aws s3 location       : s3://example.com/exports/
+
+List of available profiles (default profiles dir /home/vagrant/projects/bash-tools/conf/dbImportProfiles overridable in home profiles /home/vagrant/.bash-tools/dbImportProfiles): 
+       - all
+       - default
+       - none
+List of available dsn: 
+       - default.local
+       - default.remote
+       - localhost-root
 ```
 
 ### 1.3.4. bin/dbImportTable
@@ -159,29 +177,66 @@ dbImportTable ExampleDbName ExampleTableName
 ```
 Description: Import remote db table into local db
 
-Command: dbImportTable [--help] prints this help and exits
+Command: dbImportTable [-h|--help] prints this help and exits
 Command: dbImportTable <remoteDbName> <tableName> [<localDbName>] 
-    [-d|--download-dump] [-f|--force] [-a|--from-aws]
-    [-o|--collation-name utf8_general_ci] [-c|--character-set utf8]
+    [-d|--download-dump] [--force] [-a|--from-aws]
+    [-t|--target-dsn dsn] [-f|--from-dsn dsn]
+    [-c|--character-set utf8]
 
     download the remote table data and install data in local database (the schema should exists)
 
-    <tableName>   : table name to import
-    <localDbName> : use remote db name if not provided
-    -f|--force If local table exists, it will overwrite it
-    -a|--from-aws db dump will be downloaded from s3 instead of using remote db, 
+    <tableName>   :      table name to import
+    <localDbName> :      use remote db name if not provided
+    --force              If local table exists, it will overwrite it
+    -t|--target-dsn dsn  dsn to use for target database (Default: default.local) 
+    -f|--from-dsn dsn    dsn to use for source database (Default: default.remote)
+        this option is incompatible with -a|--from-aws option
+    -a|--from-aws        db dump will be downloaded from s3 instead of using remote db, 
         remoteDBName will represent the name of the file
         profile will be calculated against the dump itself
-    -d|--download-dump force remote db dump (default: use already downloaded dump in /home/vagrant/.bash-tools/dbImportDumps if available)
-    -o|--collation-name change the collation name used during database creation (default value: collation name used by remote db)
-    -c|--character-set change the character set used during database creation (default value: character set used by remote db)
+    -d|--download-dump   force remote db dump (default: use already downloaded dump in /home/vagrant/.bash-tools/dbImportDumps if available)
+    -c|--character-set   change the character set used during database creation (default value: character set used by remote db)
 
-    local DB connection  : root:Hidden@127.0.0.1:3306
-    remote DB connection : root:Hidden@127.0.0.1:3306
-    Aws s3 location       : s3://example/exports/
+    Aws s3 location       : s3://ck-dev-frsa-devsql/exports/
+
+List of available dsn: 
+       - default.local
+       - default.remote
+       - localhost-root
 ```
 
 ### 1.3.5. bin/cli
+
+**Help**
+```
+Description: easy connection to docker container
+
+Command: cli [-h|--help] prints this help and exits
+Command: cli [<container>] [user] [command]
+
+    <container> : container should be one of these values (provided by 'docker ps'): 
+        webserver,mysql,php-fpm,redis,mailhog,mysql8,apache2,redis,mailhog
+        if not provided, it will load the container specified in default configuration (project-apache2)
+
+examples:
+    to connect to mysql container in bash mode with user mysql
+        cli mysql mysql "//bin/bash"
+    to connect to web container with user root
+        cli web root
+
+you can override these mappings by providing your own profile in 
+    
+This script will be executed with the variables userArg containerArg commandArg set as specified in command line
+and should provide value for the following variables finalUserArg finalContainerArg finalCommandArg
+
+List of available profiles (from /home/vagrant/projects/bash-tools/conf/cliProfiles and overridable in /home/vagrant/.bash-tools/cliProfiles): 
+       - default
+       - mysql
+       - mysql.remote
+       - node
+       - redis
+       - web
+```
 
 easy connection to docker container
 
@@ -195,40 +250,18 @@ will actually execute this command : MSYS_NO_PATHCONV=1 MSYS2_ARG_CONV_EXCL='*' 
 ```bash
 cli mysql root bash
 ```
-will actually execute this command : MSYS_NO_PATHCONV=1 MSYS2_ARG_CONV_EXCL='*' docker exec -e COLUMNS="$(tput cols)" -e LINES="$(tput lines)" -it --user=root ckls-mysql bash
+will actually execute this command : MSYS_NO_PATHCONV=1 MSYS2_ARG_CONV_EXCL='*' docker exec -e COLUMNS="$(tput cols)" -e LINES="$(tput lines)" -it --user=root project-mysql bash
 
 **Example 3: connect to mysql server in order to execute a query**
 
-will actually execute this command : MSYS_NO_PATHCONV=1 MSYS2_ARG_CONV_EXCL='*' docker exec -it -e COLUMNS="$(tput cols)" -e LINES="$(tput lines)" --user=mysql ckls-mysql //bin/bash -c 'mysql -h127.0.0.1 -uroot -proot -P3306'
+will actually execute this command : MSYS_NO_PATHCONV=1 MSYS2_ARG_CONV_EXCL='*' docker exec -it -e COLUMNS="$(tput cols)" -e LINES="$(tput lines)" --user=mysql project-mysql //bin/bash -c 'mysql -h127.0.0.1 -uroot -proot -P3306'
 
 **Example 4: pipe sql command to mysql container** 
 ```bash
 echo 'SELECT table_schema AS "Database",ROUND(SUM(data_length + index_length) / 1024 / 1024, 2) AS "Size (MB)" FROM information_schema.TABLES' | bin/cli mysql
 ```
-will actually execute this command : MSYS_NO_PATHCONV=1 MSYS2_ARG_CONV_EXCL='*' docker exec -i -e COLUMNS="$(tput cols)" -e LINES="$(tput lines)" --user=mysql ckls-mysql //bin/bash -c 'mysql -h127.0.0.1 -uroot -proot -P3306'
+will actually execute this command : MSYS_NO_PATHCONV=1 MSYS2_ARG_CONV_EXCL='*' docker exec -i -e COLUMNS="$(tput cols)" -e LINES="$(tput lines)" --user=mysql project-mysql //bin/bash -c 'mysql -h127.0.0.1 -uroot -proot -P3306'
 notice that as input is given to the command, tty option is not provided to docker exec
-
-**Help**
-```
-    Description: easy connection to docker container
-
-    Command: cli [-h|--help] prints this help and exits
-    Command: cli <container> [user] [command]
-
-    <container> : container should be one of these values : apache2,mysql8,mailhog,redis,proxysql
-
-    examples:
-    to connect to mysql container in bash mode with user mysql
-        cli mysql mysql "//bin/bash"
-    to connect to web container with user root
-        cli web root
-
-    these mappings are provided by default using /home/vagrant/projects/bash-tools/cliProfile/default.sh
-    you can override these mappings by providing your own profile in /home/vagrant/.bash-tools/cliProfile/default.sh
-
-    This script will be executed with the variables userArg containerArg commandArg set as specified in command line
-    and should provide value for the following variables finalUserArg finalContainerArg finalCommandArg
-```
 
 ## 1.4. Bash Framework
 
@@ -258,6 +291,7 @@ All these tools are based on *Bash framework* with the following features:
     * **Functions::checkCommandExists** check if command specified exists or exits with error message if not
     * **Functions::isWindows** determine if the script is executed under windows (git bash, wsl)
     * **Functions::quote** quote a string replace ' with \'
+    * **Functions::addTrap** add a trap to existing trap or simply set the trap if no existing trap
   * UI
     * **UI::askToContinue** ask the user if he wishes to continue a process
     * **UI::askYesNo** ask the user a confirmation
@@ -266,6 +300,7 @@ All these tools are based on *Bash framework* with the following features:
     * **Version::checkMinimal** ensure that command exists with expected version
     * **Version::compare** compares two versions
   * Log::display* output colored message on error output and log the message 
+    * **Log::fatal** error message in red bold and exits with code 1
     * **Log::displayError** error message in red
     * **Log::displayWarning** warning message  in yellow
     * **Log::displayInfo** info message in white on lightBlue

@@ -1,25 +1,16 @@
 #!/usr/bin/env bash
 
 CURRENT_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
-# load ckls-bootstrap
-# shellcheck source=vendor/bash-framework/_bootstrap.sh
+# load bootstrap
+# shellcheck source=/bash-framework/_bootstrap.sh
 source "$( cd "${CURRENT_DIR}/.." && pwd )/vendor/bash-framework/_bootstrap.sh"
 
 # make bash-tools folder available for db scripts
 export BASH_TOOLS_FOLDER
 
-if [[  "${USER}" = "root" ]]; then
-    Log::displayError "The script must not be run as root"
-    exit 1
-fi
-
-CONTAINER="${PROJECT_NAMESPACE}-${WEB_HOSTNAME}"
+Framework::expectNonRootUser
 
 import bash-framework/Database
-#initialize Database lib in order to use to docker
-if which docker; then
-    Database::setMysqlPrefix "docker exec -i ${CONTAINER}"
-fi
 
 # ensure that Ctrl-C is trapped by this script and not sub mysql process
 trap 'exit 130' INT
@@ -36,7 +27,8 @@ SCRIPT="${SCRIPTS_FOLDER}/dbCheckStructOneDatabase.sh"
 
 # Usage info
 showHelp() {
-local scriptsList=$(find "${SCRIPTS_FOLDER}" -type f -name \*.sh -printf '%P\n' | sed 's/\.sh$//g' | sed -e "s/^/\t\t/")
+local scriptsList
+scriptsList=$(find "${SCRIPTS_FOLDER}" -type f -name \*.sh -printf '%P\n' | sed 's/\.sh$//g' | sed -e "s/^/\t\t/")
 
 cat << EOF
 Allow to check database(s) across CKLS propel schema
@@ -63,9 +55,8 @@ EOF
 # -l is for long options with double dash like --help
 # the comma separates different long options
 options=$(getopt -l help,remote,jobs:script:,,output:,verbose -o hrj:s:o:v -- "$@" 2> /dev/null) || {
-    Log::displayError "invalid options specified"
     showHelp
-    exit 1
+    Log::fatal "invalid options specified"
 }
 
 eval set -- "${options}"
@@ -99,55 +90,41 @@ case $1 in
     shift
     break;;
 *)
-    Log::displayError "invalid argument $1"
     showHelp
-    exit 1
+    Log::fatal "invalid argument $1"
 esac
 shift
 done
 
 # additional arguments
-shift $(expr $OPTIND - 1 )
+shift $(( OPTIND - 1 ))
 if [[ "$1" != "" ]]; then
     DB_NAME="$1"
     shift
 fi
 
 if [[ "$1" != "" ]]; then
-    Log::displayError "too much arguments provided, argument $1 not expected"
     showHelp
-    exit 1
+    Log::fatal "too much arguments provided, argument $1 not expected"
 fi
 
 if [[ "${OUTPUT_DIR:0:1}" != "/" ]] ; then
    # relative path
-   OUTPUT_DIR="${__rootSrcPath__}/${OUTPUT_DIR}"
+   OUTPUT_DIR="${PWD}/${OUTPUT_DIR}"
 fi
-mkdir -p "${OUTPUT_DIR}" || {
-    Log::displayError "unable to create directory ${OUTPUT_DIR}"
-    exit 1
-}
-if [[ ! -d "${OUTPUT_DIR}" || ! -w "${OUTPUT_DIR}" ]] ; then
-    Log::displayError "output dir is not correct or not writable"
-    exit 1
-fi
+mkdir -p "${OUTPUT_DIR}" || Log::fatal "unable to create directory ${OUTPUT_DIR}"
+[[ ! -d "${OUTPUT_DIR}" || ! -w "${OUTPUT_DIR}" ]] ||
+    Log::fatal "output dir is not correct or not writable"
 
 if ! [[ ${JOBS_NUMBER} =~ ^[0-9]+$ ]] ; then
-   Log::displayError "number of jobs is incorrect"
-   exit 1
+   Log::fatal "number of jobs is incorrect"
 fi
-if [[ ${JOBS_NUMBER} -lt 1 ]] ; then
-    Log::displayError "number of jobs must be greater than 0"
-    exit 1
-fi
+[[ ${JOBS_NUMBER} -lt 1 ]] && Log::fatal "number of jobs must be greater than 0"
 
 # try script inside script folder
 if [[ ! -f "${SCRIPTS_FOLDER}/${SCRIPT}.sh" ]]; then
     # try script absolute or relative
-    if [[ ! -f "${SCRIPT}" ]]; then
-        Log::displayError "unable to find script ${SCRIPT}"
-        exit 1
-    fi
+    [[ ! -f "${SCRIPT}" ]] && Log::fatal "unable to find script ${SCRIPT}"
 else
     SCRIPT="${SCRIPTS_FOLDER}/${SCRIPT}.sh"
 fi
@@ -168,6 +145,7 @@ fi
 Log::displayInfo "get the list of all databases"
 Database::setMysqlOptions "${MYSQL_OPTIONS}"
 if [[ -z "${DB_NAME}" ]]; then
+    # shellcheck disable=SC2016
     sql='SELECT `schema_name` from INFORMATION_SCHEMA.SCHEMATA  WHERE `schema_name` NOT IN("information_schema", "mysql", "performance_schema")'
     allDbs="$(Database::query "${HOSTNAME}" "${PORT}" "${USER}" "${PASSWORD}" "${sql}")"
 else
@@ -177,12 +155,12 @@ fi
 Log::displayInfo "processing $(echo "${allDbs}"|wc -l) databases using ${JOBS_NUMBER} jobs"
 
 if [[ "${JOBS_NUMBER}" = "1" ]] ; then
-    echo "${allDbs}" | while IFS=" " read db; do
-        "${SCRIPT}" "${REMOTE}" "${VERBOSE}" "${OUTPUT_DIR}" "${db}"
+    echo "${allDbs}" | while IFS=" " read -r db; do
+        "${SCRIPT}" "${REMOTE}" "${VERBOSE}" "${OUTPUT_DIR}" "${PWD}" "${db}"
     done
 else
     export selectedQueryFile
     export MYSQL_OPTIONS
 
-    echo "${allDbs}" | parallel --tag --linebuffer --jobs=${JOBS_NUMBER} "${SCRIPT}" "${REMOTE}" "${VERBOSE}" "${OUTPUT_DIR}"
+    echo "${allDbs}" | parallel --tag --linebuffer --jobs="${JOBS_NUMBER}" "${SCRIPT}" "${REMOTE}" "${VERBOSE}" "${OUTPUT_DIR}" "${PWD}"
 fi

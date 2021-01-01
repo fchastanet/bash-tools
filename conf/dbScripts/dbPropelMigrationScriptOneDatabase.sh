@@ -5,24 +5,21 @@
 # USED BY bin/dbScriptAllDatabases
 ############################################################
 
-if [[  "${USER}" = "root" ]]; then
-    Log::displayError "The script must not be run as root"
-    exit 1
-fi
+Framework::expectNonRootUser
 
 declare REMOTE="$1"
 declare VERBOSE="$2"
 declare outputDir="$3"
-declare db="$4"
+declare callingDir="$4"
+declare db="$5"
 
-# load ckls-bootstrap
+# load bootstrap
 # shellcheck source=/bash-framework/_bootstrap.sh
 source "${BASH_TOOLS_FOLDER}/vendor/bash-framework/_bootstrap.sh"
 
 # ensure that Ctrl-C is trapped by this script and not sub mysql process
 trap 'exit 130' INT
 
-CONTAINER="${PROJECT_NAMESPACE}-${WEB_HOSTNAME}"
 MYSQL_OPTIONS=""
 
 if [[ "${REMOTE}" = "1" ]] ; then
@@ -38,10 +35,6 @@ else
 fi
 
 import bash-framework/Database
-#initialize Database lib in order to use to docker
-if which docker; then
-    Database::setMysqlPrefix "docker exec -i ${CONTAINER}"
-fi
 
 declare repairPhpScript="${outputDir}/${db}_propelMigration.php"
 declare repairSqlScript="${outputDir}/${db}_up.sql"
@@ -70,10 +63,10 @@ trapExit() {
     fi
 
     # close fd 3 if opened
-    if [[ ! -z "${repairLogFd}" ]]; then
+    if [[ -n "${repairLogFd}" ]]; then
         exec {repairLogFd}>&-
     fi
-    [[ ! -z "${msg}" ]] && echo "${msg}" >> "${repairLog}"
+    [[ -n "${msg}" ]] && echo "${msg}" >> "${repairLog}"
 
     exit ${exitCode}
 }
@@ -99,40 +92,43 @@ createRepairScript() {
         [[ -d  "${PROPEL_OUTPUT_DIR}" &&  -z "${PROPEL_OUTPUT_DIR}" ]] || break
     done
 
-    let start=$(date +%s)
+    declare -i start, end, duration
+    start=$(date +%s)
 
-    cmd=""
+    declare -a cmd
+    cmd=()
     # these overrides are used by app/config/elms-conf.php
-    cmd+="OVERRIDE_DATABASE_HOST=\"${HOSTNAME}\" "
-    cmd+="OVERRIDE_DATABASE_USER=\"${USER}\" "
-    cmd+="OVERRIDE_DATABASE_PASSWORD=\"${PASSWORD}\" "
-    cmd+="OVERRIDE_DATABASE_NAME=\"${db}\" "
+    cmd+=("OVERRIDE_DATABASE_HOST=${HOSTNAME}")
+    cmd+=("OVERRIDE_DATABASE_USER=${USER}")
+    cmd+=("OVERRIDE_DATABASE_PASSWORD=${PASSWORD}")
+    cmd+=("OVERRIDE_DATABASE_NAME=${db}")
     # the propel output dir is overridden in app/config/config_remote.yml
-    cmd+="SYMFONY__PROPEL__OUTPUT__DIR=\"${PROPEL_OUTPUT_DIR}\" "
-    cmd+="\"${__rootSrcPath__}/bin/console\" crossknowledge:migration:generate-diff "
+    cmd+=("SYMFONY__PROPEL__OUTPUT__DIR=${PROPEL_OUTPUT_DIR}")
+    cmd+=("${callingDir}/bin/console")
+    cmd+=(crossknowledge:migration:generate-diff)
     # to target app/config/config_remote.yml
-    cmd+="--env=remote "
+    cmd+=("--env=remote")
     if [[ "${VERBOSE}" = "1" ]]; then
-        cmd+=" -vvv"
+        cmd+=(-vvv)
     else
         # verbosity normal only for logging
-        cmd+=" -v"
+        cmd+=(-v)
     fi
 
-    msg="execute command : ${cmd}"
+    msg="execute command : ${cmd[*]}"
     if [[ "${VERBOSE}" = "1" ]]; then
         Log::displayInfo "${msg}"
     else
-        echo "${msg}" >&${repairLogFd}
+        echo "${msg}" >&"${repairLogFd}"
     fi
     declare ret="0"
-    error=$(eval "${cmd}" 2>&1) || { ret="$?"; } || true
-    let end=$(date +%s)
+    error=$("${cmd[@]}" 2>&1) || { ret="$?"; } || true
+    end=$(date +%s)
     duration=$(( end - start ))
     if [[ "${VERBOSE}" = "1" ]]; then
         echo "${error}"
     else
-        echo "${error}" >&${repairLogFd}
+        echo "${error}" >&"${repairLogFd}"
     fi
     Log::displayInfo "DB structure of '${db}' checked in ${duration}s"
 
@@ -143,8 +139,10 @@ createRepairScript() {
 
     # does propel file generated ?
     PROPEL_FILE_PATTERN="${PROPEL_OUTPUT_DIR}/PropelMigration_*.php"
+    # shellcheck disable=SC2086
     if ls ${PROPEL_FILE_PATTERN} 1> /dev/null 2>&1; then
         Log::displayError "DB repair script : ${repairPhpScript}"
+        # shellcheck disable=SC2086
         cp ${PROPEL_FILE_PATTERN} "${repairPhpScript}" || {
             Log::displayError "invalid pattern ? ${PROPEL_FILE_PATTERN}"
             return 1
@@ -170,9 +168,9 @@ else
     # remove eventually existing repair log
     rm -f "${repairLog}" 2>/dev/null || true
     # open file descriptor for writing to repairLog
-    exec {repairLogFd}>${repairLog}
+    exec {repairLogFd}>"${repairLog}"
 
-    createRepairScript 2>&1 > >( tee -a >(cat - | sed -r -e "s/\x1B\[([0-9]{1,3}((;[0-9]{1,3})*)?)?[m|K]//g" >&${repairLogFd}) )
+    createRepairScript > >( tee -a >(cat - | sed -r -e "s/\x1B\[([0-9]{1,3}((;[0-9]{1,3})*)?)?[m|K]//g" >&"${repairLogFd}") ) 2>&1
 
     exit $?
 fi
