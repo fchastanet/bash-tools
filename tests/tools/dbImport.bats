@@ -81,18 +81,18 @@ teardown() {
     # call 6 (order 10): import structure dump into db
     # call 7 (order 11): import data dump into db
     stub mysql \
-        "\* \* \* \* information_schema -e 'SELECT default_collation_name FROM information_schema.SCHEMATA WHERE schema_name = \"fromDb\";' : echo 'collation'" \
-        "\* \* \* \* information_schema -e 'SELECT default_character_set_name FROM information_schema.SCHEMATA WHERE schema_name = \"fromDb\";' : echo 'charset'" \
-        "\* \* \* \* fromDb -e 'show tables' : echo 'table1'" \
-        "\* -s --skip-column-names --connect-timeout=5 : echo '100'" \
-        $'* -s --skip-column-names --connect-timeout=5 -e \'CREATE DATABASE `toDb` CHARACTER SET "charset" COLLATE "collation"\' : echo "db created"' \
-        "\* -s --skip-column-names --connect-timeout=5 toDb : echo 'import structure dump'" \
-        "\* -s --skip-column-names --connect-timeout=5 toDb : echo 'import data dump'"
+        "\* \* \* \* --connect-timeout=5 information_schema -e 'SELECT default_collation_name FROM information_schema.SCHEMATA WHERE schema_name = \"fromDb\";' : echo 'collation'" \
+        "\* \* \* \* --connect-timeout=5 information_schema -e 'SELECT default_character_set_name FROM information_schema.SCHEMATA WHERE schema_name = \"fromDb\";' : echo 'charset'" \
+        "\* \* \* \* --connect-timeout=5 fromDb -e 'show tables' : echo 'table1'" \
+        "\* -s --skip-column-names --default-character-set=utf8 --connect-timeout=5 : echo '100'" \
+        $'* -s --skip-column-names --default-character-set=utf8 --connect-timeout=5 -e \'CREATE DATABASE `toDb` CHARACTER SET "charset" COLLATE "collation"\' : echo "db created"' \
+        "\* -s --skip-column-names --default-character-set=utf8 --connect-timeout=5 toDb : echo 'import structure dump'" \
+        "\* -s --skip-column-names --default-character-set=utf8 --connect-timeout=5 toDb : echo 'import data dump'"
 
     # call 1 (order 7): dump data
     # call 2 (order 8): dump structure
     stub mysqldump \
-        "\* --default-character-set=utf8 --compress --compact --hex-blob --routines --triggers --single-transaction --set-gtid-purged=OFF --column-statistics=0 --ssl-mode=DISABLED --no-create-info --skip-add-drop-table --single-transaction=TRUE fromDb 'table1' : echo '####data####'" \
+        "\* --default-character-set=utf8 --compress --compact --hex-blob --routines --triggers --single-transaction --set-gtid-purged=OFF --column-statistics=0 --ssl-mode=DISABLED --no-create-info --skip-add-drop-table --single-transaction=TRUE fromDb 'table1 ' : echo '####data####'" \
         "\* --default-character-set=utf8 --compress --compact --hex-blob --routines --triggers --single-transaction --set-gtid-purged=OFF --column-statistics=0 --ssl-mode=DISABLED --no-data --skip-add-drop-table --single-transaction=TRUE fromDb : echo '####structure####'"
 
     run ${toolsDir}/dbImport -f default.local fromDb toDb 2>&1 
@@ -113,9 +113,9 @@ teardown() {
     # call 6 (order 3): import structure dump into db
     # call 7 (order 4): import data dump into db
     stub mysql \
-        $'* -s --skip-column-names --connect-timeout=5 -e \'CREATE DATABASE `toDb` CHARACTER SET "utf8" COLLATE "utf8_general_ci"\' : echo "db created"' \
-        "\* -s --skip-column-names --connect-timeout=5 toDb : echo 'import structure dump'" \
-        "\* -s --skip-column-names --connect-timeout=5 toDb : echo 'import data dump'"
+        $'* -s --skip-column-names --default-character-set=utf8 --connect-timeout=5 -e \'CREATE DATABASE `toDb` CHARACTER SET "utf8" COLLATE "utf8_general_ci"\' : echo "db created"' \
+        "\* -s --skip-column-names --default-character-set=utf8 --connect-timeout=5 toDb : echo 'import structure dump'" \
+        "\* -s --skip-column-names --default-character-set=utf8 --connect-timeout=5 toDb : echo 'import data dump'"
     
     run ${toolsDir}/dbImport -f default.local fromDb toDb 2>&1
     [[ "${output}" == *"Import database duration : "* ]]

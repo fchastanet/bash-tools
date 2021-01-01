@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -x
+
 CURRENT_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 # load bash-framework
 # shellcheck source=bash-framework/_bootstrap.sh
@@ -205,15 +205,14 @@ if [[ ! -d "${DB_IMPORT_DUMP_DIR}" ]]; then
         Log::fatal "impossible to create directory ${DB_IMPORT_DUMP_DIR} specified by DB_IMPORT_DUMP_DIR env variable"
 fi
 
-
 # create db instances
 declare -Agx dbFromInstance dbTargetDatabase
 
 Database::newInstance dbTargetDatabase "${TARGET_DSN}"
-Database::setOptions dbTargetDatabase "${MYSQL_OPTIONS} --connect-timeout=5"
+Database::setOptions dbTargetDatabase "${dbTargetDatabase[OPTIONS]} --connect-timeout=5"
 if [[ "${FROM_AWS}" = "0" ]]; then
     Database::newInstance dbFromInstance "${FROM_DSN}"
-    Database::setOptions dbFromInstance "${MYSQL_OPTIONS} --connect-timeout=5"
+    Database::setOptions dbFromInstance "${dbFromInstance[OPTIONS]} --connect-timeout=5"
 fi
 
 # check if local db exists
@@ -228,8 +227,8 @@ if [[ "${FROM_AWS}" = "1" ]]; then
     REMOTE_DB_DUMP_TEMP_FILE="${DB_IMPORT_DUMP_DIR}/${REMOTE_DB}.tar.gz"
 else
     REMOTE_DB_DUMP_TEMP_FILE="${DB_IMPORT_DUMP_DIR}/${REMOTE_DB}_${PROFILE}.sql"
+    REMOTE_DB_STRUCTURE_DUMP_TEMP_FILE="${DB_IMPORT_DUMP_DIR}/${REMOTE_DB}_${PROFILE}_structure.sql"
 fi
-REMOTE_DB_STRUCTURE_DUMP_TEMP_FILE="${DB_IMPORT_DUMP_DIR}/${REMOTE_DB}_${PROFILE}_structure.sql"
 
 # check if local dump exists
 if [[ "${DOWNLOAD_DUMP}" = "0" ]]; then
@@ -261,7 +260,7 @@ read -r -d '\0' DUMP_FOOTER <<- EOM2
 EOM2
 
 Log::displayInfo "tables list will calculated using profile ${PROFILE} => ${PROFILE_COMMAND}"
-chmod 755 "${PROFILE_COMMAND}"
+chmod +x "${PROFILE_COMMAND}"
 SECONDS=0
 if [[ "${DOWNLOAD_DUMP}" = "1" ]]; then
     Log::displayInfo "Download dump"
@@ -295,12 +294,9 @@ if [[ "${DOWNLOAD_DUMP}" = "1" ]]; then
         DUMP_HEADER=$(printf "%s\nSET names '%s';\n" "${DUMP_HEADER}" "${CHARACTER_SET}")
 
         # calculate remote db dump size
-        FULL_LIST_TABLES="$(Database::query dbFromInstance "show tables" "${REMOTE_DB}")"
-        LIST_TABLES="$(echo "${FULL_LIST_TABLES}" | ${PROFILE_COMMAND})"
-        readarray -t LIST_TABLES_ARRAY <<< "${LIST_TABLES}"
-        IFS=$'\n' eval 'LIST_TABLES_ARRAY=(${LIST_TABLES})'
-        LIST_TABLES_DUMP=$(printf "'%q'," "${LIST_TABLES_ARRAY[@]}")
-
+        IFS=$'\n' LIST_TABLES_ARRAY="$(Database::query dbFromInstance "show tables" "${REMOTE_DB}" | ${PROFILE_COMMAND})"
+        # shellcheck disable=SC2068
+        LIST_TABLES_DUMP=$(printf "'%q'," ${LIST_TABLES_ARRAY[@]})
         Log::displayInfo "Calculate dump size for tables ${LIST_TABLES_DUMP}"
         DUMP_SIZE_QUERY="SELECT ROUND(SUM(data_length + index_length) / 1024 / 1024, 0) AS size FROM information_schema.TABLES WHERE table_schema=\"${REMOTE_DB}\""
         DUMP_SIZE_QUERY+=" AND table_name IN(${LIST_TABLES_DUMP} 'dummy') "
@@ -313,18 +309,23 @@ if [[ "${DOWNLOAD_DUMP}" = "1" ]]; then
 
         # dump db
         Log::displayInfo "Dump the database $REMOTE_DB (Size:${REMOTE_DB_DUMP_SIZE}MB) ...";
-        echo "${DUMP_HEADER}" > "${REMOTE_DB_DUMP_TEMP_FILE}"
         DUMP_SIZE_PV_ESTIMATION=$(awk "BEGIN {printf \"%.0f\",${REMOTE_DB_DUMP_SIZE}/1.5}")
         LIST_TABLES_DUMP=$(printf "%q " "${LIST_TABLES_ARRAY[@]}")
-        time Database::dump dbFromInstance "${REMOTE_DB}" "${LIST_TABLES_DUMP}" --no-create-info --skip-add-drop-table --single-transaction=TRUE | \
-            pv --progress --size "${DUMP_SIZE_PV_ESTIMATION}m" >> "${REMOTE_DB_DUMP_TEMP_FILE}"
-        echo "${DUMP_FOOTER}" >> "${REMOTE_DB_DUMP_TEMP_FILE}"
+        time (
+            echo "${DUMP_HEADER}"
+            Database::dump dbFromInstance "${REMOTE_DB}" "${LIST_TABLES_DUMP}" \
+                    --no-create-info --skip-add-drop-table --single-transaction=TRUE | \
+                    pv --progress --size "${DUMP_SIZE_PV_ESTIMATION}m" 
+            echo "${DUMP_FOOTER}" 
+        ) > "${REMOTE_DB_DUMP_TEMP_FILE}"
 
-        Log::displayInfo "Dump structure of the database ${REMOTE_DB} ...";
-        echo "${DUMP_HEADER}" > "${REMOTE_DB_STRUCTURE_DUMP_TEMP_FILE}"
-        time Database::dump dbFromInstance "${REMOTE_DB}" "" --no-data --skip-add-drop-table --single-transaction=TRUE \
-            >> "${REMOTE_DB_STRUCTURE_DUMP_TEMP_FILE}"
-        echo "${DUMP_FOOTER}" >> "${REMOTE_DB_STRUCTURE_DUMP_TEMP_FILE}"
+        Log::displayInfo "Dump structure of the database ${REMOTE_DB} ..."
+        time (
+            echo "${DUMP_HEADER}" 
+            Database::dump dbFromInstance "${REMOTE_DB}" "" \
+                    --no-data --skip-add-drop-table --single-transaction=TRUE
+            echo "${DUMP_FOOTER}" 
+        ) > "${REMOTE_DB_STRUCTURE_DUMP_TEMP_FILE}"
     fi
     Log::displayInfo "Dump done.";
 fi
@@ -342,7 +343,6 @@ Log::displayInfo "create local database ${LOCAL_DB}";
 # shellcheck disable=SC2016
 Database::query dbTargetDatabase \
     "$(printf 'CREATE DATABASE `%s` CHARACTER SET "%s" COLLATE "%s"' "${LOCAL_DB}" "${CHARACTER_SET}" "${COLLATION_NAME}")"
-    
 
 if [[ "${FROM_AWS}" = "1" ]]; then
     "${CURRENT_DIR}/dbImportStream" \

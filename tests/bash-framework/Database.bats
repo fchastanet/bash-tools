@@ -45,37 +45,37 @@ teardown() {
 @test "${BATS_TEST_FILENAME#/bash/tests/} Database::checkDsnFile missing hostname" {
     run Database::checkDsnFile "${BATS_TEST_DIRNAME}/data/dsn_missing_hostname.env" 2>&1
     [ "$status" -eq 1 ]
-    [[ "${output}" == *"ERROR - dsn file /bash/tests/bash-framework/data/dsn_missing_hostname.env : HOSTNAME not provided"* ]]
+    [[ "${output}" == *"ERROR - dsn file ${BATS_TEST_DIRNAME}/data/dsn_missing_hostname.env : HOSTNAME not provided"* ]]
 }
 
 @test "${BATS_TEST_FILENAME#/bash/tests/} Database::checkDsnFile warning hostname localhost" {
     run Database::checkDsnFile "${BATS_TEST_DIRNAME}/data/dsn_hostname_localhost.env" 2>&1
     [ "$status" -eq 0 ]
-    [[ "${output}" == *"WARN  - dsn file /bash/tests/bash-framework/data/dsn_hostname_localhost.env : check that HOSTNAME should not be 127.0.0.1 instead of localhost"* ]]                        
+    [[ "${output}" == *"WARN  - dsn file ${BATS_TEST_DIRNAME}/data/dsn_hostname_localhost.env : check that HOSTNAME should not be 127.0.0.1 instead of localhost"* ]]                        
 }
 
 @test "${BATS_TEST_FILENAME#/bash/tests/} Database::checkDsnFile missing port" {
     run Database::checkDsnFile "${BATS_TEST_DIRNAME}/data/dsn_missing_port.env" 2>&1
     [ "$status" -eq 1 ]
-    [[ "${output}" == *"ERROR - dsn file /bash/tests/bash-framework/data/dsn_missing_port.env : PORT not provided"* ]]
+    [[ "${output}" == *"ERROR - dsn file ${BATS_TEST_DIRNAME}/data/dsn_missing_port.env : PORT not provided"* ]]
 }
 
 @test "${BATS_TEST_FILENAME#/bash/tests/} Database::checkDsnFile invalid port" {
     run Database::checkDsnFile "${BATS_TEST_DIRNAME}/data/dsn_invalid_port.env" 2>&1
     [ "$status" -eq 1 ]
-    [[ "${output}" == *"ERROR - dsn file /bash/tests/bash-framework/data/dsn_invalid_port.env : PORT invalid"* ]]
+    [[ "${output}" == *"ERROR - dsn file ${BATS_TEST_DIRNAME}/data/dsn_invalid_port.env : PORT invalid"* ]]
 }
 
 @test "${BATS_TEST_FILENAME#/bash/tests/} Database::checkDsnFile missing user" {
     run Database::checkDsnFile "${BATS_TEST_DIRNAME}/data/dsn_missing_user.env" 2>&1
     [ "$status" -eq 1 ]
-    [[ "${output}" == *"ERROR - dsn file /bash/tests/bash-framework/data/dsn_missing_user.env : USER not provided"* ]]
+    [[ "${output}" == *"ERROR - dsn file ${BATS_TEST_DIRNAME}/data/dsn_missing_user.env : USER not provided"* ]]
 }
 
 @test "${BATS_TEST_FILENAME#/bash/tests/} Database::checkDsnFile missing password" {
     run Database::checkDsnFile "${BATS_TEST_DIRNAME}/data/dsn_missing_password.env" 2>&1
     [ "$status" -eq 1 ]
-    [[ "${output}" == *"ERROR - dsn file /bash/tests/bash-framework/data/dsn_missing_password.env : PASSWORD not provided"* ]]
+    [[ "${output}" == *"ERROR - dsn file ${BATS_TEST_DIRNAME}/data/dsn_missing_password.env : PASSWORD not provided"* ]]
 }
 
 @test "${BATS_TEST_FILENAME#/bash/tests/} Database::checkDsnFile valid" {
@@ -307,7 +307,6 @@ teardown() {
 @test "${BATS_TEST_FILENAME#/bash/tests/} Database::dump" {
     stub mysqldump \
         '* --default-character-set=utf8 --compress --compact --hex-blob --routines --triggers --single-transaction --set-gtid-purged=OFF --column-statistics=0 --ssl-mode=DISABLED mydb : echo "dump"'
-
     declare -Ax dbFromInstance
     export HOME=/tmp/home
     Database::newInstance dbFromInstance "dsn_valid"

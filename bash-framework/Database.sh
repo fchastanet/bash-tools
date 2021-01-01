@@ -338,10 +338,10 @@ Database::query() {
 
   mysqlCommand+=(mysql)
   mysqlCommand+=("--defaults-extra-file=${instanceQuery['AUTH_FILE']}")
-  # shellcheck disable=SC2206
-  mysqlCommand+=(${instanceQuery['QUERY_OPTIONS']})
-  # shellcheck disable=SC2206
-  mysqlCommand+=(${instanceQuery['OPTIONS']})
+  IFS=' ' read -r -a queryOptions <<< "${instanceQuery['QUERY_OPTIONS']}"
+  mysqlCommand+=("${queryOptions[@]}")
+  IFS=' ' read -r -a options <<< "${instanceQuery['OPTIONS']}"
+  mysqlCommand+=("${options[@]}")
   # add optional db name
   if [[ -n "${3+x}" ]]; then
     mysqlCommand+=("$3")
@@ -353,7 +353,7 @@ Database::query() {
       mysqlCommand+=("$2")
     fi
   fi
-  Log::displayDebug "$(printf "execute command: '%s'"  "${mysqlCommand[@]}")"
+  Log::displayDebug "$(printf "execute command: '%s'"  "${mysqlCommand[*]}")"
 
   if [[ -f "$2" ]]; then
     "${mysqlCommand[@]}" < "$2"
@@ -377,7 +377,7 @@ Database::dump() {
   local -n instanceDump=$1
   local db="$2"
   local optionalTableList=""
-  local dumpAdditionalOptions=""
+  local dumpAdditionalOptions=()
   local -a mysqlCommand=()
 
   # optional table list
@@ -389,15 +389,14 @@ Database::dump() {
 
   # additional options
   if [[ -n "${1+x}" ]]; then
-    dumpAdditionalOptions="$*"
+    dumpAdditionalOptions=("$@")
   fi
 
   mysqlCommand+=(mysqldump)
   mysqlCommand+=("--defaults-extra-file=${instanceDump['AUTH_FILE']}")
-  # shellcheck disable=SC2206
-  mysqlCommand+=(${instanceDump['DUMP_OPTIONS']})
-  # shellcheck disable=SC2206
-  mysqlCommand+=(${dumpAdditionalOptions})
+  IFS=' ' read -r -a dumpOptions <<< "${instanceDump['DUMP_OPTIONS']}"
+  mysqlCommand+=("${dumpOptions[@]}")
+  mysqlCommand+=("${dumpAdditionalOptions[@]}")
   mysqlCommand+=("${db}")
   # shellcheck disable=SC2206
   mysqlCommand+=(${optionalTableList})
