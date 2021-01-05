@@ -39,11 +39,14 @@ showHelp() {
 local dsnList=""
 dsnList="$(Functions::getConfMergedList "dsn" "env")"
 
-cat << EOF
-Description: Import remote db table into local db
+INFO="$(echo -e "\033[1;37m")"
+NORMAL="$(echo -e "\033[0m")"
 
-Command: ${SCRIPT_NAME} [-h|--help] prints this help and exits
-Command: ${SCRIPT_NAME} <remoteDbName> <tableName> [<localDbName>] 
+cat << EOF
+${INFO}Description:${NORMAL} Import remote db table into local db
+
+${INFO}Usage:${NORMAL} ${SCRIPT_NAME} [-h|--help] prints this help and exits
+${INFO}Usage:${NORMAL} ${SCRIPT_NAME} <remoteDbName> <tableName> [<localDbName>] 
     [-d|--download-dump] [--force] [-a|--from-aws]
     [-t|--target-dsn dsn] [-f|--from-dsn dsn]
     [-c|--character-set utf8]
@@ -64,7 +67,7 @@ Command: ${SCRIPT_NAME} <remoteDbName> <tableName> [<localDbName>]
 
     Aws s3 location       : ${S3_BASE_URL}
 
-List of available dsn: 
+${INFO}List of available dsn:${NORMAL}
 ${dsnList}
 EOF
 }
@@ -180,10 +183,12 @@ declare -Agx dbRemoteInstance dbLocalInstance
 Database::newInstance dbTargetDatabase "${TARGET_DSN}"
 # shellcheck disable=SC2154
 Database::setOptions dbTargetDatabase "${dbTargetDatabase[OPTIONS]} --connect-timeout=5"
+Log::displayInfo "Using target dsn ${dbTargetDatabase['DSN_FILE']}"
 if [[ "${FROM_AWS}" = "0" ]]; then
     Database::newInstance dbFromInstance "${FROM_DSN}"
     # shellcheck disable=SC2154
     Database::setOptions dbFromInstance "${dbFromInstance[OPTIONS]} --connect-timeout=5"
+    Log::displayInfo "Using from dsn ${dbFromInstance['DSN_FILE']}"
 fi
 
 # check if local db exists

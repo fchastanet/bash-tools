@@ -33,11 +33,15 @@ showHelp() {
 local dsnList queriesList 
 dsnList="$(Functions::getConfMergedList "dsn" "env")"
 queriesList="$(Functions::getConfMergedList "dbQueries" "sql" || true)"
-cat << EOF
-Description: Execute a query on multiple databases in order to generate a report, query can be parallelized on multiple databases
 
-Usage: ${SCRIPT_NAME} [-h|--help] prints this help and exits
-Usage: ${SCRIPT_NAME} <query|queryFile> [-d|--dsn <dsn>] [-t|--as-tsv] [-q|--query] [--jobs|-j <jobsCount>] [--bar|-b]
+INFO="$(echo -e "\033[1;37m")"
+NORMAL="$(echo -e "\033[0m")"
+
+cat << EOF
+${INFO}Description:${NORMAL} Execute a query on multiple databases in order to generate a report, query can be parallelized on multiple databases
+
+${INFO}Usage:${NORMAL} ${SCRIPT_NAME} [-h|--help] prints this help and exits
+${INFO}Usage:${NORMAL} ${SCRIPT_NAME} <query|queryFile> [-d|--dsn <dsn>] [-t|--as-tsv] [-q|--query] [--jobs|-j <jobsCount>] [--bar|-b]
 
     -t|--as-tsv           show results as tsv file (separated by tabulations)
     -q|--query            implies <query> parameter is a mysql query string
@@ -48,9 +52,9 @@ Usage: ${SCRIPT_NAME} <query|queryFile> [-d|--dsn <dsn>] [-t|--as-tsv] [-q|--que
         if -q option is provided this parameter is a mysql query string
         else a file must be specified
 
-List of available dsn: 
+${INFO}List of available dsn:${NORMAL}
 ${dsnList}
-List of available queries (default dir ${QUERIES_DIR} overridable in home dir ${HOME_QUERIES_DIR}):
+${INFO}List of available queries (default dir ${QUERIES_DIR} overridable in home dir ${HOME_QUERIES_DIR}):${NORMAL}
 ${queriesList}
 EOF
 }

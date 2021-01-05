@@ -7,8 +7,11 @@ SCRIPT_NAME=${0##*/}
 source "$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." && pwd )/vendor/bash-framework/_bootstrap.sh"
 
 showHelp() {
+INFO="$(echo -e "\033[1;37m")"
+NORMAL="$(echo -e "\033[0m")"
+
 cat << EOF
-Command: ${SCRIPT_NAME} <branchName>
+${INFO}Usage:${NORMAL} ${SCRIPT_NAME} <branchName>
 show an error if branchName is not a known branch
 EOF
 }

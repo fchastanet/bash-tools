@@ -11,8 +11,7 @@ cmdName=$(basename "$0")
 usage()
 {
     cat << USAGE >&2
-Usage:
-    ${cmdName} host:port [-s] [-t timeout] [-- command args]
+${INFO}Usage:${NORMAL} ${cmdName} host:port [-s] [-t timeout] [-- command args]
     -h HOST | --host=HOST       Host or IP under test
     -p PORT | --port=PORT       TCP port under test
                                 Alternatively, you specify the host and port as host:port
