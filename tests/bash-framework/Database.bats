@@ -137,6 +137,12 @@ teardown() {
     [ "${dbFromInstance['DUMP_OPTIONS']}" = "--default-character-set=utf8 --compress --compact --hex-blob --routines --triggers --single-transaction --set-gtid-purged=OFF --column-statistics=0 --ssl-mode=DISABLED" ]
     [ "${dbFromInstance['DSN_FILE']}" = "/tmp/home/.bash-tools/dsn/dsn_valid.env" ]
     [[ ${dbFromInstance['AUTH_FILE']} = /tmp/mysql.* ]]
+
+    [ "${dbFromInstance['HOSTNAME']}" = "127.0.0.1" ]
+    [ "${dbFromInstance['USER']}" = "root" ]
+    [ "${dbFromInstance['PASSWORD']}" = "root" ]
+    [ "${dbFromInstance['PORT']}" = "3306" ]
+
     [ -f "${dbFromInstance['AUTH_FILE']}" ]
     [[ "${dbFromInstance['QUERY_OPTIONS']}" = "-s --skip-column-names" ]]
     [ "$(cat "${dbFromInstance['AUTH_FILE']}")" = "$(cat "${BATS_TEST_DIRNAME}/data/mysql_auth_file.cnf")" ]
@@ -332,4 +338,18 @@ teardown() {
 
     [ "$status" -eq 0 ]
     [[ "$output" = "dump additional options" ]]
+}
+
+@test "${BATS_TEST_FILENAME#/bash/tests/} Database::getUserDbList" {
+    stub mysql \
+        '* -s --skip-column-names --default-character-set=utf8 -e * : echo $6 > /tmp/home/query ; true'
+
+    declare -Ax dbFromInstance
+    export HOME=/tmp/home
+    Database::newInstance dbFromInstance "dsn_valid"
+    run Database::getUserDbList dbFromInstance
+
+    [ "$status" -eq 0 ]
+    [ -f "/tmp/home/query" ]
+    [[ "$(cat /tmp/home/query)" == "$(cat "${BATS_TEST_DIRNAME}/data/getUserDbList.query")" ]]
 }
