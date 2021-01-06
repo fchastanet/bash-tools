@@ -1,10 +1,11 @@
 #!/usr/bin/env bash
 
 FRAMEWORK_DIR="$(cd "${BATS_TEST_DIRNAME}/../.." && pwd)"
+
 # shellcheck source=bash-framework/_bootstrap.sh
 __BASH_FRAMEWORK_ENV_FILEPATH="" source "${FRAMEWORK_DIR}/bash-framework/_bootstrap.sh" || exit 1
-
 import bash-framework/Functions
+load "${FRAMEWORK_DIR}/vendor/bats-mock-Flamefire/load.bash"
 
 setup() {    
     mkdir -p /tmp/home/.bash-tools/cliProfiles
@@ -14,6 +15,7 @@ setup() {
 
 teardown() {
     rm -Rf /tmp/home || true 
+    unstub_all
 }
 
 @test "${BATS_TEST_FILENAME#/bash/tests/} framework is loaded" {
@@ -234,4 +236,29 @@ teardown() {
     rm /tmp/home/trap
     kill -SIGUSR2 $$
     [ "$(cat /tmp/home/trap)" = "$(cat ${BATS_TEST_DIRNAME}/data/Functions_addTrap2_2_expected)" ]
+}
+
+@test "${BATS_TEST_FILENAME#/bash/tests/} Functions::run status 0" {
+    stub date \
+        '* : echo 1609970133' \
+        '* : echo 1609970134'
+    
+    Functions::run echo 'coucou' 2>/tmp/home/error
+    [ "${bash_framework_status}" -eq 0 ]
+    [ "${bash_framework_duration}" = "1" ]
+    [ "${bash_framework_output}" = "coucou" ]
+    [ "$(cat /tmp/home/error)" = "" ]
+}
+
+@test "${BATS_TEST_FILENAME#/bash/tests/} Functions::run status 1" {
+    stub date \
+        '* : echo 1609970133' \
+        '* : echo 1609970134'
+    
+    Functions::run cat 'unknownFile' 2>/tmp/home/error
+    
+    [ "${bash_framework_status}" -eq 1 ]
+    [ "${bash_framework_duration}" = "1" ]
+    [ "${bash_framework_output}" = "" ]
+    [ "$(cat /tmp/home/error)" = "cat: unknownFile: No such file or directory" ]
 }

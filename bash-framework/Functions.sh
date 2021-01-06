@@ -1,5 +1,10 @@
 #!/usr/bin/env bash
 
+# global variables used by Functions:run
+declare -gx bash_framework_status 
+declare -gix bash_framework_duration
+declare -gx bash_framework_output
+
 # Public: check if command specified exists or exits
 # with error and message if not
 #
@@ -129,7 +134,7 @@ Functions::getList() {
     fi
 
     (
-        cd "${DIR}" && find . -type f -name "*${extension}" | sort | sed 's#^./##g' | sed "s/\.${EXT}\$//g" | sed "s/^/${INDENT_STR}/"
+        cd "${DIR}" && find . -type f -name "*${extension}" | sed 's#^./##g' | sed "s/\.${EXT}\$//g" | sort | sed "s/^/${INDENT_STR}/"
     )
 }
 
@@ -214,43 +219,52 @@ Functions::getAbsoluteConfFile() {
   local confFolder="$1"
   local conf="$2"
   local extension="${3-.sh}"
-  local absoluteConfFile=""
 
-  # load conf from absolute file, then home folder, then bash framework conf folder
-  absoluteConfFile="${conf}"
-  if [[ "${absoluteConfFile:0:1}" = "/" && -f "${absoluteConfFile}" ]]; then
-    # file contains /, consider it as absolute filename
-    echo "${absoluteConfFile}"
-    return 0
-  fi
-  
-  # relative to where script is executed
-  absoluteConfFile="$(realpath "${__BASH_FRAMEWORK_CALLING_SCRIPT}/${conf}" 2>/dev/null || echo "")"
-  if [ -f "${absoluteConfFile}" ]; then
-    echo "${absoluteConfFile}"
-    return 0
-  fi
+  getAbs() {
+    local absoluteConfFile=""
+    # load conf from absolute file, then home folder, then bash framework conf folder
+    absoluteConfFile="${conf}"
+    if [[ "${absoluteConfFile:0:1}" = "/" && -f "${absoluteConfFile}" ]]; then
+      # file contains /, consider it as absolute filename
+      echo "${absoluteConfFile}"
+      return 0
+    fi
+    
+    # relative to where script is executed
+    absoluteConfFile="$(realpath "${__BASH_FRAMEWORK_CALLING_SCRIPT}/${conf}" 2>/dev/null || echo "")"
+    if [ -f "${absoluteConfFile}" ]; then
+      echo "${absoluteConfFile}"
+      return 0
+    fi
 
-  # take extension into account
-  if  [[ -n "${extension}" && "${extension:0:1}" != "." ]]; then
-    extension=".${extension}"
-  fi
+    # take extension into account
+    if  [[ -n "${extension}" && "${extension:0:1}" != "." ]]; then
+      extension=".${extension}"
+    fi
 
-  # shellcheck source=/conf/dsn/default.local.env
-  absoluteConfFile="${HOME}/.bash-tools/${confFolder}/${conf}${extension}"
-  if [ -f "${absoluteConfFile}" ]; then
-    echo "${absoluteConfFile}"
-    return 0
-  fi
-  absoluteConfFile="${__BASH_FRAMEWORK_VENDOR_PATH:?}/conf/${confFolder}/${conf}${extension}"
-  if [ -f "${absoluteConfFile}" ]; then
-    echo "${absoluteConfFile}"
-    return 0
-  fi
+    # shellcheck source=/conf/dsn/default.local.env
+    absoluteConfFile="${HOME}/.bash-tools/${confFolder}/${conf}${extension}"
+    if [ -f "${absoluteConfFile}" ]; then
+      echo "${absoluteConfFile}"
+      return 0
+    fi
+    absoluteConfFile="${__BASH_FRAMEWORK_VENDOR_PATH:?}/conf/${confFolder}/${conf}${extension}"
+    if [ -f "${absoluteConfFile}" ]; then
+      echo "${absoluteConfFile}"
+      return 0
+    fi
 
-  # file not found
-  Log::displayError "conf file '${conf}' not found"
-  return 1    
+    return 1
+  }
+  local abs=""
+  abs="$(getAbs)" || {
+    # file not found
+    Log::displayError "conf file '${conf}' not found"
+    return 1    
+  }
+  Log::displayDebug "conf file '${conf}' matching '${abs}' file"
+  echo "${abs}"
+  return 0
 }
 
 
@@ -274,4 +288,34 @@ Functions::trapAdd() {
         )" "${trapAddName}" \
             || Log::fatal "unable to add to trap ${trapAddName}"
     done
+}
+
+# *Public*: run command and store data in following global variables :
+# * bash_framework_status the exit status of the command
+# * bash_framework_duration the duration of the command
+# * bash_framework_output the output of the command
+# redirecting error output to stdout is not supported, you can instead redirect stderr to a file if needed
+# **Arguments**:
+# * $@ command with arguments to execute
+Functions::run() {
+  # 'bash_framework_status', 'bash_framework_duration' are global variables
+  local -i start end
+  start=$(date +%s)
+  bash_framework_status=0
+  bash_framework_output=""
+
+  local origFlags="$-"
+  set +eET
+  local origIFS="$IFS"
+
+  # execute command
+  bash_framework_output="$("$@")"
+  bash_framework_status="$?"
+  IFS="$origIFS"
+  set "-$origFlags"
+
+  # calculate duration
+  end=$(date +%s)
+  # shellcheck disable=SC2034
+  bash_framework_duration=$(( end - start ))
 }
