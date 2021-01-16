@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 
 CURRENT_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
-# load bootstrap
-# shellcheck source=/bash-framework/_bootstrap.sh
-source "$( cd "${CURRENT_DIR}/.." && pwd )/vendor/bash-framework/_bootstrap.sh"
+# load bash-framework
+# shellcheck source=bash-framework/_bootstrap.sh
+source "$( cd "${CURRENT_DIR}/.." && pwd )/bash-framework/_bootstrap.sh"
 
 # make bash-tools folder available for db scripts
 export BASH_TOOLS_FOLDER
@@ -11,6 +11,8 @@ export BASH_TOOLS_FOLDER
 Framework::expectNonRootUser
 
 import bash-framework/Database
+import bash-framework/Functions
+import bash-framework/Array
 
 # ensure that Ctrl-C is trapped by this script and not sub mysql process
 trap 'exit 130' INT
@@ -18,33 +20,53 @@ trap 'exit 130' INT
 #default values
 SCRIPT_NAME=${0##*/}
 JOBS_NUMBER=1
-REMOTE=0
 MYSQL_OPTIONS=""
-OUTPUT_DIR="${HOME}/.bash-tools/dbCheckStructs"
+OUTPUT_DIR="${HOME}/.bash-tools/output"
+DSN="default.local"
+LOG_FORMAT="none"
 DB_NAME=""
 VERBOSE=0
-SCRIPT="${SCRIPTS_FOLDER}/dbCheckStructOneDatabase.sh"
 
 # Usage info
 showHelp() {
-local scriptsList
-scriptsList=$(find "${SCRIPTS_FOLDER}" -type f -name \*.sh -printf '%P\n' | sed 's/\.sh$//g' | sed -e "s/^/\t\t/")
+local dsnList scriptsList
+dsnList="$(Functions::getConfMergedList "dsn" "env")"
+scriptsList="$(Functions::getConfMergedList "dbScripts" "sh")"
 
 cat << EOF
-Allow to check database(s) across CKLS propel schema
-and propose repair scripts if needed in the directory "${OUTPUT_DIR}"
+${__HELP_TITLE}Description:${__HELP_NORMAL} Allow to execute a script on each database of specified mysql server
 
-Usage: ${SCRIPT_NAME} [-h|--help]
-Usage: ${SCRIPT_NAME} [-j|--jobs <numberOfJobs>] [-s|--script <scriptToExecute>] [-o|--output <outputDirectory>] [-r|--remote] [-v|--verbose] [<dbName>]
-    <dbName> : if provided will check only this db, otherwise all dbs of mysql server will be checked
-    -h|--help prints this help and exits
-    -j|--jobs <numberOfJobs> specify the number of db to query in parallel
-    -o|--output <outputDirectory> output directory for repair SQL scripts
-    -r|--remote checks remote db, local db otherwise
-    -v|--verbose display more information
-    -s|--script <scriptToExecute> specify the script that will be executed on each database
-        default value: ${SCRIPT}
-        list of available scripts (${SCRIPTS_FOLDER}):
+${__HELP_TITLE}Usage:${__HELP_NORMAL} ${SCRIPT_NAME} [-h|--help] prints this help and exits
+${__HELP_TITLE}Usage:${__HELP_NORMAL} ${SCRIPT_NAME} [-j|--jobs <numberOfJobs>] [-o|--output <outputDirectory>] [-d|--dsn <dsn>] [-v|--verbose] [-l|--log-format <logFormat>] [--database <dbName>] <scriptToExecute> [optional parameters to pass to the script]
+    <scriptToExecute>             the script that will be executed on each databases
+    -d|--dsn <dsn>                target mysql server (Default: ${DSN}) 
+    --database <dbName>           if provided will check only this db, otherwise script will be executed on all dbs of mysql server
+    -j|--jobs <numberOfJobs>      the number of db to query in parallel (default: ${JOBS_NUMBER})
+    -o|--output <outputDirectory> output directory, see log-format option (default : "${OUTPUT_DIR}")
+    -l|--log-format <logFormat>   if log provided, will log each db result to log file, can be one of these values (none, log) (default: none)
+    -v|--verbose                  display more information
+
+${__HELP_TITLE}Note:${__HELP_NORMAL} the use of output, log-format, verbose options highly depends on the script used
+
+${__HELP_TITLE}Example:${__HELP_NORMAL} script conf/dbScripts/extractData.sh 
+    executes query databaseSize (see conf/dbQueries/databaseSize.sql) on each db and log the result in log file in default output dir, call it using
+    $0 -j 10 extractData databaseSize
+
+    executes query databaseSize on each db and display the result on stdout (2>/dev/null hides information messages)
+    $0 -j 10 --log-format none extractData databaseSize 
+
+    use --verbose to get some debug information
+    $0 -j 10 --log-format none --verbose extractData databaseSize 
+
+${__HELP_TITLE}Use cases:${__HELP_NORMAL}
+    you can use this script in order to check that each db model conforms with your ORM schema
+    simply create a new script in conf/dbQueries that will call your orm schema checker
+
+    update multiple db at once (simple to complex update script)
+
+${__HELP_TITLE}List of available dsn:${__HELP_NORMAL}
+${dsnList}
+${__HELP_TITLE}list of available scripts (${SCRIPTS_FOLDER}):${__HELP_NORMAL}
 ${scriptsList}
 EOF
 }
@@ -54,7 +76,7 @@ EOF
 # -o is for short options like -h
 # -l is for long options with double dash like --help
 # the comma separates different long options
-options=$(getopt -l help,remote,jobs:script:,,output:,verbose -o hrj:s:o:v -- "$@" 2> /dev/null) || {
+options=$(getopt -l help,log-format:,dsn,jobs:,database:,output:,verbose -o hdj:l:o:v -- "$@" 2> /dev/null) || {
     showHelp
     Log::fatal "invalid options specified"
 }
@@ -71,20 +93,24 @@ case $1 in
     shift
     JOBS_NUMBER=$1
     ;;
---script|-s)
-    shift
-    SCRIPT="$1"
-    ;;
---remote|-r)
-    REMOTE=1
-    ;;
-
 --output|-o)
     shift
     OUTPUT_DIR="$1"
     ;;
 --verbose|-v)
     VERBOSE=1
+    ;;
+--dsn|-d)
+    shift
+    DSN=${1:-:-default.local}
+    ;;
+--database)
+    shift
+    DB_NAME="$1"
+    ;;
+--log-format|-l)
+    shift
+    LOG_FORMAT="$1"
     ;;
 --)
     shift
@@ -96,24 +122,23 @@ esac
 shift
 done
 
-# additional arguments
-shift $(( OPTIND - 1 ))
-if [[ "$1" != "" ]]; then
-    DB_NAME="$1"
-    shift
+# output-dir argument
+if ! Array::contains "${LOG_FORMAT}" "none" "log"; then
+    Log::fatal "log format '${LOG_FORMAT}' not supported"
 fi
 
-if [[ "$1" != "" ]]; then
-    showHelp
-    Log::fatal "too much arguments provided, argument $1 not expected"
-fi
+# additional arguments
+shift $(( OPTIND - 1 ))
+SCRIPT="$1"
+shift
+[[ -z "${SCRIPT}" ]] && Log::fatal "You must provide the script file to be executed"
 
 if [[ "${OUTPUT_DIR:0:1}" != "/" ]] ; then
    # relative path
    OUTPUT_DIR="${PWD}/${OUTPUT_DIR}"
 fi
 mkdir -p "${OUTPUT_DIR}" || Log::fatal "unable to create directory ${OUTPUT_DIR}"
-[[ ! -d "${OUTPUT_DIR}" || ! -w "${OUTPUT_DIR}" ]] ||
+[[ -d "${OUTPUT_DIR}" && -w "${OUTPUT_DIR}" ]] ||
     Log::fatal "output dir is not correct or not writable"
 
 if ! [[ ${JOBS_NUMBER} =~ ^[0-9]+$ ]] ; then
@@ -122,45 +147,25 @@ fi
 [[ ${JOBS_NUMBER} -lt 1 ]] && Log::fatal "number of jobs must be greater than 0"
 
 # try script inside script folder
-if [[ ! -f "${SCRIPTS_FOLDER}/${SCRIPT}.sh" ]]; then
-    # try script absolute or relative
-    [[ ! -f "${SCRIPT}" ]] && Log::fatal "unable to find script ${SCRIPT}"
-else
-    SCRIPT="${SCRIPTS_FOLDER}/${SCRIPT}.sh"
-fi
+SCRIPT="$(Functions::getAbsoluteConfFile "dbScripts" "${SCRIPT}" "sh")" || exit 1
+[[ "${VERBOSE}" = "1" ]] && Log::displayInfo "Using script ${SCRIPT}"
+# create db instance
+declare -Agx dbInstance
 
-if [[ "${REMOTE}" = "1" ]] ; then
-    HOSTNAME="${REMOTE_MYSQL_HOSTNAME}"
-    USER="${REMOTE_MYSQL_USER}"
-    PASSWORD="${REMOTE_MYSQL_PASSWORD}"
-    PORT="${REMOTE_MYSQL_PORT}"
-else
-    HOSTNAME="${MYSQL_HOSTNAME}"
-    USER="${MYSQL_USER}"
-    PASSWORD="${MYSQL_PASSWORD}"
-    PORT="${MYSQL_PORT}"
-fi
+Database::newInstance dbInstance "${DSN}"
+[[ "${VERBOSE}" = "1" ]] && Log::displayInfo "Using dsn ${dbInstance['DSN_FILE']}"
 
 # list of all databases
-Log::displayInfo "get the list of all databases"
-Database::setMysqlOptions "${MYSQL_OPTIONS}"
+[[ "${VERBOSE}" = "1" ]] && Log::displayInfo "get the list of all databases"
 if [[ -z "${DB_NAME}" ]]; then
-    # shellcheck disable=SC2016
-    sql='SELECT `schema_name` from INFORMATION_SCHEMA.SCHEMATA  WHERE `schema_name` NOT IN("information_schema", "mysql", "performance_schema")'
-    allDbs="$(Database::query "${HOSTNAME}" "${PORT}" "${USER}" "${PASSWORD}" "${sql}")"
+    allDbs="$(Database::getUserDbList dbInstance)"
 else
     allDbs="${DB_NAME}"
 fi
 
-Log::displayInfo "processing $(echo "${allDbs}"|wc -l) databases using ${JOBS_NUMBER} jobs"
+[[ "${VERBOSE}" = "1" ]] && Log::displayInfo "processing $(echo "${allDbs}" | wc -l) databases using ${JOBS_NUMBER} jobs"
 
-if [[ "${JOBS_NUMBER}" = "1" ]] ; then
-    echo "${allDbs}" | while IFS=" " read -r db; do
-        "${SCRIPT}" "${REMOTE}" "${VERBOSE}" "${OUTPUT_DIR}" "${PWD}" "${db}"
-    done
-else
-    export selectedQueryFile
-    export MYSQL_OPTIONS
+export selectedQueryFile
+export MYSQL_OPTIONS
 
-    echo "${allDbs}" | parallel --tag --linebuffer --jobs="${JOBS_NUMBER}" "${SCRIPT}" "${REMOTE}" "${VERBOSE}" "${OUTPUT_DIR}" "${PWD}"
-fi
+echo "${allDbs}" | parallel --eta  --progress --tag --jobs="${JOBS_NUMBER}"  "${SCRIPT}" "${DSN}" "${LOG_FORMAT}" "${VERBOSE}" "${OUTPUT_DIR}" "${PWD}" "${__BASH_FRAMEWORK_VENDOR_PATH}" "$@"

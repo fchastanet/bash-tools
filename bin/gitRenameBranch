@@ -15,13 +15,11 @@ INTERACTIVE="1"
 
 # Usage info
 showHelp() {
-INFO="$(echo -e "\033[1;37m")"
-NORMAL="$(echo -e "\033[0m")"
 cat << EOF
-${INFO}Description:${NORMAL} rename git local branch, use options to push new branch and delete old branch
+${__HELP_TITLE}Description:${__HELP_NORMAL} rename git local branch, use options to push new branch and delete old branch
 
-${INFO}Usage:${NORMAL} ${SCRIPT_NAME} [-h|--help] prints this help and exits
-${INFO}Usage:${NORMAL} ${SCRIPT_NAME} <newBranchName> [<oldBranchName>] [--push|-p] [--delete|-d] [--assume-yes|-yes|-y]
+${__HELP_TITLE}Usage:${__HELP_NORMAL} ${SCRIPT_NAME} [-h|--help] prints this help and exits
+${__HELP_TITLE}Usage:${__HELP_NORMAL} ${SCRIPT_NAME} <newBranchName> [<oldBranchName>] [--push|-p] [--delete|-d] [--assume-yes|-yes|-y]
     --help,-h prints this help and exits
      -y, --yes, --assume-yes do not ask for confirmation (use with caution)
         Automatic yes to prompts; assume "y" as answer to all prompts

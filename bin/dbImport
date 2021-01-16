@@ -44,14 +44,11 @@ local dsnList=""
 dsnList="$(Functions::getConfMergedList "dsn" "env")"
 profilesList="$(Functions::getConfMergedList "dbImportProfiles" "sh" || true)"
 
-INFO="$(echo -e "\033[1;37m")"
-NORMAL="$(echo -e "\033[0m")"
-
 cat << EOF
-${INFO}Description:${NORMAL} Import source db into target db
+${__HELP_TITLE}Description:${__HELP_NORMAL} Import source db into target db
 
-${INFO}Usage:${NORMAL} ${SCRIPT_NAME} --help prints this help and exits
-${INFO}Usage:${NORMAL} ${SCRIPT_NAME} <fromDbName> [<targetDbName>] 
+${__HELP_TITLE}Usage:${__HELP_NORMAL} ${SCRIPT_NAME} --help prints this help and exits
+${__HELP_TITLE}Usage:${__HELP_NORMAL} ${SCRIPT_NAME} <fromDbName> [<targetDbName>] 
                         [--force] 
                         [-d|--download-dump] [-a|--from-aws]
                         [-s|--skip-schema] [-p|--profile profileName] 
@@ -79,9 +76,9 @@ ${INFO}Usage:${NORMAL} ${SCRIPT_NAME} <fromDbName> [<targetDbName>]
 
     Aws s3 location       : ${S3_BASE_URL}
 
-${INFO}List of available profiles (default profiles dir ${PROFILES_DIR} overridable in home profiles ${HOME_PROFILES_DIR}):${NORMAL}
+${__HELP_TITLE}List of available profiles (default profiles dir ${PROFILES_DIR} overridable in home profiles ${HOME_PROFILES_DIR}):${__HELP_NORMAL}
 ${profilesList}
-${INFO}List of available dsn:${NORMAL}
+${__HELP_TITLE}List of available dsn:${__HELP_NORMAL}
 ${dsnList}
 EOF
 }

@@ -28,20 +28,17 @@ Functions::loadConf "cliProfiles" "default"
 
 profilesList="$(Functions::getConfMergedList "cliProfiles" "sh" || true)"
 
-INFO="$(echo -e "\033[1;37m")"
-NORMAL="$(echo -e "\033[0m")"
-
 cat << EOF
-${INFO}Description:${NORMAL} easy connection to docker container
+${__HELP_TITLE}Description:${__HELP_NORMAL} easy connection to docker container
 
-${INFO}Usage:${NORMAL} ${SCRIPT_NAME} [-h|--help] prints this help and exits
-${INFO}Usage:${NORMAL} ${SCRIPT_NAME} [<container>] [user] [command]
+${__HELP_TITLE}Usage:${__HELP_NORMAL} ${SCRIPT_NAME} [-h|--help] prints this help and exits
+${__HELP_TITLE}Usage:${__HELP_NORMAL} ${SCRIPT_NAME} [<container>] [user] [command]
 
     <container> : container should be one of these values (provided by 'docker ps'): 
         ${containers}
         if not provided, it will load the container specified in default configuration (${finalContainerArg})
 
-${INFO}examples:${NORMAL}
+${__HELP_TITLE}examples:${__HELP_NORMAL}
     to connect to mysql container in bash mode with user mysql
         ${SCRIPT_NAME} mysql mysql "//bin/bash"
     to connect to web container with user root
@@ -52,7 +49,7 @@ you can override these mappings by providing your own profile in ${CLI_PROFILE_H
 This script will be executed with the variables userArg containerArg commandArg set as specified in command line
 and should provide value for the following variables finalUserArg finalContainerArg finalCommandArg
 
-${INFO}List of available profiles (from ${PROFILES_DIR} and overridable in ${HOME_PROFILES_DIR}):${NORMAL}
+${__HELP_TITLE}List of available profiles (from ${PROFILES_DIR} and overridable in ${HOME_PROFILES_DIR}):${__HELP_NORMAL}
 ${profilesList}
 EOF
 }

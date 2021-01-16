@@ -33,4 +33,12 @@ if [[ "${CONSTANTS_MODULE_VERSION:+xxx}" != "xxx" ]]; then
   export readonly __DEBUG_COLOR='\e[37m'
   # Internal: reset color
   export readonly __RESET_COLOR='\e[0m'
+
+  # Internal: used for displaying important information in command help message
+  # shellcheck disable=SC2155
+  export readonly __HELP_TITLE="$(echo -e "\e[1;37m")"
+  # Internal: reset color
+  # shellcheck disable=SC2155
+  export readonly __HELP_NORMAL="$(echo -e "\033[0m")"
+
 fi

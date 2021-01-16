@@ -39,14 +39,12 @@ showHelp() {
 local dsnList=""
 dsnList="$(Functions::getConfMergedList "dsn" "env")"
 
-INFO="$(echo -e "\033[1;37m")"
-NORMAL="$(echo -e "\033[0m")"
 
 cat << EOF
-${INFO}Description:${NORMAL} Import remote db table into local db
+${__HELP_TITLE}Description:${__HELP_NORMAL} Import remote db table into local db
 
-${INFO}Usage:${NORMAL} ${SCRIPT_NAME} [-h|--help] prints this help and exits
-${INFO}Usage:${NORMAL} ${SCRIPT_NAME} <remoteDbName> <tableName> [<localDbName>] 
+${__HELP_TITLE}Usage:${__HELP_NORMAL} ${SCRIPT_NAME} [-h|--help] prints this help and exits
+${__HELP_TITLE}Usage:${__HELP_NORMAL} ${SCRIPT_NAME} <remoteDbName> <tableName> [<localDbName>] 
     [-d|--download-dump] [--force] [-a|--from-aws]
     [-t|--target-dsn dsn] [-f|--from-dsn dsn]
     [-c|--character-set utf8]
@@ -67,7 +65,7 @@ ${INFO}Usage:${NORMAL} ${SCRIPT_NAME} <remoteDbName> <tableName> [<localDbName>]
 
     Aws s3 location       : ${S3_BASE_URL}
 
-${INFO}List of available dsn:${NORMAL}
+${__HELP_TITLE}List of available dsn:${__HELP_NORMAL}
 ${dsnList}
 EOF
 }
