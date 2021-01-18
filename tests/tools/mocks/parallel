@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -x
+
 # shellcheck disable=SC2124
 command="${@:-2:1}"
 # shellcheck disable=SC2124

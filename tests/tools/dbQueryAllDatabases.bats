@@ -71,8 +71,7 @@ teardown() {
     run ${toolsDir}/dbQueryAllDatabases \
         -j2 \
         "${rootDir}/conf/dbQueries/databaseSize.sql"
-    (>&3 echo "${output}"
-    echo)    
+
     # could fail if run outside docker because parallel could be installed
     [[ "${output}" == *"ERROR - parallel is not installed, please install it"* ]]
 }

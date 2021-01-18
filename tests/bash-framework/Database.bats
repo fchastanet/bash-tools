@@ -122,7 +122,6 @@ teardown() {
 @test "${BATS_TEST_FILENAME#/bash/tests/} Database::newInstance valid dsn file from framework" {
     local -A dbFromInstance
     run Database::newInstance dbFromInstance "default.local"
-    (>&3 echo "${output}")
     [ "$status" -eq 0 ]
 }
 
