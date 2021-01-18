@@ -254,11 +254,13 @@ teardown() {
     stub date \
         '* : echo 1609970133' \
         '* : echo 1609970134'
-    
+
     Functions::run cat 'unknownFile' 2>/tmp/home/error
     
     [ "${bash_framework_status}" -eq 1 ]
     [ "${bash_framework_duration}" = "1" ]
     [ "${bash_framework_output}" = "" ]
-    [ "$(cat /tmp/home/error)" = "cat: unknownFile: No such file or directory" ]
+    [[ "$(cat /tmp/home/error)" == *"cat: "* ]]
+    [[ "$(cat /tmp/home/error)" == *"unknownFile"* ]]
+    [[ "$(cat /tmp/home/error)" == *": No such file or directory" ]]
 }
