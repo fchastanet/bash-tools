@@ -138,6 +138,4 @@ export query
 echo "${allDbs}" |
     parallel --eta --progress "${PARALLEL_OPTIONS[@]}" \
         "${CURRENT_DIR}/_dbQueryOneDatabase.sh" "${DSN}" \
-        | sed -E '1!{/^@@@/d}' \
-        | awk 'NR==1 { header=$0; print $0; next; } $0 != header' \
-        | sed 's/^@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@//'
+        | awk -f "${CURRENT_DIR}/dbQueryAllDatabases.awk" -
