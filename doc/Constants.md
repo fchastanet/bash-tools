@@ -52,3 +52,11 @@ color used for debug level (grey)
 > ***Internal***
 
 reset color
+# export `readonly`
+> ***Internal***
+
+used for displaying important information in command help message
+# export `readonly`
+> ***Internal***
+
+reset color

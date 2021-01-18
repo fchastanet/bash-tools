@@ -90,7 +90,7 @@ teardown() {
     status=$?
     [ "$status" -eq 0 ]
     [ "${dbFromInstance['INITIALIZED']}" = "1" ]
-    [ "${dbFromInstance['OPTIONS']}" = "mysqlOptions" ]
+    [ "${dbFromInstance['SKIP_COLUMN_NAMES']}" = "1" ]
     [ "${dbFromInstance['SSL_OPTIONS']}" = "sslOptions" ]
     [ "${dbFromInstance['QUERY_OPTIONS']}" = "queryOptions" ]
     [ "${dbFromInstance['DUMP_OPTIONS']}" = "dumpOptions" ]
@@ -105,7 +105,7 @@ teardown() {
     status=$?
     [ "$status" -eq 0 ]
     [ "${dbFromInstance['INITIALIZED']}" = "1" ]
-    [ "${dbFromInstance['OPTIONS']}" = "mysqlOptionsAbsolute" ]
+    [ "${dbFromInstance['SKIP_COLUMN_NAMES']}" = "1" ]
     [ "${dbFromInstance['SSL_OPTIONS']}" = "sslOptionsAbsolute" ]
     [ "${dbFromInstance['QUERY_OPTIONS']}" = "queryOptionsAbsolute" ]
     [ "${dbFromInstance['DUMP_OPTIONS']}" = "dumpOptionsAbsolute" ]
@@ -132,7 +132,7 @@ teardown() {
     status=$?
     [[ "$status" -eq 0 ]]
     [ "${dbFromInstance['INITIALIZED']}" = "1" ]
-    [ "${dbFromInstance['OPTIONS']}" = "--default-character-set=utf8" ]
+    [ "${dbFromInstance['SKIP_COLUMN_NAMES']}" = "1" ]
     [ "${dbFromInstance['SSL_OPTIONS']}" = "--ssl-mode=DISABLED" ]
     [ "${dbFromInstance['DUMP_OPTIONS']}" = "--default-character-set=utf8 --compress --compact --hex-blob --routines --triggers --single-transaction --set-gtid-purged=OFF --column-statistics=0 --ssl-mode=DISABLED" ]
     [ "${dbFromInstance['DSN_FILE']}" = "/tmp/home/.bash-tools/dsn/dsn_valid.env" ]
@@ -144,7 +144,7 @@ teardown() {
     [ "${dbFromInstance['PORT']}" = "3306" ]
 
     [ -f "${dbFromInstance['AUTH_FILE']}" ]
-    [[ "${dbFromInstance['QUERY_OPTIONS']}" = "-s --skip-column-names" ]]
+    [[ "${dbFromInstance['QUERY_OPTIONS']}" = "--batch --raw --default-character-set=utf8" ]]
     [ "$(cat "${dbFromInstance['AUTH_FILE']}")" = "$(cat "${BATS_TEST_DIRNAME}/data/mysql_auth_file.cnf")" ]
 }
 
@@ -158,14 +158,22 @@ teardown() {
     [ "$(cat "${dbFromInstance['AUTH_FILE']}")" = "$(cat "${BATS_TEST_DIRNAME}/data/mysql_auth_file.cnf")" ]
 }
 
-@test "${BATS_TEST_FILENAME#/bash/tests/} Database::setOptions" {
+@test "${BATS_TEST_FILENAME#/bash/tests/} Database::skipColumnNames" {
     declare -Agx dbFromInstance
     export HOME=/tmp/home
-    Database::newInstance dbFromInstance "dsn_valid"
+    Database::skipColumnNames dbFromInstance "0"
     status=$?
     [ "$status" -eq 0 ]
-    Database::setOptions dbFromInstance "test"
-    [ "${dbFromInstance['OPTIONS']}" = "test" ]
+    [ "${dbFromInstance['SKIP_COLUMN_NAMES']}" = "0" ]
+    stub mysql '--defaults-extra-file= -e SELECT\ 1 : true'
+    run Database::query dbFromInstance "SELECT 1"
+
+    Database::skipColumnNames dbFromInstance "1"
+    status=$?
+    [ "$status" -eq 0 ]
+    [ "${dbFromInstance['SKIP_COLUMN_NAMES']}" = "1" ]
+    stub mysql '--defaults-extra-file= -s --skip-column-names -e SELECT\ 1 : true'
+    run Database::query dbFromInstance "SELECT 1"
 }
 
 @test "${BATS_TEST_FILENAME#/bash/tests/} Database::setDumpOptions" {
@@ -231,7 +239,7 @@ teardown() {
 @test "${BATS_TEST_FILENAME#/bash/tests/} Database::isTableExists exists" {
     # call 2: check if from db exists, this time we answer no
     stub mysql \
-        '* -s --skip-column-names --default-character-set=utf8 -e * : echo $6 > /tmp/home/query ; echo "1"'
+        '* --batch --raw --default-character-set=utf8 -s --skip-column-names -e * : echo $8 > /tmp/home/query ; echo "1"'
 
     declare -Ax dbFromInstance
     export HOME=/tmp/home
@@ -246,7 +254,7 @@ teardown() {
 @test "${BATS_TEST_FILENAME#/bash/tests/} Database::isTableExists not exists" {
     # call 2: check if from db exists, this time we answer no
     stub mysql \
-        '* -s --skip-column-names --default-character-set=utf8 -e * : echo $6 > /tmp/home/query ; echo ""'
+        '* --batch --raw --default-character-set=utf8 -s --skip-column-names -e * : echo $8 > /tmp/home/query ; echo ""'
 
     declare -Ax dbFromInstance
     export HOME=/tmp/home
@@ -260,7 +268,7 @@ teardown() {
 
 @test "${BATS_TEST_FILENAME#/bash/tests/} Database::createDb " {
     stub mysql \
-        '* -s --skip-column-names --default-character-set=utf8 -e * : echo $6 > /tmp/home/query ; echo "Database: mydb"'
+        '* --batch --raw --default-character-set=utf8 -s --skip-column-names -e * : echo $8 > /tmp/home/query ; echo "Database: mydb"'
 
     declare -Ax dbFromInstance
     export HOME=/tmp/home
@@ -275,7 +283,7 @@ teardown() {
 
 @test "${BATS_TEST_FILENAME#/bash/tests/} Database::dropDb " {
     stub mysql \
-        '* -s --skip-column-names --default-character-set=utf8 -e * : echo $6 > /tmp/home/query ; echo "Database: mydb"'
+        '* --batch --raw --default-character-set=utf8 -s --skip-column-names -e * : echo $8 > /tmp/home/query ; echo "Database: mydb"'
 
     declare -Ax dbFromInstance
     export HOME=/tmp/home
@@ -290,7 +298,7 @@ teardown() {
 
 @test "${BATS_TEST_FILENAME#/bash/tests/} Database::dropTable " {
     stub mysql \
-        '* -s --skip-column-names --default-character-set=utf8 mydb -e * : echo $7 > /tmp/home/query ; echo "Database: mydb"'
+        '* --batch --raw --default-character-set=utf8 -s --skip-column-names mydb -e * : echo $9 > /tmp/home/query ; echo "Database: mydb"'
 
     declare -Ax dbFromInstance
     export HOME=/tmp/home
@@ -342,7 +350,7 @@ teardown() {
 
 @test "${BATS_TEST_FILENAME#/bash/tests/} Database::getUserDbList" {
     stub mysql \
-        '* -s --skip-column-names --default-character-set=utf8 -e * : echo $6 > /tmp/home/query ; true'
+        '* --batch --raw --default-character-set=utf8 -s --skip-column-names -e * : echo $8 > /tmp/home/query ; true'
 
     declare -Ax dbFromInstance
     export HOME=/tmp/home

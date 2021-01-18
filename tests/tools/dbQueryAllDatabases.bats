@@ -1,7 +1,11 @@
 #!/usr/bin/env bash
 
-declare -g toolsDir="$( cd "${BATS_TEST_DIRNAME}/../../bin" && pwd )"
-declare -g vendorDir="$( cd "${BATS_TEST_DIRNAME}/../../vendor" && pwd )"
+declare -g rootDir="$( cd "${BATS_TEST_DIRNAME}/../.." && pwd )"
+declare -g toolsDir="${rootDir}/bin"
+declare -g vendorDir="${rootDir}/vendor"
+
+# shellcheck source=bash-framework/Constants.sh
+source "$(cd "${BATS_TEST_DIRNAME}/../.." && pwd)/bash-framework/Constants.sh" || exit 1
 
 load "${vendorDir}/bats-mock-Flamefire/load.bash"
 
@@ -20,7 +24,6 @@ setup() {
         touch bin/mysql bin/mysqldump bin/mysqlshow
         chmod +x bin/*
         cp ${BATS_TEST_DIRNAME}/data/dsn_* .bash-tools/dsn
-        #cp ${BATS_TEST_DIRNAME}/data/.env .bash-tools
     )
     export PATH="$PATH:/tmp/home/bin"
 }
@@ -31,48 +34,45 @@ teardown() {
 }
 
 @test "${BATS_TEST_FILENAME#/bash/tests/} display help" {
+    cp "${BATS_TEST_DIRNAME}/mocks/parallel" "${HOME}/bin"
     run ${toolsDir}/dbQueryAllDatabases --help
-    [[ "${lines[2]}" == *"Usage: dbQueryAllDatabases <query|queryFile> [-d|--dsn <dsn>] [-t|--as-tsv] [-q|--query] [--jobs|-j <jobsCount>] [--bar|-b]"* ]]
+    [[ "${lines[2]}" = "${__HELP_TITLE}Usage:${__HELP_NORMAL} dbQueryAllDatabases <query|queryFile> [-d|--dsn <dsn>] [-q|--query] [--jobs|-j <jobsCount>] [--bar|-b]" ]]
 }
 
 @test "${BATS_TEST_FILENAME#/bash/tests/} query file not provided" {
+    cp "${BATS_TEST_DIRNAME}/mocks/parallel" "${HOME}/bin"
     HOME=/tmp/home run ${toolsDir}/dbQueryAllDatabases  2>&1
     [[ ${output} == *"FATAL - You must provide the sql file to be executed"* ]]
 }
 
 @test "${BATS_TEST_FILENAME#/bash/tests/} providing env-file changes the db connection parameters + retrieve db size" {
+    cp "${BATS_TEST_DIRNAME}/mocks/parallelDbQueryAllDatabases" "${HOME}/bin/parallel"
     stub mysql \
-        '\* -s --skip-column-names --connect-timeout=5 mysql -e show\ databases : cp ${1##*=} /tmp/connectionParameters ; '"cat ${BATS_TEST_DIRNAME}/data/databaseSize.dbList" \
-        "\* -s --skip-column-names --connect-timeout=5 db1 -e \* : cat ${BATS_TEST_DIRNAME}/data/databaseSize.result_db1" \
-        "\* -s --skip-column-names --connect-timeout=5 db2 -e \* : cat ${BATS_TEST_DIRNAME}/data/databaseSize.result_db2"
-    
-    run ${toolsDir}/dbQueryAllDatabases \
+        '\* --batch --raw --default-character-set=utf8 --connect-timeout=5 -s --skip-column-names -e \* : echo $9 > /tmp/home/query1 ; '"cat ${BATS_TEST_DIRNAME}/data/getUserDbList.result" \
+        '\* --batch --raw --default-character-set=utf8 --connect-timeout=5 db1 -e \* : echo -n "${8}" > /tmp/home/query2 ; '"cat ${BATS_TEST_DIRNAME}/data/databaseSize.result_db1" \
+        '\* --batch --raw --default-character-set=utf8 --connect-timeout=5 db2 -e \* : echo -n "${8}" > /tmp/home/query3 ; '"cat ${BATS_TEST_DIRNAME}/data/databaseSize.result_db2" \
+
+    f() {
+        ${toolsDir}/dbQueryAllDatabases \
         -d "${BATS_TEST_DIRNAME}/data/databaseSize.envProvided.sh" \
-        "${BATS_TEST_DIRNAME}/data/databaseSize.sql"
-    [[ -f "/tmp/connectionParameters" ]]
-    [[ "$(cat /tmp/connectionParameters)" = "$(cat "${BATS_TEST_DIRNAME}/data/databaseSize.expected.cnf")" ]]
-    [[ "${output}" == "$(cat ${BATS_TEST_DIRNAME}/data/databaseSize.expectedResult)" ]]
+        "${rootDir}/conf/dbQueries/databaseSize.sql" 2>/dev/null
+    }
+    run f 
+    [ -f "/tmp/home/query1" ]
+    [[ "$(cat /tmp/home/query1)" == "$(cat "${BATS_TEST_DIRNAME}/data/getUserDbList.query")" ]]
+    [ -f "/tmp/home/query2" ]
+    [[ "$(cat /tmp/home/query2 | md5sum)" = "$(cat ${rootDir}/conf/dbQueries/databaseSize.sql | md5sum)" ]]
+    [ -f "/tmp/home/query3" ]
+    [[ "$(cat /tmp/home/query3 | md5sum)" = "$(cat ${rootDir}/conf/dbQueries/databaseSize.sql | md5sum)" ]]
+    [[ "${output}" == "$(cat "${BATS_TEST_DIRNAME}/data/dbQueryAllDatabases.result")" ]]
 }
 
 @test "${BATS_TEST_FILENAME#/bash/tests/} parallel not installed" {
     run ${toolsDir}/dbQueryAllDatabases \
         -j2 \
-        "${BATS_TEST_DIRNAME}/data/databaseSize.sql" 2>&1
-    
+        "${rootDir}/conf/dbQueries/databaseSize.sql"
+    (>&3 echo "${output}"
+    echo)    
     # could fail if run outside docker because parallel could be installed
     [[ "${output}" == *"ERROR - parallel is not installed, please install it"* ]]
-}
-
-@test "${BATS_TEST_FILENAME#/bash/tests/} parallel query" {
-    cp "${BATS_TEST_DIRNAME}/mocks/parallel" "${HOME}/bin"
-    stub mysql \
-        "\* -s --skip-column-names --connect-timeout=5 mysql -e show\ databases : cat ${BATS_TEST_DIRNAME}/data/databaseSize.dbList" \
-        "\* --connect-timeout=5 --default-character-set=utf8 db1 -e \* : cat ${BATS_TEST_DIRNAME}/data/databaseSize.result_db1" \
-        "\* --connect-timeout=5 --default-character-set=utf8 db2 -e \* : cat ${BATS_TEST_DIRNAME}/data/databaseSize.result_db2"
-    
-    run ${toolsDir}/dbQueryAllDatabases \
-        -j2 \
-        "${BATS_TEST_DIRNAME}/data/databaseSize.sql" 2>&1
-    
-    [[ "${output}" = "$(cat "${BATS_TEST_DIRNAME}/data/databaseSize.expectedResult")" ]]
 }

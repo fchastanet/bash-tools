@@ -80,49 +80,49 @@ do
         hostPort=(${1//:/ })
         HOST=${hostPort[0]}
         PORT=${hostPort[1]}
-        shift 1
+        shift 1 || true
         ;;
         --child)
         CHILD=1
-        shift 1
+        shift 1 || true
         ;;
         -q | --quiet)
         QUIET=1
-        shift 1
+        shift 1 || true
         ;;
         -s | --strict)
         STRICT=1
-        shift 1
+        shift 1 || true
         ;;
         -h)
         HOST="$2"
         if [[ "${HOST}" = "" ]]; then break; fi
-        shift 2
+        shift 2 || true
         ;;
         --host=*)
         HOST="${1#*=}"
-        shift 1
+        shift 1 || true
         ;;
         -p)
         PORT="$2"
         if [[ "${PORT}" = "" ]]; then break; fi
-        shift 2
+        shift 2 || true
         ;;
         --port=*)
         PORT="${1#*=}"
-        shift 1
+        shift 1 || true
         ;;
         -t)
         TIMEOUT="$2"
         if [[ "${TIMEOUT}" = "" ]]; then break; fi
-        shift 2
+        shift 2 || true
         ;;
         --timeout=*)
         TIMEOUT="${1#*=}"
-        shift 1
+        shift 1 || true
         ;;
         --)
-        shift
+        shift || true
         CLI=("$@")
         break
         ;;

@@ -4,6 +4,9 @@ declare -g rootDir="$( cd "${BATS_TEST_DIRNAME}/../.." && pwd )"
 declare -g toolsDir="${rootDir}/bin"
 declare -g vendorDir="${rootDir}/vendor"
 
+# shellcheck source=bash-framework/Constants.sh
+source "$(cd "${BATS_TEST_DIRNAME}/../.." && pwd)/bash-framework/Constants.sh" || exit 1
+
 load "${vendorDir}/bats-mock-Flamefire/load.bash"
 
 setup() {
@@ -32,8 +35,9 @@ teardown() {
 
 @test "${BATS_TEST_FILENAME#/bash/tests/} display help" {
     run ${toolsDir}/cli --help 2>&1
+
     [ "$status" -eq 0 ]
-    [[ "${output}" == *"Description: easy connection to docker container"* ]]
+    [[ "${lines[0]}" == "${__HELP_TITLE}Description:${__HELP_NORMAL} easy connection to docker container" ]]
 }
 
 @test "${BATS_TEST_FILENAME#/bash/tests/} without any parameter connects to default container" {

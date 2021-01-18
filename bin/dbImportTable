@@ -29,12 +29,6 @@ TIMEFORMAT='time spent : %3R'
 # remove last slash
 DB_IMPORT_DUMP_DIR=${DB_IMPORT_DUMP_DIR%/}
 
-# check dependencies
-Functions::checkCommandExists mysql "sudo apt-get install mysql-client"
-Functions::checkCommandExists mysqlshow "sudo apt-get install mysql-client"
-Functions::checkCommandExists mysqldump "sudo apt-get install mysql-client"
-Functions::checkCommandExists pv "sudo apt-get install -y pv"
-
 showHelp() {
 local dsnList=""
 dsnList="$(Functions::getConfMergedList "dsn" "env")"
@@ -93,12 +87,10 @@ case $1 in
     FORCE=1
     ;;
 -t|--target-dsn)
-    shift
-    TARGET_DSN="$1"
+    shift || true && TARGET_DSN="$1"
     ;;
 -f|--from-dsn)
-    shift
-    FROM_DSN="${1:-${DEFAULT_FROM_DSN}}"
+    shift || true && FROM_DSN="${1:-${DEFAULT_FROM_DSN}}"
     ;;
 -a|--from-aws)
     FROM_AWS="1"
@@ -107,21 +99,26 @@ case $1 in
     DOWNLOAD_DUMP=1
     ;;
 -c|--character-set)
-    shift
-    CHARACTER_SET="$1"
+    shift || true && CHARACTER_SET="$1"
     ;;
 --)
-    shift
+    shift || true
     break;;
 *)
     showHelp
     Log::fatal "invalid argument $1"
 esac
-shift
+shift || true
 done
 
+# check dependencies
+Functions::checkCommandExists mysql "sudo apt-get install -y mysql-client"
+Functions::checkCommandExists mysqlshow "sudo apt-get install -y mysql-client"
+Functions::checkCommandExists mysqldump "sudo apt-get install -y mysql-client"
+Functions::checkCommandExists pv "sudo apt-get install -y pv"
+
 # additional arguments
-shift $(( OPTIND - 1 ))
+shift $(( OPTIND - 1 )) || true
 while true; do
     if [[ -z "$1" ]]; then
         # last argument
@@ -136,8 +133,7 @@ while true; do
             LOCAL_DB="$1"
         fi
     fi
-
-    shift
+    shift || true
 done
 
 if [[ -z "${REMOTE_DB}" ]]; then
@@ -180,12 +176,12 @@ declare -Agx dbRemoteInstance dbLocalInstance
 
 Database::newInstance dbTargetDatabase "${TARGET_DSN}"
 # shellcheck disable=SC2154
-Database::setOptions dbTargetDatabase "${dbTargetDatabase[OPTIONS]} --connect-timeout=5"
+Database::setQueryOptions dbTargetDatabase "${dbTargetDatabase[QUERY_OPTIONS]} --connect-timeout=5"
 Log::displayInfo "Using target dsn ${dbTargetDatabase['DSN_FILE']}"
 if [[ "${FROM_AWS}" = "0" ]]; then
     Database::newInstance dbFromInstance "${FROM_DSN}"
     # shellcheck disable=SC2154
-    Database::setOptions dbFromInstance "${dbFromInstance[OPTIONS]} --connect-timeout=5"
+    Database::setQueryOptions dbFromInstance "${dbFromInstance[QUERY_OPTIONS]} --connect-timeout=5"
     Log::displayInfo "Using from dsn ${dbFromInstance['DSN_FILE']}"
 fi
 

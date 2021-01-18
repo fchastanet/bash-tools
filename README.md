@@ -98,12 +98,11 @@ bin/dbQueryAllDatabases -e localhost-root conf/dbQueries/databaseSize.sql
 
 **Help**
 ```
-Description: Execute a query on multiple databases in order to generate a report, query can be parallelized on multiple databases
+Description: Execute a query on multiple databases in order to generate a tsv formatted report, query can be parallelized on multiple databases
 
 Usage: dbQueryAllDatabases [-h|--help] prints this help and exits
-Usage: dbQueryAllDatabases <query|queryFile> [-d|--dsn <dsn>] [-t|--as-tsv] [-q|--query] [--jobs|-j <jobsCount>] [--bar|-b]
+Usage: dbQueryAllDatabases <query|queryFile> [-d|--dsn <dsn>] [-q|--query] [--jobs|-j <jobsCount>] [--bar|-b]
 
-    -t|--as-tsv           show results as tsv file (separated by tabulations)
     -q|--query            implies <query> parameter is a mysql query string
     -d|--dsn <dsn>        to use for target mysql server (Default: default.local) 
     -j|--jobs <jobsCount> specify the number of db to query in parallel (this needs the use of gnu parallel)

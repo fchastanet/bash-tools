@@ -34,7 +34,7 @@ dsnList="$(Functions::getConfMergedList "dsn" "env")"
 scriptsList="$(Functions::getConfMergedList "dbScripts" "sh")"
 
 cat << EOF
-${__HELP_TITLE}Description:${__HELP_NORMAL} Allow to execute a script on each database of specified mysql server
+${__HELP_TITLE}Description:${__HELP_NORMAL} Allows to execute a script on each database of specified mysql server
 
 ${__HELP_TITLE}Usage:${__HELP_NORMAL} ${SCRIPT_NAME} [-h|--help] prints this help and exits
 ${__HELP_TITLE}Usage:${__HELP_NORMAL} ${SCRIPT_NAME} [-j|--jobs <numberOfJobs>] [-o|--output <outputDirectory>] [-d|--dsn <dsn>] [-v|--verbose] [-l|--log-format <logFormat>] [--database <dbName>] <scriptToExecute> [optional parameters to pass to the script]
@@ -76,7 +76,7 @@ EOF
 # -o is for short options like -h
 # -l is for long options with double dash like --help
 # the comma separates different long options
-options=$(getopt -l help,log-format:,dsn,jobs:,database:,output:,verbose -o hdj:l:o:v -- "$@" 2> /dev/null) || {
+options=$(getopt -l help,log-format:,dsn:,jobs:,database:,output:,verbose -o hd:j:l:o:v -- "$@" 2> /dev/null) || {
     showHelp
     Log::fatal "invalid options specified"
 }
@@ -90,11 +90,11 @@ case $1 in
     exit 0
     ;;
 --jobs|-j)
-    shift
+    shift || true 
     JOBS_NUMBER=$1
     ;;
 --output|-o)
-    shift
+    shift || true
     OUTPUT_DIR="$1"
     ;;
 --verbose|-v)
@@ -105,22 +105,27 @@ case $1 in
     DSN=${1:-:-default.local}
     ;;
 --database)
-    shift
+    shift || true
     DB_NAME="$1"
     ;;
 --log-format|-l)
-    shift
+    shift || true
     LOG_FORMAT="$1"
     ;;
 --)
-    shift
+    shift || true
     break;;
 *)
     showHelp
     Log::fatal "invalid argument $1"
 esac
-shift
+shift || true
 done
+
+# check dependencies
+Functions::checkCommandExists mysql "sudo apt-get install -y mysql-client"
+Functions::checkCommandExists mysqlshow "sudo apt-get install -y mysql-client"
+Functions::checkCommandExists parallel "sudo apt-get install -y parallel"
 
 # output-dir argument
 if ! Array::contains "${LOG_FORMAT}" "none" "log"; then
@@ -128,10 +133,12 @@ if ! Array::contains "${LOG_FORMAT}" "none" "log"; then
 fi
 
 # additional arguments
-shift $(( OPTIND - 1 ))
+shift $(( OPTIND - 1 )) || true
 SCRIPT="$1"
-shift
-[[ -z "${SCRIPT}" ]] && Log::fatal "You must provide the script file to be executed"
+shift || true
+if [[ -z "${SCRIPT}" ]]; then
+    Log::fatal "You must provide the script file to be executed"
+fi
 
 if [[ "${OUTPUT_DIR:0:1}" != "/" ]] ; then
    # relative path
@@ -153,6 +160,7 @@ SCRIPT="$(Functions::getAbsoluteConfFile "dbScripts" "${SCRIPT}" "sh")" || exit 
 declare -Agx dbInstance
 
 Database::newInstance dbInstance "${DSN}"
+Database::setQueryOptions dbInstance "${dbInstance['QUERY_OPTIONS']} --connect-timeout=5"
 [[ "${VERBOSE}" = "1" ]] && Log::displayInfo "Using dsn ${dbInstance['DSN_FILE']}"
 
 # list of all databases
@@ -168,4 +176,6 @@ fi
 export selectedQueryFile
 export MYSQL_OPTIONS
 
-echo "${allDbs}" | parallel --eta  --progress --tag --jobs="${JOBS_NUMBER}"  "${SCRIPT}" "${DSN}" "${LOG_FORMAT}" "${VERBOSE}" "${OUTPUT_DIR}" "${PWD}" "${__BASH_FRAMEWORK_VENDOR_PATH}" "$@"
+echo "${allDbs}" | parallel --eta  --progress --tag --jobs="${JOBS_NUMBER}" \
+     "${SCRIPT}" "${DSN}" "${LOG_FORMAT}" "${VERBOSE}" \
+        "${OUTPUT_DIR}" "${PWD}" "${__BASH_FRAMEWORK_VENDOR_PATH}" "$@"

@@ -84,13 +84,13 @@ case $1 in
     exit 0
     ;;
 --)
-    shift
+    shift || true
     break;;
 *)
     showHelp
     Log::fatal "invalid argument $1"
 esac
-shift
+shift || true
 done
 
 declare containerArg="$1"

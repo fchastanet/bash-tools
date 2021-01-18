@@ -8,7 +8,7 @@ create a new db instance
 **Arguments**:
 * $1 - (passed by reference) database instance to create
 * $2 - dsn profile - load the dsn.env profile
-      absolute file is deduced using rules defined in Database::getAbsoluteDsnFile
+      absolute file is deduced using rules defined in Functions::getAbsoluteConfFile
 
 **Example:**
 ```shell
@@ -17,15 +17,6 @@ create a new db instance
 ```
 
 Returns immediately if the instance is already initialized
-# function `Database::getAbsoluteDsnFile`
-> ***Public***
-
-get absolute dsn file from dsn name deduced using these rules
-    * from absolute file
-    * relative to where script is executed
-    * from home/.bash-tools/dsn folder
-    * from framework conf/dsn folder
- Returns absolute dsn filename
 # function `Database::checkDsnFile`
 > ***Internal***
 
@@ -36,22 +27,16 @@ check if dsn file has all the mandatory variables set
 * $1 - dsn absolute filename
 
 Returns 0 on valid file, 1 otherwise with log output
-# function `Database::getDefaultConfDsnFolder`
-Public
- Returns the default conf dsn folder
-# function `Database::getHomeConfDsnFolder`
-Public
- Returns the overriden conf dsn folder in user home folder
-# function `Database::setOptions`
+# function `Database::skipColumnNames`
 > ***Public***
 
-set the general options to use on mysql command to query the database
- These options should be set one time at instance creation and then never changes
- use `Database::setQueryOptions` to change options by query
+by default we skip the column names
+ but sometimes we need column names to display some results
+ disable this option temporarely and then restore it to true
 
 **Arguments**:
 * $1 - (passed by reference) database instance to use
-* $2 - options list
+* $2 - 0 to disable, 1 to enable (hide column names)
 # function `Database::setDumpOptions`
 > ***Public***
 
@@ -77,6 +62,17 @@ check if given database exists
 **Arguments**:
 * $1 (passed by reference) database instance to use
 * $2 database name
+# function `Database::getUserDbList`
+ Public: lis dbs of given mysql server
+ **Output**:
+ the list of db exept mysql admin ones :
+ - information_schema
+ - mysql
+ - performance_schema
+ - sys
+
+**Arguments**:
+* $1 (passed by reference) database instance to use
 # function `Database::isTableExists`
 > ***Public***
 

@@ -5,6 +5,9 @@ declare -g vendorDir="$( cd "${BATS_TEST_DIRNAME}/../../vendor" && pwd )"
 load "${vendorDir}/bats-support/load.bash"
 load "${vendorDir}/bats-assert/load.bash"
 
+# shellcheck source=bash-framework/Constants.sh
+source "$(cd "${BATS_TEST_DIRNAME}/../.." && pwd)/bash-framework/Constants.sh" || exit 1
+
 declare -g mysqlMockedStep=0
 
 
@@ -31,7 +34,7 @@ teardown() {
 @test "${BATS_TEST_FILENAME#/bash/tests/} display help" {
     run ${toolsDir}/gitRenameBranch --help 2>&1
     [ "$status" -eq 0 ]
-    [[ "${output}" == *"Description: rename git local branch, use options to push new branch and delete old branch"* ]]
+    [[ "${lines[0]}" == "${__HELP_TITLE}Description:${__HELP_NORMAL} rename git local branch, use options to push new branch and delete old branch" ]]
 }
 
 @test "${BATS_TEST_FILENAME#/bash/tests/} not a git repository" {

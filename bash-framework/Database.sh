@@ -56,9 +56,10 @@ Database::newInstance() {
   Functions::trapAdd "rm -f \"${instanceNewInstance['AUTH_FILE']}\" 2>/dev/null || true" ERR EXIT
 
   # some of those values can be overridden using the dsn file
-  instanceNewInstance['OPTIONS']="${MYSQL_OPTIONS:---default-character-set=utf8}"
+  # SKIP_COLUMN_NAMES enabled by default
+  instanceNewInstance['SKIP_COLUMN_NAMES']="${SKIP_COLUMN_NAMES:-1}"
   instanceNewInstance['SSL_OPTIONS']="${MYSQL_SSL_OPTIONS:---ssl-mode=DISABLED}"
-  instanceNewInstance['QUERY_OPTIONS']="${MYSQL_QUERY_OPTIONS:--s --skip-column-names}"
+  instanceNewInstance['QUERY_OPTIONS']="${MYSQL_QUERY_OPTIONS:---batch --raw --default-character-set=utf8}"
   instanceNewInstance['DUMP_OPTIONS']="${MYSQL_DUMP_OPTIONS:---default-character-set=utf8 --compress --compact --hex-blob --routines --triggers --single-transaction --set-gtid-purged=OFF --column-statistics=0 ${instanceNewInstance['SSL_OPTIONS']}}"
   
   instanceNewInstance['INITIALIZED']=1
@@ -112,17 +113,17 @@ Database::checkDsnFile() {
   )
 }
 
-# Public: set the general options to use on mysql command to query the database
-# These options should be set one time at instance creation and then never changes
-# use `Database::setQueryOptions` to change options by query
+# Public: by default we skip the column names
+# but sometimes we need column names to display some results
+# disable this option temporarely and then restore it to true
 #
 # **Arguments**:
 # * $1 - (passed by reference) database instance to use
-# * $2 - options list
-Database::setOptions() {
-  local -n instanceSetOptions=$1
+# * $2 - 0 to disable, 1 to enable (hide column names)
+Database::skipColumnNames() {
+  local -n instanceSkipColumnNames=$1
   # shellcheck disable=SC2034
-  instanceSetOptions['OPTIONS']="$2"
+  instanceSkipColumnNames['SKIP_COLUMN_NAMES']="$2"
 }
 
 # Public: set the options to use on mysqldump command
@@ -312,8 +313,9 @@ Database::query() {
   mysqlCommand+=("--defaults-extra-file=${instanceQuery['AUTH_FILE']}")
   IFS=' ' read -r -a queryOptions <<< "${instanceQuery['QUERY_OPTIONS']}"
   mysqlCommand+=("${queryOptions[@]}")
-  IFS=' ' read -r -a options <<< "${instanceQuery['OPTIONS']}"
-  mysqlCommand+=("${options[@]}")
+  if [[ "${instanceQuery['SKIP_COLUMN_NAMES']}" = "1" ]]; then
+    mysqlCommand+=("-s" "--skip-column-names")
+  fi
   # add optional db name
   if [[ -n "${3+x}" ]]; then
     mysqlCommand+=("$3")
@@ -353,10 +355,10 @@ Database::dump() {
   local -a mysqlCommand=()
 
   # optional table list
-  shift 2
+  shift 2 || true
   if [[ -n "${1+x}" ]]; then
     optionalTableList="$1"
-    shift 1
+    shift 1 || true
   fi
 
   # additional options

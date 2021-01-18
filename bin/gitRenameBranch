@@ -59,15 +59,15 @@ case $1 in
     INTERACTIVE="0"
     ;;
 --)
-    shift
+    shift || true
     break;;
 *)
     showHelp
     Log::fatal "invalid argument $1"
 esac
-shift
+shift || true
 done
-shift $(( OPTIND - 1 ))
+shift $(( OPTIND - 1 )) || true
 
 newName="$1"
 shift || true

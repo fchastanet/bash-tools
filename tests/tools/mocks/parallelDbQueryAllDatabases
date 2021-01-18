@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+
+shift 5 # skip --eta --progress --tag --jobs 1 
+command="$1"
+shift
+
+while IFS= read -r db; do
+  "${command}" "$@" "${db}" || true
+done

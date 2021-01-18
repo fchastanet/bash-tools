@@ -17,16 +17,11 @@ trap 'exit 130' INT
 SCRIPT_NAME=${0##*/}
 JOBS_NUMBER=1
 QUERY=0
-MYSQL_OPTIONS=""
 DSN="default.local"
 QUERIES_DIR="$(cd "${CURRENT_DIR}/.." && pwd)/conf/dbQueries"
 HOME_QUERIES_DIR="${HOME}/.bash-tools/dbQueries"
 
 declare -a PARALLEL_OPTIONS
-# check dependencies
-Functions::checkCommandExists mysql "sudo apt-get install mysql-client"
-Functions::checkCommandExists mysqlshow "sudo apt-get install mysql-client"
-Functions::checkCommandExists pv "sudo apt-get install -y pv"
 
 # Usage info
 showHelp() {
@@ -35,12 +30,11 @@ dsnList="$(Functions::getConfMergedList "dsn" "env")"
 queriesList="$(Functions::getConfMergedList "dbQueries" "sql" || true)"
 
 cat << EOF
-${__HELP_TITLE}Description:${__HELP_NORMAL} Execute a query on multiple databases in order to generate a report, query can be parallelized on multiple databases
+${__HELP_TITLE}Description:${__HELP_NORMAL} Execute a query on multiple databases in order to generate a report with tsv format, query can be parallelized on multiple databases
 
 ${__HELP_TITLE}Usage:${__HELP_NORMAL} ${SCRIPT_NAME} [-h|--help] prints this help and exits
-${__HELP_TITLE}Usage:${__HELP_NORMAL} ${SCRIPT_NAME} <query|queryFile> [-d|--dsn <dsn>] [-t|--as-tsv] [-q|--query] [--jobs|-j <jobsCount>] [--bar|-b]
+${__HELP_TITLE}Usage:${__HELP_NORMAL} ${SCRIPT_NAME} <query|queryFile> [-d|--dsn <dsn>] [-q|--query] [--jobs|-j <jobsCount>] [--bar|-b]
 
-    -t|--as-tsv           show results as tsv file (separated by tabulations)
     -q|--query            implies <query> parameter is a mysql query string
     -d|--dsn <dsn>        to use for target mysql server (Default: ${DSN}) 
     -j|--jobs <jobsCount> specify the number of db to query in parallel (this needs the use of gnu parallel)
@@ -61,7 +55,7 @@ EOF
 # -o is for short options like -h
 # -l is for long options with double dash like --help
 # the comma separates different long options
-options=$(getopt -l help,as-tsv,query,bar,jobs:,dsn: -o htqbj:d: -- "$@" 2> /dev/null) || {
+options=$(getopt -l help,query,bar,jobs:,dsn: -o hqbj:d: -- "$@" 2> /dev/null) || {
     showHelp
     Log::fatal "invalid options specified"
 }
@@ -74,12 +68,8 @@ case $1 in
     showHelp
     exit 0
     ;;
---as-tsv|-t)
-    MYSQL_OPTIONS="--batch --raw"
-    ;;
 --jobs|-j)
-    shift
-    JOBS_NUMBER=$1
+    shift || true && JOBS_NUMBER=$1
     ;;
 --bar|-b)
     PARALLEL_OPTIONS+=("--bar")
@@ -88,21 +78,26 @@ case $1 in
     QUERY=1
     ;;
 --dsn|-d)
-    shift
-    DSN=${1:-:-default.local}
+    shift || true && DSN=${1:-:-default.local}
     ;;
 --)
-    shift
+    shift || true
     break;;
 *)
     showHelp
     Log::fatal "invalid argument $1"
 esac
-shift
+shift || true
 done
 
 # additional arguments
-shift $(( OPTIND - 1 ))
+shift $(( OPTIND - 1 )) || true
+
+# check dependencies
+Functions::checkCommandExists mysql "sudo apt-get install -y mysql-client"
+Functions::checkCommandExists mysqlshow "sudo apt-get install -y mysql-client"
+Functions::checkCommandExists parallel "sudo apt-get install -y parallel"
+
 
 # if -q option provided (QUERY =1), queryFile is supposed to be a file, 
 # else it is a query string by default
@@ -110,17 +105,19 @@ queryFile=$1
 if [[ -z "${queryFile}" ]]; then
     if [[ "${QUERY}" = "0" ]]; then
         Log::fatal "You must provide the sql file to be executed"
+    else
+        Log::fatal "You must provide the sql string to be executed"
     fi
-    Log::fatal "You must provide the sql string to be executed"
 fi
 
 # query contains the sql from queryFile or from query string if -q option is provided
 declare query="${queryFile}"
 if [[ "${QUERY}" = "0" ]]; then
-    if [[ ! -f "${queryFile}" ]]; then
+    declare queryAbsoluteFile
+    queryAbsoluteFile="$(Functions::getAbsoluteConfFile "dbQueries" "${queryFile}" "sql")" || 
         Log::fatal "the file ${queryFile} does not exist"
-    fi
-    query="$(cat "${queryFile}")"
+    query="$(cat "${queryAbsoluteFile}")"
+    Log::displayInfo "Using query file ${queryAbsoluteFile}"
 fi
 
 if ! [[ ${JOBS_NUMBER} =~ ^[0-9]+$ ]] ; then
@@ -128,40 +125,19 @@ if ! [[ ${JOBS_NUMBER} =~ ^[0-9]+$ ]] ; then
 fi
 
 [[ ${JOBS_NUMBER} -lt 1 ]] && Log::fatal "number of jobs must be greater than 0"
-[[ ${JOBS_NUMBER} -gt 1 ]] && Functions::checkCommandExists parallel "sudo apt-get install parallel"
 
 declare -Agx dbInstance
 Database::newInstance dbInstance "${DSN}"
-Database::setOptions dbInstance "${MYSQL_OPTIONS} --connect-timeout=5"
-
+Database::setQueryOptions dbInstance "${dbInstance['QUERY_OPTIONS']} --connect-timeout=5"
+Log::displayInfo "Using dsn ${dbInstance['DSN_FILE']}"
 # list of all databases
-allDbs="$(Database::query dbInstance "show databases" "mysql" | tail -n +2 | grep -Ev "performance_schema|information_schema|mysql")"
-if [[ "${JOBS_NUMBER}" = "1" ]] ; then
-    (
-        headerLineDisplayed=0
-        declare db
-        echo "${allDbs}" | while IFS=" " read -r db; do
-            # errors will be shown on stderr, result on stdout
-            if [[ "${headerLineDisplayed}" = "0" ]]; then
-                Database::query dbInstance "${query}" "${db}" || (
-                    Log::displayError "database ${db} error" >&2
-                )
-                headerLineDisplayed=1
-            else
-                # remove first header line
-                (Database::query dbInstance "${query}" "${db}" | sed 1d) || (
-                    Log::displayError "database ${db} error" >&2
-                )
-            fi
-        done
-    )
-else
-    PARALLEL_OPTIONS+=("--linebuffer" "-j" "${JOBS_NUMBER}")
+allDbs="$(Database::getUserDbList dbInstance)"
+PARALLEL_OPTIONS+=("--linebuffer" "-j" "${JOBS_NUMBER}")
 
-    export query
-    export MYSQL_OPTIONS
-    echo "${allDbs}" |
-        parallel "${PARALLEL_OPTIONS[@]}" "${CURRENT_DIR}/_dbQueryOneDatabase.sh" "${DSN}" \
-            | sed -E '1!{/^@@@/d}' \
-            | sed 's/^@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@//'
-fi
+export query
+echo "${allDbs}" |
+    parallel --eta --progress "${PARALLEL_OPTIONS[@]}" \
+        "${CURRENT_DIR}/_dbQueryOneDatabase.sh" "${DSN}" \
+        | sed -E '1!{/^@@@/d}' \
+        | awk 'NR==1 { header=$0; print $0; next; } $0 != header' \
+        | sed 's/^@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@//'

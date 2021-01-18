@@ -39,7 +39,7 @@ list files of dir with given extension and display it as a list one by line
 
 **Arguments**:
 * $1 the directory to list
-* $2 the extension (eg: sh)
+* $2 the extension (default: sh)
 * $3 the indentation ('       - ' by default) can be any string compatible with sed not containing any /
  **Output**: list of files without extension/directory
  eg:
@@ -57,7 +57,7 @@ get absolute file from name deduced using these rules
 **Arguments**:
 * $1 confFolder to use below bash-tools conf folder
 * $2 conf file to use without extension
-* $3 file extension to use (default: .sh)
+* $3 file extension to use (default: sh)
 
 Returns 1 if file not found or error during file loading
 # function `Functions::getConfMergedList`
@@ -67,7 +67,7 @@ list the conf files list available in bash-tools/conf/<conf> folder
  and those overriden in $HOME/.bash-tools/<conf> folder
  **Arguments**:
 * $1 confFolder the directory name (not the path) to list
-* $2 the extension (.sh by default)
+* $2 the extension (sh by default)
 * $3 the indentation ('       - ' by default) can be any string compatible with sed not containing any /
 
 **Output**: list of files without extension/directory
@@ -75,6 +75,21 @@ list the conf files list available in bash-tools/conf/<conf> folder
         - default.local
         - default.remote
         - localhost-root
+# function `Functions::getAbsoluteConfFile`
+> ***Public***
+
+get absolute conf file from specified conf folder deduced using these rules
+    * from absolute file (ignores <confFolder> and <extension>)
+    * relative to where script is executed (ignores <confFolder> and <extension>)
+    * from home/.bash-tools/<confFolder>
+    * from framework conf/<confFolder>
+
+**Arguments**:
+* $1 confFolder the directory name (not the path) to list
+* $2 conf file to use without extension
+* $3 the extension (sh by default)
+
+Returns absolute conf filename
 # function `Functions::trapAdd`
 appends a command to a trap
 
@@ -83,3 +98,15 @@ appends a command to a trap
 # function `extract_trap_cmd`
 helper fn to get existing trap command from output
  of trap -p
+# function `Functions::run`
+*Public*: run command and store data in following global variables :
+* bash_framework_status the exit status of the command
+* bash_framework_duration the duration of the command
+* bash_framework_output the output of the command
+ redirecting error output to stdout is not supported, you can instead redirect stderr to a file if needed
+ **Arguments**:
+* $@ command with arguments to execute
+
+# Variables
+# variable `bash_framework_status`
+global variables used by Functions:run

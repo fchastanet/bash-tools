@@ -32,12 +32,6 @@ DB_IMPORT_DUMP_DIR=${DB_IMPORT_DUMP_DIR%/}
 PROFILES_DIR="$(cd "${CURRENT_DIR}/.." && pwd)/conf/dbImportProfiles"
 HOME_PROFILES_DIR="${HOME}/.bash-tools/dbImportProfiles"
 
-# check dependencies
-Functions::checkCommandExists mysql "sudo apt-get install -y mysql-client"
-Functions::checkCommandExists mysqlshow "sudo apt-get install -y mysql-client"
-Functions::checkCommandExists mysqldump "sudo apt-get install -y mysql-client"
-Functions::checkCommandExists pv "sudo apt-get install -y pv"
-
 showHelp() {
 local profilesList=""
 local dsnList=""
@@ -113,40 +107,41 @@ case $1 in
     SKIP_SCHEMA="1"
     ;;
 -t|--target-dsn)
-    shift
-    TARGET_DSN="$1"
+    shift || true && TARGET_DSN="$1"
     ;;
 -f|--from-dsn)
-    shift
-    FROM_DSN="${1:-default.remote}"
+    shift || true && FROM_DSN="${1:-default.remote}"
     ;;
 -s|--skip-schema)
     SKIP_SCHEMA="1"
     ;;
 -p|--profile)
-    shift
-    PROFILE="$1"
+    shift || true && PROFILE="$1"
     ;;
 -o|--collation-name)
-    shift
-    COLLATION_NAME="$1"
+    shift || true && COLLATION_NAME="$1"
     ;;
 -c|--character-set)
-    shift
-    CHARACTER_SET="$1"
+    shift || true && CHARACTER_SET="$1"
     ;;
 --)
-    shift
+    shift || true
     break;;
 *)
     showHelp
     Log::fatal "invalid argument $1"
 esac
-shift
+shift || true
 done
 
+# check dependencies
+Functions::checkCommandExists mysql "sudo apt-get install -y mysql-client"
+Functions::checkCommandExists mysqlshow "sudo apt-get install -y mysql-client"
+Functions::checkCommandExists mysqldump "sudo apt-get install -y mysql-client"
+Functions::checkCommandExists pv "sudo apt-get install -y pv"
+
 # additional arguments
-shift $(( OPTIND - 1 ))
+shift $(( OPTIND - 1 )) || true
 while true; do
     if [[ -z "$1" ]]; then
         # last argument
@@ -157,8 +152,7 @@ while true; do
     else
         LOCAL_DB="$1"
     fi
-
-    shift
+    shift || true
 done
 
 if [[ -z "${REMOTE_DB}" ]]; then
@@ -202,11 +196,11 @@ fi
 declare -Agx dbFromInstance dbTargetDatabase
 
 Database::newInstance dbTargetDatabase "${TARGET_DSN}"
-Database::setOptions dbTargetDatabase "${dbTargetDatabase[OPTIONS]} --connect-timeout=5"
+Database::setQueryOptions dbTargetDatabase "${dbTargetDatabase[QUERY_OPTIONS]} --connect-timeout=5"
 Log::displayInfo "Using target dsn ${dbTargetDatabase['DSN_FILE']}"
 if [[ "${FROM_AWS}" = "0" ]]; then
     Database::newInstance dbFromInstance "${FROM_DSN}"
-    Database::setOptions dbFromInstance "${dbFromInstance[OPTIONS]} --connect-timeout=5"
+    Database::setQueryOptions dbFromInstance "${dbFromInstance[QUERY_OPTIONS]} --connect-timeout=5"
     Log::displayInfo "Using from dsn ${dbFromInstance['DSN_FILE']}"
 fi
 
