@@ -5,11 +5,11 @@
 shopt -s expand_aliases
 
 # shellcheck disable=2155
-declare -g __BASH_FRAMEWORK_ROOT_PATH="$( cd "${BASH_SOURCE[0]%/*}" && pwd )"
+declare -gx __BASH_FRAMEWORK_ROOT_PATH="$( cd "${BASH_SOURCE[0]%/*}" && pwd )"
 # shellcheck disable=2155
-declare -g __BASH_FRAMEWORK_CALLING_SCRIPT="$( cd "$(dirname "$0")" && pwd )"
+declare -gx __BASH_FRAMEWORK_CALLING_SCRIPT="$( cd "$(dirname "$0")" && pwd )"
 # shellcheck disable=2155,2034
-declare -g __BASH_FRAMEWORK_VENDOR_PATH="$( cd "${__BASH_FRAMEWORK_ROOT_PATH}/.." && pwd )"
+declare -gx __BASH_FRAMEWORK_VENDOR_PATH="$( cd "${__BASH_FRAMEWORK_ROOT_PATH}/.." && pwd )"
 
 ## stubs in case either exception or log is not loaded
 Log::fatal() {

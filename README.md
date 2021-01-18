@@ -1,8 +1,11 @@
 # 1. bash-tools
 
 Build status: [![Build Status](https://travis-ci.com/fchastanet/bash-tools.svg?branch=master)](https://travis-ci.com/fchastanet/bash-tools)
+[![Project Status](http://opensource.box.com/badges/active.svg)](http://opensource.box.com/badges)
 [![DeepSource](https://deepsource.io/gh/fchastanet/bash-tools.svg/?label=active+issues&show_trend=true)](https://deepsource.io/gh/fchastanet/bash-tools/?ref=repository-badge)
 [![DeepSource](https://deepsource.io/gh/fchastanet/bash-tools.svg/?label=resolved+issues&show_trend=true)](https://deepsource.io/gh/fchastanet/bash-tools/?ref=repository-badge)
+[![Average time to resolve an issue](http://isitmaintained.com/badge/resolution/fchastanet/bash-tools.svg)](http://isitmaintained.com/project/fchastanet/bash-tools "Average time to resolve an issue")
+[![Percentage of issues still open](http://isitmaintained.com/badge/open/fchastanet/bash-tools.svg)](http://isitmaintained.com/project/fchastanet/bash-tools "Percentage of issues still open")
 
 - [1. bash-tools](#1-bash-tools)
   - [1.1. Exerpt](#11-exerpt)
@@ -10,6 +13,7 @@ Build status: [![Build Status](https://travis-ci.com/fchastanet/bash-tools.svg?b
   - [1.3. The tools](#13-the-tools)
     - [1.3.1. bin/gitRenameBranch](#131-bingitrenamebranch)
     - [1.3.2. bin/dbQueryAllDatabases](#132-bindbqueryalldatabases)
+    - [bin/dbScriptAllDatabases](#bindbscriptalldatabases)
     - [1.3.3. bin/dbImport](#133-bindbimport)
     - [1.3.4. bin/dbImportTable](#134-bindbimporttable)
     - [1.3.5. bin/cli](#135-bincli)
@@ -89,17 +93,16 @@ Usage: gitRenameBranch <newBranchName> [<oldBranchName>] [--push|-p] [--delete|-
 
 Execute a query on multiple database in order to generate a report, query can be parallelized on multiple databases
 ```bash
-bin/dbQueryAllDatabases -e conf/dsn/localhost-root.env conf/dbQueries/databaseSize.sql
+bin/dbQueryAllDatabases -e localhost-root conf/dbQueries/databaseSize.sql
 ```
 
 **Help**
 ```
-Description: Execute a query on multiple databases in order to generate a report, query can be parallelized on multiple databases
+Description: Execute a query on multiple databases in order to generate a tsv formatted report, query can be parallelized on multiple databases
 
 Usage: dbQueryAllDatabases [-h|--help] prints this help and exits
-Usage: dbQueryAllDatabases <query|queryFile> [-d|--dsn <dsn>] [-t|--as-tsv] [-q|--query] [--jobs|-j <jobsCount>] [--bar|-b]
+Usage: dbQueryAllDatabases <query|queryFile> [-d|--dsn <dsn>] [-q|--query] [--jobs|-j <jobsCount>] [--bar|-b]
 
-    -t|--as-tsv           show results as tsv file (separated by tabulations)
     -q|--query            implies <query> parameter is a mysql query string
     -d|--dsn <dsn>        to use for target mysql server (Default: default.local) 
     -j|--jobs <jobsCount> specify the number of db to query in parallel (this needs the use of gnu parallel)
@@ -108,9 +111,7 @@ Usage: dbQueryAllDatabases <query|queryFile> [-d|--dsn <dsn>] [-t|--as-tsv] [-q|
         if -q option is provided this parameter is a mysql query string
         else a file must be specified
 
-List of available dsn: 
-    List of available dsn: 
-List of available dsn: 
+List of available dsn:
        - default.local
        - default.remote
        - localhost-root
@@ -118,10 +119,75 @@ List of available queries (default dir /home/vagrant/projects/bash-tools/conf/db
        - databaseSize
 ```
 
+### bin/dbScriptAllDatabases
+Allow to execute a script on each database of specified mysql server
+```bash
+bin/dbScriptAllDatabases -d localhost-root dbCheckStructOneDatabase
+```
+
+or specified db only
+```bash
+bin/dbScriptAllDatabases -d localhost-root dbCheckStructOneDatabase db
+```
+
+launch script in parallel on multiple db at once
+```bash
+bin/dbScriptAllDatabases --jobs 10 -d localhost-root dbCheckStructOneDatabase
+```
+
+**Help:**
+```
+Description: Allow to execute a script on each database of specified mysql server
+
+Usage: dbScriptAllDatabases [-h|--help] prints this help and exits
+Usage: dbScriptAllDatabases [-j|--jobs <numberOfJobs>] [-o|--output <outputDirectory>] [-d|--dsn <dsn>] [-v|--verbose] [-l|--log-format <logFormat>] [--database <dbName>] <scriptToExecute> [optional parameters to pass to the script]
+    <scriptToExecute>             the script that will be executed on each databases
+    -d|--dsn <dsn>                target mysql server (Default: default.local) 
+    --database <dbName>           if provided will check only this db, otherwise script will be executed on all dbs of mysql server
+    -j|--jobs <numberOfJobs>      the number of db to query in parallel (default: 1)
+    -o|--output <outputDirectory> output directory, see log-format option (default : "/home/vagrant/.bash-tools/output")
+    -l|--log-format <logFormat>   if log provided, will log each db result to log file, can be one of these values (none, log) (default: none)
+    -v|--verbose                  display more information
+
+Note: the use of output, log-format, verbose options highly depends on the script used
+
+Example: script conf/dbScripts/extractData.sh 
+    executes query databaseSize (see conf/dbQueries/databaseSize.sql) on each db and log the result in log file in default output dir, call it using
+    /home/vagrant/projects/bash-tools/bin/dbScriptAllDatabases -j 10 extractData databaseSize
+
+    executes query databaseSize on each db and display the result on stdout (2>/dev/null hides information messages)
+    /home/vagrant/projects/bash-tools/bin/dbScriptAllDatabases -j 10 --log-format none extractData databaseSize 
+
+    use --verbose to get some debug information
+    /home/vagrant/projects/bash-tools/bin/dbScriptAllDatabases -j 10 --log-format none --verbose extractData databaseSize 
+
+Use cases:
+    you can use this script in order to check that each db model conforms with your ORM schema
+    simply create a new script in conf/dbQueries that will call your orm schema checker
+
+    update multiple db at once (simple to complex update script)
+
+List of available dsn:
+       - default.local
+       - default.remote
+       - localhost-root
+list of available scripts (/home/vagrant/.bash-tools/conf/dbScripts):
+       - dbCheckStructOneDatabase
+       - dbPropelMigrationScriptOneDatabase
+       - extractData
+```
+
 ### 1.3.3. bin/dbImport
 Import remote db into local db
 ```bash
 dbImport ExampleDbName
+```
+
+Ability to import db from dump stored on aws
+the dump file should have this name `<fromDbName>.tar.gz`
+and stored on AWS location defined by S3_BASE_URL env variable (see conf/.env file)
+```bash
+dbImport --from-aws ExampleDbName
 ```
 
 **Help**
@@ -157,11 +223,12 @@ Usage: dbImport <fromDbName> [<targetDbName>]
 
     Aws s3 location       : s3://example.com/exports/
 
-List of available profiles (default profiles dir /home/vagrant/projects/bash-tools/conf/dbImportProfiles overridable in home profiles /home/vagrant/.bash-tools/dbImportProfiles): 
+List of available profiles (default profiles dir /home/vagrant/projects/bash-tools/conf/dbImportProfiles overridable in home profiles /home/vagrant/.bash-tools/dbImportProfiles):
        - all
        - default
        - none
-List of available dsn: 
+       - sample
+List of available dsn:
        - default.local
        - default.remote
        - localhost-root
@@ -177,8 +244,8 @@ dbImportTable ExampleDbName ExampleTableName
 ```
 Description: Import remote db table into local db
 
-Command: dbImportTable [-h|--help] prints this help and exits
-Command: dbImportTable <remoteDbName> <tableName> [<localDbName>] 
+Usage: dbImportTable [-h|--help] prints this help and exits
+Usage: dbImportTable <remoteDbName> <tableName> [<localDbName>] 
     [-d|--download-dump] [--force] [-a|--from-aws]
     [-t|--target-dsn dsn] [-f|--from-dsn dsn]
     [-c|--character-set utf8]
@@ -197,12 +264,13 @@ Command: dbImportTable <remoteDbName> <tableName> [<localDbName>]
     -d|--download-dump   force remote db dump (default: use already downloaded dump in /home/vagrant/.bash-tools/dbImportDumps if available)
     -c|--character-set   change the character set used during database creation (default value: character set used by remote db)
 
-    Aws s3 location       : s3://ck-dev-frsa-devsql/exports/
+    Aws s3 location       : s3://example.com/exports/
 
-List of available dsn: 
+List of available dsn:
        - default.local
        - default.remote
        - localhost-root
+
 ```
 
 ### 1.3.5. bin/cli
@@ -211,11 +279,11 @@ List of available dsn:
 ```
 Description: easy connection to docker container
 
-Command: cli [-h|--help] prints this help and exits
-Command: cli [<container>] [user] [command]
+Usage: cli [-h|--help] prints this help and exits
+Usage: cli [<container>] [user] [command]
 
     <container> : container should be one of these values (provided by 'docker ps'): 
-        webserver,mysql,php-fpm,redis,mailhog,mysql8,apache2,redis,mailhog
+        mysql8,ace-dashboard,apache2,redis,mailhog,express_1
         if not provided, it will load the container specified in default configuration (project-apache2)
 
 examples:
@@ -229,7 +297,7 @@ you can override these mappings by providing your own profile in
 This script will be executed with the variables userArg containerArg commandArg set as specified in command line
 and should provide value for the following variables finalUserArg finalContainerArg finalCommandArg
 
-List of available profiles (from /home/vagrant/projects/bash-tools/conf/cliProfiles and overridable in /home/vagrant/.bash-tools/cliProfiles): 
+List of available profiles (from /home/vagrant/projects/bash-tools/conf/cliProfiles and overridable in /home/vagrant/.bash-tools/cliProfiles):
        - default
        - mysql
        - mysql.remote

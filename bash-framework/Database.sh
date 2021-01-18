@@ -7,7 +7,7 @@ import bash-framework/Log
 # **Arguments**:
 # * $1 - (passed by reference) database instance to create
 # * $2 - dsn profile - load the dsn.env profile 
-#     absolute file is deduced using rules defined in Database::getAbsoluteDsnFile
+#     absolute file is deduced using rules defined in Functions::getAbsoluteConfFile
 #
 # **Example:**
 # ```shell
@@ -29,7 +29,7 @@ Database::newInstance() {
   instanceNewInstance['DSN_FILE']=""
 
   # check dsn file
-  DSN_FILE="$(Database::getAbsoluteDsnFile "${dsn}")" || exit 1
+  DSN_FILE="$(Functions::getAbsoluteConfFile "dsn" "${dsn}" "env")" || exit 1
   Database::checkDsnFile "${DSN_FILE}"
   instanceNewInstance['DSN_FILE']="${DSN_FILE}"
 
@@ -37,6 +37,11 @@ Database::newInstance() {
   # shellcheck disable=SC1091
   source "${instanceNewInstance['DSN_FILE']}"
   
+  instanceNewInstance['USER']="${USER}"
+  instanceNewInstance['PASSWORD']="${PASSWORD}"
+  instanceNewInstance['HOSTNAME']="${HOSTNAME}"
+  instanceNewInstance['PORT']="${PORT}"
+
   # generate authfile for easy authentication
   # shellcheck disable=SC2064
   instanceNewInstance['AUTH_FILE']=$(mktemp -p "${TMPDIR:-/tmp}" -t "mysql.XXXXXXXXXXXX")
@@ -51,51 +56,13 @@ Database::newInstance() {
   Functions::trapAdd "rm -f \"${instanceNewInstance['AUTH_FILE']}\" 2>/dev/null || true" ERR EXIT
 
   # some of those values can be overridden using the dsn file
-  instanceNewInstance['OPTIONS']="${MYSQL_OPTIONS:---default-character-set=utf8}"
+  # SKIP_COLUMN_NAMES enabled by default
+  instanceNewInstance['SKIP_COLUMN_NAMES']="${SKIP_COLUMN_NAMES:-1}"
   instanceNewInstance['SSL_OPTIONS']="${MYSQL_SSL_OPTIONS:---ssl-mode=DISABLED}"
-  instanceNewInstance['QUERY_OPTIONS']="${MYSQL_QUERY_OPTIONS:--s --skip-column-names}"
+  instanceNewInstance['QUERY_OPTIONS']="${MYSQL_QUERY_OPTIONS:---batch --raw --default-character-set=utf8}"
   instanceNewInstance['DUMP_OPTIONS']="${MYSQL_DUMP_OPTIONS:---default-character-set=utf8 --compress --compact --hex-blob --routines --triggers --single-transaction --set-gtid-purged=OFF --column-statistics=0 ${instanceNewInstance['SSL_OPTIONS']}}"
   
   instanceNewInstance['INITIALIZED']=1
-}
-
-# Public: get absolute dsn file from dsn name deduced using these rules
-#   * from absolute file
-#   * relative to where script is executed
-#   * from home/.bash-tools/dsn folder
-#   * from framework conf/dsn folder
-# Returns absolute dsn filename
-Database::getAbsoluteDsnFile() {
-  local dsn="$1"
-  # load dsn from absolute file, then home folder, then bash framework conf folder
-  if [[ "${dsn}" =~ ^/.* ]]; then
-    # file contains /, consider it as absolute filename
-    echo "${dsn}"
-    return 0
-  fi
-  
-  # relative to where script is executed
-  DSN_FILE="$(realpath "${__BASH_FRAMEWORK_CALLING_SCRIPT}/${dsn}" || echo "")"
-  if [ -f "${DSN_FILE}" ]; then
-    echo "${DSN_FILE}"
-    return 0
-  fi
-
-  # shellcheck source=/conf/dsn/default.local.env
-  DSN_FILE="$(Database::getHomeConfDsnFolder)/${dsn}.env"
-  if [ -f "${DSN_FILE}" ]; then
-    echo "${DSN_FILE}"
-    return 0
-  fi
-  DSN_FILE="$(Database::getDefaultConfDsnFolder)/${dsn}.env"
-  if [ -f "${DSN_FILE}" ]; then
-    echo "${DSN_FILE}"
-    return 0
-  fi
-
-  # file not found
-  Log::displayError "dsn file '${dsn}' not found"
-  return 1    
 }
 
 # Internal: check if dsn file has all the mandatory variables set
@@ -146,29 +113,17 @@ Database::checkDsnFile() {
   )
 }
 
-# Public
-# Returns the default conf dsn folder
-Database::getDefaultConfDsnFolder() {
-  echo "${__BASH_FRAMEWORK_VENDOR_PATH:?}/conf/dsn"
-}
-
-# Public
-# Returns the overriden conf dsn folder in user home folder 
-Database::getHomeConfDsnFolder() {
-  echo "${HOME}/.bash-tools/dsn"
-}
-
-# Public: set the general options to use on mysql command to query the database
-# These options should be set one time at instance creation and then never changes
-# use `Database::setQueryOptions` to change options by query
+# Public: by default we skip the column names
+# but sometimes we need column names to display some results
+# disable this option temporarely and then restore it to true
 #
 # **Arguments**:
 # * $1 - (passed by reference) database instance to use
-# * $2 - options list
-Database::setOptions() {
-  local -n instanceSetOptions=$1
+# * $2 - 0 to disable, 1 to enable (hide column names)
+Database::skipColumnNames() {
+  local -n instanceSkipColumnNames=$1
   # shellcheck disable=SC2034
-  instanceSetOptions['OPTIONS']="$2"
+  instanceSkipColumnNames['SKIP_COLUMN_NAMES']="$2"
 }
 
 # Public: set the options to use on mysqldump command
@@ -215,6 +170,24 @@ Database::ifDbExists() {
   Log::displayDebug "execute command: '${mysqlCommand[*]}'"
   result="$(MSYS_NO_PATHCONV=1 "${mysqlCommand[@]}" 2>/dev/null | grep '^Database: ' | grep -o "${dbName}" )"
   [[ "${result}" = "${dbName}" ]]
+}
+
+#  Public: lis dbs of given mysql server
+# **Output**:
+# the list of db exept mysql admin ones :
+# - information_schema 
+# - mysql
+# - performance_schema
+# - sys
+#
+# **Arguments**:
+# * $1 (passed by reference) database instance to use
+Database::getUserDbList() {
+  # shellcheck disable=SC2034
+  local -n instanceUserDbList=$1
+  # shellcheck disable=SC2016
+  sql='SELECT `schema_name` from INFORMATION_SCHEMA.SCHEMATA WHERE `schema_name` NOT IN("information_schema", "mysql", "performance_schema", "sys")'
+ Database::query instanceUserDbList "${sql}"
 }
 
 # Public: check if table exists on given db
@@ -340,8 +313,9 @@ Database::query() {
   mysqlCommand+=("--defaults-extra-file=${instanceQuery['AUTH_FILE']}")
   IFS=' ' read -r -a queryOptions <<< "${instanceQuery['QUERY_OPTIONS']}"
   mysqlCommand+=("${queryOptions[@]}")
-  IFS=' ' read -r -a options <<< "${instanceQuery['OPTIONS']}"
-  mysqlCommand+=("${options[@]}")
+  if [[ "${instanceQuery['SKIP_COLUMN_NAMES']}" = "1" ]]; then
+    mysqlCommand+=("-s" "--skip-column-names")
+  fi
   # add optional db name
   if [[ -n "${3+x}" ]]; then
     mysqlCommand+=("$3")
@@ -381,10 +355,10 @@ Database::dump() {
   local -a mysqlCommand=()
 
   # optional table list
-  shift 2
+  shift 2 || true
   if [[ -n "${1+x}" ]]; then
     optionalTableList="$1"
-    shift 1
+    shift 1 || true
   fi
 
   # additional options

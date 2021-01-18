@@ -3,6 +3,9 @@
 declare -g toolsDir="$( cd "${BATS_TEST_DIRNAME}/../../bin" && pwd )"
 declare -g vendorDir="$( cd "${BATS_TEST_DIRNAME}/../../vendor" && pwd )"
 
+# shellcheck source=bash-framework/Constants.sh
+source "$(cd "${BATS_TEST_DIRNAME}/../.." && pwd)/bash-framework/Constants.sh" || exit 1
+
 load "${vendorDir}/bats-mock-Flamefire/load.bash"
 
 setup() {
@@ -29,7 +32,7 @@ teardown() {
 
 @test "${BATS_TEST_FILENAME#/bash/tests/} display help" {
     run ${toolsDir}/dbImport --help 2>&1
-    [[ "${output}" == *"Description: Import source db into target db"* ]]
+    [[ "${lines[0]}" = "${__HELP_TITLE}Description:${__HELP_NORMAL} Import source db into target db" ]]
 }
 
 @test "${BATS_TEST_FILENAME#/bash/tests/} remoteDbName not provided" {
@@ -53,8 +56,8 @@ teardown() {
 }
 
 @test "${BATS_TEST_FILENAME#/bash/tests/} dsn file not found" {
-    run ${toolsDir}/dbImport -f notFound fromDb 2>&1
-    [[ "${output}" == *"ERROR - dsn file 'notFound' not found"* ]]
+    run ${toolsDir}/dbImport -f notFound fromDb
+    [[ "${output}" == *"ERROR - conf file 'notFound' not found"* ]]
 }
 
 @test "${BATS_TEST_FILENAME#/bash/tests/} remote db(fromDb) doesn't exist" {
@@ -81,13 +84,13 @@ teardown() {
     # call 6 (order 10): import structure dump into db
     # call 7 (order 11): import data dump into db
     stub mysql \
-        "\* \* \* \* --connect-timeout=5 information_schema -e 'SELECT default_collation_name FROM information_schema.SCHEMATA WHERE schema_name = \"fromDb\";' : echo 'collation'" \
-        "\* \* \* \* --connect-timeout=5 information_schema -e 'SELECT default_character_set_name FROM information_schema.SCHEMATA WHERE schema_name = \"fromDb\";' : echo 'charset'" \
-        "\* \* \* \* --connect-timeout=5 fromDb -e 'show tables' : echo 'table1'" \
-        "\* -s --skip-column-names --default-character-set=utf8 --connect-timeout=5 : echo '100'" \
-        $'* -s --skip-column-names --default-character-set=utf8 --connect-timeout=5 -e \'CREATE DATABASE `toDb` CHARACTER SET "charset" COLLATE "collation"\' : echo "db created"' \
-        "\* -s --skip-column-names --default-character-set=utf8 --connect-timeout=5 toDb : echo 'import structure dump'" \
-        "\* -s --skip-column-names --default-character-set=utf8 --connect-timeout=5 toDb : echo 'import data dump'"
+        "\* --batch --raw --default-character-set=utf8 --connect-timeout=5 -s --skip-column-names information_schema -e 'SELECT default_collation_name FROM information_schema.SCHEMATA WHERE schema_name = \"fromDb\";' : echo 'collation'" \
+        "\* --batch --raw --default-character-set=utf8 --connect-timeout=5 -s --skip-column-names information_schema -e 'SELECT default_character_set_name FROM information_schema.SCHEMATA WHERE schema_name = \"fromDb\";' : echo 'charset';" \
+        "\* --batch --raw --default-character-set=utf8 --connect-timeout=5 -s --skip-column-names fromDb -e 'show tables' : echo 'table1'" \
+        "\* --batch --raw --default-character-set=utf8 --connect-timeout=5 -s --skip-column-names : echo '100'" \
+        $'* --batch --raw --default-character-set=utf8 --connect-timeout=5 -s --skip-column-names -e \'CREATE DATABASE `toDb` CHARACTER SET "charset" COLLATE "collation"\' : echo "db created"' \
+        "\* --batch --raw --default-character-set=utf8 --connect-timeout=5 -s --skip-column-names toDb : echo 'import structure dump'" \
+        "\* --batch --raw --default-character-set=utf8 --connect-timeout=5 -s --skip-column-names toDb : echo 'import data dump'"
 
     # call 1 (order 7): dump data
     # call 2 (order 8): dump structure
@@ -113,9 +116,9 @@ teardown() {
     # call 6 (order 3): import structure dump into db
     # call 7 (order 4): import data dump into db
     stub mysql \
-        $'* -s --skip-column-names --default-character-set=utf8 --connect-timeout=5 -e \'CREATE DATABASE `toDb` CHARACTER SET "utf8" COLLATE "utf8_general_ci"\' : echo "db created"' \
-        "\* -s --skip-column-names --default-character-set=utf8 --connect-timeout=5 toDb : echo 'import structure dump'" \
-        "\* -s --skip-column-names --default-character-set=utf8 --connect-timeout=5 toDb : echo 'import data dump'"
+        $'* --batch --raw --default-character-set=utf8 --connect-timeout=5 -s --skip-column-names -e \'CREATE DATABASE `toDb` CHARACTER SET "utf8" COLLATE "utf8_general_ci"\' : echo "db created"' \
+        "\* --batch --raw --default-character-set=utf8 --connect-timeout=5 -s --skip-column-names toDb : echo 'import structure dump'" \
+        "\* --batch --raw --default-character-set=utf8 --connect-timeout=5 -s --skip-column-names toDb : echo 'import data dump'"
     
     run ${toolsDir}/dbImport -f default.local fromDb toDb 2>&1
     [[ "${output}" == *"Import database duration : "* ]]

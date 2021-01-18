@@ -22,10 +22,11 @@ declare DB="$2"
 
 declare -Agx dbInstance
 Database::newInstance dbInstance "${DSN_FILE}"
-Database::setQueryOptions dbInstance "${MYSQL_OPTIONS} --connect-timeout=5"
+Database::setQueryOptions dbInstance "${dbInstance[QUERY_OPTIONS]} --connect-timeout=5"
 
 # identify columns header
 echo -n "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
+Database::skipColumnNames dbInstance 0
 
 # shellcheck disable=SC2154
 Database::query dbInstance "${query}" "${DB}" ||

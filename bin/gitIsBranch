@@ -8,7 +8,7 @@ source "$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." && pwd )/vendor/bash-framewo
 
 showHelp() {
 cat << EOF
-Command: ${SCRIPT_NAME} <branchName>
+${__HELP_TITLE}Usage:${__HELP_NORMAL} ${SCRIPT_NAME} <branchName>
 show an error if branchName is not a known branch
 EOF
 }

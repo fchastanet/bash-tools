@@ -16,10 +16,10 @@ INTERACTIVE="1"
 # Usage info
 showHelp() {
 cat << EOF
-Description: rename git local branch, use options to push new branch and delete old branch
+${__HELP_TITLE}Description:${__HELP_NORMAL} rename git local branch, use options to push new branch and delete old branch
 
-Usage: ${SCRIPT_NAME} [-h|--help] prints this help and exits
-Usage: ${SCRIPT_NAME} <newBranchName> [<oldBranchName>] [--push|-p] [--delete|-d] [--assume-yes|-yes|-y]
+${__HELP_TITLE}Usage:${__HELP_NORMAL} ${SCRIPT_NAME} [-h|--help] prints this help and exits
+${__HELP_TITLE}Usage:${__HELP_NORMAL} ${SCRIPT_NAME} <newBranchName> [<oldBranchName>] [--push|-p] [--delete|-d] [--assume-yes|-yes|-y]
     --help,-h prints this help and exits
      -y, --yes, --assume-yes do not ask for confirmation (use with caution)
         Automatic yes to prompts; assume "y" as answer to all prompts
@@ -59,15 +59,15 @@ case $1 in
     INTERACTIVE="0"
     ;;
 --)
-    shift
+    shift || true
     break;;
 *)
     showHelp
     Log::fatal "invalid argument $1"
 esac
-shift
+shift || true
 done
-shift $(( OPTIND - 1 ))
+shift $(( OPTIND - 1 )) || true
 
 newName="$1"
 shift || true

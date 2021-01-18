@@ -8,7 +8,7 @@ source "$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." && pwd )/vendor/bash-framewo
 
 showHelp() {
 cat << EOF
-# Usage: ${SCRIPT_NAME} <branch> <commit>
+${__HELP_TITLE}Usage:${__HELP_NORMAL} ${SCRIPT_NAME} <branch> <commit>
 show an error if commit is not an ancestor of branch
 EOF
 }
