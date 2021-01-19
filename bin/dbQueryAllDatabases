@@ -69,7 +69,8 @@ case $1 in
     exit 0
     ;;
 --jobs|-j)
-    shift || true && JOBS_NUMBER=$1
+    shift || true 
+    JOBS_NUMBER=$1
     ;;
 --bar|-b)
     PARALLEL_OPTIONS+=("--bar")
@@ -78,7 +79,8 @@ case $1 in
     QUERY=1
     ;;
 --dsn|-d)
-    shift || true && DSN=${1:-:-default.local}
+    shift || true 
+    DSN=${1:-:-default.local}
     ;;
 --)
     shift || true

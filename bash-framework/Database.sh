@@ -20,7 +20,7 @@ Database::newInstance() {
   local -n instanceNewInstance=$1
   local dsn="$2"
 
-  if [[ "${instanceNewInstance['INITIALIZED']:-0}" == "1" ]]; then
+  if [[ -v instanceNewInstance['INITIALIZED'] && "${instanceNewInstance['INITIALIZED']:-0}" == "1" ]]; then
     return
   fi
   

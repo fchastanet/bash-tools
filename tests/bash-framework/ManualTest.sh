@@ -37,7 +37,7 @@ declare -Ax dbFromInstance
     [ "${dbFromInstance['INITIALIZED']}" = "1" ]
     [ "${dbFromInstance['OPTIONS']}" = "--default-character-set=utf8" ]
     [ "${dbFromInstance['SSL_OPTIONS']}" = "--ssl-mode=DISABLED" ]
-    [ "${dbFromInstance['DUMP_OPTIONS']}" = "--default-character-set=utf8 --compress--hex-blob --routines --triggers --single-transaction --set-gtid-purged=OFF --column-statistics=0 --ssl-mode=DISABLED" ]
+    [ "${dbFromInstance['DUMP_OPTIONS']}" = "--default-character-set=utf8 --compress --hex-blob --routines --triggers --single-transaction --set-gtid-purged=OFF --column-statistics=0 --ssl-mode=DISABLED" ]
     [ "${dbFromInstance['DSN_FILE']}" = "/tmp/home/.bash-tools/dsn/dsn_valid.env" ]
 
     [[ ${dbFromInstance['AUTH_FILE']} = /tmp/mysql.* ]]

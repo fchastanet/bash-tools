@@ -95,8 +95,8 @@ teardown() {
     # call 1 (order 7): dump data
     # call 2 (order 8): dump structure
     stub mysqldump \
-        "\* --default-character-set=utf8 --compress--hex-blob --routines --triggers --single-transaction --set-gtid-purged=OFF --column-statistics=0 --ssl-mode=DISABLED --no-create-info --skip-add-drop-table --single-transaction=TRUE fromDb 'table1 ' : echo '####data####'" \
-        "\* --default-character-set=utf8 --compress--hex-blob --routines --triggers --single-transaction --set-gtid-purged=OFF --column-statistics=0 --ssl-mode=DISABLED --no-data --skip-add-drop-table --single-transaction=TRUE fromDb : echo '####structure####'"
+        "\* --default-character-set=utf8 --compress --hex-blob --routines --triggers --single-transaction --set-gtid-purged=OFF --column-statistics=0 --ssl-mode=DISABLED --no-create-info --skip-add-drop-table --single-transaction=TRUE fromDb 'table1 ' : echo '####data####'" \
+        "\* --default-character-set=utf8 --compress --hex-blob --routines --triggers --single-transaction --set-gtid-purged=OFF --column-statistics=0 --ssl-mode=DISABLED --no-data --skip-add-drop-table --single-transaction=TRUE fromDb : echo '####structure####'"
 
     run ${toolsDir}/dbImport -f default.local fromDb toDb 2>&1 
     [[ "${output}" == *"Import database duration : "* ]]

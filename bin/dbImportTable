@@ -19,7 +19,7 @@ FORCE=0
 FROM_AWS=0
 DOWNLOAD_DUMP=0
 REMOTE_DB=""
-LOCAL_DB=""
+TARGET_DB=""
 CHARACTER_SET=""
 TABLE=""
 FROM_DSN=""
@@ -87,10 +87,12 @@ case $1 in
     FORCE=1
     ;;
 -t|--target-dsn)
-    shift || true && TARGET_DSN="$1"
+    shift || true
+    TARGET_DSN="$1"
     ;;
 -f|--from-dsn)
-    shift || true && FROM_DSN="${1:-${DEFAULT_FROM_DSN}}"
+    shift || true
+    FROM_DSN="${1:-${DEFAULT_FROM_DSN}}"
     ;;
 -a|--from-aws)
     FROM_AWS="1"
@@ -99,7 +101,8 @@ case $1 in
     DOWNLOAD_DUMP=1
     ;;
 -c|--character-set)
-    shift || true && CHARACTER_SET="$1"
+    shift || true
+    CHARACTER_SET="$1"
     ;;
 --)
     shift || true
@@ -130,7 +133,7 @@ while true; do
         if [[ -z "${TABLE}" ]]; then
             TABLE="$1"
         else
-            LOCAL_DB="$1"
+            TARGET_DB="$1"
         fi
     fi
     shift || true
@@ -146,8 +149,8 @@ if [[ -z "${TABLE}" ]]; then
     Log::fatal "you must provide tableName"
 fi
 
-if [[ -z "${LOCAL_DB}" ]]; then
-    LOCAL_DB=${REMOTE_DB}
+if [[ -z "${TARGET_DB}" ]]; then
+    TARGET_DB=${REMOTE_DB}
 fi
 
 # check s3 parameter
@@ -172,12 +175,12 @@ if [[ ! -d "${DB_IMPORT_DUMP_DIR}" ]]; then
 fi
 
 # create db instances
-declare -Agx dbRemoteInstance dbLocalInstance
+declare -Agx dbTargetInstance dbFromInstance
 
-Database::newInstance dbTargetDatabase "${TARGET_DSN}"
+Database::newInstance dbTargetInstance "${TARGET_DSN}"
 # shellcheck disable=SC2154
-Database::setQueryOptions dbTargetDatabase "${dbTargetDatabase[QUERY_OPTIONS]} --connect-timeout=5"
-Log::displayInfo "Using target dsn ${dbTargetDatabase['DSN_FILE']}"
+Database::setQueryOptions dbTargetInstance "${dbTargetInstance[QUERY_OPTIONS]} --connect-timeout=5"
+Log::displayInfo "Using target dsn ${dbTargetInstance['DSN_FILE']}"
 if [[ "${FROM_AWS}" = "0" ]]; then
     Database::newInstance dbFromInstance "${FROM_DSN}"
     # shellcheck disable=SC2154
@@ -185,18 +188,19 @@ if [[ "${FROM_AWS}" = "0" ]]; then
     Log::displayInfo "Using from dsn ${dbFromInstance['DSN_FILE']}"
 fi
 
-# check if local db exists
-Database::ifDbExists dbTargetDatabase "${LOCAL_DB}" || {
-    Log::displayWarning "Local Database ${LOCAL_DB} does not exist !"
+# check if target db exists
+Database::ifDbExists dbTargetInstance "${TARGET_DB}" || {
+    Log::fatal "Target Database ${TARGET_DB} does not exist !"
 }
 
-# check if local table exists
-Database::isTableExists dbLocalInstance "${LOCAL_DB}" "${TABLE}" && {
-    Log::displayInfo "Local table ${LOCAL_DB}/${TABLE} already exists"
+# check if target table exists
+Database::isTableExists dbFromInstance "${TARGET_DB}" "${TABLE}" && {
+    Log::displayInfo "Target table ${TARGET_DB}/${TABLE} already exists"
     [[ "${FORCE}" = "0" ]] && Log::fatal "use --force to drop it"
+    Database::dropTable dbTargetInstance "${TARGET_DB}" "${TABLE}"
 }
 
-Log::displayInfo "import table ${TABLE} from ${REMOTE_DB} to ${LOCAL_DB}"
+Log::displayInfo "import table ${TABLE} from ${REMOTE_DB} to ${TARGET_DB}"
 
 # check if local dump exists
 REMOTE_DB_DUMP_TEMP_FILE="${DB_IMPORT_DUMP_DIR}/importTable_${REMOTE_DB}_${TABLE}.sql"
@@ -211,15 +215,15 @@ fi
 
 # dump header/footer
 read -r -d '\0' DUMP_HEADER <<- EOM
-    SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS = 0;
-    SET @OLD_AUTOCOMMIT=@@AUTOCOMMIT, AUTOCOMMIT = 0;
-    SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS = 0;\0
+SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS = 0;
+SET @OLD_AUTOCOMMIT=@@AUTOCOMMIT, AUTOCOMMIT = 0;
+SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS = 0;\0
 EOM
 
 read -r -d '\0' DUMP_FOOTER <<- EOM2
-    SET AUTOCOMMIT=@OLD_AUTOCOMMIT;
-    SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS;
-    SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS;\0
+SET AUTOCOMMIT=@OLD_AUTOCOMMIT;
+SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS;
+SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS;\0
 EOM2
 
 SECONDS=0
@@ -255,22 +259,22 @@ if [[ "${DOWNLOAD_DUMP}" = "1" ]]; then
     else
         # get remote db character set
         if [[ -z "${CHARACTER_SET}" ]]; then
-            CHARACTER_SET=$(Database::query dbRemoteInstance \
+            CHARACTER_SET=$(Database::query dbTargetInstance \
                 "SELECT default_character_set_name FROM information_schema.SCHEMATA WHERE schema_name = \"${REMOTE_DB}\";" "information_schema")
         fi
 
         DUMP_HEADER=$(printf "%s\nSET names '%s';\n" "${DUMP_HEADER}" "${CHARACTER_SET}")
 
         # check if remote db exists
-        Database::ifDbExists dbRemoteInstance "${REMOTE_DB}" || 
-            Log::fatal "Remote Database ${REMOTE_DB} does not exist"
+        Database::ifDbExists dbTargetInstance "${REMOTE_DB}" || 
+            Log::fatal "Target Database ${REMOTE_DB} does not exist"
 
         # calculate remote table dump size
         Log::displayDebug "Calculate dump size for table ${TABLE}"
         DUMP_SIZE_QUERY="SELECT ROUND(SUM(data_length + index_length) / 1024 / 1024, 0) AS size FROM information_schema.TABLES WHERE table_schema=\"${REMOTE_DB}\""
         DUMP_SIZE_QUERY+=" AND table_name='${TABLE}'"
         DUMP_SIZE_QUERY+=" GROUP BY table_schema"
-        REMOTE_DB_DUMP_SIZE=$(echo "${DUMP_SIZE_QUERY}" | Database::query dbRemoteInstance )
+        REMOTE_DB_DUMP_SIZE=$(echo "${DUMP_SIZE_QUERY}" | Database::query dbTargetInstance )
         if [[ -z "${REMOTE_DB_DUMP_SIZE}" ]]; then
             # could occur with the none profile
             REMOTE_DB_DUMP_SIZE="0"
@@ -280,7 +284,7 @@ if [[ "${DOWNLOAD_DUMP}" = "1" ]]; then
         Log::displayInfo "Dump the table ${TABLE} from database $REMOTE_DB (Size:${REMOTE_DB_DUMP_SIZE}MB) ... to file ${REMOTE_DB_DUMP_TEMP_FILE}";
         echo "${DUMP_HEADER}" > "${REMOTE_DB_DUMP_TEMP_FILE}"
         DUMP_SIZE_PV_ESTIMATION=$(awk "BEGIN {printf \"%.0f\",${REMOTE_DB_DUMP_SIZE}/1.5}")
-        Database::dump dbRemoteInstance "${REMOTE_DB}" "${TABLE}" --skip-add-drop-table --single-transaction=TRUE | \
+        Database::dump dbTargetInstance "${REMOTE_DB}" "${TABLE}" --skip-add-drop-table --single-transaction=TRUE | \
             pv --progress --size "${DUMP_SIZE_PV_ESTIMATION}m" >> "${REMOTE_DB_DUMP_TEMP_FILE}"
         echo "${DUMP_FOOTER}" >> "${REMOTE_DB_DUMP_TEMP_FILE}"
         # shellcheck disable=SC2016
@@ -291,8 +295,8 @@ if [[ "${DOWNLOAD_DUMP}" = "1" ]]; then
     Log::displayDebug "Dump done.";
 fi
 
-Log::displayDebug "import remote to local from file ${REMOTE_DB_DUMP_TEMP_FILE}"
+Log::displayDebug "import from file ${REMOTE_DB_DUMP_TEMP_FILE}"
 pv "${REMOTE_DB_DUMP_TEMP_FILE}" | \
-    Database::query dbLocalInstance "" "${LOCAL_DB}"
+    Database::query dbFromInstance "" "${TARGET_DB}"
 
 Log::displayInfo "Import table duration : $(date -u -d @${SECONDS} +"%T")"

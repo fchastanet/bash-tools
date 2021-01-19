@@ -107,22 +107,27 @@ case $1 in
     SKIP_SCHEMA="1"
     ;;
 -t|--target-dsn)
-    shift || true && TARGET_DSN="$1"
+    shift || true 
+    TARGET_DSN="$1"
     ;;
 -f|--from-dsn)
-    shift || true && FROM_DSN="${1:-default.remote}"
+    shift || true 
+    FROM_DSN="${1:-default.remote}"
     ;;
 -s|--skip-schema)
     SKIP_SCHEMA="1"
     ;;
 -p|--profile)
-    shift || true && PROFILE="$1"
+    shift || true 
+    PROFILE="$1"
     ;;
 -o|--collation-name)
-    shift || true && COLLATION_NAME="$1"
+    shift || true
+    COLLATION_NAME="$1"
     ;;
 -c|--character-set)
-    shift || true && CHARACTER_SET="$1"
+    shift || true 
+    CHARACTER_SET="$1"
     ;;
 --)
     shift || true
