@@ -11,7 +11,13 @@ PROFILE_COMMAND="${3}"
 MYSQL_AUTH_FILE="${4}"
 CHARACTER_SET="${5:-utf8}"
 
-tar xOfz "${DUMP_FILE}" | awk \
+(
+  if [[ "${DUMP_FILE}" == *tar.gz ]]; then
+    tar xOfz "${DUMP_FILE}" 
+  elif [[ "${DUMP_FILE}" == *.gz ]]; then
+    gunzip -c "${DUMP_FILE}"
+  fi
+) | awk \
   -v PROFILE_COMMAND="${PROFILE_COMMAND}" \
   -v CHARACTER_SET="${CHARACTER_SET}" \
   -f "${CURRENT_DIR}/dbImportStream.awk" \

@@ -43,13 +43,17 @@ ${__HELP_TITLE}Description:${__HELP_NORMAL} Import source db into target db
 
 ${__HELP_TITLE}Usage:${__HELP_NORMAL} ${SCRIPT_NAME} --help prints this help and exits
 ${__HELP_TITLE}Usage:${__HELP_NORMAL} ${SCRIPT_NAME} <fromDbName> [<targetDbName>] 
+${__HELP_TITLE}Usage:${__HELP_NORMAL} ${SCRIPT_NAME} -a|--from-aws <fromDbS3Filename> [<targetDbName>] 
                         [--force] 
                         [-d|--download-dump] [-a|--from-aws]
                         [-s|--skip-schema] [-p|--profile profileName] 
                         [-o|--collation-name utf8_general_ci] [-c|--character-set utf8]
                         [-t|--target-dsn dsn] [-f|--from-dsn dsn]
 
-    <localDbName> : use remote db name if not provided
+    <fromDbS3Filename>         If option -a is provided, first mandatory arg is the filename 
+        of the s3 object. Only .gz or tar.gz file are supported
+    <fromDbName>               the name of the source/remote database
+    <targetDbName>             the name of the target database, use fromDbName if not provided
     -f|--force                  If local db exists, it will overwrite it
     -d|--download-dump          force remote db dump (default: use already downloaded dump 
         in ${DB_IMPORT_DUMP_DIR} if available)
@@ -218,7 +222,7 @@ Database::ifDbExists dbTargetDatabase "${LOCAL_DB}" && {
 }
 
 if [[ "${FROM_AWS}" = "1" ]]; then
-    REMOTE_DB_DUMP_TEMP_FILE="${DB_IMPORT_DUMP_DIR}/${REMOTE_DB}.tar.gz"
+    REMOTE_DB_DUMP_TEMP_FILE="${DB_IMPORT_DUMP_DIR}/${REMOTE_DB}"
 else
     REMOTE_DB_DUMP_TEMP_FILE="${DB_IMPORT_DUMP_DIR}/${REMOTE_DB}_${PROFILE}.sql"
     REMOTE_DB_STRUCTURE_DUMP_TEMP_FILE="${DB_IMPORT_DUMP_DIR}/${REMOTE_DB}_${PROFILE}_structure.sql"
@@ -260,9 +264,8 @@ if [[ "${DOWNLOAD_DUMP}" = "1" ]]; then
     Log::displayInfo "Download dump"
 
     if [[ "${FROM_AWS}" = "1" ]]; then
-        CHARACTER_SET="${CHARACTER_SET:-utf8}"
         # download dump from s3
-        S3_URL="${S3_BASE_URL%/}/${REMOTE_DB}.tar.gz"
+        S3_URL="${S3_BASE_URL%/}/${REMOTE_DB}"
         Log::displayInfo "Download dump from ${S3_URL} ...";
         TMPDIR="${TEMP_FOLDER:-/tmp}" aws s3 cp "${S3_URL}" "${REMOTE_DB_DUMP_TEMP_FILE}" || {
             Log::fatal "unable to download dump from S3 : ${S3_URL}"
