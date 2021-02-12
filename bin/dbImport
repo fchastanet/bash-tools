@@ -53,7 +53,7 @@ ${__HELP_TITLE}Usage:${__HELP_NORMAL} ${SCRIPT_NAME} -a|--from-aws <fromDbS3File
     <fromDbS3Filename>         If option -a is provided, first mandatory arg is the filename 
         of the s3 object. Only .gz or tar.gz file are supported
     <fromDbName>               the name of the source/remote database
-    <targetDbName>             the name of the target database, use fromDbName if not provided
+    <targetDbName>             the name of the target database, use fromDbName(without extension) if not provided
     -f|--force                  If local db exists, it will overwrite it
     -d|--download-dump          force remote db dump (default: use already downloaded dump 
         in ${DB_IMPORT_DUMP_DIR} if available)
@@ -170,7 +170,8 @@ if [[ -z "${REMOTE_DB}" ]]; then
 fi
 
 if [[ -z "${LOCAL_DB}" ]]; then
-    LOCAL_DB=${REMOTE_DB}
+    # remove eventual file extension
+    LOCAL_DB="${REMOTE_DB%%.*}"
 fi
 
 # check s3 parameter
