@@ -16,4 +16,4 @@ CHARACTER_SET="${3:-utf8}"
 ) | awk \
   -v CHARACTER_SET="${CHARACTER_SET}" \
   -v TABLE_NAME="${TABLE_NAME}" \
-  -f "${CURRENT_DIR}/dbImportTableStream.awk"
+  -f "${CURRENT_DIR}/dbImportTableStream.awk" || exit $?

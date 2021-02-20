@@ -73,8 +73,6 @@ teardown() {
 }
 
 @test "${BATS_TEST_FILENAME#/bash/tests/} remote DbName not provided" {
-    stub gawk \
-        '--version : echo "GNU Awk 5.0.1, API: 2.0 (GNU MPFR 4.1.0, GNU MP 6.2.0)"'
     stub mysqlshow
     stub mysql
     stub mysqldump
@@ -83,8 +81,6 @@ teardown() {
 }
 
 @test "${BATS_TEST_FILENAME#/bash/tests/} remote TableName not provided" {
-    stub gawk \
-        '--version : echo "GNU Awk 5.0.1, API: 2.0 (GNU MPFR 4.1.0, GNU MP 6.2.0)"'
     stub mysqlshow
     stub mysql
     stub mysqldump
@@ -94,8 +90,6 @@ teardown() {
 
 
 @test "${BATS_TEST_FILENAME#/bash/tests/} --from-aws and --from-dsn are incompatible" {
-    stub gawk \
-        '--version : echo "GNU Awk 5.0.1, API: 2.0 (GNU MPFR 4.1.0, GNU MP 6.2.0)"'
     stub mysqlshow
     stub mysql
     stub mysqldump
@@ -105,8 +99,6 @@ teardown() {
 
 
 @test "${BATS_TEST_FILENAME#/bash/tests/} --from-aws and --from-dsn are incompatible shortcut" {
-    stub gawk \
-        '--version : echo "GNU Awk 5.0.1, API: 2.0 (GNU MPFR 4.1.0, GNU MP 6.2.0)"'
     stub mysqlshow
     stub mysql
     stub mysqldump
@@ -115,9 +107,6 @@ teardown() {
 }
 
 @test "${BATS_TEST_FILENAME#/bash/tests/} --from-aws missing S3_BASE_URL" {
-    stub gawk \
-        '--version : echo "GNU Awk 5.0.1, API: 2.0 (GNU MPFR 4.1.0, GNU MP 6.2.0)"' \
-        '--version : echo "GNU Awk 5.0.1, API: 2.0 (GNU MPFR 4.1.0, GNU MP 6.2.0)"'
     stub mysqlshow
     stub mysql
     stub mysqldump
@@ -130,8 +119,6 @@ teardown() {
 }
 
 @test "${BATS_TEST_FILENAME#/bash/tests/} -a and -f are incompatible" {
-    stub gawk \
-        '--version : echo "GNU Awk 5.0.1, API: 2.0 (GNU MPFR 4.1.0, GNU MP 6.2.0)"' 
     stub mysqlshow
     stub mysql
     stub mysqldump
@@ -142,8 +129,6 @@ teardown() {
 }
 
 @test "${BATS_TEST_FILENAME#/bash/tests/} dsn file not found" {
-    stub gawk \
-        '--version : echo "GNU Awk 5.0.1, API: 2.0 (GNU MPFR 4.1.0, GNU MP 6.2.0)"'
     stub mysqlshow
     stub mysql
     stub mysqldump
@@ -153,8 +138,6 @@ teardown() {
 }
 
 @test "${BATS_TEST_FILENAME#/bash/tests/} remote db(fromDb) doesn't exist" {
-    stub gawk \
-        '--version : echo "GNU Awk 5.0.1, API: 2.0 (GNU MPFR 4.1.0, GNU MP 6.2.0)"'
     stub mysql
     stub mysqldump
 
@@ -169,25 +152,16 @@ teardown() {
 }
 
 @test "${BATS_TEST_FILENAME#/bash/tests/} remote db(fromDb) fully functional" {
-    stub gawk \
-        '--version : echo "GNU Awk 5.0.1, API: 2.0 (GNU MPFR 4.1.0, GNU MP 6.2.0)"'
-    # call 1 (order 1): check if target db exists to know if it should be created, no error
-    # call 2 (order 4): check if from db exists, answers yes
     stub mysqlshow \
         '* * toDb : echo "Database: toDb"' \
         '* * fromDb : echo "Database: fromDb"' 
     
-    # call 1 (order 2) check if remote table exists
-    # call 2 (order 3): from db default_character_set_name
-    # call 3 (order 5): from db table size
-    # call 4 (order 7): import dump
     stub mysql \
         "\* --batch --raw --default-character-set=utf8 --connect-timeout=5 -s --skip-column-names -e \* : echo \$9 > /tmp/home/isTableExists ;echo '0'" \
         "\* --batch --raw --default-character-set=utf8 --connect-timeout=5 -s --skip-column-names information_schema -e 'SELECT default_character_set_name FROM information_schema.SCHEMATA WHERE schema_name = \"fromDb\";' : echo 'charset';" \
         "\* --batch --raw --default-character-set=utf8 --connect-timeout=5 -s --skip-column-names : cat - > /tmp/home/tableSize.sql ; echo '50'" \
         "\* --batch --raw --default-character-set=utf8 --connect-timeout=5 -s --skip-column-names toDb : cat - > /tmp/home/dump.sql; "
     
-    # call 1 (order 6): dump table
     stub mysqldump \
         "\* --default-character-set=utf8 --compress --hex-blob --routines --triggers --single-transaction --set-gtid-purged=OFF --column-statistics=0 --ssl-mode=DISABLED --skip-add-drop-table --single-transaction=TRUE fromDb tableName : echo 'CREATE TABLE \`tableName\`'"
 
@@ -204,8 +178,6 @@ teardown() {
 }
 
 @test "${BATS_TEST_FILENAME#/bash/tests/} remote db(fromDb) local table already present" {
-    stub gawk \
-        '--version : echo "GNU Awk 5.0.1, API: 2.0 (GNU MPFR 4.1.0, GNU MP 6.2.0)"'
     stub mysqldump
     # call 1 (order 1): check if target db exists to know if it should be created, no error
     stub mysqlshow \
@@ -223,8 +195,6 @@ teardown() {
 }
 
 @test "${BATS_TEST_FILENAME#/bash/tests/} target db does not exists" {
-    stub gawk \
-        '--version : echo "GNU Awk 5.0.1, API: 2.0 (GNU MPFR 4.1.0, GNU MP 6.2.0)"'
     stub mysql
     stub mysqldump
 
@@ -238,19 +208,10 @@ teardown() {
 }
 
 @test "${BATS_TEST_FILENAME#/bash/tests/} remote db(fromDb) local tableName exists but --force" {
-    stub gawk \
-        '--version : echo "GNU Awk 5.0.1, API: 2.0 (GNU MPFR 4.1.0, GNU MP 6.2.0)"'
-    # call 1 (order 1): check if target db exists to know if it should be created, no error
-    # call 2 (order 4): check if from db exists, answers yes
     stub mysqlshow \
         '* * toDb : echo "Database: toDb"' \
         '* * fromDb : echo "Database: fromDb"' 
-    
-    # call 1 (order 2) check if remote table exists
-    # call 2 (order 3) drop target table
-    # call 2 (order 3): from db default_character_set_name
-    # call 3 (order 5): from db table size
-    # call 4 (order 7): import dump
+
     stub mysql \
         "\* --batch --raw --default-character-set=utf8 --connect-timeout=5 -s --skip-column-names -e \* : echo \$9 > /tmp/home/isTableExists ;echo '1'" \
         "\* --batch --raw --default-character-set=utf8 --connect-timeout=5 -s --skip-column-names toDb -e 'DROP TABLE IF EXISTS tableName' : " \
@@ -258,12 +219,12 @@ teardown() {
         "\* --batch --raw --default-character-set=utf8 --connect-timeout=5 -s --skip-column-names : cat - > /tmp/home/tableSize.sql ; echo '50'" \
         "\* --batch --raw --default-character-set=utf8 --connect-timeout=5 -s --skip-column-names toDb : cat - > /tmp/home/dump.sql; "
     
-    # call 1 (order 6): dump table
     stub mysqldump \
         "\* --default-character-set=utf8 --compress --hex-blob --routines --triggers --single-transaction --set-gtid-purged=OFF --column-statistics=0 --ssl-mode=DISABLED --skip-add-drop-table --single-transaction=TRUE fromDb tableName : echo 'CREATE TABLE \`tableName\`'"
 
     run ${toolsDir}/dbImportTable --force -f default.local fromDb tableName toDb
-    
+    echo "$output"
+    cat /tmp/home/dump.sql
     [[ "${output}" == *"Import table duration : "* ]]
     [[ -f "/tmp/home/isTableExists" ]]
     [[ "$(cat /tmp/home/isTableExists | md5sum)" = "$(cat ${BATS_TEST_DIRNAME}/data/isTableExistsQuery.sql | md5sum)" ]]
@@ -277,9 +238,6 @@ teardown() {
 @test "${BATS_TEST_FILENAME#/bash/tests/} remote db(fromDb) dump already present" {
     touch "${HOME}/.bash-tools/dbImportDumps/fromDb_default.sql"
     touch "${HOME}/.bash-tools/dbImportDumps/fromDb_default_structure.sql"
-    stub gawk \
-        '--version : echo "GNU Awk 5.0.1, API: 2.0 (GNU MPFR 4.1.0, GNU MP 6.2.0)"'
-    stub awk
     stub mysqldump
     stub mysqlshow \
         '* * fromDb : echo "Database: fromDb"'
@@ -297,10 +255,6 @@ teardown() {
 @test "${BATS_TEST_FILENAME#/bash/tests/} remote db(fromDb) dump already present with --force" {
     touch "${HOME}/.bash-tools/dbImportDumps/fromDb_default.sql"
     touch "${HOME}/.bash-tools/dbImportDumps/fromDb_default_structure.sql"
-    stub gawk \
-        '--version : echo "GNU Awk 5.0.1, API: 2.0 (GNU MPFR 4.1.0, GNU MP 6.2.0)"'
-    stub awk \
-        '"BEGIN\ \{printf\ \"%.0f\"\,100/1.5\}" : echo "66.6"'
     stub mysqldump \
         "* --default-character-set=utf8 --compress --hex-blob --routines --triggers --single-transaction --set-gtid-purged=OFF --column-statistics=0 --ssl-mode=DISABLED --skip-add-drop-table --single-transaction=TRUE fromDb tableName : cat '${BATS_TEST_DIRNAME}/data/dump.sql'"
     stub mysqlshow \
@@ -326,8 +280,6 @@ teardown() {
 
 @test "${BATS_TEST_FILENAME#/bash/tests/} from aws file not found" {
     stub mysqldump
-    stub gawk \
-        '--version : echo "GNU Awk 5.0.1, API: 2.0 (GNU MPFR 4.1.0, GNU MP 6.2.0)"'
     stub mysqlshow \
         '* * toDb : echo "Database: toDb"'
     stub aws \
@@ -340,10 +292,8 @@ teardown() {
     [[ "$(cat /tmp/home/queryTableExists.sql)" == "select count(*) from information_schema.tables where table_schema='toDb' and table_name='tableName'" ]]
 }
 
-@test "${BATS_TEST_FILENAME#/bash/tests/} from aws empty dump" {
+@test "${BATS_TEST_FILENAME#/bash/tests/} from aws empty dump/table not found" {
     stub mysqldump
-    stub gawk \
-        '--version : echo "GNU Awk 5.0.1, API: 2.0 (GNU MPFR 4.1.0, GNU MP 6.2.0)"'
 
     stub mysqlshow \
         '* * toDb : echo "Database: toDb"'
@@ -353,9 +303,6 @@ teardown() {
         "xOfz /tmp/home/.bash-tools/dbImportDumps/fromDb.tar.gz : cat ${BATS_TEST_DIRNAME}/data/empty-dump.sql"
     stub mysql \
         $'* --batch --raw --default-character-set=utf8 --connect-timeout=5 -s --skip-column-names -e * : echo "$9" > /tmp/home/queryTableExists.sql && echo "0"'
-        # $'* --batch --raw --default-character-set=utf8 --connect-timeout=5 -s --skip-column-names -e \'CREATE DATABASE `toDb` CHARACTER SET "utf8" COLLATE "utf8_general_ci"\' : echo "db created"'
-    stub awk \
-        $'-v CHARACTER_SET=utf8 -v TABLE_NAME=tableName -f /bash/bin/dbImportTableStream.awk : exit 1'
     
     run ${toolsDir}/dbImportTable -a fromDb.tar.gz tableName toDb 2>&1
     
@@ -364,9 +311,6 @@ teardown() {
 }
 
 @test "${BATS_TEST_FILENAME#/bash/tests/} from aws real dump" {
-    stub gawk \
-        '--version : echo "GNU Awk 5.0.1, API: 2.0 (GNU MPFR 4.1.0, GNU MP 6.2.0)"'
-
     stub mysqlshow \
         '* * toDb : echo "Database: toDb"' 
     stub aws \
@@ -377,12 +321,9 @@ teardown() {
         $'* --batch --raw --default-character-set=utf8 --connect-timeout=5 -s --skip-column-names -e * : echo "$9" > /tmp/home/queryTableExists.sql && echo "0"' \
         $'* --batch --raw --default-character-set=utf8 --connect-timeout=5 -s --skip-column-names toDb : true'
     stub mysqldump
-    stub awk \
-        "-v CHARACTER_SET=utf8 -v TABLE_NAME=dataTable -f /bash/bin/dbImportTableStream.awk : cat ${BATS_TEST_DIRNAME}/data/dbImportTableDump.sql"
 
     run ${toolsDir}/dbImportTable -d -a fromDb.tar.gz dataTable toDb 2>&1
 
-    unstub awk
     [[ "${output}" == *"Import table duration : "* ]]
     [[ -f /tmp/home/.bash-tools/dbImportDumps/importTable_fromDb_dataTable.sql ]]          
     [[ "$(cat /tmp/home/queryTableExists.sql)" == "select count(*) from information_schema.tables where table_schema='toDb' and table_name='dataTable'" ]]

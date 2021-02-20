@@ -50,4 +50,10 @@ BEGIN{
     exit 0
   }
 }
-END {exit err}
+END {
+  if (tableProcessing == 0) {
+    print "\033[44mtable " TABLE_NAME " not found\033[0m"  > "/dev/stderr"
+    exit 1
+  }
+  exit err
+}

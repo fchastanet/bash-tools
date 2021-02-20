@@ -24,4 +24,4 @@ CHARACTER_SET="${5:-utf8}"
   -v PROFILE_COMMAND="${PROFILE_COMMAND}" \
   -v CHARACTER_SET="${CHARACTER_SET}" \
   -f "${CURRENT_DIR}/dbImportStream.awk" \
-  - | mysql --defaults-extra-file="${MYSQL_AUTH_FILE}" "${DB_NAME}" 
+  - | mysql --defaults-extra-file="${MYSQL_AUTH_FILE}" "${DB_NAME}" || exit $?
