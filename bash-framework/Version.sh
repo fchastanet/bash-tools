@@ -26,7 +26,7 @@ Version::checkMinimal() {
     Functions::checkCommandExists "${commandName}"
 
     local version
-    version=$(${commandVersion} | sed -nre 's/^[^0-9]*(([0-9]+\.)*[0-9]+).*/\1/p')
+    version=$(${commandVersion} | sed -nre 's/^[^0-9]*(([0-9]+\.)*[0-9]+).*/\1/p' | head -1)
 
     Log::displayDebug "check ${commandName} version ${version} against minimal ${minimalVersion}"
 
@@ -73,8 +73,10 @@ Version::compare() {
         fi
         if ((10#${ver1[i]} > 10#${ver2[i]}))
         then
+            set +x
             return 1
         fi
+        set +x
         if ((10#${ver1[i]} < 10#${ver2[i]}))
         then
             return 2
