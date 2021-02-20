@@ -39,7 +39,7 @@ ${__HELP_TITLE}Description:${__HELP_NORMAL} Import remote db table into target d
 
 ${__HELP_TITLE}Usage:${__HELP_NORMAL} ${SCRIPT_NAME} [-h|--help] prints this help and exits
 ${__HELP_TITLE}Usage:${__HELP_NORMAL} ${SCRIPT_NAME} <fromDbName> <tableName> [<targetDbName>]
-    [-d|--download-dump] [--force] [-a|--from-aws]
+    [--force] [-a|--from-aws]
     [-t|--target-dsn dsn] [-f|--from-dsn dsn]
     [-c|--character-set utf8]
 
@@ -55,7 +55,6 @@ ${__HELP_TITLE}Usage:${__HELP_NORMAL} ${SCRIPT_NAME} <fromDbName> <tableName> [<
     -a|--from-aws        db dump will be downloaded from s3 instead of using remote db, 
         fromDbName will represent the name of the S3 file
         Only .gz or tar.gz file are supported
-    -d|--download-dump   force remote db dump (default: use already downloaded dump in ${DB_IMPORT_DUMP_DIR} if available)
     -c|--character-set   change the character set used during database creation (default value: character set used by remote db)
 
     Aws s3 location       : ${S3_BASE_URL}
@@ -70,7 +69,7 @@ EOF
 # -o is for short options like -h
 # -l is for long options with double dash like --help
 # the comma separates different long options
-options=$(getopt -l help,force,target-dsn:,from-dsn:,from-aws,download-dump,character-set: -o aht:f:dc: -- "$@" 2> /dev/null) || {
+options=$(getopt -l help,force,target-dsn:,from-dsn:,from-aws,character-set: -o aht:f:c: -- "$@" 2> /dev/null) || {
     showHelp
     Log::fatal "invalid options specified"
 }
@@ -97,9 +96,6 @@ case $1 in
     ;;
 -a|--from-aws)
     FROM_AWS="1"
-    ;;
--d|--download-dump)
-    DOWNLOAD_DUMP=1
     ;;
 -c|--character-set)
     shift || true
@@ -206,13 +202,11 @@ Log::displayInfo "import table ${TABLE} from ${FROM_DB} to ${TARGET_DB}"
 
 # check if local dump exists
 FROM_DB_DUMP_TEMP_FILE="${DB_IMPORT_DUMP_DIR}/importTable_${FROM_DB%%.*}_${TABLE}.sql"
-if [[ "${DOWNLOAD_DUMP}" = "0" ]]; then
-    if [[ -f "${FROM_DB_DUMP_TEMP_FILE}" ]]; then
-        Log::displayInfo "local dump ${FROM_DB_DUMP_TEMP_FILE} already exists, avoid download"
-    else
-        Log::displayInfo "local dump does not exist"
-        DOWNLOAD_DUMP=1
-    fi
+if [[ -f "${FROM_DB_DUMP_TEMP_FILE}" ]]; then
+    Log::displayInfo "local dump ${FROM_DB_DUMP_TEMP_FILE} already exists, avoid download"
+else
+    Log::displayInfo "local dump does not exist"
+    DOWNLOAD_DUMP=1
 fi
 
 # dump header/footer

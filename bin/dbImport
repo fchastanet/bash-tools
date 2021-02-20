@@ -46,7 +46,7 @@ ${__HELP_TITLE}Usage:${__HELP_NORMAL} ${SCRIPT_NAME} --help prints this help and
 ${__HELP_TITLE}Usage:${__HELP_NORMAL} ${SCRIPT_NAME} <fromDbName> [<targetDbName>] 
 ${__HELP_TITLE}Usage:${__HELP_NORMAL} ${SCRIPT_NAME} -a|--from-aws <fromDbS3Filename> [<targetDbName>] 
                         [--force] 
-                        [-d|--download-dump] [-a|--from-aws]
+                        [-a|--from-aws]
                         [-s|--skip-schema] [-p|--profile profileName] 
                         [-o|--collation-name utf8_general_ci] [-c|--character-set utf8]
                         [-t|--target-dsn dsn] [-f|--from-dsn dsn]
@@ -57,8 +57,6 @@ ${__HELP_TITLE}Usage:${__HELP_NORMAL} ${SCRIPT_NAME} -a|--from-aws <fromDbS3File
     <fromDbName>               the name of the source/remote database
     <targetDbName>             the name of the target database, use fromDbName(without extension) if not provided
     -f|--force                  If target db exists, it will overwrite it
-    -d|--download-dump          force remote db dump (default: use already downloaded dump 
-        in ${DB_IMPORT_DUMP_DIR} if available)
     -s|--skip-schema            avoid to import the schema
     -o|--collation-name         change the collation name used during database creation 
         (default value: collation name used by remote db)
@@ -88,7 +86,7 @@ EOF
 # -o is for short options like -h
 # -l is for long options with double dash like --help
 # the comma separates different long options
-options=$(getopt -l help,force,target-dsn:,from-dsn:,from-aws,download-dump,skip-schema,profile:,collation-name:,character-set: -o aht:f:dsp:c:o: -- "$@" 2> /dev/null) || {
+options=$(getopt -l help,force,target-dsn:,from-dsn:,from-aws,skip-schema,profile:,collation-name:,character-set: -o aht:f:sp:c:o: -- "$@" 2> /dev/null) || {
     showHelp
     Log::fatal "invalid options specified"
 }
@@ -103,9 +101,6 @@ case $1 in
     ;;
 --force)
     FORCE=1
-    ;;
--d|--download-dump)
-    DOWNLOAD_DUMP="1"
     ;;
 -a|--from-aws)
     FROM_AWS="1"
@@ -235,18 +230,16 @@ else
 fi
 
 # check if local dump exists
+if [[ ! -f "${REMOTE_DB_DUMP_TEMP_FILE}" ]]; then
+    Log::displayInfo "local dump does not exist"
+    DOWNLOAD_DUMP=1
+fi
+if [[ "${FROM_AWS}" = "0" && ! -f "${REMOTE_DB_STRUCTURE_DUMP_TEMP_FILE}" ]]; then
+    Log::displayInfo "local structure dump does not exist"
+    DOWNLOAD_DUMP=1
+fi
 if [[ "${DOWNLOAD_DUMP}" = "0" ]]; then
-    if [[ ! -f "${REMOTE_DB_DUMP_TEMP_FILE}" ]]; then
-        Log::displayInfo "local dump does not exist"
-        DOWNLOAD_DUMP=1
-    fi
-    if [[ "${FROM_AWS}" = "0" && ! -f "${REMOTE_DB_STRUCTURE_DUMP_TEMP_FILE}" ]]; then
-        Log::displayInfo "local structure dump does not exist"
-        DOWNLOAD_DUMP=1
-    fi
-    if [[ "${DOWNLOAD_DUMP}" = "0" ]]; then
-        Log::displayInfo "local dump already exists, avoid download"
-    fi
+    Log::displayInfo "local dump already exists, avoid download"
 fi
 
 # dump header/footer

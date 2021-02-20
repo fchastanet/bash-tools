@@ -223,8 +223,7 @@ teardown() {
         "\* --default-character-set=utf8 --compress --hex-blob --routines --triggers --single-transaction --set-gtid-purged=OFF --column-statistics=0 --ssl-mode=DISABLED --skip-add-drop-table --single-transaction=TRUE fromDb tableName : echo 'CREATE TABLE \`tableName\`'"
 
     run ${toolsDir}/dbImportTable --force -f default.local fromDb tableName toDb
-    echo "$output"
-    cat /tmp/home/dump.sql
+    
     [[ "${output}" == *"Import table duration : "* ]]
     [[ -f "/tmp/home/isTableExists" ]]
     [[ "$(cat /tmp/home/isTableExists | md5sum)" = "$(cat ${BATS_TEST_DIRNAME}/data/isTableExistsQuery.sql | md5sum)" ]]
@@ -322,8 +321,8 @@ teardown() {
         $'* --batch --raw --default-character-set=utf8 --connect-timeout=5 -s --skip-column-names toDb : true'
     stub mysqldump
 
-    run ${toolsDir}/dbImportTable -d -a fromDb.tar.gz dataTable toDb 2>&1
-
+    run ${toolsDir}/dbImportTable -a fromDb.tar.gz dataTable toDb 2>&1
+    
     [[ "${output}" == *"Import table duration : "* ]]
     [[ -f /tmp/home/.bash-tools/dbImportDumps/importTable_fromDb_dataTable.sql ]]          
     [[ "$(cat /tmp/home/queryTableExists.sql)" == "select count(*) from information_schema.tables where table_schema='toDb' and table_name='dataTable'" ]]

@@ -196,16 +196,19 @@ Description: Import source db into target db
 
 Usage: dbImport --help prints this help and exits
 Usage: dbImport <fromDbName> [<targetDbName>] 
+Usage: dbImport -a|--from-aws <fromDbS3Filename> [<targetDbName>] 
                         [--force] 
-                        [-d|--download-dump] [-a|--from-aws]
+                        [-a|--from-aws]
                         [-s|--skip-schema] [-p|--profile profileName] 
                         [-o|--collation-name utf8_general_ci] [-c|--character-set utf8]
                         [-t|--target-dsn dsn] [-f|--from-dsn dsn]
 
-    <localDbName> : use remote db name if not provided
-    -f|--force                  If local db exists, it will overwrite it
-    -d|--download-dump          force remote db dump (default: use already downloaded dump 
-        in /home/vagrant/.bash-tools/dbImportDumps if available)
+    <fromDbS3Filename>         If option -a is provided
+        remoteDBName will represent the name of the s3 file
+        Only .gz or tar.gz file are supported
+    <fromDbName>               the name of the source/remote database
+    <targetDbName>             the name of the target database, use fromDbName(without extension) if not provided
+    -f|--force                  If target db exists, it will overwrite it
     -s|--skip-schema            avoid to import the schema
     -o|--collation-name         change the collation name used during database creation 
         (default value: collation name used by remote db)
@@ -242,26 +245,26 @@ dbImportTable ExampleDbName ExampleTableName
 
 **Help**
 ```
-Description: Import remote db table into local db
+Description: Import remote db table into target db
 
 Usage: dbImportTable [-h|--help] prints this help and exits
-Usage: dbImportTable <remoteDbName> <tableName> [<localDbName>] 
-    [-d|--download-dump] [--force] [-a|--from-aws]
+Usage: dbImportTable <fromDbName> <tableName> [<targetDbName>]
+    [--force] [-a|--from-aws]
     [-t|--target-dsn dsn] [-f|--from-dsn dsn]
     [-c|--character-set utf8]
 
-    download the remote table data and install data in local database (the schema should exists)
+    download the remote table data and install data in target database (the schema should exists)
 
+    <fromDbName>  :      the name of the source/remote database
     <tableName>   :      table name to import
-    <localDbName> :      use remote db name if not provided
-    --force              If local table exists, it will overwrite it
+    <targetDbName> :     the name of the target database, use fromDbName if not provided
+    --force              If target table exists, it will overwrite it
     -t|--target-dsn dsn  dsn to use for target database (Default: default.local) 
     -f|--from-dsn dsn    dsn to use for source database (Default: default.remote)
         this option is incompatible with -a|--from-aws option
     -a|--from-aws        db dump will be downloaded from s3 instead of using remote db, 
-        remoteDBName will represent the name of the file
-        profile will be calculated against the dump itself
-    -d|--download-dump   force remote db dump (default: use already downloaded dump in /home/vagrant/.bash-tools/dbImportDumps if available)
+        fromDbName will represent the name of the S3 file
+        Only .gz or tar.gz file are supported
     -c|--character-set   change the character set used during database creation (default value: character set used by remote db)
 
     Aws s3 location       : s3://example.com/exports/
