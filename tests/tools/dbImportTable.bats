@@ -172,9 +172,8 @@ teardown() {
     [[ "$(cat /tmp/home/isTableExists | md5sum)" = "$(cat ${BATS_TEST_DIRNAME}/data/isTableExistsQuery.sql | md5sum)" ]]
     [[ -f "/tmp/home/tableSize.sql" ]]
     [[ "$(cat /tmp/home/tableSize.sql | md5sum)" = "$(cat ${BATS_TEST_DIRNAME}/data/tableSizeQuery.sql | md5sum)" ]]
-    [[ -f "/tmp/home/dump.sql" ]]
-    [[ "$(cat /tmp/home/dump.sql | md5sum)" = "$(cat ${BATS_TEST_DIRNAME}/data/tableDump.sql | md5sum)" ]]
-    [[ -f "/tmp/home/.bash-tools/dbImportDumps/importTable_fromDb_tableName.sql" ]]
+    [[ -f "/tmp/home/.bash-tools/dbImportDumps/importTable_fromDb_tableName.sql.gz" ]]
+    [[ "$(zcat /tmp/home/.bash-tools/dbImportDumps/importTable_fromDb_tableName.sql.gz | md5sum)" = "$(cat ${BATS_TEST_DIRNAME}/data/tableDump.sql | md5sum)" ]]
 }
 
 @test "${BATS_TEST_FILENAME#/bash/tests/} remote db(fromDb) local table already present" {
@@ -231,7 +230,7 @@ teardown() {
     [[ "$(cat /tmp/home/tableSize.sql | md5sum)" = "$(cat ${BATS_TEST_DIRNAME}/data/tableSizeQuery.sql | md5sum)" ]]
     [[ -f "/tmp/home/dump.sql" ]]
     [[ "$(cat /tmp/home/dump.sql | md5sum)" = "$(cat ${BATS_TEST_DIRNAME}/data/tableDump.sql | md5sum)" ]]
-    [[ -f "/tmp/home/.bash-tools/dbImportDumps/importTable_fromDb_tableName.sql" ]]
+    [[ -f "/tmp/home/.bash-tools/dbImportDumps/importTable_fromDb_tableName.sql.gz" ]]
 }
 
 @test "${BATS_TEST_FILENAME#/bash/tests/} remote db(fromDb) dump already present" {
@@ -318,14 +317,17 @@ teardown() {
         "xOfz /tmp/home/.bash-tools/dbImportDumps/fromDb.tar.gz : cat ${BATS_TEST_DIRNAME}/data/dump.sql"
     stub mysql \
         $'* --batch --raw --default-character-set=utf8 --connect-timeout=5 -s --skip-column-names -e * : echo "$9" > /tmp/home/queryTableExists.sql && echo "0"' \
-        $'* --batch --raw --default-character-set=utf8 --connect-timeout=5 -s --skip-column-names toDb : true'
+        $'* --batch --raw --default-character-set=utf8 --connect-timeout=5 -s --skip-column-names toDb : cat - > /tmp/home/dump.sql'
     stub mysqldump
 
     run ${toolsDir}/dbImportTable -a fromDb.tar.gz dataTable toDb 2>&1
-    
+
+    echo "${output}"
+        
     [[ "${output}" == *"Import table duration : "* ]]
-    [[ -f /tmp/home/.bash-tools/dbImportDumps/importTable_fromDb_dataTable.sql ]]          
+    [[ -f /tmp/home/.bash-tools/dbImportDumps/importTable_fromDb_dataTable.sql.gz ]]          
     [[ "$(cat /tmp/home/queryTableExists.sql)" == "select count(*) from information_schema.tables where table_schema='toDb' and table_name='dataTable'" ]]
-    [[ "$(md5sum /tmp/home/.bash-tools/dbImportDumps/importTable_fromDb_dataTable.sql | awk '{ print $1 }')" \
+    [[ -f "/tmp/home/dump.sql" ]]
+    [[ "$(md5sum /tmp/home/dump.sql | awk '{ print $1 }')" \
         = "$(md5sum "${BATS_TEST_DIRNAME}/data/expectedDbImportTableDump.sql" | awk '{ print $1 }')" ]]
 }

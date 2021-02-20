@@ -18,8 +18,12 @@ CHARACTER_SET="${5:-utf8}"
   if [[ "${DUMP_FILE}" == *tar.gz ]]; then
     tar xOfz "${DUMP_FILE}" 
   elif [[ "${DUMP_FILE}" == *.gz ]]; then
-    gunzip -c "${DUMP_FILE}"
+    zcat "${DUMP_FILE}"
   fi
+  # zcat will continue to write to stdout whereas awk has finished if table has been found
+  # we detect this case because zcat will return code 141 because pipe closed
+  status=$?
+  if [[ $status -eq 141 ]]; then true; else exit $status; fi
 ) | awk \
   -v PROFILE_COMMAND="${PROFILE_COMMAND}" \
   -v CHARACTER_SET="${CHARACTER_SET}" \

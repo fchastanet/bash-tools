@@ -199,9 +199,9 @@ Database::isTableExists dbTargetInstance "${TARGET_DB}" "${TABLE}" && {
 }
 
 Log::displayInfo "import table ${TABLE} from ${FROM_DB} to ${TARGET_DB}"
-
+set -x
 # check if local dump exists
-FROM_DB_DUMP_TEMP_FILE="${DB_IMPORT_DUMP_DIR}/importTable_${FROM_DB%%.*}_${TABLE}.sql"
+FROM_DB_DUMP_TEMP_FILE="${DB_IMPORT_DUMP_DIR}/importTable_${FROM_DB%%.*}_${TABLE}.sql.gz"
 if [[ -f "${FROM_DB_DUMP_TEMP_FILE}" ]]; then
     Log::displayInfo "local dump ${FROM_DB_DUMP_TEMP_FILE} already exists, avoid download"
 else
@@ -250,7 +250,7 @@ if [[ "${DOWNLOAD_DUMP}" = "1" ]]; then
                 "${CHARACTER_SET}" || exit $?
             
             echo "${DUMP_FOOTER}"
-        ) > "${FROM_DB_DUMP_TEMP_FILE}" || {
+        ) | gzip > "${FROM_DB_DUMP_TEMP_FILE}" || {
             rm -f "${FROM_DB_DUMP_TEMP_FILE}"
             Log::fatal "dump invalid"
         }
@@ -281,21 +281,23 @@ if [[ "${DOWNLOAD_DUMP}" = "1" ]]; then
 
         # dump db
         Log::displayInfo "Dump the table ${TABLE} from database $FROM_DB (Size:${FROM_DB_DUMP_SIZE}MB) ... to file ${FROM_DB_DUMP_TEMP_FILE}";
-        echo "${DUMP_HEADER}" > "${FROM_DB_DUMP_TEMP_FILE}"
-        DUMP_SIZE_PV_ESTIMATION=$(awk "BEGIN {printf \"%.0f\",${FROM_DB_DUMP_SIZE}/1.5}")
-        Database::dump dbFromInstance "${FROM_DB}" "${TABLE}" --skip-add-drop-table --single-transaction=TRUE | \
-            pv --progress --size "${DUMP_SIZE_PV_ESTIMATION}m" >> "${FROM_DB_DUMP_TEMP_FILE}"
-        echo "${DUMP_FOOTER}" >> "${FROM_DB_DUMP_TEMP_FILE}"
-        # shellcheck disable=SC2016
-        sed -i -r \
-            -e 's/CREATE TABLE `/CREATE TABLE IF NOT EXISTS `/g' \
-            "${FROM_DB_DUMP_TEMP_FILE}"
+
+        (
+            echo "${DUMP_HEADER}"
+            DUMP_SIZE_PV_ESTIMATION=$(awk "BEGIN {printf \"%.0f\",${FROM_DB_DUMP_SIZE}/1.5}")
+                            # shellcheck disable=SC2016
+            Database::dump dbFromInstance "${FROM_DB}" "${TABLE}" --skip-add-drop-table --single-transaction=TRUE | \
+                pv --progress --size "${DUMP_SIZE_PV_ESTIMATION}m" | \
+                sed -r -e 's/CREATE TABLE `/CREATE TABLE IF NOT EXISTS `/g' \
+                || exit $?
+            echo "${DUMP_FOOTER}"
+        ) | gzip > "${FROM_DB_DUMP_TEMP_FILE}"
     fi
     Log::displayDebug "Dump done.";
 fi
 
 Log::displayDebug "import from file ${FROM_DB_DUMP_TEMP_FILE}"
-pv "${FROM_DB_DUMP_TEMP_FILE}" | \
+pv "${FROM_DB_DUMP_TEMP_FILE}" | zcat | \
     Database::query dbTargetInstance "" "${TARGET_DB}"
 
 Log::displayInfo "Import table duration : $(date -u -d @${SECONDS} +"%T")"
