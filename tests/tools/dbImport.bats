@@ -102,18 +102,18 @@ teardown() {
 
     run ${toolsDir}/dbImport -f default.local fromDb toDb 2>&1 
     [[ "${output}" == *"Import database duration : "* ]]
-    [[ -f "${HOME}/.bash-tools/dbImportDumps/fromDb_default.sql" ]]
-    [[ -f "${HOME}/.bash-tools/dbImportDumps/fromDb_default_structure.sql" ]]
-    [[ "$(cat "${HOME}/.bash-tools/dbImportDumps/fromDb_default.sql" | grep '####data####')" = "####data####" ]]
-    [[ "$(cat "${HOME}/.bash-tools/dbImportDumps/fromDb_default_structure.sql" | grep '####structure####')" = "####structure####" ]]
+    [[ -f "${HOME}/.bash-tools/dbImportDumps/fromDb_default.sql.gz" ]]
+    [[ -f "${HOME}/.bash-tools/dbImportDumps/fromDb_default_structure.sql.gz" ]]
+    [[ "$(zcat "${HOME}/.bash-tools/dbImportDumps/fromDb_default.sql.gz" | grep '####data####')" = "####data####" ]]
+    [[ "$(zcat "${HOME}/.bash-tools/dbImportDumps/fromDb_default_structure.sql.gz" | grep '####structure####')" = "####structure####" ]]
 }
 
 @test "${BATS_TEST_FILENAME#/bash/tests/} remote db(fromDb) dump already present" {
-    touch "${HOME}/.bash-tools/dbImportDumps/fromDb_default.sql"
-    touch "${HOME}/.bash-tools/dbImportDumps/fromDb_default_structure.sql"
+    echo "data" | gzip > "${HOME}/.bash-tools/dbImportDumps/fromDb_default.sql.gz"
+    echo "structure" | gzip > "${HOME}/.bash-tools/dbImportDumps/fromDb_default_structure.sql.gz"
     # call 1 (order 1): check if target db exists to know if it should be created, no error
     stub mysqlshow \
-        '* * toDb : echo ""' 
+        '* * toDb : echo ""'
     # call 5 (order 2): create target db (after dumps have been done)
     # call 6 (order 3): import structure dump into db
     # call 7 (order 4): import data dump into db
@@ -123,7 +123,8 @@ teardown() {
         "\* --batch --raw --default-character-set=utf8 --connect-timeout=5 -s --skip-column-names toDb : echo 'import data dump'"
     
     run ${toolsDir}/dbImport -f default.local fromDb toDb 2>&1
+    
     [[ "${output}" == *"Import database duration : "* ]]
-    [[ -f "${HOME}/.bash-tools/dbImportDumps/fromDb_default.sql" ]]
-    [[ -f "${HOME}/.bash-tools/dbImportDumps/fromDb_default_structure.sql" ]]
+    [[ -f "${HOME}/.bash-tools/dbImportDumps/fromDb_default.sql.gz" ]]
+    [[ -f "${HOME}/.bash-tools/dbImportDumps/fromDb_default_structure.sql.gz" ]]
 }

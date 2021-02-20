@@ -225,8 +225,8 @@ Database::ifDbExists dbTargetDatabase "${TARGET_DB}" && {
 if [[ "${FROM_AWS}" = "1" ]]; then
     REMOTE_DB_DUMP_TEMP_FILE="${DB_IMPORT_DUMP_DIR}/${REMOTE_DB}"
 else
-    REMOTE_DB_DUMP_TEMP_FILE="${DB_IMPORT_DUMP_DIR}/${REMOTE_DB}_${PROFILE}.sql"
-    REMOTE_DB_STRUCTURE_DUMP_TEMP_FILE="${DB_IMPORT_DUMP_DIR}/${REMOTE_DB}_${PROFILE}_structure.sql"
+    REMOTE_DB_DUMP_TEMP_FILE="${DB_IMPORT_DUMP_DIR}/${REMOTE_DB}_${PROFILE}.sql.gz"
+    REMOTE_DB_STRUCTURE_DUMP_TEMP_FILE="${DB_IMPORT_DUMP_DIR}/${REMOTE_DB}_${PROFILE}_structure.sql.gz"
 fi
 
 # check if local dump exists
@@ -313,7 +313,7 @@ if [[ "${DOWNLOAD_DUMP}" = "1" ]]; then
                     --no-create-info --skip-add-drop-table --single-transaction=TRUE | \
                     pv --progress --size "${DUMP_SIZE_PV_ESTIMATION}m" 
             echo "${DUMP_FOOTER}" 
-        ) > "${REMOTE_DB_DUMP_TEMP_FILE}"
+        ) | gzip > "${REMOTE_DB_DUMP_TEMP_FILE}"
 
         Log::displayInfo "Dump structure of the database ${REMOTE_DB} ..."
         time (
@@ -321,7 +321,7 @@ if [[ "${DOWNLOAD_DUMP}" = "1" ]]; then
             Database::dump dbFromInstance "${REMOTE_DB}" "" \
                     --no-data --skip-add-drop-table --single-transaction=TRUE
             echo "${DUMP_FOOTER}" 
-        ) > "${REMOTE_DB_STRUCTURE_DUMP_TEMP_FILE}"
+        ) | gzip > "${REMOTE_DB_STRUCTURE_DUMP_TEMP_FILE}"
     fi
     Log::displayInfo "Dump done.";
 fi
@@ -354,14 +354,14 @@ else
     else
         Log::displayInfo "create db structure from ${REMOTE_DB_STRUCTURE_DUMP_TEMP_FILE}";
         time ( \
-            pv "${REMOTE_DB_STRUCTURE_DUMP_TEMP_FILE}" | \
+            pv "${REMOTE_DB_STRUCTURE_DUMP_TEMP_FILE}" | zcat | \
                 Database::query dbTargetDatabase "" "${TARGET_DB}"
         )
     fi
 
     Log::displayInfo "import remote to local from file ${REMOTE_DB_DUMP_TEMP_FILE}"
     time ( \
-        pv "${REMOTE_DB_DUMP_TEMP_FILE}" | \
+        pv "${REMOTE_DB_DUMP_TEMP_FILE}" | zcat | \
             Database::query dbTargetDatabase "" "${TARGET_DB}"
     )
 fi
