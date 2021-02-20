@@ -1,11 +1,19 @@
 #!/usr/bin/env bash
+set -x
+set -o errexit
+set -o pipefail
 
 CURRENT_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 DUMP_FILE="$1"
 TABLE_NAME="$2"
 CHARACTER_SET="${3:-utf8}"
-
-tar xOfz "${DUMP_FILE}" | awk \
+(
+  if [[ "${DUMP_FILE}" == *tar.gz ]]; then
+    tar xOfz "${DUMP_FILE}" 
+  elif [[ "${DUMP_FILE}" == *.gz ]]; then
+    gunzip -c "${DUMP_FILE}"
+  fi
+) | awk \
   -v CHARACTER_SET="${CHARACTER_SET}" \
   -v TABLE_NAME="${TABLE_NAME}" \
   -f "${CURRENT_DIR}/dbImportTableStream.awk"

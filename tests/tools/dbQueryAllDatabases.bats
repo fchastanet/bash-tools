@@ -21,6 +21,8 @@ setup() {
             .bash-tools/dbImportProfiles \
             .bash-tools/dbQueries
         cp "${BATS_TEST_DIRNAME}/mocks/pv" bin
+        cp "${BATS_TEST_DIRNAME}/mocks/gawk" bin
+        cp "${BATS_TEST_DIRNAME}/mocks/gawk" bin/awk
         touch bin/mysql bin/mysqldump bin/mysqlshow
         chmod +x bin/*
         cp ${BATS_TEST_DIRNAME}/data/dsn_* .bash-tools/dsn

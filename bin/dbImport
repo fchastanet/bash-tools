@@ -8,6 +8,7 @@ source "$( cd "${CURRENT_DIR}/.." && pwd )/bash-framework/_bootstrap.sh"
 Framework::expectNonRootUser
 
 import bash-framework/Database
+import bash-framework/Version
 
 # ensure that Ctrl-C is trapped by this script and not sub mysql process
 trap 'exit 130' INT
@@ -20,7 +21,7 @@ DOWNLOAD_DUMP=0
 FROM_AWS=0
 SKIP_SCHEMA=0
 REMOTE_DB=""
-LOCAL_DB=""
+TARGET_DB=""
 COLLATION_NAME=""
 CHARACTER_SET=""
 FROM_DSN=""
@@ -50,11 +51,12 @@ ${__HELP_TITLE}Usage:${__HELP_NORMAL} ${SCRIPT_NAME} -a|--from-aws <fromDbS3File
                         [-o|--collation-name utf8_general_ci] [-c|--character-set utf8]
                         [-t|--target-dsn dsn] [-f|--from-dsn dsn]
 
-    <fromDbS3Filename>         If option -a is provided, first mandatory arg is the filename 
-        of the s3 object. Only .gz or tar.gz file are supported
+    <fromDbS3Filename>         If option -a is provided
+        remoteDBName will represent the name of the s3 file
+        Only .gz or tar.gz file are supported
     <fromDbName>               the name of the source/remote database
     <targetDbName>             the name of the target database, use fromDbName(without extension) if not provided
-    -f|--force                  If local db exists, it will overwrite it
+    -f|--force                  If target db exists, it will overwrite it
     -d|--download-dump          force remote db dump (default: use already downloaded dump 
         in ${DB_IMPORT_DUMP_DIR} if available)
     -s|--skip-schema            avoid to import the schema
@@ -116,7 +118,7 @@ case $1 in
     ;;
 -f|--from-dsn)
     shift || true 
-    FROM_DSN="${1:-default.remote}"
+    FROM_DSN="${1:-${DEFAULT_FROM_DSN}}"
     ;;
 -s|--skip-schema)
     SKIP_SCHEMA="1"
@@ -148,6 +150,9 @@ Functions::checkCommandExists mysql "sudo apt-get install -y mysql-client"
 Functions::checkCommandExists mysqlshow "sudo apt-get install -y mysql-client"
 Functions::checkCommandExists mysqldump "sudo apt-get install -y mysql-client"
 Functions::checkCommandExists pv "sudo apt-get install -y pv"
+Functions::checkCommandExists gawk "sudo apt-get install -y gawk"
+Functions::checkCommandExists awk "sudo apt-get install -y gawk"
+Version::checkMinimal "gawk" "gawk --version" "5.0.1"
 
 # additional arguments
 shift $(( OPTIND - 1 )) || true
@@ -159,7 +164,7 @@ while true; do
     if [[ -z "${REMOTE_DB}" ]]; then
         REMOTE_DB="$1"
     else
-        LOCAL_DB="$1"
+        TARGET_DB="$1"
     fi
     shift || true
 done
@@ -169,9 +174,9 @@ if [[ -z "${REMOTE_DB}" ]]; then
     Log::fatal "you must provide remoteDbName"
 fi
 
-if [[ -z "${LOCAL_DB}" ]]; then
+if [[ -z "${TARGET_DB}" ]]; then
     # remove eventual file extension
-    LOCAL_DB="${REMOTE_DB%%.*}"
+    TARGET_DB="${REMOTE_DB%%.*}"
 fi
 
 # check s3 parameter
@@ -214,12 +219,12 @@ if [[ "${FROM_AWS}" = "0" ]]; then
     Log::displayInfo "Using from dsn ${dbFromInstance['DSN_FILE']}"
 fi
 
-# check if local db exists
-LOCAL_DB_EXISTS=0
-Database::ifDbExists dbTargetDatabase "${LOCAL_DB}" && {
-    Log::displayInfo "Local Database ${LOCAL_DB} already exists !"
+# check if target db exists
+TARGET_DB_EXISTS=0
+Database::ifDbExists dbTargetDatabase "${TARGET_DB}" && {
+    Log::displayInfo "Target Database ${TARGET_DB} already exists !"
     [[ "${FORCE}" = "0" ]] && Log::fatal "use --force to drop it"
-    LOCAL_DB_EXISTS='1'
+    TARGET_DB_EXISTS='1'
 }
 
 if [[ "${FROM_AWS}" = "1" ]]; then
@@ -332,39 +337,39 @@ fi
 COLLATION_NAME="${COLLATION_NAME:-utf8_general_ci}"
 CHARACTER_SET="${CHARACTER_SET:-utf8}"
 
-# drop local db
-if [[ "${LOCAL_DB_EXISTS}" = "1" ]]; then
-    Log::displayInfo "drop local database ${LOCAL_DB}";
-    Database::query dbTargetDatabase "DROP DATABASE IF EXISTS ${LOCAL_DB}"
+# drop target db
+if [[ "${TARGET_DB_EXISTS}" = "1" ]]; then
+    Log::displayInfo "drop target database ${TARGET_DB}";
+    Database::query dbTargetDatabase "DROP DATABASE IF EXISTS ${TARGET_DB}"
 fi
-Log::displayInfo "create local database ${LOCAL_DB}";
+Log::displayInfo "create target database ${TARGET_DB}";
 # shellcheck disable=SC2016
 Database::query dbTargetDatabase \
-    "$(printf 'CREATE DATABASE `%s` CHARACTER SET "%s" COLLATE "%s"' "${LOCAL_DB}" "${CHARACTER_SET}" "${COLLATION_NAME}")"
+    "$(printf 'CREATE DATABASE `%s` CHARACTER SET "%s" COLLATE "%s"' "${TARGET_DB}" "${CHARACTER_SET}" "${COLLATION_NAME}")"
 
 if [[ "${FROM_AWS}" = "1" ]]; then
     "${CURRENT_DIR}/dbImportStream" \
         "${REMOTE_DB_DUMP_TEMP_FILE}" \
-        "${LOCAL_DB}" \
+        "${TARGET_DB}" \
         "${PROFILE_COMMAND}" \
         "${dbTargetDatabase['AUTH_FILE']}" \
         "${CHARACTER_SET}"
 else
-    Log::displayInfo "Importing remote db '${REMOTE_DB}' to local db '${LOCAL_DB}'"
+    Log::displayInfo "Importing remote db '${REMOTE_DB}' to local db '${TARGET_DB}'"
     if [[ "${SKIP_SCHEMA}" = "1" ]]; then
         Log::displayInfo "avoid to create db structure";
     else
         Log::displayInfo "create db structure from ${REMOTE_DB_STRUCTURE_DUMP_TEMP_FILE}";
         time ( \
             pv "${REMOTE_DB_STRUCTURE_DUMP_TEMP_FILE}" | \
-                Database::query dbTargetDatabase "" "${LOCAL_DB}"
+                Database::query dbTargetDatabase "" "${TARGET_DB}"
         )
     fi
 
     Log::displayInfo "import remote to local from file ${REMOTE_DB_DUMP_TEMP_FILE}"
     time ( \
         pv "${REMOTE_DB_DUMP_TEMP_FILE}" | \
-            Database::query dbTargetDatabase "" "${LOCAL_DB}"
+            Database::query dbTargetDatabase "" "${TARGET_DB}"
     )
 fi
 

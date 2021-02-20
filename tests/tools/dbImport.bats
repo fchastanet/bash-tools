@@ -19,6 +19,8 @@ setup() {
             .bash-tools/dbImportDumps \
             .bash-tools/dbImportProfiles
         cp "${BATS_TEST_DIRNAME}/mocks/pv" bin
+        cp "${BATS_TEST_DIRNAME}/mocks/gawk" bin
+        cp "${BATS_TEST_DIRNAME}/mocks/gawk" bin/awk
         touch bin/mysql bin/mysqldump bin/mysqlshow
         chmod +x bin/*
     )

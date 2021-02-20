@@ -7,8 +7,8 @@ source "$( cd "${CURRENT_DIR}/.." && pwd )/bash-framework/_bootstrap.sh"
 
 Framework::expectNonRootUser
 
-
 import bash-framework/Database
+import bash-framework/Version
 
 # ensure that Ctrl-C is trapped by this script and not sub mysql process
 trap 'exit 130' INT
@@ -16,9 +16,9 @@ trap 'exit 130' INT
 # default values
 SCRIPT_NAME=${0##*/}
 FORCE=0
-FROM_AWS=0
 DOWNLOAD_DUMP=0
-REMOTE_DB=""
+FROM_AWS=0
+FROM_DB=""
 TARGET_DB=""
 CHARACTER_SET=""
 TABLE=""
@@ -35,25 +35,26 @@ dsnList="$(Functions::getConfMergedList "dsn" "env")"
 
 
 cat << EOF
-${__HELP_TITLE}Description:${__HELP_NORMAL} Import remote db table into local db
+${__HELP_TITLE}Description:${__HELP_NORMAL} Import remote db table into target db
 
 ${__HELP_TITLE}Usage:${__HELP_NORMAL} ${SCRIPT_NAME} [-h|--help] prints this help and exits
-${__HELP_TITLE}Usage:${__HELP_NORMAL} ${SCRIPT_NAME} <remoteDbName> <tableName> [<localDbName>] 
+${__HELP_TITLE}Usage:${__HELP_NORMAL} ${SCRIPT_NAME} <fromDbName> <tableName> [<targetDbName>]
     [-d|--download-dump] [--force] [-a|--from-aws]
     [-t|--target-dsn dsn] [-f|--from-dsn dsn]
     [-c|--character-set utf8]
 
-    download the remote table data and install data in local database (the schema should exists)
+    download the remote table data and install data in target database (the schema should exists)
 
+    <fromDbName>  :      the name of the source/remote database
     <tableName>   :      table name to import
-    <localDbName> :      use remote db name if not provided
-    --force              If local table exists, it will overwrite it
+    <targetDbName> :     the name of the target database, use fromDbName if not provided
+    --force              If target table exists, it will overwrite it
     -t|--target-dsn dsn  dsn to use for target database (Default: ${TARGET_DSN}) 
     -f|--from-dsn dsn    dsn to use for source database (Default: ${DEFAULT_FROM_DSN})
         this option is incompatible with -a|--from-aws option
     -a|--from-aws        db dump will be downloaded from s3 instead of using remote db, 
-        remoteDBName will represent the name of the file
-        profile will be calculated against the dump itself
+        fromDbName will represent the name of the S3 file
+        Only .gz or tar.gz file are supported
     -d|--download-dump   force remote db dump (default: use already downloaded dump in ${DB_IMPORT_DUMP_DIR} if available)
     -c|--character-set   change the character set used during database creation (default value: character set used by remote db)
 
@@ -83,7 +84,7 @@ case $1 in
     exit 0
     ;;
 --force)
-    Log::displayInfo "If local db exists, it will overwrite it"
+    Log::displayInfo "If target db exists, it will overwrite it"
     FORCE=1
     ;;
 -t|--target-dsn)
@@ -119,6 +120,9 @@ Functions::checkCommandExists mysql "sudo apt-get install -y mysql-client"
 Functions::checkCommandExists mysqlshow "sudo apt-get install -y mysql-client"
 Functions::checkCommandExists mysqldump "sudo apt-get install -y mysql-client"
 Functions::checkCommandExists pv "sudo apt-get install -y pv"
+Functions::checkCommandExists gawk "sudo apt-get install -y gawk"
+Functions::checkCommandExists awk "sudo apt-get install -y gawk"
+Version::checkMinimal "gawk" "gawk --version" "5.0.1"
 
 # additional arguments
 shift $(( OPTIND - 1 )) || true
@@ -127,21 +131,19 @@ while true; do
         # last argument
         break
     fi
-    if [[ -z "${REMOTE_DB}" ]]; then
-        REMOTE_DB="$1"
+    if [[ -z "${FROM_DB}" ]]; then
+        FROM_DB="$1"
+    elif [[ -z "${TABLE}" ]]; then
+        TABLE="$1"
     else
-        if [[ -z "${TABLE}" ]]; then
-            TABLE="$1"
-        else
-            TARGET_DB="$1"
-        fi
+        TARGET_DB="$1"
     fi
     shift || true
 done
 
-if [[ -z "${REMOTE_DB}" ]]; then
+if [[ -z "${FROM_DB}" ]]; then
     showHelp
-    Log::fatal "you must provide remoteDbName"
+    Log::fatal "you must provide fromDbName"
 fi
 
 if [[ -z "${TABLE}" ]]; then
@@ -150,16 +152,16 @@ if [[ -z "${TABLE}" ]]; then
 fi
 
 if [[ -z "${TARGET_DB}" ]]; then
-    TARGET_DB=${REMOTE_DB}
+    # remove eventual file extension
+    TARGET_DB=${FROM_DB%%.*}
 fi
 
 # check s3 parameter
-if [[ "${FROM_AWS}" = "1" && -n "${FROM_DSN}" ]]; then
+[[ "${FROM_AWS}" = "1" && -n "${FROM_DSN}" ]] &&
     Log::fatal "you cannot use from-dsn and from-aws at the same time"
-fi
-if [[ "${FROM_AWS}" = "1" && -z "${S3_BASE_URL}" ]]; then
+
+[[ "${FROM_AWS}" = "1" && -z "${S3_BASE_URL}" ]] &&
     Log::fatal "missing S3_BASE_URL, please provide a value in .env file"
-fi
 
 # default value for FROM_DSN if from-aws not set
 if [[ "${FROM_AWS}" = "0" && -z "${FROM_DSN}" ]]; then
@@ -194,19 +196,19 @@ Database::ifDbExists dbTargetInstance "${TARGET_DB}" || {
 }
 
 # check if target table exists
-Database::isTableExists dbFromInstance "${TARGET_DB}" "${TABLE}" && {
+Database::isTableExists dbTargetInstance "${TARGET_DB}" "${TABLE}" && {
     Log::displayInfo "Target table ${TARGET_DB}/${TABLE} already exists"
     [[ "${FORCE}" = "0" ]] && Log::fatal "use --force to drop it"
     Database::dropTable dbTargetInstance "${TARGET_DB}" "${TABLE}"
 }
 
-Log::displayInfo "import table ${TABLE} from ${REMOTE_DB} to ${TARGET_DB}"
+Log::displayInfo "import table ${TABLE} from ${FROM_DB} to ${TARGET_DB}"
 
 # check if local dump exists
-REMOTE_DB_DUMP_TEMP_FILE="${DB_IMPORT_DUMP_DIR}/importTable_${REMOTE_DB}_${TABLE}.sql"
+FROM_DB_DUMP_TEMP_FILE="${DB_IMPORT_DUMP_DIR}/importTable_${FROM_DB%%.*}_${TABLE}.sql"
 if [[ "${DOWNLOAD_DUMP}" = "0" ]]; then
-    if [[ -f "${REMOTE_DB_DUMP_TEMP_FILE}" ]]; then
-        Log::displayInfo "local dump ${REMOTE_DB_DUMP_TEMP_FILE} already exists, avoid download"
+    if [[ -f "${FROM_DB_DUMP_TEMP_FILE}" ]]; then
+        Log::displayInfo "local dump ${FROM_DB_DUMP_TEMP_FILE} already exists, avoid download"
     else
         Log::displayInfo "local dump does not exist"
         DOWNLOAD_DUMP=1
@@ -221,20 +223,21 @@ SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS = 0;\0
 EOM
 
 read -r -d '\0' DUMP_FOOTER <<- EOM2
+UNLOCK TABLES;
 SET AUTOCOMMIT=@OLD_AUTOCOMMIT;
 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS;
 SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS;\0
 EOM2
-
+set -x
 SECONDS=0
 if [[ "${DOWNLOAD_DUMP}" = "1" ]]; then
     Log::displayInfo "Download dump"
 
     if [[ "${FROM_AWS}" = "1" ]]; then
         # download dump from s3
-        AWS_DUMP_FILE="${DB_IMPORT_DUMP_DIR}/${REMOTE_DB}.tar.gz"
+        AWS_DUMP_FILE="${DB_IMPORT_DUMP_DIR}/${FROM_DB}"
         if [[ ! -f "${AWS_DUMP_FILE}" ]]; then
-            S3_URL="${S3_BASE_URL%/}/${REMOTE_DB}.tar.gz"
+            S3_URL="${S3_BASE_URL%/}/${FROM_DB}"
             Log::displayInfo "Download dump from ${S3_URL} ...";
             TMPDIR="${TEMP_FOLDER:-/tmp}" aws s3 cp "${S3_URL}" "${AWS_DUMP_FILE}" ||
                 Log::fatal "unable to download dump from S3 : ${S3_URL}"
@@ -251,52 +254,55 @@ if [[ "${DOWNLOAD_DUMP}" = "1" ]]; then
             "${CURRENT_DIR}/dbImportTableStream" \
                 "${AWS_DUMP_FILE}" \
                 "${TABLE}" \
-                "${CHARACTER_SET}"
+                "${CHARACTER_SET}" || exit $?
             
             echo "${DUMP_FOOTER}"
-        ) > "${REMOTE_DB_DUMP_TEMP_FILE}"
-        Log::displayInfo "Table dump extracted : ${REMOTE_DB_DUMP_TEMP_FILE}"
+        ) > "${FROM_DB_DUMP_TEMP_FILE}" || {
+            rm -f "${FROM_DB_DUMP_TEMP_FILE}"
+            Log::fatal "dump invalid"
+        }
+        Log::displayInfo "Table dump extracted : ${FROM_DB_DUMP_TEMP_FILE}"
     else
         # get remote db character set
         if [[ -z "${CHARACTER_SET}" ]]; then
             CHARACTER_SET=$(Database::query dbTargetInstance \
-                "SELECT default_character_set_name FROM information_schema.SCHEMATA WHERE schema_name = \"${REMOTE_DB}\";" "information_schema")
+                "SELECT default_character_set_name FROM information_schema.SCHEMATA WHERE schema_name = \"${FROM_DB}\";" "information_schema")
         fi
 
         DUMP_HEADER=$(printf "%s\nSET names '%s';\n" "${DUMP_HEADER}" "${CHARACTER_SET}")
 
         # check if remote db exists
-        Database::ifDbExists dbTargetInstance "${REMOTE_DB}" || 
-            Log::fatal "Target Database ${REMOTE_DB} does not exist"
+        Database::ifDbExists dbFromInstance "${FROM_DB}" || 
+            Log::fatal "From Database ${FROM_DB} does not exist"
 
         # calculate remote table dump size
         Log::displayDebug "Calculate dump size for table ${TABLE}"
-        DUMP_SIZE_QUERY="SELECT ROUND(SUM(data_length + index_length) / 1024 / 1024, 0) AS size FROM information_schema.TABLES WHERE table_schema=\"${REMOTE_DB}\""
+        DUMP_SIZE_QUERY="SELECT ROUND(SUM(data_length + index_length) / 1024 / 1024, 0) AS size FROM information_schema.TABLES WHERE table_schema=\"${FROM_DB}\""
         DUMP_SIZE_QUERY+=" AND table_name='${TABLE}'"
         DUMP_SIZE_QUERY+=" GROUP BY table_schema"
-        REMOTE_DB_DUMP_SIZE=$(echo "${DUMP_SIZE_QUERY}" | Database::query dbTargetInstance )
-        if [[ -z "${REMOTE_DB_DUMP_SIZE}" ]]; then
+        FROM_DB_DUMP_SIZE=$(echo "${DUMP_SIZE_QUERY}" | Database::query dbFromInstance )
+        if [[ -z "${FROM_DB_DUMP_SIZE}" ]]; then
             # could occur with the none profile
-            REMOTE_DB_DUMP_SIZE="0"
+            FROM_DB_DUMP_SIZE="0"
         fi
 
         # dump db
-        Log::displayInfo "Dump the table ${TABLE} from database $REMOTE_DB (Size:${REMOTE_DB_DUMP_SIZE}MB) ... to file ${REMOTE_DB_DUMP_TEMP_FILE}";
-        echo "${DUMP_HEADER}" > "${REMOTE_DB_DUMP_TEMP_FILE}"
-        DUMP_SIZE_PV_ESTIMATION=$(awk "BEGIN {printf \"%.0f\",${REMOTE_DB_DUMP_SIZE}/1.5}")
-        Database::dump dbTargetInstance "${REMOTE_DB}" "${TABLE}" --skip-add-drop-table --single-transaction=TRUE | \
-            pv --progress --size "${DUMP_SIZE_PV_ESTIMATION}m" >> "${REMOTE_DB_DUMP_TEMP_FILE}"
-        echo "${DUMP_FOOTER}" >> "${REMOTE_DB_DUMP_TEMP_FILE}"
+        Log::displayInfo "Dump the table ${TABLE} from database $FROM_DB (Size:${FROM_DB_DUMP_SIZE}MB) ... to file ${FROM_DB_DUMP_TEMP_FILE}";
+        echo "${DUMP_HEADER}" > "${FROM_DB_DUMP_TEMP_FILE}"
+        DUMP_SIZE_PV_ESTIMATION=$(awk "BEGIN {printf \"%.0f\",${FROM_DB_DUMP_SIZE}/1.5}")
+        Database::dump dbFromInstance "${FROM_DB}" "${TABLE}" --skip-add-drop-table --single-transaction=TRUE | \
+            pv --progress --size "${DUMP_SIZE_PV_ESTIMATION}m" >> "${FROM_DB_DUMP_TEMP_FILE}"
+        echo "${DUMP_FOOTER}" >> "${FROM_DB_DUMP_TEMP_FILE}"
         # shellcheck disable=SC2016
         sed -i -r \
             -e 's/CREATE TABLE `/CREATE TABLE IF NOT EXISTS `/g' \
-            "${REMOTE_DB_DUMP_TEMP_FILE}"
+            "${FROM_DB_DUMP_TEMP_FILE}"
     fi
     Log::displayDebug "Dump done.";
 fi
 
-Log::displayDebug "import from file ${REMOTE_DB_DUMP_TEMP_FILE}"
-pv "${REMOTE_DB_DUMP_TEMP_FILE}" | \
-    Database::query dbFromInstance "" "${TARGET_DB}"
+Log::displayDebug "import from file ${FROM_DB_DUMP_TEMP_FILE}"
+pv "${FROM_DB_DUMP_TEMP_FILE}" | \
+    Database::query dbTargetInstance "" "${TARGET_DB}"
 
 Log::displayInfo "Import table duration : $(date -u -d @${SECONDS} +"%T")"
