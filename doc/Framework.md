@@ -1,6 +1,9 @@
 # bash-framework/Framework.sh
-# Functions
-# function `Framework::expectUser`
+
+## Functions
+
+### Function `Framework::expectUser`
+
 > ***Public***
 
 exits with message if current user is not the expected one
@@ -9,13 +12,17 @@ exits with message if current user is not the expected one
 * $1 expected user login
 
 **Exit**: code 1 if current user is not the expected one
-# function `Framework::expectNonRootUser`
+
+### Function `Framework::expectNonRootUser`
+
 > ***Public***
 
 exits with message if current user is root
 
 **Exit**: code 1 if current user is root
-# function `Framework::expectGlobalVariables`
+
+### Function `Framework::expectGlobalVariables`
+
 > ***Public***
 
 exits with message if expected global variable is not set
@@ -24,7 +31,9 @@ exits with message if expected global variable is not set
 * $1 expected global variable
 
 **Exit**: code 1 if expected global variable is not set
-# function `Framework::GetAbsolutePath`
+
+### Function `Framework::GetAbsolutePath`
+
 > ***Public***
 
 get absolute file from relative path
@@ -33,7 +42,9 @@ get absolute file from relative path
 * $1 relative file path
 
 **Output**: absolute path (can be $1 if $1 begins with /)
-# function `Framework::WrapSource`
+
+### Function `Framework::WrapSource`
+
 > ***Internal***
 
 source given file or exits with message on error
@@ -42,7 +53,9 @@ source given file or exits with message on error
 * $1 file to source
 
 **Exit**: code 1 if error while sourcing
-# function `Framework::SourceFile`
+
+### Function `Framework::SourceFile`
+
 > ***Internal***
 
 source given file. Do not source it again if it has already been sourced.
@@ -51,7 +64,9 @@ source given file. Do not source it again if it has already been sourced.
 * $1 file to source
 
 **Exit**: code 1 if error while sourcing
-# function `Framework::SourcePath`
+
+### Function `Framework::SourcePath`
+
 > ***Internal***
 
 source given file.
@@ -62,7 +77,9 @@ source given file.
 * $1 file to source
 
 **Exit**: code 1 if error while sourcing
-# function `Framework::ImportOne`
+
+### Function `Framework::ImportOne`
+
 > ***Public***
 
 source given file.
@@ -77,7 +94,9 @@ source given file.
 * $1 file to source
 
 **Exit**: code 1 if error while sourcing
-# function `Framework::Import`
+
+### Function `Framework::Import`
+
 > ***Public***
 
 source given files using Framework::ImportOne.

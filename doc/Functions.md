@@ -1,6 +1,9 @@
 # bash-framework/Functions.sh
-# Functions
-# function `Functions::checkCommandExists`
+
+## Functions
+
+### Function `Functions::checkCommandExists`
+
 > ***Public***
 
 check if command specified exists or exits
@@ -11,7 +14,9 @@ check if command specified exists or exits
 * $2 helpIfNotExists a help command to display if the command does not exist
 
 **Exit**: code 1 if the command specified does not exist
-# function `Functions::isWindows`
+
+### Function `Functions::isWindows`
+
 > ***Public***
 
 determine if the script is executed under windows
@@ -22,7 +27,9 @@ determine if the script is executed under windows
  </pre>
 
 **Echo**: "1" if windows, else "0"
-# function `Functions::quote`
+
+### Function `Functions::quote`
+
 > ***Public***
 
 quote a string
@@ -32,7 +39,9 @@ quote a string
 * $1 the string to quote
 
 **Output**: the string quoted
-# function `Functions::getList`
+
+### Function `Functions::getList`
+
 > ***Public***
 
 list files of dir with given extension and display it as a list one by line
@@ -46,7 +55,9 @@ list files of dir with given extension and display it as a list one by line
         - default.local
         - default.remote
         - localhost-root
-# function `Functions::loadConf`
+
+### Function `Functions::loadConf`
+
 > ***Public***
 
 get absolute file from name deduced using these rules
@@ -60,7 +71,9 @@ get absolute file from name deduced using these rules
 * $3 file extension to use (default: sh)
 
 Returns 1 if file not found or error during file loading
-# function `Functions::getConfMergedList`
+
+### Function `Functions::getConfMergedList`
+
 > ***Public***
 
 list the conf files list available in bash-tools/conf/<conf> folder
@@ -75,7 +88,9 @@ list the conf files list available in bash-tools/conf/<conf> folder
         - default.local
         - default.remote
         - localhost-root
-# function `Functions::getAbsoluteConfFile`
+
+### Function `Functions::getAbsoluteConfFile`
+
 > ***Public***
 
 get absolute conf file from specified conf folder deduced using these rules
@@ -90,15 +105,21 @@ get absolute conf file from specified conf folder deduced using these rules
 * $3 the extension (sh by default)
 
 Returns absolute conf filename
-# function `Functions::trapAdd`
+
+### Function `Functions::trapAdd`
+
 appends a command to a trap
 
 - 1st arg:  code to add
  - remaining args:  names of traps to modify
-# function `extract_trap_cmd`
+
+### Function `extract_trap_cmd`
+
 helper fn to get existing trap command from output
  of trap -p
-# function `Functions::run`
+
+### Function `Functions::run`
+
 *Public*: run command and store data in following global variables :
 * bash_framework_status the exit status of the command
 * bash_framework_duration the duration of the command
@@ -107,6 +128,8 @@ helper fn to get existing trap command from output
  **Arguments**:
 * $@ command with arguments to execute
 
-# Variables
-# variable `bash_framework_status`
+## Variables
+
+### Variable `bash_framework_status`
+
 global variables used by Functions:run

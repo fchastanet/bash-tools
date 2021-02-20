@@ -1,6 +1,9 @@
 # bash-framework/Log.sh
-# Functions
-# function `__logMessage`
+
+## Functions
+
+### Function `__logMessage`
+
 > ***Internal***
 
 common log message
@@ -19,7 +22,9 @@ common log message
  <pre>
  2020-01-19 19:20:21 - ERROR   - log message
  </pre>
-# function `__displayFatal`
+
+### Function `__displayFatal`
+
 > ***Public***
 
 display fatal message on stderr
@@ -29,7 +34,9 @@ display fatal message on stderr
  **Output**: using fatal color
 
 * ERROR - message
-# function `__displayError`
+
+### Function `__displayError`
+
 > ***Public***
 
 display error message on stderr
@@ -39,7 +46,9 @@ display error message on stderr
  **Output**: using error color
 
 * ERROR - message
-# function `__displayWarning`
+
+### Function `__displayWarning`
+
 > ***Public***
 
 display warning message on stderr
@@ -49,7 +58,9 @@ display warning message on stderr
  **Output**: using warning color
 
 * WARN - message
-# function `__displayInfo`
+
+### Function `__displayInfo`
+
 > ***Public***
 
 display info message on stderr
@@ -59,7 +70,9 @@ display info message on stderr
  **Output**: using info color
 
 * INFO - message
-# function `__displayDebug`
+
+### Function `__displayDebug`
+
 > ***Public***
 
 display debug message on stderr
@@ -69,7 +82,9 @@ display debug message on stderr
  **Output**: using debug color
 
 * DEBUG - message
-# function `__displaySuccess`
+
+### Function `__displaySuccess`
+
 > ***Public***
 
 display success message on stderr

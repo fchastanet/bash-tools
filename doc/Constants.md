@@ -1,62 +1,93 @@
 # bash-framework/Constants.sh
-# Exports
-# export `readonly`
+
+## Exports
+
+### Export `readonly`
+
 > ***Public***
 
 log level off
-# export `readonly`
+
+### Export `readonly`
+
 > ***Public***
 
 log level error
-# export `readonly`
+
+### Export `readonly`
+
 > ***Public***
 
 log level warning
-# export `readonly`
+
+### Export `readonly`
+
 > ***Public***
 
 log level info
-# export `readonly`
+
+### Export `readonly`
+
 > ***Public***
 
 log level success
-# export `readonly`
+
+### Export `readonly`
+
 > ***Public***
 
 log level debug
-# export `readonly`
+
+### Export `readonly`
+
 > ***Internal***
 
 color used f error level (red bold)
-# export `readonly`
+
+### Export `readonly`
+
 > ***Internal***
 
 color used for error level (red)
-# export `readonly`
+
+### Export `readonly`
+
 > ***Internal***
 
 color used for info level (white on lightBlue)
-# export `readonly`
+
+### Export `readonly`
+
 > ***Internal***
 
 color used for success level (green)
-# export `readonly`
+
+### Export `readonly`
+
 > ***Internal***
 
 color used for warning level (yellow)
-# export `readonly`
+
+### Export `readonly`
+
 > ***Internal***
 
 color used for debug level (grey)
-# export `readonly`
+
+### Export `readonly`
+
 > ***Internal***
 
 reset color
-# export `readonly`
+
+### Export `readonly`
+
 > ***Internal***
 
 used for displaying important information in command help message
-# export `readonly`
+
+### Export `readonly`
+
 > ***Internal***
 
 reset color

@@ -1,6 +1,9 @@
 # bash-framework/Git.sh
-# Functions
-# function `Git::ShallowClone`
+
+## Functions
+
+### Function `Git::ShallowClone`
+
 > ***Public***
 
 shallow clone a repository at specific commit sha, tag or branch

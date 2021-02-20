@@ -1,6 +1,9 @@
 # bash-framework/Array.sh
-# Functions
-# function `Array::contains`
+
+## Functions
+
+### Function `Array::contains`
+
 > ***Public***
 
 check if an element is contained in an array

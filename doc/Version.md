@@ -1,6 +1,9 @@
 # bash-framework/Version.sh
-# Functions
-# function `Version::checkMinimal`
+
+## Functions
+
+### Function `Version::checkMinimal`
+
 > ***Public***
 
 ensure that command exists with expected version
@@ -16,7 +19,9 @@ ensure that command exists with expected version
 
 **Exit**:
 * code 2 and error message if command exists but current version is less than expected minimal version
-# function `Version::compare`
+
+### Function `Version::compare`
+
 > ***Public***
 
 compare version

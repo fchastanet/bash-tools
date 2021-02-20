@@ -1,6 +1,9 @@
 # bash-framework/UI.sh
-# Functions
-# function `UI::askToContinue`
+
+## Functions
+
+### Function `UI::askToContinue`
+
 > ***Public***
 
 ask the user if he wishes to continue a process
@@ -8,7 +11,9 @@ ask the user if he wishes to continue a process
 **Input**: user input y or Y characters
  **Output**: displays message <pre>Are you sure, you want to continue (y or n)?</pre>
  **Exit**: with error code 1 if y or Y, other keys do nothing
-# function `UI::askYesNo`
+
+### Function `UI::askYesNo`
+
 > ***Public***
 
 ask the user a confirmation
@@ -25,7 +30,9 @@ ask the user a confirmation
 **Returns**:
 * 0 if y or Y
 * 1 if n or N
-# function `UI::askToIgnoreOverwriteAbort`
+
+### Function `UI::askToIgnoreOverwriteAbort`
+
 > ***Public***
 
 ask the user to ignore(i), overwrite(o) or abort(a)

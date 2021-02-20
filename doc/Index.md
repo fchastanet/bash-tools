@@ -5,6 +5,8 @@
 
 [bash-framework/Framework.sh](Framework.md)
 
+[bash-framework/File.sh](File.md)
+
 [bash-framework/Array.sh](Array.md)
 
 [bash-framework/Functions.sh](Functions.md)

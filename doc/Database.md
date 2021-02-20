@@ -1,6 +1,9 @@
 # bash-framework/Database.sh
-# Functions
-# function `Database::newInstance`
+
+## Functions
+
+### Function `Database::newInstance`
+
 > ***Public***
 
 create a new db instance
@@ -17,7 +20,9 @@ create a new db instance
 ```
 
 Returns immediately if the instance is already initialized
-# function `Database::checkDsnFile`
+
+### Function `Database::checkDsnFile`
+
 > ***Internal***
 
 check if dsn file has all the mandatory variables set
@@ -27,7 +32,9 @@ check if dsn file has all the mandatory variables set
 * $1 - dsn absolute filename
 
 Returns 0 on valid file, 1 otherwise with log output
-# function `Database::skipColumnNames`
+
+### Function `Database::skipColumnNames`
+
 > ***Public***
 
 by default we skip the column names
@@ -37,7 +44,9 @@ by default we skip the column names
 **Arguments**:
 * $1 - (passed by reference) database instance to use
 * $2 - 0 to disable, 1 to enable (hide column names)
-# function `Database::setDumpOptions`
+
+### Function `Database::setDumpOptions`
+
 > ***Public***
 
 set the options to use on mysqldump command
@@ -45,7 +54,9 @@ set the options to use on mysqldump command
 **Arguments**:
 * $1 - (passed by reference) database instance to use
 * $2 - options list
-# function `Database::setQueryOptions`
+
+### Function `Database::setQueryOptions`
+
 > ***Public***
 
 set the general options to use on mysql command to query the database
@@ -54,7 +65,9 @@ set the general options to use on mysql command to query the database
 **Arguments**:
 * $1 - (passed by reference) database instance to use
 * $2 - options list
-# function `Database::ifDbExists`
+
+### Function `Database::ifDbExists`
+
 > ***Public***
 
 check if given database exists
@@ -62,7 +75,9 @@ check if given database exists
 **Arguments**:
 * $1 (passed by reference) database instance to use
 * $2 database name
-# function `Database::getUserDbList`
+
+### Function `Database::getUserDbList`
+
  Public: lis dbs of given mysql server
  **Output**:
  the list of db exept mysql admin ones :
@@ -73,7 +88,9 @@ check if given database exists
 
 **Arguments**:
 * $1 (passed by reference) database instance to use
-# function `Database::isTableExists`
+
+### Function `Database::isTableExists`
+
 > ***Public***
 
 check if table exists on given db
@@ -86,7 +103,9 @@ check if table exists on given db
 **Returns**:
 * 0 if table $3 exists
 * 1 else
-# function `Database::createDb`
+
+### Function `Database::createDb`
+
 > ***Public***
 
 create database if not already existent
@@ -98,7 +117,9 @@ create database if not already existent
 **Returns**:
 * 0 if success
 * 1 else
-# function `Database::dropDb`
+
+### Function `Database::dropDb`
+
 > ***Public***
 
 drop database if exists
@@ -110,7 +131,9 @@ drop database if exists
 **Returns**:
 * 0 if success
 * 1 else
-# function `Database::dropTable`
+
+### Function `Database::dropTable`
+
 > ***Public***
 
 drop table if exists
@@ -123,7 +146,9 @@ drop table if exists
 **Returns**:
 * 0 if success
 * 1 else
-# function `Database::query`
+
+### Function `Database::query`
+
 > ***Public***
 
 mysql query on a given db
@@ -135,7 +160,9 @@ mysql query on a given db
 * _$3 (optional)_ the db name
 
 **Returns**: mysql command status code
-# function `Database::dump`
+
+### Function `Database::dump`
+
 > ***Public***
 
 dump db limited to optional table list
