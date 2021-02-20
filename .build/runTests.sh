@@ -2,21 +2,34 @@
 
 set -o errexit
 set -o pipefail
+set -x
 
 BASE_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." && pwd )
-VENDOR="$1"
-BASH_TAR_VERSION="$2"
+VENDOR="${VENDOR:-ubuntu}"
+BASH_TAR_VERSION="${BASH_TAR_VERSION:-5.1}"
+DOCKER_BUILD_OPTIONS="${DOCKER_BUILD_OPTIONS:-}"
 
-if [[ -z "${VENDOR}" || -z "${BASH_TAR_VERSION}" ]]; then
-  (>&2 echo "please provide these paramters VENDOR, BASH_TAR_VERSION")
-  exit 1
-fi
+(>&2 echo "run tests using ${VENDOR}:${BASH_TAR_VERSION}")
+cd "${BASE_DIR}" || exit 1
 
-(
-  cd "${BASE_DIR}"
+if [ "${IN_BASH_DOCKER:-}" = "You're in docker" ]; then
+  "${BASE_DIR}/test.sh"
+else
+  if [[ ! -d "${BASE_DIR}/vendor" ]]; then
+    ./.build/installBuildDeps.sh
+  fi
+
   # build docker image with user configuration
   docker build \
-    --build-arg "BASH_IMAGE=scrasnups/build:bash-tools-${VENDOR}-${BASH_TAR_VERSION}" \
+    -f ".docker/Dockerfile.${VENDOR}" \
+    -t "bash-tools-${VENDOR}-${BASH_TAR_VERSION}" \
+    ${DOCKER_BUILD_OPTIONS} \
+    .docker
+
+  # build docker image with user configuration
+  docker build \
+    ${DOCKER_BUILD_OPTIONS} \
+    --build-arg "BASH_IMAGE=bash-tools-${VENDOR}-${BASH_TAR_VERSION}" \
     --build-arg USER_ID="$(id -u)" \
     --build-arg GROUP_ID="$(id -g)" \
     -f .docker/DockerfileUser \
@@ -25,9 +38,11 @@ fi
   
   # run tests
   docker run \
-    --rm -it -v "${BASE_DIR}:/bash" \
+    --rm \
+    -it \
+    -w /bash \
+    -v "${BASE_DIR}:/bash" \
     --user "$(id -u):$(id -g)" \
-    --workdir /bash \
     "bash-tools-${VENDOR}-${BASH_TAR_VERSION}-user" \
-    /bash/vendor/bats/bin/bats -r tests
-)
+    /bash/test.sh "$@"
+fi
