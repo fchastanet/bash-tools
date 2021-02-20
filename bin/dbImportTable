@@ -9,6 +9,7 @@ Framework::expectNonRootUser
 
 import bash-framework/Database
 import bash-framework/Version
+import bash-framework/File
 
 # ensure that Ctrl-C is trapped by this script and not sub mysql process
 trap 'exit 130' INT
@@ -199,7 +200,7 @@ Database::isTableExists dbTargetInstance "${TARGET_DB}" "${TABLE}" && {
 }
 
 Log::displayInfo "import table ${TABLE} from ${FROM_DB} to ${TARGET_DB}"
-set -x
+
 # check if local dump exists
 FROM_DB_DUMP_TEMP_FILE="${DB_IMPORT_DUMP_DIR}/importTable_${FROM_DB%%.*}_${TABLE}.sql.gz"
 if [[ -f "${FROM_DB_DUMP_TEMP_FILE}" ]]; then
@@ -296,8 +297,14 @@ if [[ "${DOWNLOAD_DUMP}" = "1" ]]; then
     Log::displayDebug "Dump done.";
 fi
 
+# mark dumps as modified now to avoid them to be garbage collected
+touch -c -m "${FROM_DB_DUMP_TEMP_FILE}" || true
+
 Log::displayDebug "import from file ${FROM_DB_DUMP_TEMP_FILE}"
 pv "${FROM_DB_DUMP_TEMP_FILE}" | zcat | \
     Database::query dbTargetInstance "" "${TARGET_DB}"
+
+# garbage collect db import dumps
+File::garbageCollect "${DB_IMPORT_DUMP_DIR}" "${DB_IMPORT_GARBAGE_COLLECT_DAYS:-+30}" || true
 
 Log::displayInfo "Import table duration : $(date -u -d @${SECONDS} +"%T")"

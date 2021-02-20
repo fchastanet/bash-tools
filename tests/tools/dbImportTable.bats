@@ -309,25 +309,34 @@ teardown() {
 }
 
 @test "${BATS_TEST_FILENAME#/bash/tests/} from aws real dump" {
+    # change modification date 32 days in the past
+    touch -d@$(($(date +%s) - 32*86400)) "${HOME}/.bash-tools/dbImportDumps/oldDump.gz"
+    # change modification date 1 day in the future
+    touch -d@$(($(date +%s) + 86400)) "${HOME}/.bash-tools/dbImportDumps/dumpInTheFuture.sql.gz"
+    # create false dump 1 day in the past
+    echo "data" | gzip > "${HOME}/.bash-tools/dbImportDumps/fromDb.tar.gz"
+    touch -d@$(($(date +%s) + 86400)) "${HOME}/.bash-tools/dbImportDumps/fromDb.tar.gz"
+
     stub mysqlshow \
         '* * toDb : echo "Database: toDb"' 
-    stub aws \
-        's3 cp s3://s3server/exports/fromDb.tar.gz /tmp/home/.bash-tools/dbImportDumps/fromDb.tar.gz : exit 0'
     stub tar \
-        "xOfz /tmp/home/.bash-tools/dbImportDumps/fromDb.tar.gz : cat ${BATS_TEST_DIRNAME}/data/dump.sql"
+        "xOfz ${HOME}/.bash-tools/dbImportDumps/fromDb.tar.gz : cat ${BATS_TEST_DIRNAME}/data/dump.sql"
     stub mysql \
-        $'* --batch --raw --default-character-set=utf8 --connect-timeout=5 -s --skip-column-names -e * : echo "$9" > /tmp/home/queryTableExists.sql && echo "0"' \
-        $'* --batch --raw --default-character-set=utf8 --connect-timeout=5 -s --skip-column-names toDb : cat - > /tmp/home/dump.sql'
+        $'* --batch --raw --default-character-set=utf8 --connect-timeout=5 -s --skip-column-names -e * : echo "$9" > ${HOME}/queryTableExists.sql && echo "0"' \
+        $'* --batch --raw --default-character-set=utf8 --connect-timeout=5 -s --skip-column-names toDb : cat - > ${HOME}/dump.sql'
     stub mysqldump
 
     run ${toolsDir}/dbImportTable -a fromDb.tar.gz dataTable toDb 2>&1
-
-    echo "${output}"
-        
+    
     [[ "${output}" == *"Import table duration : "* ]]
-    [[ -f /tmp/home/.bash-tools/dbImportDumps/importTable_fromDb_dataTable.sql.gz ]]          
-    [[ "$(cat /tmp/home/queryTableExists.sql)" == "select count(*) from information_schema.tables where table_schema='toDb' and table_name='dataTable'" ]]
-    [[ -f "/tmp/home/dump.sql" ]]
-    [[ "$(md5sum /tmp/home/dump.sql | awk '{ print $1 }')" \
+    [[ -f ${HOME}/.bash-tools/dbImportDumps/importTable_fromDb_dataTable.sql.gz ]]          
+    [[ "$(cat ${HOME}/queryTableExists.sql)" == "select count(*) from information_schema.tables where table_schema='toDb' and table_name='dataTable'" ]]
+    [[ -f "${HOME}/dump.sql" ]]
+    [[ "$(md5sum ${HOME}/dump.sql | awk '{ print $1 }')" \
         = "$(md5sum "${BATS_TEST_DIRNAME}/data/expectedDbImportTableDump.sql" | awk '{ print $1 }')" ]]
+    # check dump file has been touched
+    (( $(date +%s) - $(stat -c "%Y" "${HOME}/.bash-tools/dbImportDumps/fromDb.tar.gz") < 60 ))
+    # check garbage
+    [[ -f "${HOME}/.bash-tools/dbImportDumps/dumpInTheFuture.sql.gz" ]]
+    [[ ! -f "${HOME}/.bash-tools/dbImportDumps/oldDump.sql.gz" ]]
 }

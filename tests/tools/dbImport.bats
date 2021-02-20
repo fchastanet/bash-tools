@@ -109,8 +109,15 @@ teardown() {
 }
 
 @test "${BATS_TEST_FILENAME#/bash/tests/} remote db(fromDb) dump already present" {
+    # change modification date 32 days in the past
+    touch -d@$(($(date +%s) - 32*86400)) "${HOME}/.bash-tools/dbImportDumps/oldDump.sql.gz"
+    # change modification date 1 day in the future
+    touch -d@$(($(date +%s) + 86400)) "${HOME}/.bash-tools/dbImportDumps/dumpInTheFuture.sql.gz"
+    # create false dump 1 day in the past
     echo "data" | gzip > "${HOME}/.bash-tools/dbImportDumps/fromDb_default.sql.gz"
     echo "structure" | gzip > "${HOME}/.bash-tools/dbImportDumps/fromDb_default_structure.sql.gz"
+    touch -d@$(($(date +%s) + 86400)) "${HOME}/.bash-tools/dbImportDumps/fromDb_default.sql.gz"
+    touch -d@$(($(date +%s) + 86400)) "${HOME}/.bash-tools/dbImportDumps/fromDb_default_structure.sql.gz"
     # call 1 (order 1): check if target db exists to know if it should be created, no error
     stub mysqlshow \
         '* * toDb : echo ""'
@@ -123,8 +130,14 @@ teardown() {
         "\* --batch --raw --default-character-set=utf8 --connect-timeout=5 -s --skip-column-names toDb : echo 'import data dump'"
     
     run ${toolsDir}/dbImport -f default.local fromDb toDb 2>&1
-    
+
     [[ "${output}" == *"Import database duration : "* ]]
     [[ -f "${HOME}/.bash-tools/dbImportDumps/fromDb_default.sql.gz" ]]
     [[ -f "${HOME}/.bash-tools/dbImportDumps/fromDb_default_structure.sql.gz" ]]
+    # check files have been touched
+    (( $(date +%s) - $(stat -c "%Y" "${HOME}/.bash-tools/dbImportDumps/fromDb_default.sql.gz") < 60 ))
+    (( $(date +%s) - $(stat -c "%Y" "${HOME}/.bash-tools/dbImportDumps/fromDb_default_structure.sql.gz") < 60 ))
+    # check garbage
+    [[ -f "${HOME}/.bash-tools/dbImportDumps/dumpInTheFuture.sql.gz" ]]
+    [[ ! -f "${HOME}/.bash-tools/dbImportDumps/oldDump.sql.gz" ]]
 }
