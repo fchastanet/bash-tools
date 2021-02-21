@@ -3,8 +3,10 @@ ARG BASH_IMAGE=amd64/bash:5.0.17
 FROM ${BASH_IMAGE}
 
 RUN apk add --no-cache \
+    "gawk=~5.1" \
     "git=~2.26" \
-    "gawk=~5.1"
+    # gettext provides envsubst used for doc.sh 
+    "gettext=~0.20"
 ENV IN_BASH_DOCKER="You're in docker"
 
 ONBUILD ARG USER_ID=1000

@@ -26,6 +26,11 @@ script:
   if [[ "$SHELLCHECK" == 'true' ]]; then
     ./.build/shellcheck.sh > shellcheck.log
     ./.build/publishDeepsourceArtifact.sh ./shellcheck.log
+    ./doc.sh
+    if ! git diff-index --quiet HEAD --; then
+      (>&2 echo "doc needs to be updated")
+      exit 1
+    fi
   else
     ./test.sh
   fi

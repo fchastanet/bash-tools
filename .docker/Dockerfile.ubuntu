@@ -11,11 +11,17 @@ RUN set -x \
   && echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selections \
   && apt-get update \
   && apt-get install -y -q --no-install-recommends \
-    build-essential=12.* \ 
-    ca-certificates=* \
-    curl=7.68.* \
+    # used for bash conpilation
     bison=2:3.5.* \
+    # used for bash conpilation
+    build-essential=12.* \ 
+    # used for bash conpilation
+    ca-certificates=* \
+    # used for bash conpilation
+    curl=7.68.* \
     gawk=1:5.0.* \
+    # gettext provides envsubst used for doc.sh
+    gettext-base=0.19.* \
     git=1:2.25.* \
     gzip=1.10-* \
     \

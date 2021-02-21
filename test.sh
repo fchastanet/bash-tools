@@ -1,18 +1,6 @@
 #!/usr/bin/env bash
 
-set -x
-
-if [ "${IN_BASH_DOCKER:-}" = "You're in docker" ]; then
-  (
-    if (( $# < 1)); then
-      "./vendor/bats/bin/bats" -r tests
-    else
-      "./vendor/bats/bin/bats" "$@"
-    fi
-  )
-else
-  ./.build/runTests.sh "$@"
-fi
+CURRENT_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 
 # use this in order to debug inside the container
 # docker build -t bash-tools-ubuntu:5.1 -f .docker/Dockerfile.ubuntu
@@ -24,3 +12,15 @@ fi
 #
 # rebuild alpine image
 # DOCKER_BUILD_OPTIONS=--no-cache VENDOR=alpine ./test.sh 
+
+if [ "${IN_BASH_DOCKER:-}" = "You're in docker" ]; then
+  (
+    if (( $# < 1)); then
+      "${CURRENT_DIR}/vendor/bats/bin/bats" -r tests
+    else
+      "${CURRENT_DIR}/vendor/bats/bin/bats" "$@"
+    fi
+  )
+else
+  "${CURRENT_DIR}/.build/runBuildContainer.sh" "/bash/test.sh" "$@"
+fi

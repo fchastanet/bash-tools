@@ -2,9 +2,10 @@
 
 SCRIPT_NAME=${0##*/}
 
-# load bootstrap
-# shellcheck source=/bash-framework/_bootstrap.sh
-source "$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." && pwd )/vendor/bash-framework/_bootstrap.sh"
+CURRENT_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
+# load bash-framework
+# shellcheck source=bash-framework/_bootstrap.sh
+source "$( cd "${CURRENT_DIR}/.." && pwd )/bash-framework/_bootstrap.sh"
 
 showHelp() {
 cat << EOF
@@ -12,6 +13,11 @@ ${__HELP_TITLE}Usage:${__HELP_NORMAL} ${SCRIPT_NAME} <branchName>
 show an error if branchName is not a known branch
 EOF
 }
+
+if [[ "$1" == '--help' || "$1" == '-h' ]]; then
+  showHelp
+  exit 0
+fi
 
 if [[ "$#" != "1" ]]; then
     showHelp

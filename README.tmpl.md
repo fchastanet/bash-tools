@@ -86,18 +86,7 @@ touch ~/.parallel/will-cite
 
 **Help**
 ```
-Description: rename git local branch, use options to push new branch and delete old branch
-
-Usage: gitRenameBranch [-h|--help] prints this help and exits
-Usage: gitRenameBranch <newBranchName> [<oldBranchName>] [--push|-p] [--delete|-d] [--assume-yes|-yes|-y]
-    --help,-h prints this help and exits
-     -y, --yes, --assume-yes do not ask for confirmation (use with caution)
-        Automatic yes to prompts; assume "y" as answer to all prompts
-        and run non-interactively. 
-    --push,-p push new branch
-    --delete,-d delete old remote branch
-    <newBranchName> the new branch name to give to current branch
-    <oldBranchName> (optional) the name of the old branch if not current one
+${gitRenameBranch_help}
 ```
 
 ### 1.3.2. bin/dbQueryAllDatabases
@@ -109,25 +98,7 @@ bin/dbQueryAllDatabases -e localhost-root conf/dbQueries/databaseSize.sql
 
 **Help**
 ```
-Description: Execute a query on multiple databases in order to generate a report with tsv format, query can be parallelized on multiple databases
-
-Usage: dbQueryAllDatabases [-h|--help] prints this help and exits
-Usage: dbQueryAllDatabases <query|queryFile> [-d|--dsn <dsn>] [-q|--query] [--jobs|-j <jobsCount>] [--bar|-b]
-
-    -q|--query            implies <query> parameter is a mysql query string
-    -d|--dsn <dsn>        to use for target mysql server (Default: default.local) 
-    -j|--jobs <jobsCount> specify the number of db to query in parallel (this needs the use of gnu parallel)
-    -b|--bar              Show progress as a progress bar. In the bar is shown: % of jobs completed, estimated seconds left, and number of jobs started.
-    <query|queryFile>
-        if -q option is provided this parameter is a mysql query string
-        else a file must be specified
-
-List of available dsn:
-       - default.local
-       - default.remote
-       - localhost-root
-List of available queries (default dir /bash/conf/dbQueries overridable in home dir /home/www-data/.bash-tools/dbQueries):
-       - databaseSize
+${dbQueryAllDatabases_help}
 ```
 
 ### 1.3.3. bin/dbScriptAllDatabases
@@ -148,42 +119,7 @@ bin/dbScriptAllDatabases --jobs 10 -d localhost-root dbCheckStructOneDatabase
 
 **Help:**
 ```
-Description: Allows to execute a script on each database of specified mysql server
-
-Usage: dbScriptAllDatabases [-h|--help] prints this help and exits
-Usage: dbScriptAllDatabases [-j|--jobs <numberOfJobs>] [-o|--output <outputDirectory>] [-d|--dsn <dsn>] [-v|--verbose] [-l|--log-format <logFormat>] [--database <dbName>] <scriptToExecute> [optional parameters to pass to the script]
-    <scriptToExecute>             the script that will be executed on each databases
-    -d|--dsn <dsn>                target mysql server (Default: default.local) 
-    --database <dbName>           if provided will check only this db, otherwise script will be executed on all dbs of mysql server
-    -j|--jobs <numberOfJobs>      the number of db to query in parallel (default: 1)
-    -o|--output <outputDirectory> output directory, see log-format option (default : "/home/www-data/.bash-tools/output")
-    -l|--log-format <logFormat>   if log provided, will log each db result to log file, can be one of these values (none, log) (default: none)
-    -v|--verbose                  display more information
-
-Note: the use of output, log-format, verbose options highly depends on the script used
-
-Example: script conf/dbScripts/extractData.sh 
-    executes query databaseSize (see conf/dbQueries/databaseSize.sql) on each db and log the result in log file in default output dir, call it using
-    /bash/bin/dbScriptAllDatabases -j 10 extractData databaseSize
-
-    executes query databaseSize on each db and display the result on stdout (2>/dev/null hides information messages)
-    /bash/bin/dbScriptAllDatabases -j 10 --log-format none extractData databaseSize 
-
-    use --verbose to get some debug information
-    /bash/bin/dbScriptAllDatabases -j 10 --log-format none --verbose extractData databaseSize 
-
-Use cases:
-    you can use this script in order to check that each db model conforms with your ORM schema
-    simply create a new script in conf/dbQueries that will call your orm schema checker
-
-    update multiple db at once (simple to complex update script)
-
-List of available dsn:
-       - default.local
-       - default.remote
-       - localhost-root
-list of available scripts (/home/www-data/.bash-tools/conf/dbScripts):
-       - extractData
+${dbScriptAllDatabases_help}
 ```
 
 ### 1.3.4. bin/dbImport
@@ -201,48 +137,7 @@ dbImport --from-aws ExampleDbName
 
 **Help**
 ```
-Description: Import source db into target db
-
-Usage: dbImport --help prints this help and exits
-Usage: dbImport <fromDbName> [<targetDbName>] 
-Usage: dbImport -a|--from-aws <fromDbS3Filename> [<targetDbName>] 
-                        [--force] 
-                        [-a|--from-aws]
-                        [-s|--skip-schema] [-p|--profile profileName] 
-                        [-o|--collation-name utf8_general_ci] [-c|--character-set utf8]
-                        [-t|--target-dsn dsn] [-f|--from-dsn dsn]
-
-    <fromDbS3Filename>         If option -a is provided
-        remoteDBName will represent the name of the s3 file
-        Only .gz or tar.gz file are supported
-    <fromDbName>               the name of the source/remote database
-    <targetDbName>             the name of the target database, use fromDbName(without extension) if not provided
-    -f|--force                  If target db exists, it will overwrite it
-    -s|--skip-schema            avoid to import the schema
-    -o|--collation-name         change the collation name used during database creation 
-        (default value: collation name used by remote db)
-    -c|--character-set          change the character set used during database creation 
-        (default value: character set used by remote db or dump file if aws)
-    -p|--profile profileName    the name of the profile to use in order to include or exclude tables
-        (if not specified /home/www-data/.bash-tools/dbImportProfiles/default.sh  is used if exists otherwise /bash/conf/dbImportProfiles/default.sh)
-    -t|--target-dsn dsn         dsn to use for target database (Default: default.local) 
-    -f|--from-dsn dsn           dsn to use for source database (Default: default.remote)
-        this option is incompatible with -a|--from-aws option
-    -a|--from-aws               db dump will be downloaded from s3 instead of using remote db, 
-        remoteDBName will represent the name of the file
-        profile will be calculated against the dump itself
-        this option is incompatible with -f|--from-dsn option
-
-    Aws s3 location       : s3://example.com/exports/
-
-List of available profiles (default profiles dir /bash/conf/dbImportProfiles overridable in home profiles /home/www-data/.bash-tools/dbImportProfiles):
-       - all
-       - default
-       - none
-List of available dsn:
-       - default.local
-       - default.remote
-       - localhost-root
+${dbImport_help}
 ```
 
 ### 1.3.5. bin/dbImportTable
@@ -253,68 +148,14 @@ dbImportTable ExampleDbName ExampleTableName
 
 **Help**
 ```
-Description: Import remote db table into target db
-
-Usage: dbImportTable [-h|--help] prints this help and exits
-Usage: dbImportTable <fromDbName> <tableName> [<targetDbName>] [<targetTableName>]
-    [--force] [-a|--from-aws]
-    [-t|--target-dsn dsn] [-f|--from-dsn dsn]
-    [-c|--character-set utf8]
-
-    download the remote table data and install data in target database (the schema should exists)
-
-    <fromDbName>  :      the name of the source/remote database
-    <tableName>   :      table name to import
-    <targetDbName> :     the name of the target database, use fromDbName if not provided
-    <targetTableName> :  rename tableName to this table name int the target database, use tableName if not provided
-    --force              If target table exists, it will overwrite it
-    -t|--target-dsn dsn  dsn to use for target database (Default: default.local) 
-    -f|--from-dsn dsn    dsn to use for source database (Default: default.remote)
-        this option is incompatible with -a|--from-aws option
-    -a|--from-aws        db dump will be downloaded from s3 instead of using remote db, 
-        fromDbName will represent the name of the S3 file
-        Only .gz or tar.gz file are supported
-    -c|--character-set   change the character set used during database creation (default value: character set used by remote db)
-
-    Aws s3 location       : s3://example.com/exports/
-
-List of available dsn:
-       - default.local
-       - default.remote
-       - localhost-root
+${dbImportTable_help}
 ```
 
 ### 1.3.6. bin/cli
 
 **Help**
 ```
-Description: easy connection to docker container
-
-Usage: cli [-h|--help] prints this help and exits
-Usage: cli [<container>] [user] [command]
-
-    <container> : container should be one of these values (provided by 'docker ps'): 
-        
-        if not provided, it will load the container specified in default configuration (project-apache2)
-
-examples:
-    to connect to mysql container in bash mode with user mysql
-        cli mysql mysql "//bin/bash"
-    to connect to web container with user root
-        cli web root
-
-you can override these mappings by providing your own profile in 
-    
-This script will be executed with the variables userArg containerArg commandArg set as specified in command line
-and should provide value for the following variables finalUserArg finalContainerArg finalCommandArg
-
-List of available profiles (from /bash/conf/cliProfiles and overridable in /home/www-data/.bash-tools/cliProfiles):
-       - default
-       - mysql
-       - mysql.remote
-       - node
-       - redis
-       - web
+${cli_help}
 ```
 
 easy connection to docker container
@@ -346,8 +187,7 @@ notice that as input is given to the command, tty option is not provided to dock
 
 **Help**
 ```
-Usage: gitIsAncestorOf <branch> <commit>
-show an error if commit is not an ancestor of branch
+${gitIsAncestorOf_help}
 ```
 
 
@@ -409,7 +249,7 @@ All these tools are based on *Bash framework* with the following features:
 # load bash-framework
 # shellcheck source=bash-framework/_bootstrap.sh
 CURRENT_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
-source "$( cd "/.." && pwd )/bash-framework/_bootstrap.sh"
+source "$( cd "${CURRENT_DIR}/.." && pwd )/bash-framework/_bootstrap.sh"
 
 # bash framework is loaded, .env has been loaded (default .env file present in bash-framework is loaded if none exists yet) 
 
@@ -434,16 +274,7 @@ generated by running
 ./doc.sh
 ```
 
-* [bash-framework/Constants.sh](doc/Constants.md)
-* [bash-framework/Database.sh](doc/Database.md)
-* [bash-framework/Framework.sh](doc/Framework.md)
-* [bash-framework/File.sh](doc/File.md)
-* [bash-framework/Array.sh](doc/Array.md)
-* [bash-framework/Functions.sh](doc/Functions.md)
-* [bash-framework/Git.sh](doc/Git.md)
-* [bash-framework/UI.sh](doc/UI.md)
-* [bash-framework/Version.sh](doc/Version.md)
-* [bash-framework/Log.sh](doc/Log.md)
+${bash_doc_index}
 
 ## 1.5. Acknowledgements
 Like so many projects, this effort has roots in many places. 
