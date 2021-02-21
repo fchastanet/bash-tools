@@ -15,5 +15,5 @@ File::garbageCollect() {
   local maxdepth="${3:-1}"
 
   Log::displayInfo "Garbage collect files older than ${mtime} days in directory ${path}" 
-  find "${path}" -type f -mtime "$mtime" -maxdepth "${maxdepth}" -print -delete
+  find "${path}" -maxdepth "${maxdepth}" -type f -mtime "$mtime" -print -delete
 }
