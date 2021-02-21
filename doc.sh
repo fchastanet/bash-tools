@@ -56,7 +56,9 @@ generateReadme() {
   envsubst < "${CURRENT_DIR}/README.tmpl.md" > "${CURRENT_DIR}/README.md"
 }
 
+#-----------------------------
 # configure environment
+#-----------------------------
 mkdir -p ~/.bash-tools
 cp -R conf/. ~/.bash-tools
 sed -i \
@@ -68,6 +70,12 @@ touch /tmp/docker
 chmod 755 /tmp/docker
 export PATH=/tmp:$PATH
 
+#install vendors
+"${BASE_DIR}/.build/installBuildDeps.sh"
+
+#-----------------------------
+# doc generation
+#-----------------------------
 # generate doc + index
 mkdir -p "${CURRENT_DIR}/doc"
 declare -a cmd
