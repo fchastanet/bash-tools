@@ -9,13 +9,13 @@ import bash-framework/Log
 if ! command -v parallel 2>/dev/null; then
   Log::displayInfo "We will install GNU parallel software, please enter you sudo password"
   sudo apt update || true
-  sudo apt install -y parallel && {
+  if sudo apt install -y parallel; then
     # remove parallel nagware
     mkdir -p ~/.parallel
     touch ~/.parallel/will-cite
-  } || {
-    Log::displayError "Impossible to install GNU parallel, please install it manually"
-  }
+  else
+    Log::displayWarning "Impossible to install GNU parallel, please install it manually"
+  fi
 fi
 
 if [[ -d "${HOME}/.bash-tools" ]]; then
