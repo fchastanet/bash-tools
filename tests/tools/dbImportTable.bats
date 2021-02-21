@@ -340,3 +340,26 @@ teardown() {
     [[ -f "${HOME}/.bash-tools/dbImportDumps/dumpInTheFuture.sql.gz" ]]
     [[ ! -f "${HOME}/.bash-tools/dbImportDumps/oldDump.sql.gz" ]]
 }
+
+@test "${BATS_TEST_FILENAME#/bash/tests/} from aws real dump rename table" {
+    # create false dump
+    echo "data" | gzip > "${HOME}/.bash-tools/dbImportDumps/fromDb.tar.gz"
+
+    stub mysqlshow \
+        '* * toDb : echo "Database: toDb"' 
+    stub tar \
+        "xOfz ${HOME}/.bash-tools/dbImportDumps/fromDb.tar.gz : cat ${BATS_TEST_DIRNAME}/data/dump.sql"
+    stub mysql \
+        $'* --batch --raw --default-character-set=utf8 --connect-timeout=5 -s --skip-column-names -e * : echo "$9" > ${HOME}/queryTableExists.sql && echo "0"' \
+        $'* --batch --raw --default-character-set=utf8 --connect-timeout=5 -s --skip-column-names toDb : cat - > ${HOME}/dump.sql'
+    stub mysqldump
+
+    run ${toolsDir}/dbImportTable -a fromDb.tar.gz dataTable toDb newTableName 2>&1
+    
+    [[ "${output}" == *"Import table duration : "* ]]
+    [[ -f ${HOME}/.bash-tools/dbImportDumps/importTable_fromDb_dataTable.sql.gz ]]          
+    [[ "$(cat ${HOME}/queryTableExists.sql)" == "select count(*) from information_schema.tables where table_schema='toDb' and table_name='dataTable'" ]]
+    [[ -f "${HOME}/dump.sql" ]]
+    [[ "$(md5sum ${HOME}/dump.sql | awk '{ print $1 }')" \
+        = "$(md5sum "${BATS_TEST_DIRNAME}/data/expectedDbImportTableDumpRenamed.sql" | awk '{ print $1 }')" ]]
+}

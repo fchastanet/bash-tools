@@ -23,6 +23,7 @@ FROM_DB=""
 TARGET_DB=""
 CHARACTER_SET=""
 TABLE=""
+TARGET_TABLE=""
 FROM_DSN=""
 DEFAULT_FROM_DSN="default.remote"
 TARGET_DSN="default.local"
@@ -39,7 +40,7 @@ cat << EOF
 ${__HELP_TITLE}Description:${__HELP_NORMAL} Import remote db table into target db
 
 ${__HELP_TITLE}Usage:${__HELP_NORMAL} ${SCRIPT_NAME} [-h|--help] prints this help and exits
-${__HELP_TITLE}Usage:${__HELP_NORMAL} ${SCRIPT_NAME} <fromDbName> <tableName> [<targetDbName>]
+${__HELP_TITLE}Usage:${__HELP_NORMAL} ${SCRIPT_NAME} <fromDbName> <tableName> [<targetDbName>] [<targetTableName>]
     [--force] [-a|--from-aws]
     [-t|--target-dsn dsn] [-f|--from-dsn dsn]
     [-c|--character-set utf8]
@@ -49,6 +50,7 @@ ${__HELP_TITLE}Usage:${__HELP_NORMAL} ${SCRIPT_NAME} <fromDbName> <tableName> [<
     <fromDbName>  :      the name of the source/remote database
     <tableName>   :      table name to import
     <targetDbName> :     the name of the target database, use fromDbName if not provided
+    <targetTableName> :  rename tableName to this table name int the target database, use tableName if not provided
     --force              If target table exists, it will overwrite it
     -t|--target-dsn dsn  dsn to use for target database (Default: ${TARGET_DSN}) 
     -f|--from-dsn dsn    dsn to use for source database (Default: ${DEFAULT_FROM_DSN})
@@ -128,12 +130,15 @@ while true; do
         # last argument
         break
     fi
+    # <fromDbName> <tableName> [<targetDbName>] [<targetTableName>]
     if [[ -z "${FROM_DB}" ]]; then
         FROM_DB="$1"
     elif [[ -z "${TABLE}" ]]; then
         TABLE="$1"
-    else
+    elif [[ -z "${TARGET_DB}" ]]; then
         TARGET_DB="$1"
+    else
+        TARGET_TABLE="$1"
     fi
     shift || true
 done
@@ -151,6 +156,10 @@ fi
 if [[ -z "${TARGET_DB}" ]]; then
     # remove eventual file extension
     TARGET_DB=${FROM_DB%%.*}
+fi
+
+if [[ -z "${TARGET_TABLE}" ]]; then
+    TARGET_TABLE="${TABLE}"
 fi
 
 # check s3 parameter
@@ -301,8 +310,13 @@ fi
 touch -c -m "${FROM_DB_DUMP_TEMP_FILE}" || true
 
 Log::displayDebug "import from file ${FROM_DB_DUMP_TEMP_FILE}"
-pv "${FROM_DB_DUMP_TEMP_FILE}" | zcat | \
-    Database::query dbTargetInstance "" "${TARGET_DB}"
+pv "${FROM_DB_DUMP_TEMP_FILE}" \
+    | zcat \
+    | awk \
+        -f "${CURRENT_DIR}/dbImportTableRename.awk" \
+        -v SOURCE_TABLE="${TABLE}" \
+        -v TARGET_TABLE="${TARGET_TABLE}" \
+    | Database::query dbTargetInstance "" "${TARGET_DB}"
 
 # garbage collect db import dumps
 File::garbageCollect "${DB_IMPORT_DUMP_DIR}" "${DB_IMPORT_GARBAGE_COLLECT_DAYS:-+30}" || true
