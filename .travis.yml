@@ -12,7 +12,7 @@ env:
   - VENDOR=alpine BASH_TAR_VERSION=5.0.18 BASH_IMAGE=bash:5.0.18
   - VENDOR=alpine BASH_TAR_VERSION=5.1    BASH_IMAGE=bash:5.1
 
-before_script:
+before_install:
   - >
     if [[ "$SHELLCHECK" == 'true' ]]; then
       sudo apt-get install -y shellcheck
