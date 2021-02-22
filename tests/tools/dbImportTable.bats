@@ -34,7 +34,7 @@ teardown() {
 
 @test "${BATS_TEST_FILENAME#/bash/tests/} display help" {
     run ${toolsDir}/dbImportTable --help 2>&1
-    [[ "${lines[2]}" = "${__HELP_TITLE}Usage:${__HELP_NORMAL} dbImportTable <fromDbName> <tableName> [<targetDbName>] [<targetDbTable>]" ]]
+    [[ "${lines[2]}" = "${__HELP_TITLE}Usage:${__HELP_NORMAL} dbImportTable <fromDbName> <tableName> [<targetDbName>] [<targetTableName>]" ]]
 }
 
 @test "${BATS_TEST_FILENAME#/bash/tests/} invalid gawk version" {
