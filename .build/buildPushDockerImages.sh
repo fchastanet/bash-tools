@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 set -x
+set -o errexit
+set -o pipefail
+
 BASE_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." && pwd )
 VENDOR="$1"
 BASH_TAR_VERSION="$2"
@@ -24,9 +27,9 @@ docker build \
   --build-arg BASH_TAR_VERSION="${BASH_TAR_VERSION}" \
   --build-arg BASH_IMAGE="${BASH_BASE_IMAGE}"  \
   -t "bash-tools-${VENDOR}-${BASH_TAR_VERSION}" \
+  -t "scrasnups/build:bash-tools-${VENDOR}-${BASH_TAR_VERSION}" \
   .docker
 docker run "bash-tools-${VENDOR}-${BASH_TAR_VERSION}" bash --version
 
-docker tag "bash-tools-${VENDOR}-${BASH_TAR_VERSION}":latest  "${VENDOR}-${BASH_TAR_VERSION}"
 echo "${DOCKER_PASSWORD}" | docker login --username "$DOCKER_USERNAME" --password-stdin
 docker push "scrasnups/build:bash-tools-${VENDOR}-${BASH_TAR_VERSION}"
