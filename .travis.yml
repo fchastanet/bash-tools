@@ -28,7 +28,7 @@ script:
     ./.build/publishDeepsourceArtifact.sh ./shellcheck.log
   else
     ./test.sh
-  fi
+  fi;
   if [[ "$DOCCHECK" == 'true' ]]; then
     ./doc.sh
     # check if doc is up to date
