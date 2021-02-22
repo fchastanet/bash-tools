@@ -6,9 +6,6 @@ BASE_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 source "$( cd "${BASE_DIR}" && pwd )/bash-framework/_bootstrap.sh"
 import bash-framework/Log
 
-# install vendors
-"${BASE_DIR}/.build/installBuildDeps.sh"
-
 if ! command -v parallel 2>/dev/null; then
   Log::displayInfo "We will install GNU parallel software, please enter you sudo password"
   sudo apt update || true

@@ -5,7 +5,7 @@ services:
 env:
   matrix:
   - SHELLCHECK=true
-  - VENDOR=ubuntu BASH_TAR_VERSION=4.4    BASH_IMAGE=ubuntu:20.04
+  - VENDOR=ubuntu BASH_TAR_VERSION=4.4    BASH_IMAGE=ubuntu:20.04     DOCCHECK=true 
   - VENDOR=ubuntu BASH_TAR_VERSION=5.0    BASH_IMAGE=ubuntu:20.04
   - VENDOR=ubuntu BASH_TAR_VERSION=5.1    BASH_IMAGE=ubuntu:20.04
   - VENDOR=alpine BASH_TAR_VERSION=4.4    BASH_IMAGE=bash:4.4
@@ -26,11 +26,14 @@ script:
   if [[ "$SHELLCHECK" == 'true' ]]; then
     ./.build/shellcheck.sh > shellcheck.log
     ./.build/publishDeepsourceArtifact.sh ./shellcheck.log
+  else
+    ./test.sh
+  fi
+  if [[ "$DOCCHECK" == 'true' ]]; then
     ./doc.sh
+    # check if doc is up to date
     if ! git diff-index --quiet HEAD --; then
       (>&2 echo "doc needs to be updated")
       exit 1
     fi
-  else
-    ./test.sh
   fi

@@ -70,9 +70,6 @@ touch /tmp/docker
 chmod 755 /tmp/docker
 export PATH=/tmp:$PATH
 
-#install vendors
-"${BASE_DIR}/.build/installBuildDeps.sh"
-
 #-----------------------------
 # doc generation
 #-----------------------------
