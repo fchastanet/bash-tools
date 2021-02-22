@@ -11,7 +11,7 @@ CURRENT_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 # DOCKER_BUILD_OPTIONS=--no-cache ./test.sh 
 #
 # rebuild alpine image
-# DOCKER_BUILD_OPTIONS=--no-cache VENDOR=alpine ./test.sh 
+# DOCKER_BUILD_OPTIONS=--no-cache VENDOR=alpine BASH_IMAGE=bash:5.1 BASH_TAR_VERSION=5.1 ./test.sh 
 
 if [ "${IN_BASH_DOCKER:-}" = "You're in docker" ]; then
   (

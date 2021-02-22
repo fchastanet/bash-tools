@@ -7,7 +7,8 @@ set -x
 BASE_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." && pwd )
 VENDOR="${VENDOR:-ubuntu}"
 BASH_TAR_VERSION="${BASH_TAR_VERSION:-5.1}"
-DOCKER_BUILD_OPTIONS="${DOCKER_BUILD_OPTIONS:-}"
+BASH_IMAGE="${BASH_IMAGE:-ubuntu:20.04}"
+DOCKER_BUILD_OPTIONS="${DOCKER_BUILD_OPTIONS:-}"  
 
 (>&2 echo "run tests using ${VENDOR}:${BASH_TAR_VERSION}")
 cd "${BASE_DIR}" || exit 1
@@ -16,13 +17,7 @@ if [[ ! -d "${BASE_DIR}/vendor" ]]; then
   ./.build/installBuildDeps.sh
 fi
 
-# build docker image with user configuration
-docker build \
-  -f ".docker/Dockerfile.${VENDOR}" \
-  --cache-from "scrasnups/build:bash-tools-${VENDOR}-${BASH_TAR_VERSION}" \
-  -t "bash-tools-${VENDOR}-${BASH_TAR_VERSION}" \
-  ${DOCKER_BUILD_OPTIONS} \
-  .docker
+./.build/buildPushDockerImages.sh "${VENDOR}" "${BASH_TAR_VERSION}" "${BASH_IMAGE}"
 
 # build docker image with user configuration
 docker build \
