@@ -19,6 +19,7 @@ fi
 # build docker image with user configuration
 docker build \
   -f ".docker/Dockerfile.${VENDOR}" \
+  --cache-from "scrasnups/build:bash-tools-${VENDOR}-${BASH_TAR_VERSION}" \
   -t "bash-tools-${VENDOR}-${BASH_TAR_VERSION}" \
   ${DOCKER_BUILD_OPTIONS} \
   .docker
