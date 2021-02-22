@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-
+set -x
 BASE_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." && pwd )
 VENDOR="$1"
 BASH_TAR_VERSION="$2"
@@ -18,7 +18,7 @@ fi
 # build image and push it ot registry
 docker pull "scrasnups/build:bash-tools-${VENDOR}-${BASH_TAR_VERSION}" || true 
 docker build \
-  -f "${BASE_DIR}.docker/Dockerfile.${VENDOR}" \
+  -f "${BASE_DIR}/.docker/Dockerfile.${VENDOR}" \
   --pull \
   --cache-from "scrasnups/build:bash-tools-${VENDOR}-${BASH_TAR_VERSION}" \
   --build-arg BASH_TAR_VERSION="${BASH_TAR_VERSION}" \
