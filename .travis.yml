@@ -32,7 +32,7 @@ script:
   if [[ "$DOCCHECK" == 'true' ]]; then
     ./doc.sh
     # check if doc is up to date
-    if ! git diff-index --quiet HEAD --; then
+    if [ "$(git diff --name-only HEAD)" != "" ]]; then
       (>&2 echo "doc needs to be updated")
       exit 1
     fi
