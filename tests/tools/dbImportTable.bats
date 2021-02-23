@@ -20,8 +20,8 @@ setup() {
             .bash-tools/dbImportDumps \
             .bash-tools/dbImportProfiles
         cp "${BATS_TEST_DIRNAME}/mocks/pv" bin
-        cp "${rootDir}/conf/.env.template" .bash-tools/.env
-        sed -i -E 's#^S3_BASE_URL=$#S3_BASE_URL=s3://s3server/exports/#g' .bash-tools/.env
+        cp "${rootDir}/conf/.env" .bash-tools/.env
+        sed -i -E 's#^S3_BASE_URL=.*$#S3_BASE_URL=s3://s3server/exports/#g' .bash-tools/.env
         chmod +x bin/*
     )
     export PATH="/tmp/home/bin:$PATH"
