@@ -15,6 +15,7 @@ Build status: [![Build Status](https://travis-ci.com/fchastanet/bash-tools.svg?b
     - [1.3.2. bin/dbQueryAllDatabases](#132-bindbqueryalldatabases)
     - [1.3.3. bin/dbScriptAllDatabases](#133-bindbscriptalldatabases)
     - [1.3.4. bin/dbImport](#134-bindbimport)
+    - [1.3.4. bin/dbImportProfile](#134-bindbimportprofile)
     - [1.3.5. bin/dbImportTable](#135-bindbimporttable)
     - [1.3.6. bin/cli](#136-bincli)
     - [1.3.7. bin/gitIsAncestorOf](#137-bingitisancestorof)
@@ -138,6 +139,21 @@ dbImport --from-aws ExampleDbName
 **Help**
 ```
 ${dbImport_help}
+```
+
+### 1.3.4. bin/dbImportProfile
+Import remote db into local db
+```bash
+dbImportProfile --from-dsn default.local MY_DB --ratio 45
+```
+
+Ability to generate profile that can be used in dbImport to filter out tables bigger than given ratio (based on biggest table size).
+Profile is automatically saved in ${HOME}/.bash-tools/dbImportProfiles with this format 'auto_<dsn>_<db>'
+**eg:** auto_default.local_MY_DB
+
+**Help**
+```
+${dbImportProfile_help}
 ```
 
 ### 1.3.5. bin/dbImportTable

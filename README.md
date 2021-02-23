@@ -15,6 +15,7 @@ Build status: [![Build Status](https://travis-ci.com/fchastanet/bash-tools.svg?b
     - [1.3.2. bin/dbQueryAllDatabases](#132-bindbqueryalldatabases)
     - [1.3.3. bin/dbScriptAllDatabases](#133-bindbscriptalldatabases)
     - [1.3.4. bin/dbImport](#134-bindbimport)
+    - [1.3.4. bin/dbImportProfile](#134-bindbimportprofile)
     - [1.3.5. bin/dbImportTable](#135-bindbimporttable)
     - [1.3.6. bin/cli](#136-bincli)
     - [1.3.7. bin/gitIsAncestorOf](#137-bingitisancestorof)
@@ -234,6 +235,44 @@ Usage: dbImport -a|--from-aws <fromDbS3Filename> [<targetDbName>]
         this option is incompatible with -f|--from-dsn option
 
     Aws s3 location       : s3://example.com/exports/
+
+List of available profiles (default profiles dir /bash/conf/dbImportProfiles overridable in home profiles /home/www-data/.bash-tools/dbImportProfiles):
+       - all
+       - default
+       - none
+List of available dsn:
+       - default.local
+       - default.remote
+       - localhost-root
+```
+
+### 1.3.4. bin/dbImportProfile
+Import remote db into local db
+```bash
+dbImportProfile --from-dsn default.local MY_DB --ratio 45
+```
+
+Ability to generate profile that can be used in dbImport to filter out tables bigger than given ratio (based on biggest table size).
+Profile is automatically saved in /home/www-data/.bash-tools/dbImportProfiles with this format 'auto_<dsn>_<db>'
+**eg:** auto_default.local_MY_DB
+
+**Help**
+```
+Description: generate optimized profiles to be used by dbImport
+
+Usage: dbImportProfile --help prints this help and exits
+Usage: dbImportProfile <fromDbName> 
+                        [-p|--profile profileName] 
+                        [-f|--from-dsn dsn]
+
+    <fromDbName>                the name of the source/remote database
+    -p|--profile profileName    the name of the profile to write in /home/www-data/.bash-tools/dbImportProfiles directory
+        if not provided, the file name pattern will be 'auto_<dsn>_<fromDbName>.sh'
+    -f|--from-dsn dsn           dsn to use for source database (Default: default.remote)
+    -r|--ratio ratio            define the ratio to use (0 to 100% - default 70)
+        0 means profile will filter out all the tables
+        100 means profile will keep all the tables
+        eg: 70 means that table size (table+index) > 70%*max table size will be excluded
 
 List of available profiles (default profiles dir /bash/conf/dbImportProfiles overridable in home profiles /home/www-data/.bash-tools/dbImportProfiles):
        - all
