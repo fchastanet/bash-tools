@@ -68,14 +68,14 @@ Framework::bootstrap() {
         if [[ -f "${__BASH_FRAMEWORK_CALLING_SCRIPT:?}/.env" ]]; then
             # shellcheck disable=SC1090
             source "${__BASH_FRAMEWORK_CALLING_SCRIPT:?}/.env" || exit 1
-        elif [[ -f "${HOME}/.env" ]]; then
-            # shellcheck source=~/.env
-            # shellcheck disable=SC1090
-            source "${HOME}/.env" || exit 1
         elif [[ -f "${HOME}/.bash-tools/.env" ]]; then
             # shellcheck source=~/.bash-tools/.env
             # shellcheck disable=SC1090
             source "${HOME}/.bash-tools/.env" || exit 1
+        elif [[ -f "${HOME}/.env" ]]; then
+            # shellcheck source=~/.env
+            # shellcheck disable=SC1090
+            source "${HOME}/.env" || exit 1
         fi
     elif [[ -z "${__BASH_FRAMEWORK_ENV_FILEPATH}" ]]; then
         # __BASH_FRAMEWORK_ENV_FILEPATH defined but empty - nothing to do
