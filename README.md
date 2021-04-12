@@ -207,7 +207,6 @@ Description: Import source db into target db
 Usage: dbImport --help prints this help and exits
 Usage: dbImport <fromDbName> [<targetDbName>] 
 Usage: dbImport -a|--from-aws <fromDbS3Filename> [<targetDbName>] 
-                        [--force] 
                         [-a|--from-aws]
                         [-s|--skip-schema] [-p|--profile profileName] 
                         [-o|--collation-name utf8_general_ci] [-c|--character-set utf8]
@@ -218,7 +217,6 @@ Usage: dbImport -a|--from-aws <fromDbS3Filename> [<targetDbName>]
         Only .gz or tar.gz file are supported
     <fromDbName>               the name of the source/remote database
     <targetDbName>             the name of the target database, use fromDbName(without extension) if not provided
-    -f|--force                  If target db exists, it will overwrite it
     -s|--skip-schema            avoid to import the schema
     -o|--collation-name         change the collation name used during database creation 
         (default value: collation name used by remote db)

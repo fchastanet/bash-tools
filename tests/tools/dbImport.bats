@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 
-declare -g toolsDir="$( cd "${BATS_TEST_DIRNAME}/../../bin" && pwd )"
-declare -g vendorDir="$( cd "${BATS_TEST_DIRNAME}/../../vendor" && pwd )"
+declare -g rootDir="$( cd "${BATS_TEST_DIRNAME}/../.." && pwd )"
+declare -g toolsDir="${rootDir}/bin"
+declare -g vendorDir="${rootDir}/vendor"
 
 # shellcheck source=bash-framework/Constants.sh
 source "$(cd "${BATS_TEST_DIRNAME}/../.." && pwd)/bash-framework/Constants.sh" || exit 1
@@ -22,6 +23,8 @@ setup() {
         cp "${BATS_TEST_DIRNAME}/mocks/gawk" bin
         cp "${BATS_TEST_DIRNAME}/mocks/gawk" bin/awk
         touch bin/mysql bin/mysqldump bin/mysqlshow
+        cp "${rootDir}/conf/.env" .bash-tools/.env
+        sed -i -E 's#^S3_BASE_URL=.*$#S3_BASE_URL=s3://s3server/exports/#g' .bash-tools/.env
         chmod +x bin/*
     )
     export PATH="$PATH:/tmp/home/bin"
@@ -48,6 +51,7 @@ teardown() {
 }
 
 @test "${BATS_TEST_FILENAME#/bash/tests/} --from-aws missing S3_BASE_URL" {
+    sed -i -E 's#^S3_BASE_URL=.*$##g' "${HOME}/.bash-tools/.env"
     run ${toolsDir}/dbImport --from-aws fromDb 2>&1
     [[ "${output}" == *"FATAL - missing S3_BASE_URL, please provide a value in .env file"* ]]
 }
@@ -62,21 +66,10 @@ teardown() {
     [[ "${output}" == *"ERROR - conf file 'notFound' not found"* ]]
 }
 
-@test "${BATS_TEST_FILENAME#/bash/tests/} remote db(fromDb) doesn't exist" {
-    # call 1: check if target db exists to know if it should be created, no error
-    # call 2: check if from db exists, this time we answer no
-    stub mysqlshow \
-        '* * toDb : echo ""' \
-        '* * fromDb : echo ""' 
-    run ${toolsDir}/dbImport -f default.local fromDb toDb 2>&1
-    [[ "${output}" == *"FATAL - Remote Database fromDb does not exist"* ]]
-}
-
 @test "${BATS_TEST_FILENAME#/bash/tests/} remote db(fromDb) fully functional" {
     # call 1 (order 1): check if target db exists to know if it should be created, no error
     # call 2 (order 2): check if from db exists, answers yes
     stub mysqlshow \
-        '* * toDb : echo ""' \
         '* * fromDb : echo "Database: fromDb"' 
     # call 1 (order 3): from db default_collation_name
     # call 2 (order 4): from db default_character_set_name
@@ -90,9 +83,9 @@ teardown() {
         "\* --batch --raw --default-character-set=utf8 --connect-timeout=5 -s --skip-column-names information_schema -e 'SELECT default_character_set_name FROM information_schema.SCHEMATA WHERE schema_name = \"fromDb\";' : echo 'charset';" \
         "\* --batch --raw --default-character-set=utf8 --connect-timeout=5 -s --skip-column-names fromDb -e 'show tables' : echo 'table1'" \
         "\* --batch --raw --default-character-set=utf8 --connect-timeout=5 -s --skip-column-names : echo '100'" \
-        $'* --batch --raw --default-character-set=utf8 --connect-timeout=5 -s --skip-column-names -e \'CREATE DATABASE `toDb` CHARACTER SET "charset" COLLATE "collation"\' : echo "db created"' \
-        "\* --batch --raw --default-character-set=utf8 --connect-timeout=5 -s --skip-column-names toDb : echo 'import structure dump'" \
-        "\* --batch --raw --default-character-set=utf8 --connect-timeout=5 -s --skip-column-names toDb : echo 'import data dump'"
+        $'* --batch --raw --default-character-set=utf8 --connect-timeout=5 -s --skip-column-names -e \'CREATE DATABASE IF NOT EXISTS `toDb` CHARACTER SET "charset" COLLATE "collation"\' : echo "db created"' \
+        "\* --connect-timeout=5 --batch --raw --default-character-set=utf8 -s --skip-column-names toDb : echo 'import structure dump'" \
+        "\* --connect-timeout=5 --batch --raw --default-character-set=utf8 -s --skip-column-names toDb : echo 'import data dump'"
 
     # call 1 (order 7): dump data
     # call 2 (order 8): dump structure
@@ -118,16 +111,13 @@ teardown() {
     echo "structure" | gzip > "${HOME}/.bash-tools/dbImportDumps/fromDb_default_structure.sql.gz"
     touch -d@$(($(date +%s) + 86400)) "${HOME}/.bash-tools/dbImportDumps/fromDb_default.sql.gz"
     touch -d@$(($(date +%s) + 86400)) "${HOME}/.bash-tools/dbImportDumps/fromDb_default_structure.sql.gz"
-    # call 1 (order 1): check if target db exists to know if it should be created, no error
-    stub mysqlshow \
-        '* * toDb : echo ""'
     # call 5 (order 2): create target db (after dumps have been done)
     # call 6 (order 3): import structure dump into db
     # call 7 (order 4): import data dump into db
     stub mysql \
-        $'* --batch --raw --default-character-set=utf8 --connect-timeout=5 -s --skip-column-names -e \'CREATE DATABASE `toDb` CHARACTER SET "utf8" COLLATE "utf8_general_ci"\' : echo "db created"' \
-        "\* --batch --raw --default-character-set=utf8 --connect-timeout=5 -s --skip-column-names toDb : echo 'import structure dump'" \
-        "\* --batch --raw --default-character-set=utf8 --connect-timeout=5 -s --skip-column-names toDb : echo 'import data dump'"
+        $'* --batch --raw --default-character-set=utf8 --connect-timeout=5 -s --skip-column-names -e \'CREATE DATABASE IF NOT EXISTS `toDb` CHARACTER SET "utf8" COLLATE "utf8_general_ci"\' : echo "db created"' \
+        "\* --connect-timeout=5 --batch --raw --default-character-set=utf8 -s --skip-column-names toDb : echo 'import structure dump'" \
+        "\* --connect-timeout=5 --batch --raw --default-character-set=utf8 -s --skip-column-names toDb : echo 'import data dump'"
     
     run ${toolsDir}/dbImport -f default.local fromDb toDb 2>&1
 
@@ -140,4 +130,41 @@ teardown() {
     # check garbage
     [[ -f "${HOME}/.bash-tools/dbImportDumps/dumpInTheFuture.sql.gz" ]]
     [[ ! -f "${HOME}/.bash-tools/dbImportDumps/oldDump.sql.gz" ]]
+}
+
+@test "${BATS_TEST_FILENAME#/bash/tests/} remote db(fromDb) fully functional from aws" {
+    
+    stub aws \
+        's3 ls --human-readable s3://s3server/exports/fromDb.tar.gz : exit 0' \
+        's3 cp s3://s3server/exports/fromDb.tar.gz /tmp/home/.bash-tools/dbImportDumps/fromDb.tar.gz : exit 0'
+    stub tar \
+        "xOfz /tmp/home/.bash-tools/dbImportDumps/fromDb.tar.gz : cat ${BATS_TEST_DIRNAME}/data/empty-dump.sql"
+    stub awk \
+        '-v PROFILE_COMMAND=/bash/conf/dbImportProfiles/default.sh -v CHARACTER_SET=utf8 -f /bash/bin/dbImportStream.awk - : exit 0'    
+    
+    # call 5 (order 9): create target db
+    # call 7 (order 11): import data dump into db
+    stub mysql \
+        $'* --batch --raw --default-character-set=utf8 --connect-timeout=5 -s --skip-column-names -e \'CREATE DATABASE IF NOT EXISTS `toDb` CHARACTER SET "utf8" COLLATE "utf8_general_ci"\' : echo "db created"' \
+        "\* --connect-timeout=5  --batch --raw --default-character-set=utf8 toDb : echo 'import dump'"
+
+    run ${toolsDir}/dbImport --from-aws fromDb.tar.gz toDb 2>&1 
+    [[ "${output}" == *"Import database duration : "* ]]
+}
+
+@test "${BATS_TEST_FILENAME#/bash/tests/} remote db(fromDb) dump already present from aws" {
+    # create false dump 1 day in the past
+    echo "data" | gzip > "${HOME}/.bash-tools/dbImportDumps/fromDb.tar.gz"
+    touch -d@$(($(date +%s) + 86400)) "${HOME}/.bash-tools/dbImportDumps/fromDb.tar.gz"
+    # call 5 (order 2): create target db (after dumps have been done)
+    # call 7 (order 4): import data dump into db
+    stub mysql \
+        $'* --batch --raw --default-character-set=utf8 --connect-timeout=5 -s --skip-column-names -e \'CREATE DATABASE IF NOT EXISTS `toDb` CHARACTER SET "utf8" COLLATE "utf8_general_ci"\' : echo "db created"' \
+        "\* --connect-timeout=5  --batch --raw --default-character-set=utf8 toDb : echo 'import data dump'"
+    
+    run ${toolsDir}/dbImport --from-aws fromDb.tar.gz toDb 2>&1
+    [[ "${output}" == *"Import database duration : "* ]]
+    [[ -f "${HOME}/.bash-tools/dbImportDumps/fromDb.tar.gz" ]]
+    # check files have been touched
+    (( $(date +%s) - $(stat -c "%Y" "${HOME}/.bash-tools/dbImportDumps/fromDb.tar.gz") < 60 ))
 }

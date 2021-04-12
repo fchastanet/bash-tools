@@ -20,9 +20,10 @@ fi
 ./.build/buildPushDockerImages.sh "${VENDOR}" "${BASH_TAR_VERSION}" "${BASH_IMAGE}"
 
 # build docker image with user configuration
+# shellcheck disable=SC2086
 docker build \
   ${DOCKER_BUILD_OPTIONS} \
-  --build-arg "BASH_IMAGE=bash-tools-${VENDOR}-${BASH_TAR_VERSION}" \
+  --build-arg "BASH_IMAGE=bash-tools-${VENDOR}-${BASH_TAR_VERSION}:latest" \
   --build-arg USER_ID="$(id -u)" \
   --build-arg GROUP_ID="$(id -g)" \
   -f .docker/DockerfileUser \

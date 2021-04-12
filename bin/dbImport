@@ -17,7 +17,6 @@ trap 'exit 130' INT
 # default values
 SCRIPT_NAME=${0##*/}
 PROFILE="default"
-FORCE=0
 DOWNLOAD_DUMP=0
 FROM_AWS=0
 SKIP_SCHEMA=0
@@ -46,7 +45,6 @@ ${__HELP_TITLE}Description:${__HELP_NORMAL} Import source db into target db
 ${__HELP_TITLE}Usage:${__HELP_NORMAL} ${SCRIPT_NAME} --help prints this help and exits
 ${__HELP_TITLE}Usage:${__HELP_NORMAL} ${SCRIPT_NAME} <fromDbName> [<targetDbName>] 
 ${__HELP_TITLE}Usage:${__HELP_NORMAL} ${SCRIPT_NAME} -a|--from-aws <fromDbS3Filename> [<targetDbName>] 
-                        [--force] 
                         [-a|--from-aws]
                         [-s|--skip-schema] [-p|--profile profileName] 
                         [-o|--collation-name utf8_general_ci] [-c|--character-set utf8]
@@ -57,7 +55,6 @@ ${__HELP_TITLE}Usage:${__HELP_NORMAL} ${SCRIPT_NAME} -a|--from-aws <fromDbS3File
         Only .gz or tar.gz file are supported
     <fromDbName>               the name of the source/remote database
     <targetDbName>             the name of the target database, use fromDbName(without extension) if not provided
-    -f|--force                  If target db exists, it will overwrite it
     -s|--skip-schema            avoid to import the schema
     -o|--collation-name         change the collation name used during database creation 
         (default value: collation name used by remote db)
@@ -87,7 +84,7 @@ EOF
 # -o is for short options like -h
 # -l is for long options with double dash like --help
 # the comma separates different long options
-options=$(getopt -l help,force,target-dsn:,from-dsn:,from-aws,skip-schema,profile:,collation-name:,character-set: -o aht:f:sp:c:o: -- "$@" 2> /dev/null) || {
+options=$(getopt -l help,target-dsn:,from-dsn:,from-aws,skip-schema,profile:,collation-name:,character-set: -o aht:f:sp:c:o: -- "$@" 2> /dev/null) || {
     showHelp
     Log::fatal "invalid options specified"
 }
@@ -99,9 +96,6 @@ case $1 in
 -h|--help)
     showHelp
     exit 0
-    ;;
---force)
-    FORCE=1
     ;;
 -a|--from-aws)
     FROM_AWS="1"
@@ -215,14 +209,6 @@ if [[ "${FROM_AWS}" = "0" ]]; then
     Log::displayInfo "Using from dsn ${dbFromInstance['DSN_FILE']}"
 fi
 
-# check if target db exists
-TARGET_DB_EXISTS=0
-Database::ifDbExists dbTargetDatabase "${TARGET_DB}" && {
-    Log::displayInfo "Target Database ${TARGET_DB} already exists !"
-    [[ "${FORCE}" = "0" ]] && Log::fatal "use --force to drop it"
-    TARGET_DB_EXISTS='1'
-}
-
 if [[ "${FROM_AWS}" = "1" ]]; then
     REMOTE_DB_DUMP_TEMP_FILE="${DB_IMPORT_DUMP_DIR}/${REMOTE_DB}"
 else
@@ -240,7 +226,7 @@ if [[ "${FROM_AWS}" = "0" && ! -f "${REMOTE_DB_STRUCTURE_DUMP_TEMP_FILE}" ]]; th
     DOWNLOAD_DUMP=1
 fi
 if [[ "${DOWNLOAD_DUMP}" = "0" ]]; then
-    Log::displayInfo "local dump already exists, avoid download"
+    Log::displayInfo "local dump ${REMOTE_DB_DUMP_TEMP_FILE} already exists, avoid download"
 fi
 
 # dump header/footer
@@ -266,6 +252,9 @@ if [[ "${DOWNLOAD_DUMP}" = "1" ]]; then
     if [[ "${FROM_AWS}" = "1" ]]; then
         # download dump from s3
         S3_URL="${S3_BASE_URL%/}/${REMOTE_DB}"
+        aws s3 ls --human-readable "${S3_URL}" || {
+            Log::fatal "unable to get information on S3 object : ${S3_URL}"
+        }
         Log::displayInfo "Download dump from ${S3_URL} ...";
         TMPDIR="${TEMP_FOLDER:-/tmp}" aws s3 cp "${S3_URL}" "${REMOTE_DB_DUMP_TEMP_FILE}" || {
             Log::fatal "unable to download dump from S3 : ${S3_URL}"
@@ -335,15 +324,10 @@ touch -c -m "${REMOTE_DB_STRUCTURE_DUMP_TEMP_FILE}" || true
 COLLATION_NAME="${COLLATION_NAME:-utf8_general_ci}"
 CHARACTER_SET="${CHARACTER_SET:-utf8}"
 
-# drop target db
-if [[ "${TARGET_DB_EXISTS}" = "1" ]]; then
-    Log::displayInfo "drop target database ${TARGET_DB}";
-    Database::query dbTargetDatabase "DROP DATABASE IF EXISTS ${TARGET_DB}"
-fi
-Log::displayInfo "create target database ${TARGET_DB}";
-# shellcheck disable=SC2016
+Log::displayInfo "create target database ${TARGET_DB} if needed";
+#shellcheck disable=SC2016
 Database::query dbTargetDatabase \
-    "$(printf 'CREATE DATABASE `%s` CHARACTER SET "%s" COLLATE "%s"' "${TARGET_DB}" "${CHARACTER_SET}" "${COLLATION_NAME}")"
+   "$(printf 'CREATE DATABASE IF NOT EXISTS `%s` CHARACTER SET "%s" COLLATE "%s"' "${TARGET_DB}" "${CHARACTER_SET}" "${COLLATION_NAME}")"
 
 if [[ "${FROM_AWS}" = "1" ]]; then
     "${CURRENT_DIR}/dbImportStream" \
@@ -351,8 +335,10 @@ if [[ "${FROM_AWS}" = "1" ]]; then
         "${TARGET_DB}" \
         "${PROFILE_COMMAND}" \
         "${dbTargetDatabase['AUTH_FILE']}" \
-        "${CHARACTER_SET}"
+        "${CHARACTER_SET}" \
+        "${dbTargetDatabase['DB_IMPORT_OPTIONS']}"
 else
+    Database::setQueryOptions dbTargetDatabase "${dbTargetDatabase['DB_IMPORT_OPTIONS']}"
     Log::displayInfo "Importing remote db '${REMOTE_DB}' to local db '${TARGET_DB}'"
     if [[ "${SKIP_SCHEMA}" = "1" ]]; then
         Log::displayInfo "avoid to create db structure";
