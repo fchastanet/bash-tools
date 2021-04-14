@@ -1,4 +1,4 @@
-# 1. bash-tools
+# bash-tools
 
 Build status: [![Build Status](https://travis-ci.com/fchastanet/bash-tools.svg?branch=master)](https://travis-ci.com/fchastanet/bash-tools)
 [![Project Status](http://opensource.box.com/badges/active.svg)](http://opensource.box.com/badges)
@@ -7,24 +7,22 @@ Build status: [![Build Status](https://travis-ci.com/fchastanet/bash-tools.svg?b
 [![Average time to resolve an issue](http://isitmaintained.com/badge/resolution/fchastanet/bash-tools.svg)](http://isitmaintained.com/project/fchastanet/bash-tools "Average time to resolve an issue")
 [![Percentage of issues still open](http://isitmaintained.com/badge/open/fchastanet/bash-tools.svg)](http://isitmaintained.com/project/fchastanet/bash-tools "Percentage of issues still open")
 
-- [1. bash-tools](#1-bash-tools)
-  - [1.1. Exerpt](#11-exerpt)
-  - [1.2. Installation/Configuration](#12-installationconfiguration)
-  - [1.3. The tools](#13-the-tools)
-    - [1.3.1. bin/gitRenameBranch](#131-bingitrenamebranch)
-    - [1.3.2. bin/dbQueryAllDatabases](#132-bindbqueryalldatabases)
-    - [1.3.3. bin/dbScriptAllDatabases](#133-bindbscriptalldatabases)
-    - [1.3.4. bin/dbImport](#134-bindbimport)
-    - [1.3.4. bin/dbImportProfile](#134-bindbimportprofile)
-    - [1.3.5. bin/dbImportTable](#135-bindbimporttable)
-    - [1.3.6. bin/cli](#136-bincli)
-    - [1.3.7. bin/gitIsAncestorOf](#137-bingitisancestorof)
-  - [1.4. Bash Framework](#14-bash-framework)
-    - [1.4.1. UT](#141-ut)
-    - [1.4.2. auto generated bash doc](#142-auto-generated-bash-doc)
-  - [1.5. Acknowledgements](#15-acknowledgements)
+- [1. Exerpt](#1-exerpt)
+- [2. Installation/Configuration](#2-installationconfiguration)
+- [3. The tools](#3-the-tools)
+  - [3.1. bin/gitRenameBranch](#31-bingitrenamebranch)
+  - [3.2. bin/dbQueryAllDatabases](#32-bindbqueryalldatabases)
+  - [3.3. bin/dbScriptAllDatabases](#33-bindbscriptalldatabases)
+  - [3.4. bin/dbImport](#34-bindbimport)
+  - [3.5. bin/dbImportProfile](#35-bindbimportprofile)
+  - [3.6. bin/cli](#36-bincli)
+  - [3.7. bin/gitIsAncestorOf](#37-bingitisancestorof)
+- [4. Bash Framework](#4-bash-framework)
+  - [4.1. UT](#41-ut)
+  - [4.2. auto generated bash doc](#42-auto-generated-bash-doc)
+- [5. Acknowledgements](#5-acknowledgements)
 
-## 1.1. Exerpt
+## 1. Exerpt
 
 This is a collection of several bash tools using a bash framework allowing to easily import bash script, log, display log messages, database manipulation, user interation, version comparison, ...
 
@@ -41,7 +39,7 @@ List of tools:
 * **waitforIt** : useful in docker container to know if another container port is accessible
 * **waitForMysql** : useful in docker container to know if mysql server is ready to receive queries
 
-## 1.2. Installation/Configuration
+## 2. Installation/Configuration
 
 clone this repository and create configuration files in your home directory
 alternatively you can use the **install.sh** script
@@ -81,16 +79,16 @@ mkdir ~/.parallel
 touch ~/.parallel/will-cite
 ```
 
-## 1.3. The tools
+## 3. The tools
 
-### 1.3.1. bin/gitRenameBranch
+### 3.1. bin/gitRenameBranch
 
 **Help**
 ```
 ${gitRenameBranch_help}
 ```
 
-### 1.3.2. bin/dbQueryAllDatabases
+### 3.2. bin/dbQueryAllDatabases
 
 Execute a query on multiple database in order to generate a report, query can be parallelized on multiple databases
 ```bash
@@ -102,7 +100,7 @@ bin/dbQueryAllDatabases -e localhost-root conf/dbQueries/databaseSize.sql
 ${dbQueryAllDatabases_help}
 ```
 
-### 1.3.3. bin/dbScriptAllDatabases
+### 3.3. bin/dbScriptAllDatabases
 Allow to execute a script on each database of specified mysql server
 ```bash
 bin/dbScriptAllDatabases -d localhost-root dbCheckStructOneDatabase
@@ -123,8 +121,8 @@ bin/dbScriptAllDatabases --jobs 10 -d localhost-root dbCheckStructOneDatabase
 ${dbScriptAllDatabases_help}
 ```
 
-### 1.3.4. bin/dbImport
-Import remote db into local db
+### 3.4. bin/dbImport
+Import default source dsn/db ExampleDbName into default target dsn/db ExampleDbName
 ```bash
 dbImport ExampleDbName
 ```
@@ -132,8 +130,21 @@ dbImport ExampleDbName
 Ability to import db from dump stored on aws
 the dump file should have this name `<fromDbName>.tar.gz`
 and stored on AWS location defined by S3_BASE_URL env variable (see conf/.env file)
+
 ```bash
-dbImport --from-aws ExampleDbName
+dbImport --from-aws ExampleDbName.tar.gz
+```
+
+It allows also to dump from source database and import it into target database.
+Providing --profile option **dumps** only the tables selected.
+Providing --tables option **imports** only the tables selected.
+
+The following command will dump full structure and data of fromDb but will insert only the data from 
+tableA and tableB, full structure will be inserted too. Second call to this command skip the dump 
+as dump has been saved the first time.
+Note that table A and table B are truncated on target database before being imported.
+```bash
+dbImport --from-dsn default.remote --target-dsn default.local -p all fromDb targetDB --tables tableA,tableB
 ```
 
 **Help**
@@ -141,7 +152,7 @@ dbImport --from-aws ExampleDbName
 ${dbImport_help}
 ```
 
-### 1.3.4. bin/dbImportProfile
+### 3.5. bin/dbImportProfile
 Import remote db into local db
 ```bash
 dbImportProfile --from-dsn default.local MY_DB --ratio 45
@@ -156,18 +167,7 @@ Profile is automatically saved in ${HOME}/.bash-tools/dbImportProfiles with this
 ${dbImportProfile_help}
 ```
 
-### 1.3.5. bin/dbImportTable
-Import remote db table into local db
-```bash
-dbImportTable ExampleDbName ExampleTableName
-```
-
-**Help**
-```
-${dbImportTable_help}
-```
-
-### 1.3.6. bin/cli
+### 3.6. bin/cli
 
 **Help**
 ```
@@ -199,7 +199,7 @@ echo 'SELECT table_schema AS "Database",ROUND(SUM(data_length + index_length) / 
 will actually execute this command : MSYS_NO_PATHCONV=1 MSYS2_ARG_CONV_EXCL='*' docker exec -i -e COLUMNS="$(tput cols)" -e LINES="$(tput lines)" --user=mysql project-mysql //bin/bash -c 'mysql -h127.0.0.1 -uroot -proot -P3306'
 notice that as input is given to the command, tty option is not provided to docker exec
 
-### 1.3.7. bin/gitIsAncestorOf
+### 3.7. bin/gitIsAncestorOf
 
 **Help**
 ```
@@ -207,7 +207,7 @@ ${gitIsAncestorOf_help}
 ```
 
 
-## 1.4. Bash Framework
+## 4. Bash Framework
 
 All these tools are based on *Bash framework* with the following features:
  * A boostrap that allows to import automatically .env file in home folder or ~/.bash-tools folder in order to load some environment variables
@@ -277,13 +277,13 @@ import bash-framework/Database
 import bash-framework/Array
 ```
 
-### 1.4.1. UT
+### 4.1. UT
 All the methods of this framework are unit tested, you can run the unit tests using the following command
 ```bash
 ./test.sh
 ```
 
-### 1.4.2. auto generated bash doc
+### 4.2. auto generated bash doc
 
 generated by running
 ```bash
@@ -292,7 +292,7 @@ generated by running
 
 ${bash_doc_index}
 
-## 1.5. Acknowledgements
+## 5. Acknowledgements
 Like so many projects, this effort has roots in many places. 
 
 I would like to thank particularly  Bazyli Brzóska for his work on the project [Bash Infinity](https://github.com/niieani/bash-oo-framework).

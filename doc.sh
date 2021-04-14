@@ -48,7 +48,6 @@ generateReadme() {
   export dbScriptAllDatabases_help="$(/bash/bin/dbScriptAllDatabases --help | escapeColorCodes)"
   export dbImport_help="$(/bash/bin/dbImport --help | escapeColorCodes)"
   export dbImportProfile_help="$(/bash/bin/dbImportProfile --help | escapeColorCodes)"
-  export dbImportTable_help="$(/bash/bin/dbImportTable --help | escapeColorCodes)"
   export gitIsAncestorOf_help="$(/bash/bin/gitIsAncestorOf --help | escapeColorCodes)"
   export gitIsBranch_help="$(/bash/bin/gitIsBranch --help | escapeColorCodes)"
   export cli_help="$(/bash/bin/cli --help | escapeColorCodes)"

@@ -17,6 +17,7 @@ trap 'exit 130' INT
 # default values
 SCRIPT_NAME=${0##*/}
 PROFILE="default"
+TABLES=""
 DOWNLOAD_DUMP=0
 FROM_AWS=0
 SKIP_SCHEMA=0
@@ -49,6 +50,7 @@ ${__HELP_TITLE}Usage:${__HELP_NORMAL} ${SCRIPT_NAME} -a|--from-aws <fromDbS3File
                         [-s|--skip-schema] [-p|--profile profileName] 
                         [-o|--collation-name utf8_general_ci] [-c|--character-set utf8]
                         [-t|--target-dsn dsn] [-f|--from-dsn dsn]
+                        [--tables tableName1,tableName2]
 
     <fromDbS3Filename>         If option -a is provided
         remoteDBName will represent the name of the s3 file
@@ -61,7 +63,7 @@ ${__HELP_TITLE}Usage:${__HELP_NORMAL} ${SCRIPT_NAME} -a|--from-aws <fromDbS3File
     -c|--character-set          change the character set used during database creation 
         (default value: character set used by remote db or dump file if aws)
     -p|--profile profileName    the name of the profile to use in order to include or exclude tables
-        (if not specified ${HOME_PROFILES_DIR}/default.sh  is used if exists otherwise ${PROFILES_DIR}/default.sh)
+        (if not specified ${HOME_PROFILES_DIR}/default.sh is used if exists otherwise ${PROFILES_DIR}/default.sh)
     -t|--target-dsn dsn         dsn to use for target database (Default: ${TARGET_DSN}) 
     -f|--from-dsn dsn           dsn to use for source database (Default: ${DEFAULT_FROM_DSN})
         this option is incompatible with -a|--from-aws option
@@ -69,6 +71,8 @@ ${__HELP_TITLE}Usage:${__HELP_NORMAL} ${SCRIPT_NAME} -a|--from-aws <fromDbS3File
         remoteDBName will represent the name of the file
         profile will be calculated against the dump itself
         this option is incompatible with -f|--from-dsn option
+    --tables table1,table2      import only table specified in the list
+        if aws mode, ignore profile option
 
     Aws s3 location       : ${S3_BASE_URL}
 
@@ -84,7 +88,7 @@ EOF
 # -o is for short options like -h
 # -l is for long options with double dash like --help
 # the comma separates different long options
-options=$(getopt -l help,target-dsn:,from-dsn:,from-aws,skip-schema,profile:,collation-name:,character-set: -o aht:f:sp:c:o: -- "$@" 2> /dev/null) || {
+options=$(getopt -l help,tables:,target-dsn:,from-dsn:,from-aws,skip-schema,profile:,collation-name:,character-set: -o aht:f:sp:c:o: -- "$@" 2> /dev/null) || {
     showHelp
     Log::fatal "invalid options specified"
 }
@@ -101,6 +105,10 @@ case $1 in
     FROM_AWS="1"
     # structure is included in s3 file
     SKIP_SCHEMA="1"
+    ;;
+--tables)
+    shift || true 
+    TABLES="$1"
     ;;
 -t|--target-dsn)
     shift || true 
@@ -170,6 +178,8 @@ if [[ -z "${TARGET_DB}" ]]; then
 fi
 
 # check s3 parameter
+[[ "${FROM_AWS}" = "1" ]] &&
+    Functions::checkCommandExists aws "missing aws, please check https://docs.aws.amazon.com/fr_fr/cli/latest/userguide/install-cliv2.html"
 [[ "${FROM_AWS}" = "1" && -n "${FROM_DSN}" ]] &&
     Log::fatal "you cannot use from-dsn and from-aws at the same time"
 [[ "${FROM_AWS}" = "1" && -z "${S3_BASE_URL}" ]] &&
@@ -186,8 +196,32 @@ if [[ -z "${PROFILE}" ]]; then
     Log::fatal "you should specify a profile"
 fi
 
+# Profile selection
 PROFILE_COMMAND="$(Functions::getAbsoluteConfFile "dbImportProfiles" "${PROFILE}" "sh")" || exit 1
-Log::displayInfo "Using profile ${PROFILE_COMMAND}"
+PROFILE_MSG_INFO="Using profile ${PROFILE_COMMAND}"
+if [[ -n "${TABLES}" ]]; then
+    [[ ${TABLES} =~ ^[A-Za-z0-9_]+(,[A-Za-z0-9_]+)*$ ]] || {
+        Log::fatal "Table list is not valid : ${TABLES}"
+    }
+fi
+
+TABLES_PROFILE_COMMAND=$(mktemp -p "${TMPDIR:-/tmp}" -t "profileCmd.XXXXXXXXXXXX")
+chmod +x "${TABLES_PROFILE_COMMAND}"
+Functions::trapAdd "rm -f \"${TABLES_PROFILE_COMMAND}\" 2>/dev/null || true" ERR EXIT
+(
+    echo '#!/usr/bin/env bash'
+    if [[ -n "${TABLES}" ]]; then
+        echo "${TABLES}" | sed -E 's/([A-Za-z0-9_]+),?/echo "\1"\n/g'
+    else
+        # tables option not specified, we will import all tables of the profile
+        echo 'cat'
+    fi
+) > "${TABLES_PROFILE_COMMAND}"
+if [[ "${FROM_AWS}" = "1" ]]; then
+    PROFILE_MSG_INFO="as aws dump is already full one, tables option takes precedence on profile"
+    PROFILE_COMMAND="${TABLES_PROFILE_COMMAND}"
+fi
+Log::displayInfo "${PROFILE_MSG_INFO}"
 
 [[ -z "${DB_IMPORT_DUMP_DIR}" ]] &&
     Log::fatal "you have to specify a value for DB_IMPORT_DUMP_DIR env variable"
@@ -280,12 +314,12 @@ if [[ "${DOWNLOAD_DUMP}" = "1" ]]; then
         DUMP_HEADER=$(printf "%s\nSET names '%s';\n" "${DUMP_HEADER}" "${CHARACTER_SET}")
 
         # calculate remote db dump size
-        IFS=$'\n' LIST_TABLES_ARRAY="$(Database::query dbFromInstance "show tables" "${REMOTE_DB}" | ${PROFILE_COMMAND})"
-        # shellcheck disable=SC2068
-        LIST_TABLES_DUMP=$(printf "'%q'," ${LIST_TABLES_ARRAY[@]})
+        LIST_TABLES="$(Database::query dbFromInstance "show tables" "${REMOTE_DB}" | ${PROFILE_COMMAND} | sort)"
+        LIST_TABLES_DUMP_SIZE="$(echo "${LIST_TABLES}" | awk -v d="," -v q="'" '{s=(NR==1?s:s d)q $0 q}END{print s }')"
+        LIST_TABLES_DUMP=$(echo "${LIST_TABLES}" | awk -v d=" " -v q="" '{s=(NR==1?s:s d)q $0 q}END{print s }')
         Log::displayInfo "Calculate dump size for tables ${LIST_TABLES_DUMP}"
         DUMP_SIZE_QUERY="SELECT ROUND(SUM(data_length + index_length) / 1024 / 1024, 0) AS size FROM information_schema.TABLES WHERE table_schema=\"${REMOTE_DB}\""
-        DUMP_SIZE_QUERY+=" AND table_name IN(${LIST_TABLES_DUMP} 'dummy') "
+        DUMP_SIZE_QUERY+=" AND table_name IN(${LIST_TABLES_DUMP_SIZE}, 'dummy') "
         DUMP_SIZE_QUERY+=" GROUP BY table_schema"
         REMOTE_DB_DUMP_SIZE=$(echo "${DUMP_SIZE_QUERY}" | Database::query dbFromInstance )
         if [[ -z "${REMOTE_DB_DUMP_SIZE}" ]]; then
@@ -296,20 +330,21 @@ if [[ "${DOWNLOAD_DUMP}" = "1" ]]; then
         # dump db
         Log::displayInfo "Dump the database $REMOTE_DB (Size:${REMOTE_DB_DUMP_SIZE}MB) ...";
         DUMP_SIZE_PV_ESTIMATION=$(awk "BEGIN {printf \"%.0f\",${REMOTE_DB_DUMP_SIZE}/1.5}")
-        LIST_TABLES_DUMP=$(printf "%q " "${LIST_TABLES_ARRAY[@]}")
         time (
             echo "${DUMP_HEADER}"
             Database::dump dbFromInstance "${REMOTE_DB}" "${LIST_TABLES_DUMP}" \
-                    --no-create-info --skip-add-drop-table --single-transaction=TRUE | \
-                    pv --progress --size "${DUMP_SIZE_PV_ESTIMATION}m" 
+                --no-create-info --skip-add-drop-table --single-transaction=TRUE | \
+                pv --progress --size "${DUMP_SIZE_PV_ESTIMATION}m" 
             echo "${DUMP_FOOTER}" 
         ) | gzip > "${REMOTE_DB_DUMP_TEMP_FILE}"
 
         Log::displayInfo "Dump structure of the database ${REMOTE_DB} ..."
         time (
-            echo "${DUMP_HEADER}" 
+            echo "${DUMP_HEADER}"
+            #shellcheck disable=SC2016 
             Database::dump dbFromInstance "${REMOTE_DB}" "" \
-                    --no-data --skip-add-drop-table --single-transaction=TRUE
+                --no-data --skip-add-drop-table --single-transaction=TRUE | \
+                sed 's/^CREATE TABLE `/CREATE TABLE IF NOT EXISTS `/g'
             echo "${DUMP_FOOTER}" 
         ) | gzip > "${REMOTE_DB_STRUCTURE_DUMP_TEMP_FILE}"
     fi
@@ -352,8 +387,13 @@ else
 
     Log::displayInfo "import remote to local from file ${REMOTE_DB_DUMP_TEMP_FILE}"
     time ( \
-        pv "${REMOTE_DB_DUMP_TEMP_FILE}" | zcat | \
-            Database::query dbTargetDatabase "" "${TARGET_DB}"
+        "${CURRENT_DIR}/dbImportStream" \
+            "${REMOTE_DB_DUMP_TEMP_FILE}" \
+            "${TARGET_DB}" \
+            "${TABLES_PROFILE_COMMAND}" \
+            "${dbTargetDatabase['AUTH_FILE']}" \
+            "${CHARACTER_SET}" \
+            "${dbTargetDatabase['DB_IMPORT_OPTIONS']}"
     )
 fi
 

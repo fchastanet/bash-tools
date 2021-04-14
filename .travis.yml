@@ -25,6 +25,7 @@ script:
 - >
   if [[ "$SHELLCHECK" == 'true' ]]; then
     ./.build/shellcheck.sh > shellcheck.log
+    ./.build/awkLint.sh > awkLint.log
     ./.build/publishDeepsourceArtifact.sh ./shellcheck.log
   else
     ./test.sh

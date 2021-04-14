@@ -2,7 +2,7 @@ BEGIN{
   write=1
 }
 {
-  buffer = substr($0, 0, 150)
+  buffer = substr($0, 1, 150)
   line = $0
   if(match(buffer, /^LOCK TABLES `([^`]+)` WRITE;$/, arr) != 0) {
     # check if inserts are part of the profile
@@ -10,10 +10,10 @@ BEGIN{
     if (! (tableName in map)) {
       profileCmd = "echo '" tableName "' | " PROFILE_COMMAND " | grep -q " tableName
       map[tableName] = (system(profileCmd) == 0)
-      close(profileCmd)
     }
     if (map[tableName]) {
       print "\033[44mbegin insert " tableName "\033[0m"  > "/dev/stderr"
+      line = line "\nTRUNCATE TABLE `" tableName "`;"
       write=1
     } else {
       print "ignore table " tableName  > "/dev/stderr"
@@ -32,6 +32,7 @@ BEGIN{
     }
     write=1
   }
+
 
   if (write == 1) {
     print line
