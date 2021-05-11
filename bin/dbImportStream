@@ -15,6 +15,10 @@ MYSQL_AUTH_FILE="${4}"
 CHARACTER_SET="${5:-utf8}"
 DB_IMPORT_OPTIONS="${6:-}"
 
+if [[ -z "${PROFILE_COMMAND}" ]]; then
+  Log::fatal "You should provide a profile command"
+fi
+
 # shellcheck disable=2086
 (
   if [[ "${DUMP_FILE}" == *tar.gz ]]; then

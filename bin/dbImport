@@ -196,6 +196,9 @@ if [[ -z "${PROFILE}" ]]; then
     Log::fatal "you should specify a profile"
 fi
 
+[[ "${PROFILE}" != "default" && -n "${TABLES}" ]] &&
+    Log::fatal "you cannot use table and profile options at the same time"
+
 # Profile selection
 PROFILE_COMMAND="$(Functions::getAbsoluteConfFile "dbImportProfiles" "${PROFILE}" "sh")" || exit 1
 PROFILE_MSG_INFO="Using profile ${PROFILE_COMMAND}"
@@ -205,21 +208,20 @@ if [[ -n "${TABLES}" ]]; then
     }
 fi
 
-TABLES_PROFILE_COMMAND=$(mktemp -p "${TMPDIR:-/tmp}" -t "profileCmd.XXXXXXXXXXXX")
-chmod +x "${TABLES_PROFILE_COMMAND}"
-Functions::trapAdd "rm -f \"${TABLES_PROFILE_COMMAND}\" 2>/dev/null || true" ERR EXIT
-(
-    echo '#!/usr/bin/env bash'
-    if [[ -n "${TABLES}" ]]; then
-        echo "${TABLES}" | sed -E 's/([A-Za-z0-9_]+),?/echo "\1"\n/g'
-    else
-        # tables option not specified, we will import all tables of the profile
-        echo 'cat'
-    fi
-) > "${TABLES_PROFILE_COMMAND}"
-if [[ "${FROM_AWS}" = "1" ]]; then
-    PROFILE_MSG_INFO="as aws dump is already full one, tables option takes precedence on profile"
-    PROFILE_COMMAND="${TABLES_PROFILE_COMMAND}"
+if [[ "${PROFILE}" = 'default' && -n "${TABLES}" ]]; then
+    PROFILE_COMMAND=$(mktemp -p "${TMPDIR:-/tmp}" -t "profileCmd.XXXXXXXXXXXX")
+    chmod +x "${PROFILE_COMMAND}"
+    Functions::trapAdd "rm -f \"${PROFILE_COMMAND}\" 2>/dev/null || true" ERR EXIT
+    PROFILE_MSG_INFO="only ${TABLES} will be imported"
+    (
+        echo '#!/usr/bin/env bash'
+        if [[ -n "${TABLES}" ]]; then
+            echo "${TABLES}" | sed -E 's/([A-Za-z0-9_]+),?/echo "\1"\n/g'
+        else
+            # tables option not specified, we will import all tables of the profile
+            echo 'cat'
+        fi
+    ) > "${PROFILE_COMMAND}"
 fi
 Log::displayInfo "${PROFILE_MSG_INFO}"
 
@@ -390,7 +392,7 @@ else
         "${CURRENT_DIR}/dbImportStream" \
             "${REMOTE_DB_DUMP_TEMP_FILE}" \
             "${TARGET_DB}" \
-            "${TABLES_PROFILE_COMMAND}" \
+            "${PROFILE_COMMAND}" \
             "${dbTargetDatabase['AUTH_FILE']}" \
             "${CHARACTER_SET}" \
             "${dbTargetDatabase['DB_IMPORT_OPTIONS']}"

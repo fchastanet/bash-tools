@@ -8,6 +8,13 @@ Log::logInfo() { :;}
 Log::logSuccess() { :;}
 Log::logDebug() { :;}
 
+
+Log::displayError() { :;}
+Log::displayWarning() { :;}
+Log::displayInfo() { :;}
+Log::displaySuccess() { :;}
+Log::displayDebug() { :;}
+
 declare logLevel=${BASH_FRAMEWORK_LOG_LEVEL:-${__LEVEL_OFF}}
 if (( logLevel > __LEVEL_OFF )); then
   if [[ -z "${BASH_FRAMEWORK_LOG_FILE}" ]]; then
@@ -40,12 +47,6 @@ if (( logLevel > __LEVEL_OFF )); then
       Log::logDebug() { __logMessage "DEBUG  " "$@"; }
   fi
 fi
-
-Log::displayError() { :;}
-Log::displayWarning() { :;}
-Log::displayInfo() { :;}
-Log::displaySuccess() { :;}
-Log::displayDebug() { :;}
 
 declare displayLevel=${BASH_FRAMEWORK_DISPLAY_LEVEL:-${__LEVEL_OFF}}
 if (( displayLevel > __LEVEL_OFF )); then
