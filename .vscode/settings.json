@@ -1,4 +1,6 @@
 {
+  "profiles.autoSwitch.initial": true,
+  "profiles.initial": "Bash-Bats-Shellcheck-jq",
   "markdown.extension.toc.omittedFromToc": {
     "*.md": ["# %%"]
   },
