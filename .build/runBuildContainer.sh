@@ -17,18 +17,20 @@ if [[ ! -d "${BASE_DIR}/vendor" ]]; then
   ./.build/installBuildDeps.sh
 fi
 
-./.build/buildPushDockerImages.sh "${VENDOR}" "${BASH_TAR_VERSION}" "${BASH_IMAGE}"
+if [[ "${SKIP_BUILD:-0}" = "0" ]]; then
+  ./.build/buildPushDockerImages.sh "${VENDOR}" "${BASH_TAR_VERSION}" "${BASH_IMAGE}"
 
-# build docker image with user configuration
-# shellcheck disable=SC2086
-docker build \
-  ${DOCKER_BUILD_OPTIONS} \
-  --build-arg "BASH_IMAGE=bash-tools-${VENDOR}-${BASH_TAR_VERSION}:latest" \
-  --build-arg USER_ID="$(id -u)" \
-  --build-arg GROUP_ID="$(id -g)" \
-  -f .docker/DockerfileUser \
-  -t "bash-tools-${VENDOR}-${BASH_TAR_VERSION}-user" \
-  .docker
+  # build docker image with user configuration
+  # shellcheck disable=SC2086
+  docker build \
+    ${DOCKER_BUILD_OPTIONS} \
+    --build-arg "BASH_IMAGE=bash-tools-${VENDOR}-${BASH_TAR_VERSION}:latest" \
+    --build-arg USER_ID="$(id -u)" \
+    --build-arg GROUP_ID="$(id -g)" \
+    -f .docker/DockerfileUser \
+    -t "bash-tools-${VENDOR}-${BASH_TAR_VERSION}-user" \
+    .docker
+fi
 
 # run tests
 docker run \
