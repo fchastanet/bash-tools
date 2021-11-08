@@ -206,6 +206,22 @@ notice that as input is given to the command, tty option is not provided to dock
 ${gitIsAncestorOf_help}
 ```
 
+### 3.8 bin/mysql2puml
+
+**Help**
+```
+${mysql2puml_help}
+```
+
+Mysql dump of some tables
+```bash
+mysqldump --skip-add-drop-table --skip-add-locks --skip-disable-keys --skip-set-charset   --host=127.0.0.1 --port=3345 --user=root --password=root --no-data skills  $(mysql --host=127.0.0.1 --port=3345 --user=root --password=root skills -Bse "show tables like 'core\_%'") | grep -v '^\/\*![0-9]\{5\}.*\/;$' > doc/schema.sql
+```
+
+Transform mysql dump to plant uml format
+```bash
+mysql2puml doc/schema.sql conf/mysql2puml/mysql2puml.default-skin.puml
+```
 
 ## 4. Bash Framework
 

@@ -1,0 +1,113 @@
+@startuml
+' uncomment the line below if you're using computer with a retina display
+' skinparam dpi 300
+!function Table($name, $desc)
+  !return "class " + $name + ' as "' + $desc + '" << (T,#FFAAAA) >>'
+!endfunction
+' we use bold for primary key
+' green color for unique
+' and underscore for not_null
+!function primary_key($name)
+  !return "#<&key><b>" + $name + "</b>"
+!endfunction
+!function foreign_key($name)
+  !return "#<b>" + $name + "</b>"
+!endfunction
+!function unique($name)
+  !return "<color:green>" + $name + "</color>"
+!endfunction
+!function not_null($name) !return  "+<u>" + $name + "</u>"
+
+!function column($name, $type, $null="", $pk="", $fk="", $unique="")
+  !$label = ""
+  
+  ' Display key
+  !if ($pk == "PK" && $fk != "FK")
+    !$label = "<color:red><&key></color>"
+  !elseif ($pk == "PK" && $fk == "FK")
+    !$label = "<color:blue><&key></color>"
+  !elseif ($fk == "FK")
+    !$label = "<color:green><&key></color>"
+  !else
+    !$label = "<&minus>"
+  !endif
+
+  ' Display nullable icon
+  !if ($null == "NULL")
+    !$label = $label + "<&ban>"
+  !else
+    !$label = $label + "<&minus>"
+  !endif
+
+  ' Display unique icon
+  !if ($unique == "UNIQUE")
+    !$label = $label + "<&audio-spectrum>"
+  !else
+    !$label = $label + "<&minus>"
+  !endif
+  
+  ' display label in the right color (PK, FK, both, none)
+  !$label = $label + " "
+  !$columnSpec = $name + " : " + $type
+  !if ($pk == "PK" && $fk != "FK")
+    !$label = $label + "<u><color:red>" + $columnSpec + "</color></u>"
+  !elseif ($pk == "PK" && $fk == "FK")
+    !$label = $label + "<u><color:blue>" + $columnSpec + "</color></u>"
+  !elseif ($fk == "FK")
+    !$label = $label + "<u><color:green>" + $columnSpec + "</color></u>"
+  !else
+    !$label = $label + $columnSpec
+  !endif
+  
+  !return $label
+!endfunction
+' other tags available:
+' <i></i>
+' <back:COLOR></color>, where color is a color name or html color code
+' (#FFAACC)
+' see: http://plantuml.com/classes.html#More
+hide methods
+hide stereotypes
+skinparam classAttributeIconSize 0
+' entities
+Table(core_learner, "core_learner") { 
+  column(id, INTEGER, "NOT NULL", PK, "", "") 
+  column(id, "INTEGER", NULL, PK) 
+  column(id, "INTEGER", NULL, "") 
+  column(id, INTEGER, "NOT NULL") 
+  column(id, INTEGER, NULL, "", FK) 
+  column(id, INTEGER, "NOT NULL", "", FK) 
+  column(id, INTEGER, NULL, PK, FK) 
+  column(id, INTEGER, "NOT NULL", PK, FK) 
+  column(id, INTEGER, "NOT NULL", PK, UNIQUE) 
+  column(id, INTEGER, NULL, PK, UNIQUE) 
+  column(id, INTEGER, NULL, "", UNIQUE) 
+  column(id, INTEGER, "NOT NULL", "", UNIQUE) 
+  column(id, INTEGER, NULL, "", FK, UNIQUE) 
+  column(id, INTEGER, "NOT NULL", "", FK, UNIQUE) 
+  column(id, INTEGER, NULL, PK, FK, UNIQUE) 
+  column(id, INTEGER, "NOT NULL", PK, FK, UNIQUE) 
+  not_null(urn) 
+  unique(urn) 
+  #ddd IIIIN
+  column(test, NULL, UNIQUE)
+  column(not_null, "", "NOT NULL")
+  -mapped_skill_id uint precision=10 
+  #mapped_skill_id uint precision=10 
+  +mapped_skill_id uint precision=10 
+  *mapped_skill_id uint precision=10 
+}
+core_learner::id --> core_test : FK id
+
+Table(core_test, "core_test") { 
+  primary_key(id) INTEGER 
+  not_null(urn) 
+  unique(urn) 
+  #ddd IIIIN
+  column(test, "UNIQUE", NULL)
+  column(not_null, "", "NOT NULL")
+  -mapped_skill_id uint precision=10 
+}
+
+
+@enduml
