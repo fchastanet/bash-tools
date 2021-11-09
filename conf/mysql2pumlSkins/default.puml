@@ -1,23 +1,12 @@
 @startuml
 ' uncomment the line below if you're using computer with a retina display
 ' skinparam dpi 300
-!function Table($name, $desc)
-  !return "class " + $name + ' as "' + $desc + '" << (T,#FFAAAA) >>'
+!function Table($name)
+  !return "class " + $name + " << (T,#FFAAAA) >>"
 !endfunction
 ' we use bold for primary key
 ' green color for unique
 ' and underscore for not_null
-!function primary_key($name)
-  !return "#<&key><b>" + $name + "</b>"
-!endfunction
-!function foreign_key($name)
-  !return "#<b>" + $name + "</b>"
-!endfunction
-!function unique($name)
-  !return "<color:green>" + $name + "</color>"
-!endfunction
-!function not_null($name) !return  "+<u>" + $name + "</u>"
-
 !function column($name, $type, $null="", $pk="", $fk="", $unique="")
   !$label = ""
   
@@ -69,4 +58,6 @@
 hide methods
 hide stereotypes
 skinparam classAttributeIconSize 0
+
+' entities
 @enduml
