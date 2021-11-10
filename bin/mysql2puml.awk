@@ -43,6 +43,36 @@ function trim(s) { return rtrim(ltrim(s)); }
 
 # =========================================================================
 
+function column_weight(column) 
+{
+    return (columnsDetails[column ",pk"] == "1" ? 8 : 0) \
+        + (columnsDetails[column ",fk"] == "1" ? 4 : 0) \
+        + (columnsDetails[column ",unique"] == "1" ? 2 : 0) \
+        + (columnsDetails[column ",null"] == "0" ? 1 : 0)
+}
+
+function column_sort(i1, column1, i2, column2)
+{
+    weight1 = column_weight(column1)
+    weight2 = column_weight(column2)
+    if (weight1 == weight2) {
+        l = tolower(column1)
+        r = tolower(column2)
+
+        if (l < r) {
+            return -1
+        } else if (l == r) {
+            return 0
+        } else {
+            return 1
+        }
+    } else {
+        return weight2 - weight1
+    }
+}
+
+# =========================================================================
+
 function uml_table(createTable)
 # DDL to plantuml
 # CREATE TABLE `core_customer` (`id` int(11) NOT NULL AUTO_INCREMENT, `instance_name` varchar(128) NOT NULL, PRIMARY KEY (`id`), UNIQUE KEY `instance_name` (`instance_name`) ) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8;
@@ -106,12 +136,18 @@ function uml_table(createTable)
         for (i in columns) debug("column ", i, " ", columns[i])
         for (i in columnsDetails) debug("match ", i, " ", columnsDetails[i])
     }
+    asort(columns, columns, "column_sort")
+    if (DEBUG == 1) {
+        debug("***************************************************************")
+        debug("Columns order after sort")
+        for (i in columns) debug("column ", i, " ", columns[i], column_weight(columns[i]))
+    }
     printf("Table(%s) { \n", tableName )
     for(i in columns) {
         columnName=columns[i]
         # column($name, $type, $null="", $pk="", $fk="", $unique="")
         printf( \
-            "column(\"%s\", \"%s\", \"%s\", \"%s\", \"%s\", \"%s\")\n", \
+            "  column(\"%s\", \"%s\", \"%s\", \"%s\", \"%s\", \"%s\")\n", \
             columnName, \
             trim(columnsDetails[columnName ",type"]), \
             (columnsDetails[columnName ",null"] == "1") ? "NULL" : "NOT NULL", \
@@ -129,6 +165,7 @@ function uml_table(createTable)
             printf("%s \"0..*\" --> \"1\" %s : \"%s\"\n", tableName, columnsDetails[columnName ",fkTable"], columnsDetails[columnName ",fkColumn"] )
         }
     }
+    print("")
 
     delete columnsDetails
     delete columns

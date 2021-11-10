@@ -14,7 +14,7 @@ CREATE TABLE `customer` (
   `updated_at` datetime(6) NOT NULL,
   `identifier` varchar(128) NOT NULL,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `instance_name` (`instance_name`)
+  UNIQUE KEY `identifier` (`identifier`)
 ) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8;
 
 --

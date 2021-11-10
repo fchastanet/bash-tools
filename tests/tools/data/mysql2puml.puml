@@ -62,55 +62,61 @@ skinparam classAttributeIconSize 0
 ' entities
 ' entities
 Table(customer) { 
-column("id", "int11", "NOT NULL", "PK", "", "")
-column("created_at", "datetime6", "NOT NULL", "", "", "")
-column("updated_at", "datetime6", "NOT NULL", "", "", "")
-column("identifier", "varchar128", "NOT NULL", "", "", "")
+  column("id", "int11", "NOT NULL", "PK", "", "")
+  column("identifier", "varchar128", "NOT NULL", "", "", "UNIQUE")
+  column("created_at", "datetime6", "NOT NULL", "", "", "")
+  column("updated_at", "datetime6", "NOT NULL", "", "", "")
 }
+
 Table(learner) { 
-column("created_at", "datetime6", "NOT NULL", "", "", "")
-column("updated_at", "datetime6", "NOT NULL", "", "", "")
-column("id", "int10 unsigned", "NOT NULL", "PK", "", "")
-column("external_id", "varchar255", "NOT NULL", "", "", "UNIQUE")
-column("customer_id", "int11", "NOT NULL", "", "", "UNIQUE")
+  column("id", "int10 unsigned", "NOT NULL", "PK", "", "")
+  column("customer_id", "int11", "NOT NULL", "", "", "UNIQUE")
+  column("external_id", "varchar255", "NOT NULL", "", "", "UNIQUE")
+  column("created_at", "datetime6", "NOT NULL", "", "", "")
+  column("updated_at", "datetime6", "NOT NULL", "", "", "")
 }
 learner "0..*" --> "1" customer : "id"
+
 Table(learnerattribute) { 
-column("id", "int11", "NOT NULL", "PK", "", "")
-column("created_at", "datetime6", "NOT NULL", "", "", "")
-column("updated_at", "datetime6", "NOT NULL", "", "", "")
-column("level", "double", "NOT NULL", "", "", "")
-column("interest", "double", "NOT NULL", "", "", "")
-column("learner_id", "int10 unsigned", "NOT NULL", "", "", "")
-column("attribute_id", "int10 unsigned", "NOT NULL", "", "", "")
+  column("id", "int11", "NOT NULL", "PK", "", "")
+  column("attribute_id", "int10 unsigned", "NOT NULL", "", "", "")
+  column("learner_id", "int10 unsigned", "NOT NULL", "", "", "")
+  column("created_at", "datetime6", "NOT NULL", "", "", "")
+  column("interest", "double", "NOT NULL", "", "", "")
+  column("level", "double", "NOT NULL", "", "", "")
+  column("updated_at", "datetime6", "NOT NULL", "", "", "")
 }
-learnerattribute "0..*" --> "1" learner : "id"
 learnerattribute "0..*" --> "1" attribute : "id"
+learnerattribute "0..*" --> "1" learner : "id"
+
 Table(attribute) { 
-column("created_at", "datetime6", "NOT NULL", "", "", "")
-column("updated_at", "datetime6", "NOT NULL", "", "", "")
-column("id", "int10 unsigned", "NOT NULL", "PK", "", "")
-column("translations", "json", "NOT NULL", "", "", "")
-column("mapped_attribute_id", "int10 unsigned", "NULL", "", "", "")
-column("internal_id", "int11", "NULL", "", "", "UNIQUE")
+  column("id", "int10 unsigned", "NOT NULL", "PK", "", "")
+  column("mapped_attribute_id", "int10 unsigned", "NULL", "", "", "")
+  column("internal_id", "int11", "NULL", "", "", "UNIQUE")
+  column("created_at", "datetime6", "NOT NULL", "", "", "")
+  column("translations", "json", "NOT NULL", "", "", "")
+  column("updated_at", "datetime6", "NOT NULL", "", "", "")
 }
 attribute "0..*" --> "1" attribute : "id"
+
 Table(product) { 
-column("created_at", "datetime6", "NOT NULL", "", "", "")
-column("updated_at", "datetime6", "NOT NULL", "", "", "")
-column("id", "int10 unsigned", "NOT NULL", "PK", "", "")
-column("external_id", "int10 unsigned", "NOT NULL", "", "", "UNIQUE")
-column("customer_id", "int11", "NOT NULL", "", "", "UNIQUE")
+  column("id", "int10 unsigned", "NOT NULL", "PK", "", "")
+  column("customer_id", "int11", "NOT NULL", "", "", "UNIQUE")
+  column("external_id", "int10 unsigned", "NOT NULL", "", "", "UNIQUE")
+  column("created_at", "datetime6", "NOT NULL", "", "", "")
+  column("updated_at", "datetime6", "NOT NULL", "", "", "")
 }
 product "0..*" --> "1" customer : "id"
+
 Table(product_attribute) { 
-column("id", "int11", "NOT NULL", "PK", "", "")
-column("created_at", "datetime6", "NOT NULL", "", "", "")
-column("updated_at", "datetime6", "NOT NULL", "", "", "")
-column("relevance", "double", "NOT NULL", "", "", "")
-column("attribute_id", "int10 unsigned", "NOT NULL", "", "", "")
-column("training_course_id", "int10 unsigned", "NOT NULL", "", "", "")
+  column("id", "int11", "NOT NULL", "PK", "", "")
+  column("attribute_id", "int10 unsigned", "NOT NULL", "", "", "")
+  column("training_course_id", "int10 unsigned", "NOT NULL", "", "", "")
+  column("created_at", "datetime6", "NOT NULL", "", "", "")
+  column("relevance", "double", "NOT NULL", "", "", "")
+  column("updated_at", "datetime6", "NOT NULL", "", "", "")
 }
 product_attribute "0..*" --> "1" attribute : "id"
 product_attribute "0..*" --> "1" product : "id"
+
 @enduml
