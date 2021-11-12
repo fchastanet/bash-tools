@@ -3,46 +3,162 @@ on:
   push:
   pull_request:
   workflow_dispatch:
-    
 
 jobs:
   
   linters:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Code
+      - 
+        name: Checkout Code
         uses: actions/checkout@v2
-      - run: mkdir -p logs
-        working-directory: ./
-      - name: Linting - Shellcheck
+      - 
+        name: Linting - Shellcheck
         run: ./shellcheck.sh | tee logs/shellcheck-checkstyle.xml
-        working-directory: ./
-      - name: Linting - Awk
+      - 
+        name: Linting - Awk
         run: ./awkLint.sh | tee logs/awkLint.log
-        working-directory: ./
-      - name: Linting - Dockerfiles
+      - 
+        name: Linting - Dockerfiles
         run: ./dockerLint.sh | tee logs/docker-checkstyle.xml
-        working-directory: ./
-      - uses: actions/checkout@v2
-        with:
-          repository: fchastanet/tomdoc.sh
-          path: vendor/fchastanet.tomdoc.sh
-          ref: refs/heads/master
-      - name: Check if doc up to date
-        run: |
-          ./doc.sh
-          if ! git diff --exit-code >/dev/null; then
-            (>&2 echo "Documentation not up to date, please run doc.sh to update it")
-            exit 1
-          fi
-        working-directory: ./
-      - uses: jwgmeligmeyling/checkstyle-github-action@master
+      - 
+        uses: jwgmeligmeyling/checkstyle-github-action@master
         with:
           path: 'logs/*-checkstyle.xml'
-      - name: Archive results
+      - 
+        name: Archive results
         uses: actions/upload-artifact@v2
         with:
           name: linter-reports
           path: |
             logs/*.xml
             logs/*.log
+
+  buildDockerImages:
+    needs: linters
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: true
+      matrix:
+        vendor:
+          - ubuntu
+          - alpine
+        bashTarVersion:
+          - "4.4"
+          - "5.0"
+          - "5.1"
+        include:
+          - vendor: ubuntu
+            bashImage: ubuntu:20.04
+          - vendor: alpine
+            bashImage: bash
+    steps:
+      -
+        name: Checkout
+        uses: actions/checkout@v2
+      -
+        name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+      -
+        name: Login to DockerHub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      -
+        name: Build and push
+        uses: docker/build-push-action@v2
+        with:
+          context: .docker
+          file: Dockerfile.${{ matrix.vendor }}
+          # if master build without cache
+          pull: ${{ github.ref != 'refs/heads/master' }}
+          build-args: "BASH_TAR_VERSION=${{ matrix.bashTarVersion }} BASH_IMAGE=${{ matrix.bashImage }}"
+          tags: |
+            bash-tools-${{ matrix.vendor }}-${{ matrix.bashTarVersion }}
+            scrasnups/build:bash-tools-${{ matrix.vendor }}-${{ matrix.bashTarVersion }}
+          # cache image for other jobs
+          outputs: type=docker,dest=/tmp/bash-tools-${{ matrix.vendor }}-${{ matrix.bashTarVersion }}.tar
+      - 
+        name: Check image
+        run:
+          docker run --rm "bash-tools-${VENDOR}-${BASH_TAR_VERSION}" bash --version
+
+  testDoc:
+    needs: buildDockerImages
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: true
+    steps:
+      - 
+        name: Checkout Code
+        uses: actions/checkout@v2
+      -
+        name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+      -
+        name: Download artifact
+        uses: actions/download-artifact@v2
+        with:
+          name: bash-tools-ubuntu-5.1.tar
+          path: /tmp
+      -
+        name: Load image
+        run: |
+          docker load --input /tmp/bash-tools-ubuntu-5.1.tar
+          docker image ls -a
+      - 
+        name: Check if doc up to date
+        run: |
+          ./doc.sh
+          if ! git diff --exit-code >/dev/null; then
+            (>&2 echo "Documentation not up to date, please run doc.sh to update it")
+            exit 1
+          fi
+      
+  tests:
+      needs: buildDockerImages
+      runs-on: ubuntu-latest
+      strategy:
+        fail-fast: true
+        matrix:
+          vendor:
+            - ubuntu
+            - alpine
+          bashTarVersion:
+            - "4.4"
+            - "5.0"
+            - "5.1"
+          include:
+            - vendor: ubuntu
+              bashImage: ubuntu:20.04
+            - vendor: alpine
+              bashImage: bash
+      steps:
+        - 
+          name: Checkout Code
+          uses: actions/checkout@v2
+        -
+          name: Set up Docker Buildx
+          uses: docker/setup-buildx-action@v1
+        -
+          name: Download artifact
+          uses: actions/download-artifact@v2
+          with:
+            name: bash-tools-ubuntu-5.1.tar
+            path: /tmp
+        -
+          name: Load image
+          run: |
+            docker load --input /tmp/bash-tools-ubuntu-5.1.tar
+            docker image ls -a
+        - 
+          name: run unit tests
+          run: |
+            SKIP_BUILD=1 ./test.sh --formatter junit -r tests | tee logs/junit.xml
+        - 
+          name: Publish Unit Test Results
+          uses: EnricoMi/publish-unit-test-result-action@v1
+          if: always()
+          with:
+            files: logs/junit.xml

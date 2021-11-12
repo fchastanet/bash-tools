@@ -1,6 +1,6 @@
 # bash-tools
 
-Build status: [![Build Status](https://travis-ci.com/fchastanet/bash-tools.svg?branch=master)](https://travis-ci.com/fchastanet/bash-tools)
+Build status: [![Workflow executed at each push](https://github.com/fchastanet/bash-tools/actions/workflows/push_branch.yml/badge.svg?branch=github_actions)](https://github.com/fchastanet/bash-tools/actions/workflows/push_branch.yml)
 [![Project Status](http://opensource.box.com/badges/active.svg)](http://opensource.box.com/badges)
 [![DeepSource](https://deepsource.io/gh/fchastanet/bash-tools.svg/?label=active+issues&show_trend=true)](https://deepsource.io/gh/fchastanet/bash-tools/?ref=repository-badge)
 [![DeepSource](https://deepsource.io/gh/fchastanet/bash-tools.svg/?label=resolved+issues&show_trend=true)](https://deepsource.io/gh/fchastanet/bash-tools/?ref=repository-badge)
@@ -123,11 +123,20 @@ Usage: dbQueryAllDatabases <query|queryFile> [-d|--dsn <dsn>] [-q|--query] [--jo
         else a file must be specified
 
 List of available dsn:
+       - cklm.local
        - default.local
        - default.remote
        - localhost-root
-List of available queries (default dir /bash/conf/dbQueries overridable in home dir /home/www-data/.bash-tools/dbQueries):
+       - mizar
+       - zarmi
+List of available queries (default dir /home/vagrant/projects/bash-tools/conf/dbQueries overridable in home dir /home/vagrant/.bash-tools/dbQueries):
+       - audit_eqs_forum_topic_subscriptions
+       - auditGuid
        - databaseSize
+       - loRuntimeStats
+       - loRuntimeStats2
+       - propelMigVersion
+       - test
 ```
 
 ### 3.3. bin/dbScriptAllDatabases
@@ -156,7 +165,7 @@ Usage: dbScriptAllDatabases [-j|--jobs <numberOfJobs>] [-o|--output <outputDirec
     -d|--dsn <dsn>                target mysql server (Default: default.local) 
     --database <dbName>           if provided will check only this db, otherwise script will be executed on all dbs of mysql server
     -j|--jobs <numberOfJobs>      the number of db to query in parallel (default: 1)
-    -o|--output <outputDirectory> output directory, see log-format option (default : "/home/www-data/.bash-tools/output")
+    -o|--output <outputDirectory> output directory, see log-format option (default : "/home/vagrant/.bash-tools/output")
     -l|--log-format <logFormat>   if log provided, will log each db result to log file, can be one of these values (none, log) (default: none)
     -v|--verbose                  display more information
 
@@ -164,13 +173,13 @@ Note: the use of output, log-format, verbose options highly depends on the scrip
 
 Example: script conf/dbScripts/extractData.sh 
     executes query databaseSize (see conf/dbQueries/databaseSize.sql) on each db and log the result in log file in default output dir, call it using
-    /bash/bin/dbScriptAllDatabases -j 10 extractData databaseSize
+    /home/vagrant/projects/bash-tools/bin/dbScriptAllDatabases -j 10 extractData databaseSize
 
     executes query databaseSize on each db and display the result on stdout (2>/dev/null hides information messages)
-    /bash/bin/dbScriptAllDatabases -j 10 --log-format none extractData databaseSize 
+    /home/vagrant/projects/bash-tools/bin/dbScriptAllDatabases -j 10 --log-format none extractData databaseSize 
 
     use --verbose to get some debug information
-    /bash/bin/dbScriptAllDatabases -j 10 --log-format none --verbose extractData databaseSize 
+    /home/vagrant/projects/bash-tools/bin/dbScriptAllDatabases -j 10 --log-format none --verbose extractData databaseSize 
 
 Use cases:
     you can use this script in order to check that each db model conforms with your ORM schema
@@ -179,10 +188,15 @@ Use cases:
     update multiple db at once (simple to complex update script)
 
 List of available dsn:
+       - cklm.local
        - default.local
        - default.remote
        - localhost-root
-list of available scripts (/home/www-data/.bash-tools/conf/dbScripts):
+       - mizar
+       - zarmi
+list of available scripts (/home/vagrant/.bash-tools/conf/dbScripts):
+       - dbCheckStructOneDatabase
+       - dbPropelMigrationScriptOneDatabase
        - extractData
 ```
 
@@ -236,7 +250,7 @@ Usage: dbImport -a|--from-aws <fromDbS3Filename> [<targetDbName>]
     -c|--character-set          change the character set used during database creation 
         (default value: character set used by remote db or dump file if aws)
     -p|--profile profileName    the name of the profile to use in order to include or exclude tables
-        (if not specified /home/www-data/.bash-tools/dbImportProfiles/default.sh is used if exists otherwise /bash/conf/dbImportProfiles/default.sh)
+        (if not specified /home/vagrant/.bash-tools/dbImportProfiles/default.sh is used if exists otherwise /home/vagrant/projects/bash-tools/conf/dbImportProfiles/default.sh)
     -t|--target-dsn dsn         dsn to use for target database (Default: default.local) 
     -f|--from-dsn dsn           dsn to use for source database (Default: default.remote)
         this option is incompatible with -a|--from-aws option
@@ -249,14 +263,28 @@ Usage: dbImport -a|--from-aws <fromDbS3Filename> [<targetDbName>]
 
     Aws s3 location       : s3://example.com/exports/
 
-List of available profiles (default profiles dir /bash/conf/dbImportProfiles overridable in home profiles /home/www-data/.bash-tools/dbImportProfiles):
+List of available profiles (default profiles dir /home/vagrant/projects/bash-tools/conf/dbImportProfiles overridable in home profiles /home/vagrant/.bash-tools/dbImportProfiles):
+       - 5496
        - all
+       - auto_default.local_ISAPIENS_JN
+       - blendedX
+       - bugProd
        - default
+       - ing
        - none
+       - perf-eqs_forum_topic_subscriptions
+       - precomputeLearnerTimezone
+       - sample
+       - small
+       - smartgroup
+       - wo_reg_stats
 List of available dsn:
+       - cklm.local
        - default.local
        - default.remote
        - localhost-root
+       - mizar
+       - zarmi
 ```
 
 ### 3.5. bin/dbImportProfile
@@ -279,7 +307,7 @@ Usage: dbImportProfile <fromDbName>
                         [-f|--from-dsn dsn]
 
     <fromDbName>                the name of the source/remote database
-    -p|--profile profileName    the name of the profile to write in /home/www-data/.bash-tools/dbImportProfiles directory
+    -p|--profile profileName    the name of the profile to write in /home/vagrant/.bash-tools/dbImportProfiles directory
         if not provided, the file name pattern will be 'auto_<dsn>_<fromDbName>.sh'
     -f|--from-dsn dsn           dsn to use for source database (Default: default.remote)
     -r|--ratio ratio            define the ratio to use (0 to 100% - default 70)
@@ -287,14 +315,28 @@ Usage: dbImportProfile <fromDbName>
         100 means profile will keep all the tables
         eg: 70 means that table size (table+index) > 70%*max table size will be excluded
 
-List of available profiles (default profiles dir /bash/conf/dbImportProfiles overridable in home profiles /home/www-data/.bash-tools/dbImportProfiles):
+List of available profiles (default profiles dir /home/vagrant/projects/bash-tools/conf/dbImportProfiles overridable in home profiles /home/vagrant/.bash-tools/dbImportProfiles):
+       - 5496
        - all
+       - auto_default.local_ISAPIENS_JN
+       - blendedX
+       - bugProd
        - default
+       - ing
        - none
+       - perf-eqs_forum_topic_subscriptions
+       - precomputeLearnerTimezone
+       - sample
+       - small
+       - smartgroup
+       - wo_reg_stats
 List of available dsn:
+       - cklm.local
        - default.local
        - default.remote
        - localhost-root
+       - mizar
+       - zarmi
 ```
 
 ### 3.6. bin/cli
@@ -321,12 +363,16 @@ you can override these mappings by providing your own profile in
 This script will be executed with the variables userArg containerArg commandArg set as specified in command line
 and should provide value for the following variables finalUserArg finalContainerArg finalCommandArg
 
-List of available profiles (from /bash/conf/cliProfiles and overridable in /home/www-data/.bash-tools/cliProfiles):
+List of available profiles (from /home/vagrant/projects/bash-tools/conf/cliProfiles and overridable in /home/vagrant/.bash-tools/cliProfiles):
+       - cklm
+       - cklm-mysql
        - default
+       - mongo
        - mysql
        - mysql.remote
        - node
        - redis
+       - skills
        - web
 ```
 

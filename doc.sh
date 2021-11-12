@@ -5,6 +5,11 @@ set -o pipefail
 
 CURRENT_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 
+if [ "${IN_BASH_DOCKER:-}" != "You're in docker" ]; then
+  "${CURRENT_DIR}/.build/runBuildContainer.sh" "/bash/doc.sh" "$@"
+  exit $?
+fi
+
 INDEX_FILE="/tmp/Index.md"
 
 generateShDoc() {
