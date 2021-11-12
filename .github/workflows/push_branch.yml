@@ -15,18 +15,18 @@ jobs:
   #     - run: ./shellcheck.sh
   #       working-directory: ./
 
-  dockerLint:
-    runs-on: ubuntu-latest
-    steps: 
-      - name: Checkout Code
-        uses: actions/checkout@v2
-      - name: lint
-      - uses: jbergstroem/hadolint-gh-action@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          dockerfile: ".build/Dockerfile*"
-          output_format: checkstyle
+  # dockerLint:
+  #   runs-on: ubuntu-latest
+  #   steps: 
+  #     - name: Checkout Code
+  #       uses: actions/checkout@v2
+  #     - name: lint
+  #     - uses: jbergstroem/hadolint-gh-action@v1
+  #       env:
+  #         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  #       with:
+  #         dockerfile: ".build/Dockerfile*"
+  #         output_format: checkstyle
   
   awkLint:
     runs-on: ubuntu-latest
