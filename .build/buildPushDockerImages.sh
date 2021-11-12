@@ -7,7 +7,7 @@ BASE_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." && pwd )
 VENDOR="$1"
 BASH_TAR_VERSION="$2"
 BASH_BASE_IMAGE="$3"
-PULL_IMAGE="${4:-pull}"
+PULL_IMAGE="${4:-true}"
 PUSH_IMAGE="${5:-}"
 DOCKER_BUILD_OPTIONS="${DOCKER_BUILD_OPTIONS:-}"
 
@@ -19,7 +19,7 @@ fi
 cd "${BASE_DIR}" || exit 1
 
 # pull image if needed
-if [[ "${PULL_IMAGE}" == "pull" ]]; then
+if [[ "${PULL_IMAGE}" == "true" ]]; then
   docker pull "scrasnups/build:bash-tools-${VENDOR}-${BASH_TAR_VERSION}" || true 
 fi
 
