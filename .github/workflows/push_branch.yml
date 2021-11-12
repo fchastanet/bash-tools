@@ -7,34 +7,25 @@ on:
 
 jobs:
   
-  shellcheck:
+  linters:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
         uses: actions/checkout@v2
       - name: Shellcheck
-        run: ./shellcheck.sh
+        run: ./shellcheck.sh | tee logs/shellcheck-checkstyle.xml
         working-directory: ./
-
-  dockerLint:
-    runs-on: ubuntu-latest
-    steps: 
-      - name: Checkout Code
-        uses: actions/checkout@v2
-      - name: Hadolint
-        uses: jbergstroem/hadolint-gh-action@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - run: ./awkLint.sh | tee logs/awkLint.log
+        working-directory: ./
+      - run: ./dockerLint.sh | tee logs/docker-checkstyle.xml
+        working-directory: ./
+      - uses: jwgmeligmeyling/checkstyle-github-action@master
         with:
-          dockerfile: ".build/Dockerfile*"
-          output_format: checkstyle
-  
-  awkLint:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v2
-      - run: ./awkLint.sh > awkLint.log
-        working-directory: ./
-
-  
+          path: 'logs/*-checkstyle.xml'
+      - name: Archive results
+        uses: actions/upload-artifact@v2
+        with:
+          name: linter-reports
+          path: 
+            - logs/*.xml
+            - logs/*.log
