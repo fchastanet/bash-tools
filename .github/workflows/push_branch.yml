@@ -7,26 +7,26 @@ on:
 
 jobs:
   
-  # shellcheck:
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - name: Checkout Code
-  #       uses: actions/checkout@v2
-  #     - run: ./shellcheck.sh
-  #       working-directory: ./
+  shellcheck:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v2
+      - run: ./shellcheck.sh
+        working-directory: ./
 
-  # dockerLint:
-  #   runs-on: ubuntu-latest
-  #   steps: 
-  #     - name: Checkout Code
-  #       uses: actions/checkout@v2
-  #     - name: lint
-  #     - uses: jbergstroem/hadolint-gh-action@v1
-  #       env:
-  #         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  #       with:
-  #         dockerfile: ".build/Dockerfile*"
-  #         output_format: checkstyle
+  dockerLint:
+    runs-on: ubuntu-latest
+    steps: 
+      - name: Checkout Code
+        uses: actions/checkout@v2
+      - name: lint
+      - uses: jbergstroem/hadolint-gh-action@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          dockerfile: ".build/Dockerfile*"
+          output_format: checkstyle
   
   awkLint:
     runs-on: ubuntu-latest
@@ -36,27 +36,4 @@ jobs:
       - run: ./awkLint.sh > awkLint.log
         working-directory: ./
 
-  superLinter:
-    # Name the Job
-    name: Lint Code Base
-    # Set the agent to run on
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v2
-        with:
-          # Full git history is needed to get a proper list of changed files within `super-linter`
-          fetch-depth: 0
-
-      # Run Linter against code base #
-      - name: Lint Code Base
-        uses: github/super-linter@v4
-        env:
-          VALIDATE_ALL_CODEBASE: "true"
-          USE_FIND_ALGORITHM: "false"
-          LOG_LEVEL: "DEBUG"
-          ACTIONS_RUNNER_DEBUG: "true"
-          ERROR_ON_MISSING_EXEC_BIT: "true"
-          DEFAULT_BRANCH: master
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   
