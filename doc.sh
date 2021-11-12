@@ -5,11 +5,6 @@ set -o pipefail
 
 CURRENT_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 
-if [ "${IN_BASH_DOCKER:-}" != "You're in docker" ]; then
-  "${CURRENT_DIR}/.build/runBuildContainer.sh" "/bash/doc.sh" "$@"
-  exit $?
-fi
-
 INDEX_FILE="/tmp/Index.md"
 
 generateShDoc() {
@@ -47,14 +42,14 @@ generateReadme() {
 
   replaceTokenByFileContent() { 
     local TOKEN="$1"
-    "/bash/bin/${TOKEN}" --help | escapeColorCodes > "${TMP_DIR}/${TOKEN}_help"
+    "${CURRENT_DIR}/bin/${TOKEN}" --help | escapeColorCodes > "${TMP_DIR}/${TOKEN}_help"
     (
       cd "${TMP_DIR}"
       sed -i -e "/@@@${TOKEN}_help@@@/r ${TOKEN}_help" -e "/@@@${TOKEN}_help@@@/d" "${CURRENT_DIR}/README.md"
     )
   }
 
-  cp "/bash/tests/tools/data/mysql2puml.puml" "${TMP_DIR}/mysql2puml_plantuml_diagram"
+  cp "${CURRENT_DIR}/tests/tools/data/mysql2puml.puml" "${TMP_DIR}/mysql2puml_plantuml_diagram"
   cp "${CURRENT_DIR}/README.tmpl.md" "${CURRENT_DIR}/README.md"
 
   replaceTokenByFileContent "gitRenameBranch" 
@@ -66,7 +61,7 @@ generateReadme() {
   replaceTokenByFileContent "gitIsBranch" 
   replaceTokenByFileContent "mysql2puml" 
   replaceTokenByFileContent "cli" 
-  sed -i -e "/@@@mysql2puml_plantuml_diagram@@@/r /bash/tests/tools/data/mysql2puml.puml" -e "/@@@mysql2puml_plantuml_diagram@@@/d" "${CURRENT_DIR}/README.md"
+  sed -i -e "/@@@mysql2puml_plantuml_diagram@@@/r ${CURRENT_DIR}/tests/tools/data/mysql2puml.puml" -e "/@@@mysql2puml_plantuml_diagram@@@/d" "${CURRENT_DIR}/README.md"
   sed -i -e "/@@@bash_doc_index@@@/r ${INDEX_FILE}" -e "/@@@bash_doc_index@@@/d" "${CURRENT_DIR}/README.md"
 }
 
