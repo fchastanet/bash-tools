@@ -26,6 +26,6 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: linter-reports
-          path: 
-            - logs/*.xml
-            - logs/*.log
+          path: |
+            logs/*.xml
+            logs/*.log
