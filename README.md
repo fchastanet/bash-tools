@@ -266,7 +266,7 @@ dbImportProfile --from-dsn default.local MY_DB --ratio 45
 ```
 
 Ability to generate profile that can be used in dbImport to filter out tables bigger than given ratio (based on biggest table size).
-Profile is automatically saved in /home/www-data/.bash-tools/dbImportProfiles with this format 'auto_<dsn>_<db>'
+Profile is automatically saved in ${HOME}/.bash-tools/dbImportProfiles with this format 'auto_<dsn>_<db>'
 **eg:** auto_default.local_MY_DB
 
 **Help**
@@ -385,6 +385,7 @@ mysqldump --skip-add-drop-table --skip-add-locks --skip-disable-keys --skip-set-
 
 List of available skins:
        - default
+
 ```
 
 Mysql dump of some tables
@@ -588,7 +589,7 @@ All these tools are based on *Bash framework* with the following features:
 # load bash-framework
 # shellcheck source=bash-framework/_bootstrap.sh
 CURRENT_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
-source "$( cd "/.." && pwd )/bash-framework/_bootstrap.sh"
+source "$( cd "${CURRENT_DIR}/.." && pwd )/bash-framework/_bootstrap.sh"
 
 # bash framework is loaded, .env has been loaded (default .env file present in bash-framework is loaded if none exists yet) 
 
