@@ -12,6 +12,8 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v2
+      - run: mkdir -p logs
+        working-directory: ./
       - name: Shellcheck
         run: ./shellcheck.sh | tee logs/shellcheck-checkstyle.xml
         working-directory: ./
