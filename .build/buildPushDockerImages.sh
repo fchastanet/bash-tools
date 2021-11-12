@@ -19,11 +19,11 @@ cd "${BASE_DIR}" || exit 1
 
 # build image and push it ot registry
 docker pull "scrasnups/build:bash-tools-${VENDOR}-${BASH_TAR_VERSION}" || true 
-docker build \
+DOCKER_BUILDKIT=1 docker build \
   ${DOCKER_BUILD_OPTIONS} \
   -f ".docker/Dockerfile.${VENDOR}" \
-  --pull \
   --cache-from "scrasnups/build:bash-tools-${VENDOR}-${BASH_TAR_VERSION}" \
+  --build-arg BUILDKIT_INLINE_CACHE=1 \
   --build-arg BASH_TAR_VERSION="${BASH_TAR_VERSION}" \
   --build-arg BASH_IMAGE="${BASH_BASE_IMAGE}"  \
   -t "bash-tools-${VENDOR}-${BASH_TAR_VERSION}" \
