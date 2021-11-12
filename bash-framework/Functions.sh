@@ -198,8 +198,12 @@ Functions::getConfMergedList() {
     HOME_CONF_DIR="${HOME}/.bash-tools/${confFolder}"
     
     (
-        Functions::getList "${DEFAULT_CONF_DIR}" "${extension}" "${indentStr}"
-        Functions::getList "${HOME_CONF_DIR}" "${extension}" "${indentStr}"
+        if [[ -d "${DEFAULT_CONF_DIR}" ]]; then
+          Functions::getList "${DEFAULT_CONF_DIR}" "${extension}" "${indentStr}"
+        fi
+        if [[ -d "${HOME_CONF_DIR}" ]]; then
+          Functions::getList "${HOME_CONF_DIR}" "${extension}" "${indentStr}"
+        fi
     ) | sort | uniq
 }
 

@@ -50,6 +50,7 @@ generateReadme() {
   export dbImportProfile_help="$(/bash/bin/dbImportProfile --help | escapeColorCodes)"
   export gitIsAncestorOf_help="$(/bash/bin/gitIsAncestorOf --help | escapeColorCodes)"
   export gitIsBranch_help="$(/bash/bin/gitIsBranch --help | escapeColorCodes)"
+  export mysql2puml_help="$(/bash/bin/mysql2puml --help | escapeColorCodes)"
   export cli_help="$(/bash/bin/cli --help | escapeColorCodes)"
   export bash_doc_index="$(cat "${INDEX_FILE}")"
 

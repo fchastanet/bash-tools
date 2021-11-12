@@ -17,6 +17,7 @@ Build status: [![Build Status](https://travis-ci.com/fchastanet/bash-tools.svg?b
   - [3.5. bin/dbImportProfile](#35-bindbimportprofile)
   - [3.6. bin/cli](#36-bincli)
   - [3.7. bin/gitIsAncestorOf](#37-bingitisancestorof)
+  - [3.8. bin/mysql2puml](#38-binmysql2puml)
 - [4. Bash Framework](#4-bash-framework)
   - [4.1. UT](#41-ut)
   - [4.2. auto generated bash doc](#42-auto-generated-bash-doc)
@@ -362,6 +363,172 @@ Usage: gitIsAncestorOf <branch> <commit>
 show an error if commit is not an ancestor of branch
 ```
 
+### 3.8. bin/mysql2puml
+
+**Help**
+```
+Description: convert mysql dump sql schema to plantuml format
+
+Usage: mysql2puml [-h|--help] prints this help and exits
+Usage: mysql2puml [-v|--version] prints the version and exits
+Usage: mysql2puml [-s|--skin skin] inputSqlFile
+
+  --help,-h      : prints this help and exits
+  --version,-v   : display version and exit
+  --skin,-s skin : (optional) header configuration of the plant uml file (default: default)
+  inputSqlFile   : sql filepath to parse
+  
+Examples
+mysql2puml dump.dql
+
+mysqldump --skip-add-drop-table --skip-add-locks --skip-disable-keys --skip-set-charset --user=root --password=root --no-data skills | mysql2puml
+
+List of available skins:
+       - default
+```
+
+Mysql dump of some tables
+
+```bash
+mysqldump --skip-add-drop-table --skip-add-locks --skip-disable-keys --skip-set-charset   --host=127.0.0.1 --port=3345 --user=root --password=root --no-data skills  $(mysql --host=127.0.0.1 --port=3345 --user=root --password=root skills -Bse "show tables like 'core\_%'") | grep -v '^\/\*![0-9]\{5\}.*\/;$' > doc/schema.sql
+```
+
+Transform mysql dump to plant uml format
+
+```bash
+mysql2puml tests/tools/data/mysql2puml.dump.sql -s default > tests/tools/data/mysql2puml.puml
+```
+
+Plantuml diagram generated
+
+```plantuml
+@startuml
+' uncomment the line below if you're using computer with a retina display
+' skinparam dpi 300
+!function Table()
+  !return "class " +  + " << (T,#FFAAAA) >>"
+!endfunction
+' we use bold for primary key
+' green color for unique
+' and underscore for not_null
+!function column(, , ="", ="", ="", ="")
+  ! = ""
+  
+  ' Display key
+  !if ( == "PK" &&  != "FK")
+    ! = "<color:red><&key></color>"
+  !elseif ( == "PK" &&  == "FK")
+    ! = "<color:blue><&key></color>"
+  !elseif ( == "FK")
+    ! = "<color:green><&key></color>"
+  !else
+    ! = "<&minus>"
+  !endif
+
+  ' Display nullable icon
+  !if ( == "NULL")
+    ! =  + "<&ban>"
+  !else
+    ! =  + "<&minus>"
+  !endif
+
+  ' Display unique icon
+  !if ( == "UNIQUE")
+    ! =  + "<&audio-spectrum>"
+  !else
+    ! =  + "<&minus>"
+  !endif
+  
+  ' display label in the right color (PK, FK, both, none)
+  ! =  + " "
+  ! =  + " : " + 
+  !if ( == "PK" &&  != "FK")
+    ! =  + "<u><color:red>" +  + "</color></u>"
+  !elseif ( == "PK" &&  == "FK")
+    ! =  + "<u><color:blue>" +  + "</color></u>"
+  !elseif ( == "FK")
+    ! =  + "<u><color:green>" +  + "</color></u>"
+  !else
+    ! =  + 
+  !endif
+  
+  !return 
+!endfunction
+' other tags available:
+' <i></i>
+' <back:COLOR></color>, where color is a color name or html color code
+' (#FFAACC)
+' see: http://plantuml.com/classes.html#More
+hide methods
+hide stereotypes
+skinparam classAttributeIconSize 0
+
+' entities
+' entities
+Table(customer) { 
+  column("id", "int11", "NOT NULL", "PK", "", "")
+  column("identifier", "varchar128", "NOT NULL", "", "", "UNIQUE")
+  column("created_at", "datetime6", "NOT NULL", "", "", "")
+  column("updated_at", "datetime6", "NOT NULL", "", "", "")
+}
+
+Table(learner) { 
+  column("id", "int10 unsigned", "NOT NULL", "PK", "", "")
+  column("customer_id", "int11", "NOT NULL", "", "", "UNIQUE")
+  column("external_id", "varchar255", "NOT NULL", "", "", "UNIQUE")
+  column("created_at", "datetime6", "NOT NULL", "", "", "")
+  column("updated_at", "datetime6", "NOT NULL", "", "", "")
+}
+learner "0..*" --> "1" customer : "id"
+
+Table(learnerattribute) { 
+  column("id", "int11", "NOT NULL", "PK", "", "")
+  column("attribute_id", "int10 unsigned", "NOT NULL", "", "", "")
+  column("learner_id", "int10 unsigned", "NOT NULL", "", "", "")
+  column("created_at", "datetime6", "NOT NULL", "", "", "")
+  column("interest", "double", "NOT NULL", "", "", "")
+  column("level", "double", "NOT NULL", "", "", "")
+  column("updated_at", "datetime6", "NOT NULL", "", "", "")
+}
+learnerattribute "0..*" --> "1" attribute : "id"
+learnerattribute "0..*" --> "1" learner : "id"
+
+Table(attribute) { 
+  column("id", "int10 unsigned", "NOT NULL", "PK", "", "")
+  column("mapped_attribute_id", "int10 unsigned", "NULL", "", "", "")
+  column("internal_id", "int11", "NULL", "", "", "UNIQUE")
+  column("created_at", "datetime6", "NOT NULL", "", "", "")
+  column("translations", "json", "NOT NULL", "", "", "")
+  column("updated_at", "datetime6", "NOT NULL", "", "", "")
+}
+attribute "0..*" --> "1" attribute : "id"
+
+Table(product) { 
+  column("id", "int10 unsigned", "NOT NULL", "PK", "", "")
+  column("customer_id", "int11", "NOT NULL", "", "", "UNIQUE")
+  column("external_id", "int10 unsigned", "NOT NULL", "", "", "UNIQUE")
+  column("created_at", "datetime6", "NOT NULL", "", "", "")
+  column("updated_at", "datetime6", "NOT NULL", "", "", "")
+}
+product "0..*" --> "1" customer : "id"
+
+Table(product_attribute) { 
+  column("id", "int11", "NOT NULL", "PK", "", "")
+  column("attribute_id", "int10 unsigned", "NOT NULL", "", "", "")
+  column("training_course_id", "int10 unsigned", "NOT NULL", "", "", "")
+  column("created_at", "datetime6", "NOT NULL", "", "", "")
+  column("relevance", "double", "NOT NULL", "", "", "")
+  column("updated_at", "datetime6", "NOT NULL", "", "", "")
+}
+product_attribute "0..*" --> "1" attribute : "id"
+product_attribute "0..*" --> "1" product : "id"
+
+@enduml
+```
+
+using plantuml software, here an example of resulting diagram
+
+![resulting dabatase diagram](doc/mysql2puml-model.png)
 
 ## 4. Bash Framework
 
