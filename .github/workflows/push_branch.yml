@@ -73,13 +73,13 @@ jobs:
         run: ./.build/buildPushDockerImages.sh "${{ matrix.vendor }}" "${{ matrix.bashTarVersion }}" "${{ matrix.bashImage }}" "${PULL}" "${PUSH}"      
       -
         name: cache image for other jobs
-        run: docker save -o "/tmp/images/bash-tools-${{ matrix.vendor }}-${{ matrix.bashTarVersion }}.tar" bash-tools-${{ matrix.vendor }}-${{ matrix.bashTarVersion }}
+        run: docker save -o "/tmp/bash-tools-${{ matrix.vendor }}-${{ matrix.bashTarVersion }}.tar" bash-tools-${{ matrix.vendor }}-${{ matrix.bashTarVersion }}
       -
         name: Upload artifact
         uses: actions/upload-artifact@v2
         with:
-          name: bash-tools-${{ matrix.vendor }}-${{ matrix.bashTarVersion }}.tar
-          path: /tmp/images
+          name: image.tar
+          path: /tmp/bash-tools-${{ matrix.vendor }}-${{ matrix.bashTarVersion }}
       - 
         name: Check image
         run:
@@ -101,12 +101,12 @@ jobs:
         name: Download artifact
         uses: actions/download-artifact@v2
         with:
-          name: bash-tools-ubuntu-5.1.tar
-          path: /tmp/images
+          name: image.tar
+          path: /tmp/bash-tools-ubuntu-5.1.tar
       -
         name: Load image
         run: |
-          docker load --input /tmp/images/bash-tools-ubuntu-5.1.tar
+          docker load --input /tmp/images/bash-tools-ubuntu-5.1/image.tar
           docker image ls -a
       - 
         name: Check if doc up to date
@@ -146,12 +146,12 @@ jobs:
           name: Download artifact
           uses: actions/download-artifact@v2
           with:
-            name: bash-tools-${{ matrix.vendor }}-${{ matrix.bashTarVersion }}.tar
-            path: /tmp/images
+            name: image.tar
+            path: /tmp/bash-tools-${{ matrix.vendor }}-${{ matrix.bashTarVersion }}
         -
           name: Load image
           run: |
-            docker load --input /tmp/images/bash-tools-${{ matrix.vendor }}-${{ matrix.bashTarVersion }}.tar
+            docker load --input /tmp/images/bash-tools-${{ matrix.vendor }}-${{ matrix.bashTarVersion }}/image.tar
             docker image ls -a
         - 
           name: run unit tests
