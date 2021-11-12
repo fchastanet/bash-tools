@@ -19,6 +19,7 @@ cd "${BASE_DIR}" || exit 1
 
 # build image and push it ot registry
 docker pull "scrasnups/build:bash-tools-${VENDOR}-${BASH_TAR_VERSION}" || true 
+# shellcheck disable=SC2086
 DOCKER_BUILDKIT=1 docker build \
   ${DOCKER_BUILD_OPTIONS} \
   -f ".docker/Dockerfile.${VENDOR}" \

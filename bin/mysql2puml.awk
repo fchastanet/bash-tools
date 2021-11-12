@@ -176,14 +176,14 @@ function uml_table(createTable)
 }
 
 # =========================================================================
-function uml_parse_line(line)
+function uml_parse_line(currentLine)
 {
-    if (length(line) < 2 || match(line, "^--") > 0) {
+    if (length(currentLine) < 2 || match(currentLine, "^--") > 0) {
         return
     }
  
-    if (match(line,";")>0) {
-        sqlLine = sqlLine "\n" line
+    if (match(currentLine,";")>0) {
+        sqlLine = sqlLine "\n" currentLine
         debug(sqlLine)
         if (match(sqlLine,"CREATE TABLE") > 0) {
             uml_table(sqlLine)
@@ -191,7 +191,7 @@ function uml_parse_line(line)
         sqlLine=""
     }
     else {
-        sqlLine = sqlLine "\n" line
+        sqlLine = sqlLine "\n" currentLine
     }
 }
 
@@ -211,5 +211,8 @@ BEGIN {
 
 END {
     uml_end()
+    exit 0
+    # fake call occuring after exit to remove warning about unused function
+    column_sort()
 }
 # =========================================================================
