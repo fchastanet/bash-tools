@@ -74,6 +74,12 @@ jobs:
       -
         name: cache image for other jobs
         run: docker save -o "/tmp/bash-tools-${{ matrix.vendor }}-${{ matrix.bashTarVersion }}.tar" bash-tools-${{ matrix.vendor }}-${{ matrix.bashTarVersion }}
+      -
+        name: Upload artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: bash-tools-${{ matrix.vendor }}-${{ matrix.bashTarVersion }}.tar
+          path: /tmp/bash-tools-${{ matrix.vendor }}-${{ matrix.bashTarVersion }}.tar
       - 
         name: Check image
         run:
@@ -96,7 +102,7 @@ jobs:
         uses: actions/download-artifact@v2
         with:
           name: bash-tools-ubuntu-5.1.tar
-          path: /tmp
+          path: /tmp/bash-tools-ubuntu-5.1.tar
       -
         name: Load image
         run: |
@@ -141,7 +147,7 @@ jobs:
           uses: actions/download-artifact@v2
           with:
             name: bash-tools-${{ matrix.vendor }}-${{ matrix.bashTarVersion }}.tar
-            path: /tmp
+            path: /tmp/bash-tools-${{ matrix.vendor }}-${{ matrix.bashTarVersion }}.tar
         -
           name: Load image
           run: |
