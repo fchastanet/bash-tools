@@ -23,6 +23,11 @@ jobs:
       - name: Linting - Dockerfiles
         run: ./dockerLint.sh | tee logs/docker-checkstyle.xml
         working-directory: ./
+      - uses: actions/checkout@v2
+        with:
+          name: fchastanet/tomdoc.sh
+          path: vendor/fchastanet.tomdoc.sh
+          ref: refs/heads/master
       - name: Check if doc up to date
         run: |
           ./doc.sh
