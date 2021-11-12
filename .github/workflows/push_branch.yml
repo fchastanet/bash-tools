@@ -73,7 +73,7 @@ jobs:
         run: ./.build/buildPushDockerImages.sh "${{ matrix.vendor }}" "${{ matrix.bashTarVersion }}" "${{ matrix.bashImage }}" "${PULL}" "${PUSH}"      
       -
         name: cache image for other jobs
-        run: docker save -o "/tmp/bash-tools-${{ matrix.vendor }}-${{ matrix.bashTarVersion }}.tar" bash-tools-${{ matrix.vendor }}-${{ matrix.bashTarVersion }}
+        run: docker save -o "/tmp/bash-tools-${{ matrix.vendor }}-${{ matrix.bashTarVersion }}/image.tar" bash-tools-${{ matrix.vendor }}-${{ matrix.bashTarVersion }}
       -
         name: Upload artifact
         uses: actions/upload-artifact@v2
