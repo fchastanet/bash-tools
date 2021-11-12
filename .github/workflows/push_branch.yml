@@ -14,12 +14,22 @@ jobs:
         uses: actions/checkout@v2
       - run: mkdir -p logs
         working-directory: ./
-      - name: Shellcheck
+      - name: Linting - Shellcheck
         run: ./shellcheck.sh | tee logs/shellcheck-checkstyle.xml
         working-directory: ./
-      - run: ./awkLint.sh | tee logs/awkLint.log
+      - name: Linting - Awk
+        run: ./awkLint.sh | tee logs/awkLint.log
         working-directory: ./
-      - run: ./dockerLint.sh | tee logs/docker-checkstyle.xml
+      - name: Linting - Dockerfiles
+        run: ./dockerLint.sh | tee logs/docker-checkstyle.xml
+        working-directory: ./
+      - name: Check if doc up to date
+        run: |
+          ./doc.sh
+          if ! git diff --exit-code >/dev/null; then
+            (>&2 echo "Documentation not up to date, please run doc.sh to update it")
+            exit 1
+          fi
         working-directory: ./
       - uses: jwgmeligmeyling/checkstyle-github-action@master
         with:
