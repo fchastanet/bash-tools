@@ -19,6 +19,10 @@ function debug(first, second, third, fourth, fifth, sixth, seventh, eighth, nint
 
 function uml_start()
 {
+    if (!skinFile) {
+        print("skinFile parameter missing") > "/dev/stderr"
+        exit 1
+    }
     while ((getline tmp < skinFile) > 0) {
         if (match(tmp, /@enduml/)) {
             break

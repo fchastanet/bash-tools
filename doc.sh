@@ -42,19 +42,32 @@ escapeColorCodes() {
 }
 
 generateReadme() {
-  # generate README.md
-  export gitRenameBranch_help="$(/bash/bin/gitRenameBranch --help | escapeColorCodes)"
-  export dbQueryAllDatabases_help="$(/bash/bin/dbQueryAllDatabases --help | escapeColorCodes)"
-  export dbScriptAllDatabases_help="$(/bash/bin/dbScriptAllDatabases --help | escapeColorCodes)"
-  export dbImport_help="$(/bash/bin/dbImport --help | escapeColorCodes)"
-  export dbImportProfile_help="$(/bash/bin/dbImportProfile --help | escapeColorCodes)"
-  export gitIsAncestorOf_help="$(/bash/bin/gitIsAncestorOf --help | escapeColorCodes)"
-  export gitIsBranch_help="$(/bash/bin/gitIsBranch --help | escapeColorCodes)"
-  export mysql2puml_help="$(/bash/bin/mysql2puml --help | escapeColorCodes)"
-  export cli_help="$(/bash/bin/cli --help | escapeColorCodes)"
-  export bash_doc_index="$(cat "${INDEX_FILE}")"
+  TMP_DIR="$(mktemp -d "/tmp/bash-tools.XXXXXXXX")"
+  trap 'rm -rf "${TMP_DIR}"' ERR EXIT
 
-  envsubst < "${CURRENT_DIR}/README.tmpl.md" > "${CURRENT_DIR}/README.md"
+  replaceTokenByFileContent() { 
+    local TOKEN="$1"
+    "/bash/bin/${TOKEN}" --help | escapeColorCodes > "${TMP_DIR}/${TOKEN}_help"
+    (
+      cd "${TMP_DIR}"
+      sed -i -e "/@@@${TOKEN}_help@@@/r ${TOKEN}_help" -e "/@@@${TOKEN}_help@@@/d" "${CURRENT_DIR}/README.md"
+    )
+  }
+
+  cp "/bash/tests/tools/data/mysql2puml.puml" "${TMP_DIR}/mysql2puml_plantuml_diagram"
+  cp "${CURRENT_DIR}/README.tmpl.md" "${CURRENT_DIR}/README.md"
+
+  replaceTokenByFileContent "gitRenameBranch" 
+  replaceTokenByFileContent "dbQueryAllDatabases" 
+  replaceTokenByFileContent "dbScriptAllDatabases" 
+  replaceTokenByFileContent "dbImport" 
+  replaceTokenByFileContent "dbImportProfile" 
+  replaceTokenByFileContent "gitIsAncestorOf" 
+  replaceTokenByFileContent "gitIsBranch" 
+  replaceTokenByFileContent "mysql2puml" 
+  replaceTokenByFileContent "cli" 
+  sed -i -e "/@@@mysql2puml_plantuml_diagram@@@/r /bash/tests/tools/data/mysql2puml.puml" -e "/@@@mysql2puml_plantuml_diagram@@@/d" "${CURRENT_DIR}/README.md"
+  sed -i -e "/@@@bash_doc_index@@@/r ${INDEX_FILE}" -e "/@@@bash_doc_index@@@/d" "${CURRENT_DIR}/README.md"
 }
 
 #-----------------------------

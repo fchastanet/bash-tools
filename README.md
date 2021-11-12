@@ -266,7 +266,7 @@ dbImportProfile --from-dsn default.local MY_DB --ratio 45
 ```
 
 Ability to generate profile that can be used in dbImport to filter out tables bigger than given ratio (based on biggest table size).
-Profile is automatically saved in /home/www-data/.bash-tools/dbImportProfiles with this format 'auto_<dsn>_<db>'
+Profile is automatically saved in ${HOME}/.bash-tools/dbImportProfiles with this format 'auto_<dsn>_<db>'
 **eg:** auto_default.local_MY_DB
 
 **Help**
@@ -385,6 +385,7 @@ mysqldump --skip-add-drop-table --skip-add-locks --skip-disable-keys --skip-set-
 
 List of available skins:
        - default
+
 ```
 
 Mysql dump of some tables
@@ -405,54 +406,54 @@ Plantuml diagram generated
 @startuml
 ' uncomment the line below if you're using computer with a retina display
 ' skinparam dpi 300
-!function Table()
-  !return "class " +  + " << (T,#FFAAAA) >>"
+!function Table($name)
+  !return "class " + $name + " << (T,#FFAAAA) >>"
 !endfunction
 ' we use bold for primary key
 ' green color for unique
 ' and underscore for not_null
-!function column(, , ="", ="", ="", ="")
-  ! = ""
+!function column($name, $type, $null="", $pk="", $fk="", $unique="")
+  !$label = ""
   
   ' Display key
-  !if ( == "PK" &&  != "FK")
-    ! = "<color:red><&key></color>"
-  !elseif ( == "PK" &&  == "FK")
-    ! = "<color:blue><&key></color>"
-  !elseif ( == "FK")
-    ! = "<color:green><&key></color>"
+  !if ($pk == "PK" && $fk != "FK")
+    !$label = "<color:red><&key></color>"
+  !elseif ($pk == "PK" && $fk == "FK")
+    !$label = "<color:blue><&key></color>"
+  !elseif ($fk == "FK")
+    !$label = "<color:green><&key></color>"
   !else
-    ! = "<&minus>"
+    !$label = "<&minus>"
   !endif
 
   ' Display nullable icon
-  !if ( == "NULL")
-    ! =  + "<&ban>"
+  !if ($null == "NULL")
+    !$label = $label + "<&ban>"
   !else
-    ! =  + "<&minus>"
+    !$label = $label + "<&minus>"
   !endif
 
   ' Display unique icon
-  !if ( == "UNIQUE")
-    ! =  + "<&audio-spectrum>"
+  !if ($unique == "UNIQUE")
+    !$label = $label + "<&audio-spectrum>"
   !else
-    ! =  + "<&minus>"
+    !$label = $label + "<&minus>"
   !endif
   
   ' display label in the right color (PK, FK, both, none)
-  ! =  + " "
-  ! =  + " : " + 
-  !if ( == "PK" &&  != "FK")
-    ! =  + "<u><color:red>" +  + "</color></u>"
-  !elseif ( == "PK" &&  == "FK")
-    ! =  + "<u><color:blue>" +  + "</color></u>"
-  !elseif ( == "FK")
-    ! =  + "<u><color:green>" +  + "</color></u>"
+  !$label = $label + " "
+  !$columnSpec = $name + " : " + $type
+  !if ($pk == "PK" && $fk != "FK")
+    !$label = $label + "<u><color:red>" + $columnSpec + "</color></u>"
+  !elseif ($pk == "PK" && $fk == "FK")
+    !$label = $label + "<u><color:blue>" + $columnSpec + "</color></u>"
+  !elseif ($fk == "FK")
+    !$label = $label + "<u><color:green>" + $columnSpec + "</color></u>"
   !else
-    ! =  + 
+    !$label = $label + $columnSpec
   !endif
   
-  !return 
+  !return $label
 !endfunction
 ' other tags available:
 ' <i></i>
@@ -588,7 +589,7 @@ All these tools are based on *Bash framework* with the following features:
 # load bash-framework
 # shellcheck source=bash-framework/_bootstrap.sh
 CURRENT_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
-source "$( cd "/.." && pwd )/bash-framework/_bootstrap.sh"
+source "$( cd "${CURRENT_DIR}/.." && pwd )/bash-framework/_bootstrap.sh"
 
 # bash framework is loaded, .env has been loaded (default .env file present in bash-framework is loaded if none exists yet) 
 
