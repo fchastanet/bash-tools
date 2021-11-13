@@ -131,7 +131,8 @@ jobs:
         - 
           name: run unit tests
           run: |
-            ./test.sh --formatter junit -r tests | tee ./logs/junit.xml
+            ./test.sh --version
+            SKIP_BUILD=1 ./test.sh --formatter junit -r tests | tee ./logs/junit.xml
             echo "results:"
             cat ./logs/junit.xml
         - 
