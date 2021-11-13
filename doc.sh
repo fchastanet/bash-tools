@@ -47,14 +47,14 @@ generateReadme() {
 
   replaceTokenByFileContent() { 
     local TOKEN="$1"
-    "/bash/bin/${TOKEN}" --help | escapeColorCodes > "${TMP_DIR}/${TOKEN}_help"
+    "${CURRENT_DIR}/bin/${TOKEN}" --help | escapeColorCodes > "${TMP_DIR}/${TOKEN}_help"
     (
       cd "${TMP_DIR}"
       sed -i -e "/@@@${TOKEN}_help@@@/r ${TOKEN}_help" -e "/@@@${TOKEN}_help@@@/d" "${CURRENT_DIR}/README.md"
     )
   }
 
-  cp "/bash/tests/tools/data/mysql2puml.puml" "${TMP_DIR}/mysql2puml_plantuml_diagram"
+  cp "${CURRENT_DIR}/tests/tools/data/mysql2puml.puml" "${TMP_DIR}/mysql2puml_plantuml_diagram"
   cp "${CURRENT_DIR}/README.tmpl.md" "${CURRENT_DIR}/README.md"
 
   replaceTokenByFileContent "gitRenameBranch" 
@@ -66,7 +66,7 @@ generateReadme() {
   replaceTokenByFileContent "gitIsBranch" 
   replaceTokenByFileContent "mysql2puml" 
   replaceTokenByFileContent "cli" 
-  sed -i -e "/@@@mysql2puml_plantuml_diagram@@@/r /bash/tests/tools/data/mysql2puml.puml" -e "/@@@mysql2puml_plantuml_diagram@@@/d" "${CURRENT_DIR}/README.md"
+  sed -i -e "/@@@mysql2puml_plantuml_diagram@@@/r ${CURRENT_DIR}/tests/tools/data/mysql2puml.puml" -e "/@@@mysql2puml_plantuml_diagram@@@/d" "${CURRENT_DIR}/README.md"
   sed -i -e "/@@@bash_doc_index@@@/r ${INDEX_FILE}" -e "/@@@bash_doc_index@@@/d" "${CURRENT_DIR}/README.md"
 }
 
@@ -88,10 +88,11 @@ export PATH=/tmp:$PATH
 # doc generation
 #-----------------------------
 # generate doc + index
+echo "generate bash-framework index"
 mkdir -p "${CURRENT_DIR}/doc"
-declare -a cmd
-cmd=(generateShDoc '{}' "${CURRENT_DIR}" "${INDEX_FILE}")
-find "${CURRENT_DIR}/bash-framework" -name "*.sh" -exec bash -c "${cmd[*]}" \;
+while IFS= read -r file; do 
+  generateShDoc "${file}" "${CURRENT_DIR}" "${INDEX_FILE}"
+done < <(find "${CURRENT_DIR}/bash-framework" -name "*.sh" | sort)
 
 # generate readme
 echo "generate README.md"

@@ -4,9 +4,7 @@ FROM ${BASH_IMAGE}
 
 RUN apk add --no-cache \
     "gawk=~5.1" \
-    "git=~2.26" \
-    # gettext provides envsubst used for doc.sh 
-    "gettext=~0.20"
+    "git=~2"
 ENV IN_BASH_DOCKER="You're in docker"
 
 ONBUILD ARG USER_ID=1000

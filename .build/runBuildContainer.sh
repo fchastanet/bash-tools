@@ -2,7 +2,6 @@
 
 set -o errexit
 set -o pipefail
-set -x
 
 BASE_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." && pwd )
 VENDOR="${VENDOR:-ubuntu}"
@@ -33,9 +32,14 @@ if [[ "${SKIP_BUILD:-0}" = "0" ]]; then
 fi
 
 # run tests
+args=()
+if tty -s; then
+  args=("-it")
+fi
+
 docker run \
   --rm \
-  -it \
+  "${args[@]}" \
   -w /bash \
   -v "${BASE_DIR}:/bash" \
   --user "$(id -u):$(id -g)" \

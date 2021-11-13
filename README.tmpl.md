@@ -1,6 +1,6 @@
 # bash-tools
 
-Build status: [![Build Status](https://travis-ci.com/fchastanet/bash-tools.svg?branch=master)](https://travis-ci.com/fchastanet/bash-tools)
+Build status: [![Workflow executed at each push](https://github.com/fchastanet/bash-tools/actions/workflows/push_branch.yml/badge.svg?branch=master)](https://github.com/fchastanet/bash-tools/actions/workflows/push_branch.yml)
 [![Project Status](http://opensource.box.com/badges/active.svg)](http://opensource.box.com/badges)
 [![DeepSource](https://deepsource.io/gh/fchastanet/bash-tools.svg/?label=active+issues&show_trend=true)](https://deepsource.io/gh/fchastanet/bash-tools/?ref=repository-badge)
 [![DeepSource](https://deepsource.io/gh/fchastanet/bash-tools.svg/?label=resolved+issues&show_trend=true)](https://deepsource.io/gh/fchastanet/bash-tools/?ref=repository-badge)

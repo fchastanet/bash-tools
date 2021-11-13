@@ -1,5 +1,4 @@
 #!/usr/bin/env bash
-set -x
 set -o errexit
 set -o pipefail
 
@@ -7,7 +6,8 @@ BASE_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." && pwd )
 VENDOR="$1"
 BASH_TAR_VERSION="$2"
 BASH_BASE_IMAGE="$3"
-PUSH_IMAGE="$4"
+PULL_IMAGE="${4:-true}"
+PUSH_IMAGE="${5:-}"
 DOCKER_BUILD_OPTIONS="${DOCKER_BUILD_OPTIONS:-}"
 
 if [[ -z "${VENDOR}" || -z "${BASH_TAR_VERSION}" || -z "${BASH_BASE_IMAGE}" ]]; then
@@ -17,8 +17,13 @@ fi
 
 cd "${BASE_DIR}" || exit 1
 
+# pull image if needed
+if [[ "${PULL_IMAGE}" == "true" ]]; then
+  docker pull "scrasnups/build:bash-tools-${VENDOR}-${BASH_TAR_VERSION}" || true 
+fi
+
 # build image and push it ot registry
-docker pull "scrasnups/build:bash-tools-${VENDOR}-${BASH_TAR_VERSION}" || true 
+# shellcheck disable=SC2086
 DOCKER_BUILDKIT=1 docker build \
   ${DOCKER_BUILD_OPTIONS} \
   -f ".docker/Dockerfile.${VENDOR}" \
@@ -32,10 +37,5 @@ DOCKER_BUILDKIT=1 docker build \
 docker run --rm "bash-tools-${VENDOR}-${BASH_TAR_VERSION}" bash --version
 
 if [[ "${PUSH_IMAGE}" == "push" ]]; then
-  if [[ -z "${DOCKER_PASSWORD}" || -z "${DOCKER_USERNAME}" ]]; then
-    (>&2 echo "please export DOCKER_PASSWORD and DOCKER_USERNAME before using this script")
-    exit 1
-  fi
-  echo "${DOCKER_PASSWORD}" | docker login --username "$DOCKER_USERNAME" --password-stdin
   docker push "scrasnups/build:bash-tools-${VENDOR}-${BASH_TAR_VERSION}"
 fi

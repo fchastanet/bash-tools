@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+set -o errexit
+set -o pipefail
 CURRENT_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 
 # use this in order to debug inside the container
