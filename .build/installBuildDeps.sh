@@ -16,19 +16,20 @@ Git::ShallowClone \
 Git::ShallowClone \
   "https://github.com/bats-core/bats-core.git" \
   "${BASE_DIR}/vendor/bats" \
-  "v1.2.1" \
+  "v1.5.0" \
   "1"
 
+# last revision 2019
 Git::ShallowClone \
   "https://github.com/bats-core/bats-support.git" \
   "${BASE_DIR}/vendor/bats-support" \
-  "d140a65044b2d6810381935ae7f0c94c7023c8c3" \
+  "master" \
   "1"
 
 Git::ShallowClone \
   "https://github.com/bats-core/bats-assert.git" \
   "${BASE_DIR}/vendor/bats-assert" \
-  "0a8dd57e2cc6d4cc064b1ed6b4e79b9f7fee096f" \
+  "34551b1d7f8c7b677c1a66fc0ac140d6223409e5" \
   "1"
 
 Git::ShallowClone \
