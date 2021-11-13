@@ -95,7 +95,7 @@ jobs:
         name: Check if doc up to date
         run: |
           ./doc.sh
-          if ! git diff --exit-code >/dev/null; then
+          if ! git diff --exit-code; then
             (>&2 echo "Documentation not up to date, please run doc.sh to update it")
             exit 1
           fi
