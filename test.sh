@@ -2,7 +2,7 @@
 
 set -o errexit
 set -o pipefail
-
+set -x
 CURRENT_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 
 # use this in order to debug inside the container

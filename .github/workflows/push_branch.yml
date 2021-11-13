@@ -131,6 +131,7 @@ jobs:
         - 
           name: run unit tests
           run: |
+            ./vendor/bats/bin/bats --help
             ./test.sh --formatter junit -r tests | tee ./logs/junit.xml
         - 
           name: Publish Unit Test Results
