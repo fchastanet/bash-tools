@@ -88,10 +88,11 @@ export PATH=/tmp:$PATH
 # doc generation
 #-----------------------------
 # generate doc + index
+echo "generate bash-framework index"
 mkdir -p "${CURRENT_DIR}/doc"
-declare -a cmd
-cmd=(generateShDoc '{}' "${CURRENT_DIR}" "${INDEX_FILE}")
-find "${CURRENT_DIR}/bash-framework" -name "*.sh" -exec bash -c "${cmd[*]}" \;
+while IFS= read -r file; do 
+  generateShDoc "${file}" "${CURRENT_DIR}" "${INDEX_FILE}"
+done < <(find "${CURRENT_DIR}/bash-framework" -name "*.sh" | sort)
 
 # generate readme
 echo "generate README.md"
