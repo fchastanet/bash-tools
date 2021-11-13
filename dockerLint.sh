@@ -10,7 +10,6 @@ if (( $# == 0 )); then
 fi
 
 (
-  set -x
   cd "${BASE_DIR}"
   # shellcheck disable=SC2046
   hadolint "$@" $(find .docker -type f -name 'Dockerfile*')
