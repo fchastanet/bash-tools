@@ -131,7 +131,7 @@ jobs:
         - 
           name: run unit tests
           run: |
-            SKIP_BUILD=1 ./test.sh --formatter junit -r tests | tee logs/junit.xml
+            ./test.sh --formatter junit -r tests | tee logs/junit.xml
         - 
           name: Publish Unit Test Results
           uses: EnricoMi/publish-unit-test-result-action@v1
