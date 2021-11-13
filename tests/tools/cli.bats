@@ -42,15 +42,24 @@ teardown() {
 
 @test "${BATS_TEST_FILENAME#/bash/tests/} without any parameter connects to default container" {
     stub_tput
-    stub docker 'exec -it -e COLUMNS=80 -e LINES=23 --user=www-data project-apache2 //bin/bash : echo "connected to container"'
+    if read -r -t 0; then
+        stub docker 'exec -i -e COLUMNS=80 -e LINES=23 --user=www-data project-apache2 //bin/bash : echo "connected to container"'
+    else
+        stub docker 'exec -it -e COLUMNS=80 -e LINES=23 --user=www-data project-apache2 //bin/bash : echo "connected to container"'
+    fi
     run ${toolsDir}/cli 2>&1
+    
     [ "$status" -eq 0 ]
     [[ "${lines[1]}" = "connected to container" ]]
 }
 
 @test "${BATS_TEST_FILENAME#/bash/tests/} to existing container" {
     stub_tput
-    stub docker 'exec -it -e COLUMNS=80 -e LINES=23 --user=mysql project-mysql8 //bin/bash -c mysql\ -h127.0.0.1\ -uroot\ -proot\ -P3306 : echo "connected to container"'
+    if read -r -t 0; then
+        stub docker 'exec -i -e COLUMNS=80 -e LINES=23 --user=mysql project-mysql8 //bin/bash -c mysql\ -h127.0.0.1\ -uroot\ -proot\ -P3306 : echo "connected to container"'
+    else
+        stub docker 'exec -it -e COLUMNS=80 -e LINES=23 --user=mysql project-mysql8 //bin/bash -c mysql\ -h127.0.0.1\ -uroot\ -proot\ -P3306 : echo "connected to container"'
+    fi
     run ${toolsDir}/cli mysql 2>&1
     [ "$status" -eq 0 ]
     [[ "${lines[1]}" = "connected to container" ]]
@@ -58,7 +67,11 @@ teardown() {
 
 @test "${BATS_TEST_FILENAME#/bash/tests/} to existing container override user" {
     stub_tput
-    stub docker 'exec -it -e COLUMNS=80 -e LINES=23 --user=user2 project-apache2 //bin/bash : echo "connected to container"'
+    if read -r -t 0; then
+        stub docker 'exec -i -e COLUMNS=80 -e LINES=23 --user=user2 project-apache2 //bin/bash : echo "connected to container"'
+    else
+        stub docker 'exec -it -e COLUMNS=80 -e LINES=23 --user=user2 project-apache2 //bin/bash : echo "connected to container"'
+    fi
     run ${toolsDir}/cli web user2 2>&1
     [ "$status" -eq 0 ]
     [[ "${lines[1]}" = "connected to container" ]]
@@ -66,7 +79,11 @@ teardown() {
 
 @test "${BATS_TEST_FILENAME#/bash/tests/} to existing container override user and command" {
     stub_tput
-    stub docker 'exec -it -e COLUMNS=80 -e LINES=23 --user=user2 project-apache2 gulp : echo "gulp running"'
+    if read -r -t 0; then
+        stub docker 'exec -i -e COLUMNS=80 -e LINES=23 --user=user2 project-apache2 gulp : echo "gulp running"'
+    else
+        stub docker 'exec -it -e COLUMNS=80 -e LINES=23 --user=user2 project-apache2 gulp : echo "gulp running"'
+    fi
     run ${toolsDir}/cli web user2 gulp 2>&1
     [ "$status" -eq 0 ]
     [[ "${lines[1]}" = "gulp running" ]]
@@ -75,7 +92,11 @@ teardown() {
 @test "${BATS_TEST_FILENAME#/bash/tests/} add a custom profile and use this profile" {
     stub_tput
     cp ${BATS_TEST_DIRNAME}/data/my-container.sh "${HOME}/.bash-tools/cliProfiles"
-    stub docker 'exec -it -e COLUMNS=80 -e LINES=23 --user=superuser my-container mycommand : echo "connected to container"'
+    if read -r -t 0; then
+        stub docker 'exec -i -e COLUMNS=80 -e LINES=23 --user=superuser my-container mycommand : echo "connected to container"'
+    else
+        stub docker 'exec -it -e COLUMNS=80 -e LINES=23 --user=superuser my-container mycommand : echo "connected to container"'
+    fi
     run ${toolsDir}/cli my-container 2>&1
     [ "$status" -eq 0 ]
     [[ "${lines[1]}" = "connected to container" ]]
@@ -83,7 +104,11 @@ teardown() {
 
 @test "${BATS_TEST_FILENAME#/bash/tests/} to a container without a matching profile" {
     stub_tput
-    stub docker 'exec -it -e COLUMNS=80 -e LINES=23 --user=www-data my-container //bin/bash : echo "connected to container"'
+    if read -r -t 0; then
+        stub docker 'exec -i -e COLUMNS=80 -e LINES=23 --user=www-data my-container //bin/bash : echo "connected to container"'
+    else
+        stub docker 'exec -it -e COLUMNS=80 -e LINES=23 --user=www-data my-container //bin/bash : echo "connected to container"'
+    fi
     run ${toolsDir}/cli my-container 2>&1
     [ "$status" -eq 0 ]
     [[ "${lines[1]}" = "connected to container" ]]
