@@ -15,11 +15,11 @@ jobs:
       - name: Download hadolint and make available in path
         shell: bash
         run: |
-          mkdir -p ${{ github.action_path }}/bin || true
-          wget -q -O ${{ github.action_path }}/bin/hadolint \
+          mkdir -p bin || true
+          wget -q -O bin/hadolint \
             "https://github.com/hadolint/hadolint/releases/download/v2.8.0/hadolint-Linux-x86_64"
-          chmod +x ${{ github.action_path }}/bin/hadolint
-          echo "${{ github.action_path }}/bin" >> $GITHUB_PATH
+          chmod +x bin/hadolint
+          echo "$(pwd)/bin" >> $GITHUB_PATH
       - 
         name: Linting - Shellcheck
         run: ./shellcheck.sh | tee logs/shellcheck-checkstyle.xml
