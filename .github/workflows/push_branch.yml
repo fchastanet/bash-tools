@@ -15,7 +15,7 @@ jobs:
       - name: Download hadolint and make available in path
         shell: bash
         run: |
-          mkdir ${{ github.action_path }}/bin
+          mkdir -p ${{ github.action_path }}/bin || true
           wget -q -O ${{ github.action_path }}/bin/hadolint \
             "https://github.com/hadolint/hadolint/releases/download/v2.8.0/hadolint-Linux-x86_64"
           chmod +x ${{ github.action_path }}/bin/hadolint
