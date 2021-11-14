@@ -3,7 +3,7 @@
 BASE_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 
 (
-  cd "${BASE_DIR}"
+  cd "${BASE_DIR}" || exit 1
   trap 'rm -f /tmp/awkLint.log || true' ERR EXIT
   # <?xml version='1.0' encoding='UTF-8'?>
   # <checkstyle version='4.3'>
