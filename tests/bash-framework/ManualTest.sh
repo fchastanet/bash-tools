@@ -29,7 +29,7 @@ export HOME="/tmp/home"
     cp "${BATS_TEST_DIRNAME}/data/"dsn_* /tmp/home/.bash-tools/dsn
     touch default.local.env
     touch other.local.env
-
+)
 export PATH="$PATH:/tmp/home/bin"
 
 declare -Ax dbFromInstance
