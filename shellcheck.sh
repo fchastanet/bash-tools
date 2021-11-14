@@ -17,6 +17,7 @@ fi
           -not -path './LICENSE' \
           -not -path './vendor/*' \
           -not -path './.git/*' \
+          -not -path './bin/hadolint' \
           -not -path './.github/*' \
           -not -path './.docker/*' \
           -not -path './.history/*' \
