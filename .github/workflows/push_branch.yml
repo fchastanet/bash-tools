@@ -40,7 +40,7 @@ jobs:
         name: Linting - Dockerfiles
         run: ./dockerLint.sh | tee logs/docker-checkstyle.xml
       - 
-        uses: jwgmeligmeyling/checkstyle-github-action@master
+        uses: fchastanet/checkstyle-github-action@failfastOnError
         with:
           path: 'logs/*-checkstyle.xml'
       - 
