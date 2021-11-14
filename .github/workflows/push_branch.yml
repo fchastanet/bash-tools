@@ -12,7 +12,8 @@ jobs:
       - 
         name: Checkout Code
         uses: actions/checkout@v2
-      - name: Download hadolint and make available in path
+      - 
+        name: Download hadolint and make available in path
         shell: bash
         run: |
           mkdir -p bin || true
@@ -20,6 +21,10 @@ jobs:
             "https://github.com/hadolint/hadolint/releases/download/v2.8.0/hadolint-Linux-x86_64"
           chmod +x bin/hadolint
           echo "$(pwd)/bin" >> $GITHUB_PATH
+      - 
+        name: Install vendors (shellcheck follow source during linting)
+        shell: bash
+        run: ./.build/installBuildDeps.sh
       - 
         name: Linting - Shellcheck
         run: ./shellcheck.sh | tee logs/shellcheck-checkstyle.xml
