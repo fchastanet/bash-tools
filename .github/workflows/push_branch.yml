@@ -11,7 +11,8 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        vendor: ubuntu
+        vendor: 
+          - ubuntu
     steps:
       - 
         name: Checkout Code
@@ -99,8 +100,10 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        vendor: ubuntu
-        bashTarVersion: "5.1"
+        vendor: 
+          - ubuntu
+        bashTarVersion: 
+          - "5.1"
     steps:
       - 
         name: Checkout Code
