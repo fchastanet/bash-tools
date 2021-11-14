@@ -3,10 +3,13 @@
 # test used for bats debugging purpose
 
 BATS_TEST_DIRNAME=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
-declare -g vendorDir="$( cd "${BATS_TEST_DIRNAME}/../../vendor" && pwd )"
+declare -g vendorDir
+vendorDir="$( cd "${BATS_TEST_DIRNAME}/../../vendor" && pwd )"
 
+# shellcheck source=/bash-framework/_bootstrap.sh
 source "$(cd "${BATS_TEST_DIRNAME}/../.." && pwd)/bash-framework/_bootstrap.sh" || exit 1
 import bash-framework/Database
+# shellcheck source=/vendor/bats-mock-Flamefire/load.bash
 source "${vendorDir}/bats-mock-Flamefire/load.bash" || exit 1
 
 export HOME="/tmp/home"
@@ -23,7 +26,7 @@ export HOME="/tmp/home"
     chmod +x bin/*
     mkdir -p /tmp/home/.bash-tools/dsn
     cd /tmp/home/.bash-tools/dsn
-    cp ${BATS_TEST_DIRNAME}/data/dsn_* /tmp/home/.bash-tools/dsn
+    cp "${BATS_TEST_DIRNAME}/data/"dsn_* /tmp/home/.bash-tools/dsn
     touch default.local.env
     touch other.local.env
 )
