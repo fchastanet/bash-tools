@@ -9,7 +9,7 @@
 ' and underscore for not_null
 !function column($name, $type, $null="", $pk="", $fk="", $unique="")
   !$label = ""
-  
+
   ' Display key
   !if ($pk == "PK" && $fk != "FK")
     !$label = "<color:red><&key></color>"
@@ -34,7 +34,7 @@
   !else
     !$label = $label + "<&minus>"
   !endif
-  
+
   ' display label in the right color (PK, FK, both, none)
   !$label = $label + " "
   !$columnSpec = $name + " : " + $type
@@ -47,7 +47,7 @@
   !else
     !$label = $label + $columnSpec
   !endif
-  
+
   !return $label
 !endfunction
 ' other tags available:

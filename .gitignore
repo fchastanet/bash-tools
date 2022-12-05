@@ -1,4 +1,7 @@
 logs/*
 !logs/.gitkeep
-vendor/
-.history/
+vendor
+.history
+megalinter-reports
+_site
+doc

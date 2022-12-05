@@ -1,0 +1,9 @@
+{
+  "retryOn429": true,
+  "retryCount": 5,
+  "ignorePatterns": [
+    {
+      "pattern": "^http://localhost:4000/"
+    }
+  ]
+}
