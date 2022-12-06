@@ -96,11 +96,12 @@ touch ~/.parallel/will-cite
 
 ### 3.1. Install build dependencies
 
-In order to generate bash documentation nad to run unit tests, you have to
-launch this command to install some libraries.
+In order to generate bash documentation and to run unit tests, you have to
+launch this command to install dependent libraries.
 
 ```bash
- ./build/installBuildDeps.sh
+ git submodule init
+ git submodule update
 ```
 
 this script will install the following libraries inside `vendor` folder:

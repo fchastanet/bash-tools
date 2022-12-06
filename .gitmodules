@@ -1,3 +1,19 @@
 [submodule "bash-tools-framework"]
-	path = bash-tools-framework
+	path = vendor/bash-tools-framework
 	url = git@github.com:fchastanet/bash-tools-framework.git
+[submodule "vendor/tomdoc.sh"]
+	path = vendor/tomdoc.sh
+	url = git@github.com:fchastanet/tomdoc.sh.git
+[submodule "vendor/bats-core"]
+	path = vendor/bats-core
+	url = git@github.com:bats-core/bats-core.git
+	branch = v1.5.0
+[submodule "vendor/bats-support"]
+	path = vendor/bats-support
+	url = git@github.com:bats-core/bats-support.git
+[submodule "vendor/bats-assert"]
+	path = vendor/bats-assert
+	url = git@github.com:bats-core/bats-assert.git
+[submodule "vendor/bats-mock"]
+	path = vendor/bats-mock-Flamefire
+	url = git@github.com:Flamefire/bats-mock.git
