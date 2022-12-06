@@ -1,3 +1,5 @@
+---
+# Check if precommit packages need to be updated and create PR if this is the case
 name: Pre-commit auto-update
 on:
   workflow_dispatch:

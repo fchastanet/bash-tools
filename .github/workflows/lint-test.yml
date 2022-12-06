@@ -1,4 +1,6 @@
-name: Workflow executed at each push
+---
+# Lint the code base and launch unit test at each push or pull request
+name: Lint and test
 on:
   push:
   pull_request:
