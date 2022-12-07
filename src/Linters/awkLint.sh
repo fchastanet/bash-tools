@@ -1,16 +1,19 @@
 #!/usr/bin/env bash
-# ROOT_DIR_RELATIVE_TO_BIN_DIR=../..
+# BIN_FILE=${ROOT_DIR}/bin/awkLint
+# ROOT_DIR_RELATIVE_TO_BIN_DIR=..
 
-.INCLUDE lib/_header.tpl
+.INCLUDE "${TEMPLATE_DIR}/_includes/_header.tpl"
 
 awkLintScript="$(
   cat <<'EOF'
-.INCLUDE src/linters/awkLint.awk
+.INCLUDE "${CURRENT_DIR}/awkLint.awk"
 EOF
 )"
 
+FROM_DIR="${1:-${ROOT_DIR}}"
+
 (
-  cd "${ROOT_DIR}" || exit 1
+  cd "${FROM_DIR}" || exit 1
   # <?xml version='1.0' encoding='UTF-8'?>
   # <checkstyle version='4.3'>
   # <file name='./tests/bash&#45;framework/ManualTest.sh' >

@@ -4,15 +4,18 @@
     "report": true,
     "backup": true,
     "megalinter-reports": true,
-    "bin": true,
+    "**/bin": true,
     "_site": true,
-    "vendor": true
+    "vendor/bats-*": true,
+    "vendor/tomdoc.sh": true
   },
   "files.exclude": {
-    "_site/**": true
+    "_site/**": true,
+    "**/.git": true
   },
   "markdown.extension.toc.omittedFromToc": {
     "*.md": ["# %%"]
   },
-  "markdown.extension.toc.levels": "2..6"
+  "markdown.extension.toc.levels": "2..6",
+  "shellcheck.customArgs": ["--source-path=SCRIPTDIR", "--external-sources"]
 }

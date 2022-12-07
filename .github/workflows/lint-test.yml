@@ -78,13 +78,14 @@ jobs:
           BRANCH: ${{ github.ref }}
           PUSH: push
         run:
-          ./.github/buildScripts/buildPushDockerImages.sh "${{ matrix.vendor }}"
-          \ "${{ matrix.bashTarVersion }}" "${{ matrix.bashImage }}" "${BRANCH}"
-          \ "${PUSH}"
+          ./.github/buildScripts/buildPushDockerImages.sh "${{matrix.vendor}}" \
+          "${{matrix.bashTarVersion}}" "${{matrix.bashImage}}" "${BRANCH}" \
+          "${PUSH}"
       - name: Check image
-        run:
-          docker run --rm "bash-tools-${{ matrix.vendor
-          }}-${{matrix.bashTarVersion }}" bash --version
+        run: |
+          docker run --rm \
+          "bash-tools-${{matrix.vendor}}-${{matrix.bashTarVersion}}" bash \
+          --version
 
   testDoc:
     needs: buildDockerImages

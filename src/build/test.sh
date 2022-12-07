@@ -2,7 +2,7 @@
 # BIN_FILE=${ROOT_DIR}/bin/test
 # ROOT_DIR_RELATIVE_TO_BIN_DIR=..
 
-.INCLUDE lib/_header.tpl
+.INCLUDE "${TEMPLATE_DIR}/_includes/_header.tpl"
 
 # use this in order to debug inside the container
 # docker build -t bash-tools-ubuntu:5.1 -f .docker/Dockerfile.ubuntu

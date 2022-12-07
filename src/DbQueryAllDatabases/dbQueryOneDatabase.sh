@@ -1,20 +1,20 @@
 #!/usr/bin/env bash
+# BIN_FILE=${ROOT_DIR}/bin/dbQueryOneDatabase
+# ROOT_DIR_RELATIVE_TO_BIN_DIR=..
+
+.INCLUDE "${TEMPLATE_DIR}/_includes/_header.tpl"
 
 ############################################################
 # INTERNAL USE ONLY
 # USED BY bin/dbQueryAllDatabases
 ############################################################
 
-# load bash-framework
-# shellcheck source=bash-framework/_bootstrap.sh
-source "$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." && pwd )/bash-framework/_bootstrap.sh"
+Assert::expectNonRootUser
 
-Framework::expectNonRootUser
+Framework::loadEnv
 
 # ensure that Ctrl-C is trapped by this script and not sub mysql process
 trap 'exit 130' INT
-
-import bash-framework/Database
 
 # query is passed via export
 declare DSN_FILE="$1"
@@ -30,4 +30,4 @@ Database::skipColumnNames dbInstance 0
 
 # shellcheck disable=SC2154
 Database::query dbInstance "${query}" "${DB}" ||
-    Log::displayError "database ${DB} error" 1>&2
+  Log::displayError "database ${DB} error" 1>&2

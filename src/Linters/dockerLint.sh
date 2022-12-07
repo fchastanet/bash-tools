@@ -1,17 +1,12 @@
 #!/usr/bin/env bash
-# ROOT_DIR_RELATIVE_TO_BIN_DIR=../..
+# BIN_FILE=${ROOT_DIR}/bin/dockerLint
+# ROOT_DIR_RELATIVE_TO_BIN_DIR=..
 
-set -o errexit
-set -o pipefail
-
-BASE_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)
+.INCLUDE "${TEMPLATE_DIR}/_includes/_header.tpl"
 
 if (($# == 0)); then
   set -- -f checkstyle
 fi
 
-(
-  cd "${BASE_DIR}"
-  # shellcheck disable=SC2046
-  hadolint "$@" $(find .docker -type f -name 'Dockerfile*')
-)
+# shellcheck disable=SC2046
+find . -type f -name 'Dockerfile*' -print0 | xargs -0 hadolint "$@"

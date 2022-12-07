@@ -2,7 +2,7 @@
 # BIN_FILE=${ROOT_DIR}/bin/publishDeepsourceArtifact
 # ROOT_DIR_RELATIVE_TO_BIN_DIR=..
 
-.INCLUDE lib/_header.tpl
+.INCLUDE "${TEMPLATE_DIR}/_includes/_header.tpl"
 
 FILE="$1"
 (

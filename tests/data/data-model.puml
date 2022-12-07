@@ -22,7 +22,7 @@ column ( KEY ): `core_learner_customer_id_6d356da8_fk_core_customer_id`
 foreign_key ( CONSTRAINT ): `core_learner_customer_id_6d356da8_fk_core_customer_id`
 }
 
-table(core_learnerskill) {
+table(core_learner_skill) {
 column ( `id` ): int(11
 column ( `created_at` ): datetime(6)
 column ( `updated_at` ): datetime(6)
@@ -31,10 +31,10 @@ column ( `interest` ): double
 column ( `learner_id` ): int(10)
 column ( `skill_id` ): int(10)
 column ( PRIMARY ): KEY
-column ( KEY ): `core_learnerskill_learner_id_684f904f_fk_core_learner_id`
-column ( KEY ): `core_learnerskill_skill_id_fa4d99ac_fk_core_skill_id`
-foreign_key ( CONSTRAINT ): `core_learnerskill_learner_id_684f904f_fk_core_learner_id`
-foreign_key ( CONSTRAINT ): `core_learnerskill_skill_id_fa4d99ac_fk_core_skill_id`
+column ( KEY ): `core_learner_skill_learner_id_684f904f_fk_core_learner_id`
+column ( KEY ): `core_learner_skill_skill_id_fa4d99ac_fk_core_skill_id`
+foreign_key ( CONSTRAINT ): `core_learner_skill_learner_id_684f904f_fk_core_learner_id`
+foreign_key ( CONSTRAINT ): `core_learner_skill_skill_id_fa4d99ac_fk_core_skill_id`
 }
 
 table(core_skill) {

@@ -1,0 +1,722 @@
+#!/usr/bin/env bash
+
+#####################################
+# GENERATED FILE FROM src/Docker/cli.sh
+# DO NOT EDIT IT
+#####################################
+
+# shellcheck disable=SC2034
+SCRIPT_NAME=${0##*/}
+# shellcheck disable=SC2034
+CURRENT_DIR=$(cd "$(readlink -e "${BASH_SOURCE[0]%/*}")" && pwd -P)
+BIN_DIR=$(cd "$(readlink -e "${BASH_SOURCE[0]%/*}")" && pwd -P)
+ROOT_DIR="$(cd "${BIN_DIR}/.." && pwd -P)"
+# shellcheck disable=SC2034
+SRC_DIR="${ROOT_DIR}/lib"
+
+# shellcheck disable=SC2034
+((failures = 0)) || true
+
+shopt -s expand_aliases
+
+# Bash will remember & return the highest exit code in a chain of pipes.
+# This way you can catch the error inside pipes, e.g. mysqldump | gzip
+set -o pipefail
+set -o errexit
+
+# a log is generated when a command fails
+set -o errtrace
+
+# use nullglob so that (file*.php) will return an empty array if no file matches the wildcard
+shopt -s nullglob
+
+export TERM=xterm-256color
+
+#avoid interactive install
+export DEBIAN_FRONTEND=noninteractive
+export DEBCONF_NONINTERACTIVE_SEEN=true
+
+# FUNCTIONS
+
+# *Public*: run command and store data in following global variables :
+# * bash_framework_status the exit status of the command
+# * bash_framework_duration the duration of the command
+# * bash_framework_output the output of the command
+# redirecting error output to stdout is not supported, you can instead redirect stderr to a file if needed
+# **Arguments**:
+# * $@ command with arguments to execute
+Framework::run() {
+  # 'bash_framework_status', 'bash_framework_duration' are global variables
+  local -i start, end
+  start=$(date +%s)
+  bash_framework_status=0
+  bash_framework_output=""
+
+  local origFlags="$-"
+  set +eET
+  local origIFS="${IFS}"
+
+  # execute command
+  # shellcheck disable=SC2034
+  bash_framework_output="$("$@")"
+  # shellcheck disable=SC2034
+  bash_framework_status="$?"
+  IFS="${origIFS}"
+  set "-${origFlags}"
+
+  # calculate duration
+  end=$(date +%s)
+  # shellcheck disable=SC2034
+  bash_framework_duration=$((end - start))
+}
+
+# Display message using debug color (grey)
+# @param {String} $1 message
+Log::displayDebug() {
+  echo -e "${__DEBUG_COLOR}DEBUG   - ${1}${__RESET_COLOR}"
+}
+
+# Display message using error color (red)
+# @param {String} $1 message
+Log::displayError() {
+  echo -e "${__ERROR_COLOR}ERROR   - ${1}${__RESET_COLOR}"
+}
+
+# Display message using info color (bg light blue/fg white)
+# @param {String} $1 message
+Log::displayInfo() {
+  echo -e "${__INFO_COLOR}INFO    - ${1}${__RESET_COLOR}"
+}
+
+# Display message using warning color (yellow)
+# @param {String} $1 message
+Log::displayWarning() {
+  echo -e "${__WARNING_COLOR}WARN    - ${1}${__RESET_COLOR}"
+}
+
+# TODO use alias deactivated by default
+# TODO displayXXX should call _logMessage too
+Log::loadEnv() {
+  # Log::fatal() {
+  #   __displayFatal "$@"
+  #   exit 1
+  # }
+
+  # Log::logError() { :; }
+  # Log::logWarning() { :; }
+  # Log::logInfo() { :; }
+  # Log::logSuccess() { :; }
+  # Log::logDebug() { :; }
+
+  # Log::displayError() { :; }
+  # Log::displayWarning() { :; }
+  # Log::displayInfo() { :; }
+  # Log::displaySuccess() { :; }
+  # Log::displayDebug() { :; }
+
+  BASH_FRAMEWORK_LOG_LEVEL=${BASH_FRAMEWORK_LOG_LEVEL:-${__LEVEL_OFF}}
+  if ((BASH_FRAMEWORK_LOG_LEVEL > __LEVEL_OFF)); then
+    if [[ -z "${BASH_FRAMEWORK_LOG_FILE}" ]]; then
+      BASH_FRAMEWORK_LOG_LEVEL=${__LEVEL_OFF}
+    else
+      if ! mkdir -p "$(dirname "${BASH_FRAMEWORK_LOG_FILE}")" 2>/dev/null; then
+        # TODO use _logMessage to be sure to display the message during env lading
+        Log::displayError "Log file directory '$(dirname "${BASH_FRAMEWORK_LOG_FILE}")' cannot be created"
+        BASH_FRAMEWORK_LOG_LEVEL=${__LEVEL_OFF}
+      elif ! touch --no-create "${BASH_FRAMEWORK_LOG_FILE}" 2>/dev/null; then
+        Log::displayError "Log file ${BASH_FRAMEWORK_LOG_FILE} is not writable"
+        BASH_FRAMEWORK_LOG_LEVEL=${__LEVEL_OFF}
+      fi
+    fi
+    # if ((BASH_FRAMEWORK_LOG_LEVEL >= __LEVEL_ERROR)); then
+    #   Log::logError() { __logMessage "ERROR  " "$@"; }
+    # fi
+    # if ((BASH_FRAMEWORK_LOG_LEVEL >= __LEVEL_WARNING)); then
+    #   Log::logWarning() { __logMessage "WARNING" "$@"; }
+    # fi
+    # if ((BASH_FRAMEWORK_LOG_LEVEL >= __LEVEL_INFO)); then
+    #   Log::logInfo() { __logMessage "INFO   " "$@"; }
+    # fi
+    # if ((BASH_FRAMEWORK_LOG_LEVEL >= __LEVEL_SUCCESS)); then
+    #   Log::logSuccess() { __logMessage "SUCCESS" "$@"; }
+    # fi
+    # if ((BASH_FRAMEWORK_LOG_LEVEL >= __LEVEL_DEBUG)); then
+    #   Log::logDebug() { __logMessage "DEBUG  " "$@"; }
+    # fi
+  fi
+
+  BASH_FRAMEWORK_DISPLAY_LEVEL=${BASH_FRAMEWORK_DISPLAY_LEVEL:-${__LEVEL_OFF}}
+  # if ((BASH_FRAMEWORK_DISPLAY_LEVEL > __LEVEL_OFF)); then
+  #   if ((BASH_FRAMEWORK_DISPLAY_LEVEL >= __LEVEL_ERROR)); then
+  #     Log::displayError() { __displayError "$@"; }
+  #   fi
+  #   if ((BASH_FRAMEWORK_DISPLAY_LEVEL >= __LEVEL_WARNING)); then
+  #     Log::displayWarning() { __displayWarning "$@"; }
+  #   fi
+  #   if ((BASH_FRAMEWORK_DISPLAY_LEVEL >= __LEVEL_INFO)); then
+  #     Log::displayInfo() { __displayInfo "$@"; }
+  #   fi
+  #   if ((BASH_FRAMEWORK_DISPLAY_LEVEL >= __LEVEL_SUCCESS)); then
+  #     Log::displaySuccess() { __displaySuccess "$@"; }
+  #   fi
+  #   if ((BASH_FRAMEWORK_DISPLAY_LEVEL >= __LEVEL_DEBUG)); then
+  #     Log::displayDebug() { __displayDebug "$@"; }
+  #   fi
+  # fi
+}
+
+# Public: list files of dir with given extension and display it as a list one by line
+#
+# **Arguments**:
+# * $1 the directory to list
+# * $2 the profile file prefix (default: "")
+# * $3 the extension
+# * $4 find options (default: '-type f', eg: -type d)
+# * $5 the indentation ('       - ' by default) can be any string compatible with sed not containing any /
+# **Output**: list of files without extension/directory
+# eg:
+#       - default.local
+#       - default.remote
+#       - localhost-root
+Profiles::list() {
+  local DIR="$1"
+  local PREFIX="${2:-}"
+  local EXT="${3}"
+  local FIND_OPTIONS="${4--type f}"
+  local INDENT_STR="${5-       - }"
+
+  local extension="${EXT}"
+  if [[ -n "${EXT}" && "${EXT:0:1}" != "." ]]; then
+    extension=".${EXT}"
+  fi
+
+  (
+    # shellcheck disable=SC2086
+    cd "${DIR}" &&
+      find . -maxdepth 1 ${FIND_OPTIONS} -name "${PREFIX}*${extension}" |
+      sed "s#^\./${PREFIX}##g" |
+        sed "s/${EXT}$//g" | sort | sed "s/^/${INDENT_STR}/"
+  )
+}
+
+# Public: check if command specified exists or return 1
+# with error and message if not
+#
+# **Arguments**:
+# * $1 commandName on which existence must be checked
+# * $2 helpIfNotExists a help command to display if the command does not exist
+#
+# **Exit**: code 1 if the command specified does not exist
+Assert::commandExists() {
+  local commandName="$1"
+  local helpIfNotExists="$2"
+
+  Log::displayInfo "check ${commandName} installed"
+  command -v "${commandName}" >/dev/null 2>/dev/null || {
+    Log::displayError "${commandName} is not installed, please install it"
+    if [[ -n "${helpIfNotExists}" ]]; then
+      Log::displayInfo "${helpIfNotExists}"
+    fi
+    return 1
+  }
+  return 0
+}
+
+# Public: exits with message if current user is root
+#
+# **Exit**: code 1 if current user is root
+Assert::expectNonRootUser() {
+  if [[ "$(id -u)" = "0" ]]; then
+    Log::fatal "The script must not be run as root"
+  fi
+}
+
+# Public: determine if the script is executed under windows
+# cspell:disable
+# <pre>
+# uname GitBash windows (with wsl) => MINGW64_NT-10.0 ZOXFL-6619QN2 2.10.0(0.325/5/3) 2018-06-13 23:34 x86_64 Msys
+# uname GitBash windows (wo wsl)   => MINGW64_NT-10.0 frsa02-j5cbkc2 2.9.0(0.318/5/3) 2018-01-12 23:37 x86_64 Msys
+# uname wsl => Linux ZOXFL-6619QN2 4.4.0-17134-Microsoft #112-Microsoft Thu Jun 07 22:57:00 PST 2018 x86_64 x86_64 x86_64 GNU/Linux
+# </pre>
+# cspell:enable
+#
+# @return 1 on error
+Assert::windows() {
+  if [[ "$(uname -o)" = "Msys" ]]; then
+    return 0
+  else
+    return 1
+  fi
+}
+
+# Internal: check if dsn file has all the mandatory variables set
+# Mandatory variables are: HOSTNAME, USER, PASSWORD, PORT
+#
+# **Arguments**:
+# * $1 - dsn absolute filename
+#
+# Returns 0 on valid file, 1 otherwise with log output
+Database::checkDsnFile() {
+  local DSN_FILENAME="$1"
+  if [[ ! -f "${DSN_FILENAME}" ]]; then
+    Log::displayError "dsn file ${DSN_FILENAME} not found"
+    return 1
+  fi
+
+  (
+    unset HOSTNAME PORT PASSWORD USER
+    # shellcheck source=tests/data/dsn_valid.env
+    source "${DSN_FILENAME}"
+    if [[ -z ${HOSTNAME+x} ]]; then
+      Log::displayError "dsn file ${DSN_FILENAME} : HOSTNAME not provided"
+      return 1
+    fi
+    if [[ -z "${HOSTNAME}" ]]; then
+      Log::displayWarning "dsn file ${DSN_FILENAME} : HOSTNAME value not provided"
+    fi
+    if [[ "${HOSTNAME}" = "localhost" ]]; then
+      Log::displayWarning "dsn file ${DSN_FILENAME} : check that HOSTNAME should not be 127.0.0.1 instead of localhost"
+    fi
+    if [[ -z "${PORT+x}" ]]; then
+      Log::displayError "dsn file ${DSN_FILENAME} : PORT not provided"
+      return 1
+    fi
+    if ! [[ ${PORT} =~ ^[0-9]+$ ]]; then
+      Log::displayError "dsn file ${DSN_FILENAME} : PORT invalid"
+      return 1
+    fi
+    if [[ -z "${USER+x}" ]]; then
+      Log::displayError "dsn file ${DSN_FILENAME} : USER not provided"
+      return 1
+    fi
+    if [[ -z "${PASSWORD+x}" ]]; then
+      Log::displayError "dsn file ${DSN_FILENAME} : PASSWORD not provided"
+      return 1
+    fi
+  )
+}
+
+# global variables used by Framework::run
+declare -gx bash_framework_status
+declare -gix bash_framework_duration
+declare -gx bash_framework_output
+
+## Initialize some default variables
+## List of variables
+## * BASH_FRAMEWORK_INITIALIZED=1 lazy initialization
+##
+## default tests/data/.env file is loaded
+##
+## then all these variables can be overridden by a .env file that will be searched in the following directories
+## in this order (stop on first file found):
+## * __BASH_FRAMEWORK_CALLING_SCRIPT: upper directory
+## * ~/ : home path
+## * ~/.bash-tools : home path .bash-tools
+## alternatively you can force a given .env file to be loaded using
+## BASH_FRAMEWORK_ENV_FILEPATH=<fullPathToEnvFile or empty if no file to be loaded>
+Framework::loadEnv() {
+  # import default .env file
+  #!/usr/bin/env bash
+
+  # Default settings
+  # you can override these settings by creating ${HOME}/.bash-tools/.env file
+  ###
+  ### LOG Level
+  ### minimum level of the messages that will be logged into LOG_FILE
+  ###
+  ### 0: NO LOG
+  ### 1: ERROR
+  ### 2: WARNING
+  ### 3: INFO
+  ### 4: DEBUG
+  ###
+  BASH_FRAMEWORK_LOG_LEVEL=${BASH_FRAMEWORK_LOG_LEVEL-0}
+
+  ###
+  ### DISPLAY Level
+  ### minimum level of the messages that will be displayed on screen
+  ###
+  ### 0: NO LOG
+  ### 1: ERROR
+  ### 2: WARNING
+  ### 3: INFO
+  ### 4: DEBUG
+  ###
+  BASH_FRAMEWORK_DISPLAY_LEVEL=${BASH_FRAMEWORK_DISPLAY_LEVEL-3}
+
+  ###
+  ### Log to file
+  ###
+  ### all log messages will be redirected to log file specified
+  ### this same path will be used inside and outside of the container
+  ###
+  BASH_FRAMEWORK_LOG_FILE=${BASH_FRAMEWORK_LOG_FILE-${HOME}/.bash-tools/logs/bash.log}
+
+  # absolute directory containing db import sql dumps
+  DB_IMPORT_DUMP_DIR=${DB_IMPORT_DUMP_DIR-${HOME}/.bash-tools/dbImportDumps}
+
+  # garbage collect all files for which modification is greater than eg: 30 days (+30)
+  # each time an existing file is used by dbImport/dbImportTable
+  # the file modification time is set to now
+  DB_IMPORT_GARBAGE_COLLECT_DAYS=${DB_IMPORT_GARBAGE_COLLECT_DAYS-+30}
+
+  # absolute directory containing dbScripts used by dbScriptAllDatabases
+  SCRIPTS_FOLDER=${SCRIPTS_FOLDER-${HOME}/.bash-tools/conf/dbScripts}
+
+  # absolute directory to bash-tools project
+  BASH_TOOLS_FOLDER=${BASH_TOOLS_FOLDER-$(cd .. && pwd)}
+
+  # -----------------------------------------------------
+  # AWS Parameters
+  # -----------------------------------------------------
+  S3_BASE_URL=${S3_BASE_URL-}
+  TEMP_FOLDER=${TEMP_FOLDER-/tmp}
+
+  # import custom .env file
+  if [[ -z "${BASH_FRAMEWORK_ENV_FILEPATH+xxx}" ]]; then
+    # BASH_FRAMEWORK_ENV_FILEPATH not defined
+    if [[ -f "${HOME}/.bash-tools/.env" ]]; then
+      # shellcheck source=tests/data/.env
+      source "${HOME}/.bash-tools/.env" || exit 1
+    elif [[ -f "${HOME}/.env" ]]; then
+      # shellcheck source=tests/data/.env
+      source "${HOME}/.env" || exit 1
+    fi
+  elif [[ -z "${BASH_FRAMEWORK_ENV_FILEPATH}" ]]; then
+    # BASH_FRAMEWORK_ENV_FILEPATH defined but empty - nothing to do
+    true
+  else
+    # load BASH_FRAMEWORK_ENV_FILEPATH
+    [[ ! -f "${BASH_FRAMEWORK_ENV_FILEPATH}" ]] &&
+      Log::fatal "env file not not found - ${BASH_FRAMEWORK_ENV_FILEPATH}"
+    # shellcheck source=tests/data/.env
+    source "${BASH_FRAMEWORK_ENV_FILEPATH}"
+  fi
+
+  Log::loadEnv
+
+  export BASH_FRAMEWORK_INITIALIZED=1
+
+  set +o allexport
+}
+
+if [[ -t 0 ]]; then
+  # check colors applicable https://misc.flogisoft.com/bash/tip_colors_and_formatting
+  export readonly __ERROR_COLOR='\e[31m'      # Red
+  export readonly __INFO_COLOR='\e[44m'       # white on lightBlue
+  export readonly __SUCCESS_COLOR='\e[32m'    # Green
+  export readonly __WARNING_COLOR='\e[33m'    # Yellow
+  export readonly __SKIPPED_COLOR='\e[93m'    # Light Yellow
+  export readonly __TEST_COLOR='\e[100m'      # Light magenta
+  export readonly __TEST_ERROR_COLOR='\e[41m' # white on red
+  export readonly __SKIPPED_COLOR='\e[33m'    # Yellow
+  export readonly __DEBUG_COLOR='\e[37m'      # Grey
+  # Internal: reset color
+  export readonly __RESET_COLOR='\e[0m' # Reset Color
+  # shellcheck disable=SC2155,SC2034
+  export readonly __HELP_EXAMPLE="$(echo -e "\e[1;30m")"
+  # shellcheck disable=SC2155,SC2034
+  export readonly __HELP_TITLE="$(echo -e "\e[1;37m")"
+  # shellcheck disable=SC2155,SC2034
+  export readonly __HELP_NORMAL="$(echo -e "\033[0m")"
+else
+  # check colors applicable https://misc.flogisoft.com/bash/tip_colors_and_formatting
+  export readonly __ERROR_COLOR=''
+  export readonly __INFO_COLOR=''
+  export readonly __SUCCESS_COLOR=''
+  export readonly __WARNING_COLOR=''
+  export readonly __SKIPPED_COLOR=''
+  export readonly __TEST_COLOR=''
+  export readonly __TEST_ERROR_COLOR=''
+  export readonly __SKIPPED_COLOR=''
+  export readonly __DEBUG_COLOR=''
+  # Internal: reset color
+  export readonly __RESET_COLOR=''
+  export readonly __HELP_EXAMPLE=''
+  export readonly __HELP_TITLE=''
+  export readonly __HELP_NORMAL=''
+fi
+
+# Display message using error color (red) and exit immediately with error status 1
+# @param {String} $1 message
+Log::fatal() {
+  Log::displayError "$1"
+  exit 1
+}
+
+# shellcheck disable=SC2034
+declare -Ag allDepsResultSeen=()
+declare -ag allDepsResult=()
+
+# Public: get absolute conf file from specified conf folder deduced using these rules
+#   * from absolute file (ignores <confFolder> and <extension>)
+#   * relative to where script is executed (ignores <confFolder> and <extension>)
+#   * from home/.bash-tools/<confFolder>
+#   * from framework conf/<confFolder>
+#
+# **Arguments**:
+# * $1 confFolder the directory name (not the path) to list
+# * $2 conf file to use without extension
+# * $3 the extension (sh by default)
+#
+# Returns absolute conf filename
+Profiles::getAbsoluteConfFile() {
+  local confFolder="$1"
+  local conf="$2"
+  local extension="${3-.sh}"
+
+  getAbs() {
+    local absoluteConfFile=""
+    # load conf from absolute file, then home folder, then bash framework conf folder
+    absoluteConfFile="${conf}"
+    if [[ "${absoluteConfFile:0:1}" = "/" && -f "${absoluteConfFile}" ]]; then
+      # file contains /, consider it as absolute filename
+      echo "${absoluteConfFile}"
+      return 0
+    fi
+
+    # relative to where script is executed
+    absoluteConfFile="$(realpath "${__BASH_FRAMEWORK_CALLING_SCRIPT}/${conf}" 2>/dev/null || echo "")"
+    if [[ -f "${absoluteConfFile}" ]]; then
+      echo "${absoluteConfFile}"
+      return 0
+    fi
+
+    # take extension into account
+    if [[ -n "${extension}" && "${extension:0:1}" != "." ]]; then
+      extension=".${extension}"
+    fi
+
+    # shellcheck source=/conf/dsn/default.local.env
+    absoluteConfFile="${HOME}/.bash-tools/${confFolder}/${conf}${extension}"
+    if [[ -f "${absoluteConfFile}" ]]; then
+      echo "${absoluteConfFile}"
+      return 0
+    fi
+    absoluteConfFile="${ROOT_DIR:?}/conf/${confFolder}/${conf}${extension}"
+    if [[ -f "${absoluteConfFile}" ]]; then
+      echo "${absoluteConfFile}"
+      return 0
+    fi
+
+    return 1
+  }
+  local abs=""
+  abs="$(getAbs)" || {
+    # file not found
+    Log::displayError "conf file '${conf}' not found"
+    return 1
+  }
+  Log::displayDebug "conf file '${conf}' matching '${abs}' file"
+  echo "${abs}"
+  return 0
+}
+
+# Public: list the conf files list available in bash-tools/conf/<conf> folder
+# and those overridden in ${HOME}/.bash-tools/<conf> folder
+# **Arguments**:
+# * $1 confFolder the directory name (not the path) to list
+# * $2 the extension (sh by default)
+# * $3 the indentation ('       - ' by default) can be any string compatible with sed not containing any /
+#
+# **Output**: list of files without extension/directory
+# eg:
+#       - default.local
+#       - default.remote
+#       - localhost-root
+Profiles::getConfMergedList() {
+  local confFolder="$1"
+  local extension="${2:-sh}"
+  local indentStr="${3:-       - }"
+
+  local DEFAULT_CONF_DIR="${ROOT_DIR:?}/conf/${confFolder}"
+  local HOME_CONF_DIR="${HOME}/.bash-tools/${confFolder}"
+
+  (
+    if [[ -d "${DEFAULT_CONF_DIR}" ]]; then
+      Profiles::list "${DEFAULT_CONF_DIR}" "" "${extension}" "-type f" "${indentStr}"
+    fi
+    if [[ -d "${HOME_CONF_DIR}" ]]; then
+      Profiles::list "${HOME_CONF_DIR}" "" "${extension}" "-type f" "${indentStr}"
+    fi
+  ) | sort | uniq
+}
+
+# Public: get absolute file from name deduced using these rules
+#   * using absolute/relative <conf> file (ignores <confFolder> and <extension>
+#   * from home/.bash-tools/<confFolder>/<conf><extension> file
+#   * from framework conf/<conf><extension> file
+#
+# **Arguments**:
+# * $1 confFolder to use below bash-tools conf folder
+# * $2 conf file to use without extension
+# * $3 file extension to use (default: sh)
+#
+# Returns 1 if file not found or error during file loading
+Profiles::loadConf() {
+  local confFolder="$1"
+  local conf="$2"
+  local extension="${3:-sh}"
+  local confFile=""
+
+  if [[ -n "${extension}" && "${extension:0:1}" != "." ]]; then
+    extension=".${extension}"
+  fi
+
+  # if conf is absolute
+  local confFile
+  if [[ "${conf}" == /* ]]; then
+    # file contains /, consider it as absolute filename
+    confFile="${conf}"
+  else
+    # shellcheck source=/conf/dsn/default.local.env
+    confFile="${HOME}/.bash-tools/${confFolder}/${conf}${extension}"
+    if [[ ! -f "${confFile}" ]]; then
+      confFile="${ROOT_DIR:?}/conf/${confFolder}/${conf}${extension}"
+    fi
+  fi
+  if [[ ! -f "${confFile}" ]]; then
+    return 1
+  fi
+  # shellcheck disable=SC1090
+  source "${confFile}"
+}
+
+Assert::expectNonRootUser
+
+Framework::loadEnv
+
+# ensure that Ctrl-C is trapped by this script
+trap 'exit 130' INT
+
+# check dependencies
+Assert::commandExists docker "check https://docs.docker.com/engine/install/ubuntu/"
+
+SCRIPT_NAME=${0##*/}
+PROFILES_DIR="${ROOT_DIR}/conf/cliProfiles"
+HOME_PROFILES_DIR="${HOME}/.bash-tools/cliProfiles"
+
+showHelp() {
+  local containers
+  containers=$(docker ps --format '{{.Names}}' | sed -E 's/[^-]+-(.*)/\1/' | paste -sd "," -)
+  local profilesList=""
+  Profiles::loadConf "cliProfiles" "default"
+
+  profilesList="$(Profiles::getConfMergedList "cliProfiles" ".sh" || true)"
+
+  cat <<EOF
+${__HELP_TITLE}Description:${__HELP_NORMAL} easy connection to docker container
+
+${__HELP_TITLE}Usage:${__HELP_NORMAL} ${SCRIPT_NAME} [-h|--help] prints this help and exits
+${__HELP_TITLE}Usage:${__HELP_NORMAL} ${SCRIPT_NAME} [<container>] [user] [command]
+
+    <container> : container should be one of these values (provided by 'docker ps'):
+        ${containers}
+        if not provided, it will load the container specified in default configuration (${finalContainerArg})
+
+${__HELP_TITLE}examples:${__HELP_NORMAL}
+    to connect to mysql container in bash mode with user mysql
+        ${SCRIPT_NAME} mysql mysql "//bin/bash"
+    to connect to web container with user root
+        ${SCRIPT_NAME} web root
+
+you can override these mappings by providing your own profile in ${CLI_PROFILE_HOME}
+
+This script will be executed with the variables userArg containerArg commandArg set as specified in command line
+and should provide value for the following variables finalUserArg finalContainerArg finalCommandArg
+
+${__HELP_TITLE}List of available profiles (from ${PROFILES_DIR} and can be overridden in ${HOME_PROFILES_DIR}):${__HELP_NORMAL}
+${profilesList}
+EOF
+}
+
+# Internal function that can be used in conf profiles to load the dsn file
+loadDsn() {
+  local dsn="$1"
+  local dsnFile
+  dsnFile="$(Profiles::getAbsoluteConfFile "dsn" "${dsn}" "env")"
+  Database::checkDsnFile "${dsnFile}"
+  # shellcheck source=/conf/dsn/default.local.env
+  # shellcheck disable=SC1091
+  source "${dsnFile}"
+}
+
+# read command parameters
+# $@ is all command line parameters passed to the script.
+# -o is for short options like -h
+# -l is for long options with double dash like --help
+# the comma separates different long options
+options=$(getopt -l help -o h -- "$@" 2>/dev/null) || {
+  showHelp
+  Log::fatal "invalid options specified"
+}
+
+eval set -- "${options}"
+while true; do
+  case $1 in
+    -h | --help)
+      showHelp
+      exit 0
+      ;;
+    --)
+      shift || true
+      break
+      ;;
+    *)
+      showHelp
+      Log::fatal "invalid argument $1"
+      ;;
+  esac
+  shift || true
+done
+
+declare containerArg="$1"
+declare userArg
+declare -a commandArg
+if shift; then
+  userArg="$1"
+fi
+if shift; then
+  commandArg=("$@")
+fi
+
+# load default conf file
+Profiles::loadConf "cliProfiles" "default"
+# try to load config file associated to container if provided
+if [[ -n "${containerArg}" ]]; then
+  Profiles::loadConf "cliProfiles" "${containerArg}" || {
+    # conf file not existing fallback to provided args or to default ones if not provided
+    finalContainerArg="${containerArg}"
+    finalUserArg=${userArg:-${finalUserArg}}
+    finalCommandArg=${commandArg:-${finalCommandArg}}
+  }
+fi
+
+declare -a cmd=()
+if [[ "$(
+  Assert::windows
+  echo $?
+)" = "1" ]]; then
+  # open tty for git bash
+  cmd+=(winpty)
+fi
+INTERACTIVE_MODE="-i"
+if ! read -r -t 0; then
+  # command is not piped or TTY not available
+  INTERACTIVE_MODE+="t"
+fi
+
+cmd+=(docker)
+cmd+=(exec)
+cmd+=("${INTERACTIVE_MODE}")
+# ensure column/lines will be updated upon terminal resize
+cmd+=(-e)
+cmd+=("COLUMNS=$(tput cols)")
+cmd+=(-e)
+cmd+=("LINES=$(tput lines)")
+
+cmd+=("--user=${finalUserArg}")
+cmd+=("${finalContainerArg}")
+cmd+=("${finalCommandArg[@]}")
+(echo >&2 MSYS_NO_PATHCONV=1 MSYS2_ARG_CONV_EXCL='*' "${cmd[@]}")
+MSYS_NO_PATHCONV=1 MSYS2_ARG_CONV_EXCL='*' "${cmd[@]}"

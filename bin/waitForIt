@@ -1,0 +1,266 @@
+#!/usr/bin/env bash
+
+#   Use this script to test if a given TCP host/port are available
+#  https://github.com/vishnubob/wait-for-it
+
+#####################################
+# GENERATED FILE FROM src/Utils/waitForIt.sh
+# DO NOT EDIT IT
+#####################################
+
+# shellcheck disable=SC2034
+SCRIPT_NAME=${0##*/}
+# shellcheck disable=SC2034
+CURRENT_DIR=$(cd "$(readlink -e "${BASH_SOURCE[0]%/*}")" && pwd -P)
+BIN_DIR=$(cd "$(readlink -e "${BASH_SOURCE[0]%/*}")" && pwd -P)
+ROOT_DIR="$(cd "${BIN_DIR}/.." && pwd -P)"
+# shellcheck disable=SC2034
+SRC_DIR="${ROOT_DIR}/lib"
+
+# shellcheck disable=SC2034
+((failures = 0)) || true
+
+shopt -s expand_aliases
+
+# Bash will remember & return the highest exit code in a chain of pipes.
+# This way you can catch the error inside pipes, e.g. mysqldump | gzip
+set -o pipefail
+set -o errexit
+
+# a log is generated when a command fails
+set -o errtrace
+
+# use nullglob so that (file*.php) will return an empty array if no file matches the wildcard
+shopt -s nullglob
+
+export TERM=xterm-256color
+
+#avoid interactive install
+export DEBIAN_FRONTEND=noninteractive
+export DEBCONF_NONINTERACTIVE_SEEN=true
+
+# FUNCTIONS
+
+if [[ -t 0 ]]; then
+  # check colors applicable https://misc.flogisoft.com/bash/tip_colors_and_formatting
+  export readonly __ERROR_COLOR='\e[31m'      # Red
+  export readonly __INFO_COLOR='\e[44m'       # white on lightBlue
+  export readonly __SUCCESS_COLOR='\e[32m'    # Green
+  export readonly __WARNING_COLOR='\e[33m'    # Yellow
+  export readonly __SKIPPED_COLOR='\e[93m'    # Light Yellow
+  export readonly __TEST_COLOR='\e[100m'      # Light magenta
+  export readonly __TEST_ERROR_COLOR='\e[41m' # white on red
+  export readonly __SKIPPED_COLOR='\e[33m'    # Yellow
+  export readonly __DEBUG_COLOR='\e[37m'      # Grey
+  # Internal: reset color
+  export readonly __RESET_COLOR='\e[0m' # Reset Color
+  # shellcheck disable=SC2155,SC2034
+  export readonly __HELP_EXAMPLE="$(echo -e "\e[1;30m")"
+  # shellcheck disable=SC2155,SC2034
+  export readonly __HELP_TITLE="$(echo -e "\e[1;37m")"
+  # shellcheck disable=SC2155,SC2034
+  export readonly __HELP_NORMAL="$(echo -e "\033[0m")"
+else
+  # check colors applicable https://misc.flogisoft.com/bash/tip_colors_and_formatting
+  export readonly __ERROR_COLOR=''
+  export readonly __INFO_COLOR=''
+  export readonly __SUCCESS_COLOR=''
+  export readonly __WARNING_COLOR=''
+  export readonly __SKIPPED_COLOR=''
+  export readonly __TEST_COLOR=''
+  export readonly __TEST_ERROR_COLOR=''
+  export readonly __SKIPPED_COLOR=''
+  export readonly __DEBUG_COLOR=''
+  # Internal: reset color
+  export readonly __RESET_COLOR=''
+  export readonly __HELP_EXAMPLE=''
+  export readonly __HELP_TITLE=''
+  export readonly __HELP_NORMAL=''
+fi
+
+# Display message using error color (red)
+# @param {String} $1 message
+Log::displayError() {
+  echo -e "${__ERROR_COLOR}ERROR   - ${1}${__RESET_COLOR}"
+}
+
+# Display message using info color (bg light blue/fg white)
+# @param {String} $1 message
+Log::displayInfo() {
+  echo -e "${__INFO_COLOR}INFO    - ${1}${__RESET_COLOR}"
+}
+
+# Display message using error color (red) and exit immediately with error status 1
+# @param {String} $1 message
+Log::fatal() {
+  Log::displayError "$1"
+  exit 1
+}
+
+showHelp() {
+  cat <<USAGE >&2
+${__HELP_TITLE}Usage:${__HELP_NORMAL} ${SCRIPT_NAME} host:port [-s] [-t timeout] [-- command args]
+    -h HOST | --host=HOST       Host or IP under test
+    -p PORT | --port=PORT       TCP port under test
+                                Alternatively, you specify the host and port as host:port
+    -s | --strict               Only execute sub-command if the test succeeds
+    -q | --quiet                Don't output any status messages
+    -t TIMEOUT | --timeout=TIMEOUT
+                                Timeout in seconds, zero for no timeout
+    -- COMMAND ARGS             Execute command with args after the test finishes
+USAGE
+  exit 1
+}
+
+waitFor() {
+  local result=0
+  if ((TIMEOUT > 0)); then
+    Log::displayInfo "${SCRIPT_NAME}: waiting ${TIMEOUT} seconds for ${HOST}:${PORT}"
+  else
+    Log::displayInfo "${SCRIPT_NAME}: waiting for ${HOST}:${PORT} without a timeout"
+  fi
+  local start_ts=${SECONDS}
+  while true; do
+    result=0
+    if [[ "${ISBUSY}" = "1" ]]; then
+      (nc -z "${HOST}" "${PORT}") >/dev/null 2>&1 || result=$? || true
+    else
+      (echo >"/dev/tcp/${HOST}/${PORT}") >/dev/null 2>&1 || result=$? || true
+    fi
+    if [[ "${result}" = "0" ]]; then
+      local end_ts=${SECONDS}
+      Log::displayInfo "${SCRIPT_NAME}: ${HOST}:${PORT} is available after $((end_ts - start_ts)) seconds"
+      break
+    fi
+    sleep 1
+  done
+  return "${result}"
+}
+
+waitForWrapper() {
+  local result
+  # In order to support SIGINT during timeout: http://unix.stackexchange.com/a/57692
+  local -a ARGS=(--child "--host=${HOST}" "--port=${PORT}" "--timeout=${TIMEOUT}")
+  if [[ "${QUIET}" = "1" ]]; then
+    ARGS+=(--quiet)
+  fi
+  timeout "${BUSYTIMEFLAG}" "${TIMEOUT}" "$0" "${ARGS[@]}" &
+
+  local pid=$!
+  # shellcheck disable=2064
+  trap "kill -INT -${pid}" INT
+  wait "${pid}"
+  result=$?
+  if [[ "${result}" != "0" ]]; then
+    Log::displayError "${SCRIPT_NAME}: timeout occurred after waiting ${TIMEOUT} seconds for ${HOST}:${PORT}"
+  fi
+  return "${result}"
+}
+
+# process arguments
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    *:*)
+      # shellcheck disable=2206
+      hostPort=(${1//:/ })
+      HOST=${hostPort[0]}
+      PORT=${hostPort[1]}
+      shift 1 || true
+      ;;
+    --child)
+      CHILD=1
+      shift 1 || true
+      ;;
+    -q | --quiet)
+      QUIET=1
+      shift 1 || true
+      ;;
+    -s | --strict)
+      STRICT=1
+      shift 1 || true
+      ;;
+    -h)
+      HOST="$2"
+      if [[ "${HOST}" = "" ]]; then break; fi
+      shift 2 || true
+      ;;
+    --host=*)
+      HOST="${1#*=}"
+      shift 1 || true
+      ;;
+    -p)
+      PORT="$2"
+      if [[ "${PORT}" = "" ]]; then break; fi
+      shift 2 || true
+      ;;
+    --port=*)
+      PORT="${1#*=}"
+      shift 1 || true
+      ;;
+    -t)
+      TIMEOUT="$2"
+      if [[ "${TIMEOUT}" = "" ]]; then break; fi
+      shift 2 || true
+      ;;
+    --timeout=*)
+      TIMEOUT="${1#*=}"
+      shift 1 || true
+      ;;
+    --)
+      shift || true
+      CLI=("$@")
+      break
+      ;;
+    --help)
+      showHelp
+      ;;
+    *)
+      showHelp
+      Log::fatal "Unknown argument: $1"
+      ;;
+  esac
+done
+
+if [[ "${HOST}" = "" || "${PORT}" = "" ]]; then
+  showHelp
+  Log::fatal "Error: you need to provide a host and port to test."
+fi
+
+TIMEOUT=${TIMEOUT:-15}
+STRICT=${STRICT:-0}
+CHILD=${CHILD:-0}
+QUIET=${QUIET:-0}
+
+# check to see if timeout is from busybox?
+# check to see if timeout is from busybox?
+TIMEOUT_PATH=$(dirname "$(command -v timeout)")
+if [[ ${TIMEOUT_PATH} =~ "busybox" ]]; then
+  ISBUSY=1
+  BUSYTIMEFLAG="-t"
+else
+  ISBUSY=0
+  BUSYTIMEFLAG=""
+fi
+
+if [[ ${CHILD} -gt 0 ]]; then
+  waitFor
+  RESULT=$?
+  exit "${RESULT}"
+else
+  if [[ ${TIMEOUT} -gt 0 ]]; then
+    waitForWrapper
+    RESULT=$?
+  else
+    waitFor
+    RESULT=$?
+  fi
+fi
+if [[ -n "${CLI+x}" && "${CLI[*]}" != "" ]]; then
+  if [[ "${RESULT}" != "0" && "${STRICT}" = "1" ]]; then
+    Log::displayError "${SCRIPT_NAME}: strict mode, refusing to execute sub-process"
+    exit "${RESULT}"
+  fi
+  exec "${CLI[@]}"
+else
+  exit "${RESULT}"
+fi

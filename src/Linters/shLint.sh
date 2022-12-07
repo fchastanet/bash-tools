@@ -1,17 +1,14 @@
 #!/usr/bin/env bash
-# ROOT_DIR_RELATIVE_TO_BIN_DIR=../..
+# BIN_FILE=${ROOT_DIR}/bin/shLint
+# ROOT_DIR_RELATIVE_TO_BIN_DIR=..
 
-set -o errexit
-set -o pipefail
-
-BASE_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)
+.INCLUDE "${TEMPLATE_DIR}/_includes/_header.tpl"
 
 if (($# == 0)); then
   set -- --check-sourced -x -f checkstyle
 fi
 
 (
-  cd "${BASE_DIR}"
   # shellcheck disable=SC2046
   LC_ALL=C.UTF-8 shellcheck "$@" \
     $(find . -type f \

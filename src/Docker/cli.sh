@@ -1,34 +1,32 @@
 #!/usr/bin/env bash
+# BIN_FILE=${ROOT_DIR}/bin/cli
+# ROOT_DIR_RELATIVE_TO_BIN_DIR=..
 
-CURRENT_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
-# load bash-framework
-# shellcheck source=bash-framework/_bootstrap.sh
-source "$( cd "${CURRENT_DIR}/.." && pwd )/bash-framework/_bootstrap.sh"
+.INCLUDE "${TEMPLATE_DIR}/_includes/_header.tpl"
 
-import bash-framework/Log
+Assert::expectNonRootUser
 
-Framework::expectNonRootUser
-import bash-framework/Database
+Framework::loadEnv
 
 # ensure that Ctrl-C is trapped by this script
 trap 'exit 130' INT
 
 # check dependencies
-Functions::checkCommandExists docker "check https://docs.docker.com/engine/install/ubuntu/"
+Assert::commandExists docker "check https://docs.docker.com/engine/install/ubuntu/"
 
 SCRIPT_NAME=${0##*/}
-PROFILES_DIR="$(cd "${CURRENT_DIR}/.." && pwd)/conf/cliProfiles"
+PROFILES_DIR="${ROOT_DIR}/conf/cliProfiles"
 HOME_PROFILES_DIR="${HOME}/.bash-tools/cliProfiles"
 
 showHelp() {
-local containers
-containers=$(docker ps --format '{{.Names}}'| sed -E 's/[^-]+-(.*)/\1/'| paste -sd "," -)
-local profilesList=""
-Functions::loadConf "cliProfiles" "default"
+  local containers
+  containers=$(docker ps --format '{{.Names}}' | sed -E 's/[^-]+-(.*)/\1/' | paste -sd "," -)
+  local profilesList=""
+  Profiles::loadConf "cliProfiles" "default"
 
-profilesList="$(Functions::getConfMergedList "cliProfiles" "sh" || true)"
+  profilesList="$(Profiles::getConfMergedList "cliProfiles" ".sh" || true)"
 
-cat << EOF
+  cat <<EOF
 ${__HELP_TITLE}Description:${__HELP_NORMAL} easy connection to docker container
 
 ${__HELP_TITLE}Usage:${__HELP_NORMAL} ${SCRIPT_NAME} [-h|--help] prints this help and exits
@@ -49,20 +47,20 @@ you can override these mappings by providing your own profile in ${CLI_PROFILE_H
 This script will be executed with the variables userArg containerArg commandArg set as specified in command line
 and should provide value for the following variables finalUserArg finalContainerArg finalCommandArg
 
-${__HELP_TITLE}List of available profiles (from ${PROFILES_DIR} and can be overriden in ${HOME_PROFILES_DIR}):${__HELP_NORMAL}
+${__HELP_TITLE}List of available profiles (from ${PROFILES_DIR} and can be overridden in ${HOME_PROFILES_DIR}):${__HELP_NORMAL}
 ${profilesList}
 EOF
 }
 
 # Internal function that can be used in conf profiles to load the dsn file
 loadDsn() {
-    local dsn="$1"
-    local dsnFile
-    dsnFile="$(Functions::getAbsoluteConfFile "dsn" "${dsn}" "env")"
-    Database::checkDsnFile "${dsnFile}"
-    # shellcheck source=/conf/dsn/default.local.env
-    # shellcheck disable=SC1091
-    source "${dsnFile}"
+  local dsn="$1"
+  local dsnFile
+  dsnFile="$(Profiles::getAbsoluteConfFile "dsn" "${dsn}" "env")"
+  Database::checkDsnFile "${dsnFile}"
+  # shellcheck source=/conf/dsn/default.local.env
+  # shellcheck disable=SC1091
+  source "${dsnFile}"
 }
 
 # read command parameters
@@ -70,55 +68,59 @@ loadDsn() {
 # -o is for short options like -h
 # -l is for long options with double dash like --help
 # the comma separates different long options
-options=$(getopt -l help -o h -- "$@" 2> /dev/null) || {
-    showHelp
-    Log::fatal "invalid options specified"
+options=$(getopt -l help -o h -- "$@" 2>/dev/null) || {
+  showHelp
+  Log::fatal "invalid options specified"
 }
 
 eval set -- "${options}"
-while true
-do
-case $1 in
--h|--help)
-    showHelp
-    exit 0
-    ;;
---)
-    shift || true
-    break;;
-*)
-    showHelp
-    Log::fatal "invalid argument $1"
-esac
-shift || true
+while true; do
+  case $1 in
+    -h | --help)
+      showHelp
+      exit 0
+      ;;
+    --)
+      shift || true
+      break
+      ;;
+    *)
+      showHelp
+      Log::fatal "invalid argument $1"
+      ;;
+  esac
+  shift || true
 done
 
 declare containerArg="$1"
 declare userArg
 declare -a commandArg
 if shift; then
-    userArg="$1"
+  userArg="$1"
 fi
 if shift; then
-    commandArg=("$@")
+  commandArg=("$@")
 fi
 
 # load default conf file
-Functions::loadConf "cliProfiles" "default"
+Profiles::loadConf "cliProfiles" "default"
 # try to load config file associated to container if provided
 if [[ -n "${containerArg}" ]]; then
-    Functions::loadConf "cliProfiles" "${containerArg}" || {
-        # conf file not existing fallback to provided args or to default ones if not provided
-        finalContainerArg="${containerArg}"
-        finalUserArg=${userArg:-${finalUserArg}}
-        finalCommandArg=${commandArg:-${finalCommandArg}}
-    }
+  Profiles::loadConf "cliProfiles" "${containerArg}" || {
+    # conf file not existing fallback to provided args or to default ones if not provided
+    finalContainerArg="${containerArg}"
+    finalUserArg=${userArg:-${finalUserArg}}
+    finalCommandArg=${commandArg:-${finalCommandArg}}
+  }
 fi
 
 declare -a cmd=()
-if [[ "$(Functions::isWindows; echo $?)" = "1" ]]; then
-    # open tty for git bash
-    cmd+=(winpty)
+if [[ "$(
+  Assert::windows
+  echo $?
+)" = "1" ]]; then
+  # open tty for git bash
+  cmd+=(winpty)
 fi
 INTERACTIVE_MODE="-i"
 if ! read -r -t 0; then
@@ -138,5 +140,5 @@ cmd+=("LINES=$(tput lines)")
 cmd+=("--user=${finalUserArg}")
 cmd+=("${finalContainerArg}")
 cmd+=("${finalCommandArg[@]}")
-(>&2 echo MSYS_NO_PATHCONV=1 MSYS2_ARG_CONV_EXCL='*' "${cmd[@]}")
+(echo >&2 MSYS_NO_PATHCONV=1 MSYS2_ARG_CONV_EXCL='*' "${cmd[@]}")
 MSYS_NO_PATHCONV=1 MSYS2_ARG_CONV_EXCL='*' "${cmd[@]}"

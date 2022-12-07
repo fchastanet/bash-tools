@@ -1,12 +1,8 @@
 #!/usr/bin/env bash
+# BIN_FILE=${ROOT_DIR}/bin/dbImportStream
+# ROOT_DIR_RELATIVE_TO_BIN_DIR=..
 
-set -o errexit
-set -o pipefail
-
-CURRENT_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
-# load bash-framework
-# shellcheck source=bash-framework/_bootstrap.sh
-source "$( cd "${CURRENT_DIR}/.." && pwd )/bash-framework/_bootstrap.sh"
+.INCLUDE "${TEMPLATE_DIR}/_includes/_header.tpl"
 
 DUMP_FILE="$1"
 DB_NAME="$2"
@@ -19,6 +15,11 @@ if [[ -z "${PROFILE_COMMAND}" ]]; then
   Log::fatal "You should provide a profile command"
 fi
 
+awkScript="$(
+  cat <<'EOF'
+.INCLUDE "${CURRENT_DIR}/dbImportStream.awk"
+EOF
+)"
 # shellcheck disable=2086
 (
   if [[ "${DUMP_FILE}" == *tar.gz ]]; then
@@ -29,9 +30,9 @@ fi
   # zcat will continue to write to stdout whereas awk has finished if table has been found
   # we detect this case because zcat will return code 141 because pipe closed
   status=$?
-  if [[ $status -eq 141 ]]; then true; else exit $status; fi
+  if [[ "${status}" -eq "141" ]]; then true; else exit "${status}"; fi
 ) | awk \
   -v PROFILE_COMMAND="${PROFILE_COMMAND}" \
   -v CHARACTER_SET="${CHARACTER_SET}" \
-  -f "${CURRENT_DIR}/dbImportStream.awk" \
+  --source "${awkScript}" \
   - | mysql --defaults-extra-file="${MYSQL_AUTH_FILE}" ${DB_IMPORT_OPTIONS} "${DB_NAME}" || exit $?

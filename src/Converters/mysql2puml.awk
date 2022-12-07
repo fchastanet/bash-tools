@@ -4,8 +4,8 @@
 # mysql2puml - SQL DDL to markdown converter
 #
 # Invocation/Execution:
-#   awk -f mysql2puml.awk skinFile < inputFile > outputfile
-#   DEBUG=1 awk -f mysql2puml.awk skinFile < inputFile > outputfile
+#   awk -f mysql2puml.awk skinFile < inputFile > outputFile
+#   DEBUG=1 awk -f mysql2puml.awk skinFile < inputFile > outputFile
 #
 # Supports
 #   PlantUML format
@@ -80,7 +80,7 @@ function column_sort(i1, column1, i2, column2)
 function uml_table(createTable)
 # DDL to plantuml
 # CREATE TABLE `core_customer` (`id` int(11) NOT NULL AUTO_INCREMENT, `instance_name` varchar(128) NOT NULL, PRIMARY KEY (`id`), UNIQUE KEY `instance_name` (`instance_name`) ) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8;
-# CREATE TABLE `core_learnerskill` (`id` int(11) NOT NULL AUTO_INCREMENT, `customer_id` int(10) unsigned NOT NULL, PRIMARY KEY (`id`), KEY `customer_id_684f904f_fk_core_learner_id` (`customer_id`), CONSTRAINT `customer_id_684f904f_fk_core_customer_id` FOREIGN KEY (`customer_id`) REFERENCES `core_customer` (`id`)) ENGINE=InnoDB AUTO_INCREMENT=415 DEFAULT CHARSET=utf8;
+# CREATE TABLE `core_learner_skill` (`id` int(11) NOT NULL AUTO_INCREMENT, `customer_id` int(10) unsigned NOT NULL, PRIMARY KEY (`id`), KEY `customer_id_684f904f_fk_core_learner_id` (`customer_id`), CONSTRAINT `customer_id_684f904f_fk_core_customer_id` FOREIGN KEY (`customer_id`) REFERENCES `core_customer` (`id`)) ENGINE=InnoDB AUTO_INCREMENT=415 DEFAULT CHARSET=utf8;
 #table( user ) {
 #  primary_key( id ): UUID
 #  column( isActive ): BOOLEAN

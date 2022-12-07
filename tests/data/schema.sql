@@ -34,10 +34,10 @@ CREATE TABLE `core_learner` (
 ) ENGINE=InnoDB AUTO_INCREMENT=13 DEFAULT CHARSET=utf8;
 
 --
--- Table structure for table `core_learnerskill`
+-- Table structure for table `core_learner_skill`
 --
 
-CREATE TABLE `core_learnerskill` (
+CREATE TABLE `core_learner_skill` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `created_at` datetime(6) NOT NULL,
   `updated_at` datetime(6) NOT NULL,
@@ -46,10 +46,10 @@ CREATE TABLE `core_learnerskill` (
   `learner_id` int(10) unsigned NOT NULL,
   `skill_id` int(10) unsigned NOT NULL,
   PRIMARY KEY (`id`),
-  KEY `core_learnerskill_learner_id_684f904f_fk_core_learner_id` (`learner_id`),
-  KEY `core_learnerskill_skill_id_fa4d99ac_fk_core_skill_id` (`skill_id`),
-  CONSTRAINT `core_learnerskill_learner_id_684f904f_fk_core_learner_id` FOREIGN KEY (`learner_id`) REFERENCES `core_learner` (`id`),
-  CONSTRAINT `core_learnerskill_skill_id_fa4d99ac_fk_core_skill_id` FOREIGN KEY (`skill_id`) REFERENCES `core_skill` (`id`)
+  KEY `core_learner_skill_learner_id_684f904f_fk_core_learner_id` (`learner_id`),
+  KEY `core_learner_skill_skill_id_fa4d99ac_fk_core_skill_id` (`skill_id`),
+  CONSTRAINT `core_learner_skill_learner_id_684f904f_fk_core_learner_id` FOREIGN KEY (`learner_id`) REFERENCES `core_learner` (`id`),
+  CONSTRAINT `core_learner_skill_skill_id_fa4d99ac_fk_core_skill_id` FOREIGN KEY (`skill_id`) REFERENCES `core_skill` (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=415 DEFAULT CHARSET=utf8;
 
 --

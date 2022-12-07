@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
+# BIN_FILE=${ROOT_DIR}/bin/Installers/installDockerInWsl
 # ROOT_DIR_RELATIVE_TO_BIN_DIR=../..
 
-.INCLUDE lib/_header.tpl
+.INCLUDE "${TEMPLATE_DIR}/_includes/_header.tpl"
 
-.INCLUDE lib/_includes/executedAsRoot.sh
+Assert::expectNonRootUser
 
 Log::displayInfo "install docker required packages"
 Retry::default sudo apt-get update -y --fix-missing -o Acquire::ForceIPv4=true

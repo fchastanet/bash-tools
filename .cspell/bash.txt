@@ -87,3 +87,14 @@ onbuild
 TMPDIR
 SIGUSR
 inlines
+TIMEFORMAT
+AUTOCOMMIT
+zcat
+getline
+tolower
+varchar
+asort
+ISBUSY
+SIGINT
+BUSYTIMEFLAG
+hqbj

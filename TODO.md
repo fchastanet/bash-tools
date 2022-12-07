@@ -1,5 +1,8 @@
 # Todo
 
+- build.sh move md5 computation from build.sh to workflow script
+- merge buildDoc.sh and doc.sh
+- doc.sh move bash-framework doc generation to bash-tools-framework
 - Bash-tools only contains commands, build tools (linters, ...)
 
   - move build.sh to bin/build
@@ -31,6 +34,7 @@
     global HOME variable
   - replace all ${HOME} by $(Env::get "HOME")
   - generate automatically .env.template from Env::get
+- src/build/install.sh use backupDir
 - <https://dougrichardson.us/notes/fail-fast-bash-scripting.html>
 - <https://github.com/adoyle-h/lobash>
 - <https://github.com/elibs/ebash>

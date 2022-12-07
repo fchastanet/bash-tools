@@ -1,18 +1,19 @@
 #!/usr/bin/env bash
+# BIN_FILE=${ROOT_DIR}/bin/dbScriptOneDatabase
+# ROOT_DIR_RELATIVE_TO_BIN_DIR=..
 
-# load bash-framework
-# shellcheck source=bash-framework/_bootstrap.sh
-source "${__BASH_FRAMEWORK_ROOT_PATH}/_bootstrap.sh"
+.INCLUDE "${TEMPLATE_DIR}/_includes/_header.tpl"
+
 ############################################################
 # INTERNAL USE ONLY
 # USED BY bin/dbScriptAllDatabases
 ############################################################
-Framework::expectNonRootUser
+Assert::expectNonRootUser
+
+Framework::loadEnv
 
 # ensure that Ctrl-C is trapped by this script and not sub mysql process
-Functions::trapAdd 'exit 130' INT
-
-import bash-framework/Database
+Framework::trapAdd 'exit 130' INT
 
 declare DSN="$1"
 # shellcheck disable=SC2034
@@ -23,12 +24,10 @@ declare VERBOSE="$3"
 declare outputDir="$4"
 # shellcheck disable=SC2034
 declare callingDir="$5"
-# shellcheck disable=SC2034
-declare bashFrameworkVendorPath="$6"
 
-declare -i length=$(($#-7))
+declare -i length=$(($# - 6))
 # shellcheck disable=SC2034
-declare -a scriptParameters=("${@:7:$length}")
+declare -a scriptParameters=("${@:7:${length}}")
 # shellcheck disable=SC2034,SC2124
 declare db="${@:$(($#)):1}"
 

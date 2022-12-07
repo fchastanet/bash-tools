@@ -1,9 +1,8 @@
 #!/usr/bin/env bash
+# BIN_FILE=${ROOT_DIR}/bin/mysql2puml
+# ROOT_DIR_RELATIVE_TO_BIN_DIR=..
 
-# load bash-framework
-CURRENT_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
-# shellcheck source=/bash-framework/_bootstrap.sh
-source "$( cd "${CURRENT_DIR}/.." && pwd )/bash-framework/_bootstrap.sh"
+.INCLUDE "${TEMPLATE_DIR}/_includes/_header.tpl"
 
 #default values
 SCRIPT_NAME=${0##*/}
@@ -12,10 +11,10 @@ SKIN="default"
 
 # Usage info
 showHelp() {
-local skinList=""
-skinList="$(Functions::getConfMergedList "mysql2pumlSkins" "puml")"
+  local skinList=""
+  skinList="$(Profiles::getConfMergedList "mysql2pumlSkins" ".puml")"
 
-cat << EOF
+  cat <<EOF
 ${__HELP_TITLE}Description:${__HELP_NORMAL} convert mysql dump sql schema to plantuml format
 
 ${__HELP_TITLE}Usage:${__HELP_NORMAL} ${SCRIPT_NAME} [-h|--help] prints this help and exits
@@ -48,45 +47,46 @@ showVersion() {
 # -l is for long options with double dash like --help
 # the comma separates different long options
 options=$(getopt -l help,version,skin: -o hvs: -- "$@" 2>/dev/null) || {
-    showHelp
-    Log::fatal "invalid options specified"
+  showHelp
+  Log::fatal "invalid options specified"
 }
 
 eval set -- "${options}"
-while true
-do
-case $1 in
--h|--help)
-    showHelp
-    exit 0
-    ;;
---version|-v)
-    showVersion
-    exit 0
-    ;;
---skin|-s)
-    shift
-    SKIN="$1"
-    ;;
---)
-    shift || true
-    break;;
-*)
-    showHelp
-    Log::fatal "invalid argument $1"
-esac
-shift || true
+while true; do
+  case $1 in
+    -h | --help)
+      showHelp
+      exit 0
+      ;;
+    --version | -v)
+      showVersion
+      exit 0
+      ;;
+    --skin | -s)
+      shift
+      SKIN="$1"
+      ;;
+    --)
+      shift || true
+      break
+      ;;
+    *)
+      showHelp
+      Log::fatal "invalid argument $1"
+      ;;
+  esac
+  shift || true
 done
-shift $(( OPTIND - 1 )) || true
+shift $((OPTIND - 1)) || true
 
 sqlFile="${1:-}"
 shift || true
-if [ $# -gt 0 ]; then
+if (($# > 0)); then
   showHelp
   Log::fatal "too much arguments provided"
 fi
 
-absSkinFile="$(Functions::getAbsoluteConfFile "mysql2pumlSkins" "${SKIN}" "puml")" ||
+absSkinFile="$(Profiles::getAbsoluteConfFile "mysql2pumlSkins" "${SKIN}" "puml")" ||
   Log::fatal "the skin ${SKIN} does not exist"
 
 if [[ -n "${sqlFile}" ]]; then
@@ -97,7 +97,12 @@ if [[ -n "${sqlFile}" ]]; then
 elif [[ ! -t 0 ]]; then
   exec 3<&0
 else
-    Log::fatal "No sql file provided..."
+  Log::fatal "No sql file provided..."
 fi
 
-awk -f "${CURRENT_DIR}/mysql2puml.awk" "${absSkinFile}" - <&3
+awkScript="$(
+  cat <<'EOF'
+.INCLUDE "$(cd "$(dirname ${SRC_FILE_PATH})" && pwd -P)/mysql2puml.awk"
+EOF
+)"
+awk --source "${awkScript}" "${absSkinFile}" - <&3

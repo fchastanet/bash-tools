@@ -1,18 +1,15 @@
 #!/usr/bin/env bash
+# BIN_FILE=${ROOT_DIR}/bin/dbScriptAllDatabases
+# ROOT_DIR_RELATIVE_TO_BIN_DIR=..
 
-CURRENT_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
-# load bash-framework
-# shellcheck source=bash-framework/_bootstrap.sh
-source "$( cd "${CURRENT_DIR}/.." && pwd )/bash-framework/_bootstrap.sh"
+.INCLUDE "${TEMPLATE_DIR}/_includes/_header.tpl"
+
+Assert::expectNonRootUser
+
+Framework::loadEnv
 
 # make bash-tools folder available for db scripts
 export BASH_TOOLS_FOLDER
-
-Framework::expectNonRootUser
-
-import bash-framework/Database
-import bash-framework/Functions
-import bash-framework/Array
 
 # ensure that Ctrl-C is trapped by this script and not sub mysql process
 trap 'exit 130' INT
@@ -29,11 +26,11 @@ VERBOSE=0
 
 # Usage info
 showHelp() {
-local dsnList scriptsList
-dsnList="$(Functions::getConfMergedList "dsn" "env")"
-scriptsList="$(Functions::getConfMergedList "dbScripts" "sh")"
+  local dsnList scriptsList
+  dsnList="$(Profiles::getConfMergedList "dsn" "env")"
+  scriptsList="$(Profiles::getConfMergedList "dbScripts" "sh")"
 
-cat << EOF
+  cat <<EOF
 ${__HELP_TITLE}Description:${__HELP_NORMAL} Allows to execute a script on each database of specified mysql server
 
 ${__HELP_TITLE}Usage:${__HELP_NORMAL} ${SCRIPT_NAME} [-h|--help] prints this help and exits
@@ -76,85 +73,86 @@ EOF
 # -o is for short options like -h
 # -l is for long options with double dash like --help
 # the comma separates different long options
-options=$(getopt -l help,log-format:,dsn:,jobs:,database:,output:,verbose -o hd:j:l:o:v -- "$@" 2> /dev/null) || {
-    showHelp
-    Log::fatal "invalid options specified"
+options=$(getopt -l help,log-format:,dsn:,jobs:,database:,output:,verbose -o hd:j:l:o:v -- "$@" 2>/dev/null) || {
+  showHelp
+  Log::fatal "invalid options specified"
 }
 
 eval set -- "${options}"
-while true
-do
-case $1 in
--h|--help)
-    showHelp
-    exit 0
-    ;;
---jobs|-j)
-    shift || true
-    JOBS_NUMBER=$1
-    ;;
---output|-o)
-    shift || true
-    OUTPUT_DIR="$1"
-    ;;
---verbose|-v)
-    VERBOSE=1
-    ;;
---dsn|-d)
-    shift
-    DSN=${1:-:-default.local}
-    ;;
---database)
-    shift || true
-    DB_NAME="$1"
-    ;;
---log-format|-l)
-    shift || true
-    LOG_FORMAT="$1"
-    ;;
---)
-    shift || true
-    break;;
-*)
-    showHelp
-    Log::fatal "invalid argument $1"
-esac
-shift || true
+while true; do
+  case $1 in
+    -h | --help)
+      showHelp
+      exit 0
+      ;;
+    --jobs | -j)
+      shift || true
+      JOBS_NUMBER=$1
+      ;;
+    --output | -o)
+      shift || true
+      OUTPUT_DIR="$1"
+      ;;
+    --verbose | -v)
+      VERBOSE=1
+      ;;
+    --dsn | -d)
+      shift
+      DSN=${1:-:-default.local}
+      ;;
+    --database)
+      shift || true
+      DB_NAME="$1"
+      ;;
+    --log-format | -l)
+      shift || true
+      LOG_FORMAT="$1"
+      ;;
+    --)
+      shift || true
+      break
+      ;;
+    *)
+      showHelp
+      Log::fatal "invalid argument $1"
+      ;;
+  esac
+  shift || true
 done
 
 # check dependencies
-Functions::checkCommandExists mysql "sudo apt-get install -y mysql-client"
-Functions::checkCommandExists mysqlshow "sudo apt-get install -y mysql-client"
-Functions::checkCommandExists parallel "sudo apt-get install -y parallel"
+Assert::commandExists mysql "sudo apt-get install -y mysql-client"
+Assert::commandExists mysqlshow "sudo apt-get install -y mysql-client"
+Assert::commandExists parallel "sudo apt-get install -y parallel"
 
 # output-dir argument
 if ! Array::contains "${LOG_FORMAT}" "none" "log"; then
-    Log::fatal "log format '${LOG_FORMAT}' not supported"
+  Log::fatal "log format '${LOG_FORMAT}' not supported"
 fi
 
 # additional arguments
-shift $(( OPTIND - 1 )) || true
+shift $((OPTIND - 1)) || true
 SCRIPT="$1"
 shift || true
 if [[ -z "${SCRIPT}" ]]; then
-    Log::fatal "You must provide the script file to be executed"
+  Log::fatal "You must provide the script file to be executed"
 fi
 
-if [[ "${OUTPUT_DIR:0:1}" != "/" ]] ; then
-   # relative path
-   OUTPUT_DIR="${PWD}/${OUTPUT_DIR}"
+if [[ "${OUTPUT_DIR:0:1}" != "/" ]]; then
+  # relative path
+  OUTPUT_DIR="${PWD}/${OUTPUT_DIR}"
 fi
 mkdir -p "${OUTPUT_DIR}" || Log::fatal "unable to create directory ${OUTPUT_DIR}"
 [[ -d "${OUTPUT_DIR}" && -w "${OUTPUT_DIR}" ]] ||
-    Log::fatal "output dir is not correct or not writable"
+  Log::fatal "output dir is not correct or not writable"
 
-if ! [[ ${JOBS_NUMBER} =~ ^[0-9]+$ ]] ; then
-   Log::fatal "number of jobs is incorrect"
+if ! [[ ${JOBS_NUMBER} =~ ^[0-9]+$ ]]; then
+  Log::fatal "number of jobs is incorrect"
 fi
 [[ ${JOBS_NUMBER} -lt 1 ]] && Log::fatal "number of jobs must be greater than 0"
 
 # try script inside script folder
-SCRIPT="$(Functions::getAbsoluteConfFile "dbScripts" "${SCRIPT}" "sh")" || exit 1
+SCRIPT="$(Profiles::getAbsoluteConfFile "dbScripts" "${SCRIPT}" "sh")" || exit 1
 [[ "${VERBOSE}" = "1" ]] && Log::displayInfo "Using script ${SCRIPT}"
 # create db instance
 declare -Agx dbInstance
@@ -166,9 +164,9 @@ Database::setQueryOptions dbInstance "${dbInstance['QUERY_OPTIONS']} --connect-t
 # list of all databases
 [[ "${VERBOSE}" = "1" ]] && Log::displayInfo "get the list of all databases"
 if [[ -z "${DB_NAME}" ]]; then
-    allDbs="$(Database::getUserDbList dbInstance)"
+  allDbs="$(Database::getUserDbList dbInstance)"
 else
-    allDbs="${DB_NAME}"
+  allDbs="${DB_NAME}"
 fi
 
 [[ "${VERBOSE}" = "1" ]] && Log::displayInfo "processing $(echo "${allDbs}" | wc -l) databases using ${JOBS_NUMBER} jobs"
@@ -176,6 +174,6 @@ fi
 export selectedQueryFile
 export MYSQL_OPTIONS
 
-echo "${allDbs}" | parallel --eta  --progress --tag --jobs="${JOBS_NUMBER}" \
-     "${SCRIPT}" "${DSN}" "${LOG_FORMAT}" "${VERBOSE}" \
-        "${OUTPUT_DIR}" "${PWD}" "${__BASH_FRAMEWORK_VENDOR_PATH}" "$@"
+echo "${allDbs}" | parallel --eta --progress --tag --jobs="${JOBS_NUMBER}" \
+  "${SCRIPT}" "${DSN}" "${LOG_FORMAT}" "${VERBOSE}" \
+  "${OUTPUT_DIR}" "${PWD}" "$@"

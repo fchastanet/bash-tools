@@ -135,3 +135,10 @@ mysqldump
 timeago
 mysqlshow
 gtid
+tomdoc
+enduml
+rtrim
+ltrim
+Inno
+linebuffer
+winpty

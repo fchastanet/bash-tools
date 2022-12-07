@@ -5,6 +5,4 @@
 # DO NOT EDIT IT
 #####################################
 
-echo "coucou"
 .INCLUDE "${ORIGINAL_TEMPLATE_DIR}/_includes/_header.tpl"
-echo "coucou2"

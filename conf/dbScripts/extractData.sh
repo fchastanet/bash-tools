@@ -12,7 +12,7 @@ fi
 declare query="${scriptParameters[0]}"
 declare queryName="customQuery"
 declare queryFile="${query}"
-queryFile="$(Functions::getAbsoluteConfFile "dbQueries" "${queryFile}" "sql" 2>/dev/null || echo "")"
+queryFile="$(Profiles::getAbsoluteConfFile "dbQueries" "${queryFile}" "sql" 2>/dev/null || echo "")"
 if [[ -n "${queryFile}" ]]; then
   queryName="$(basename "${queryFile%.*}")"
   query="$(cat "${queryFile}")"

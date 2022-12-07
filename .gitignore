@@ -1,6 +1,6 @@
-logs/*
-!logs/.gitkeep
-.history
-megalinter-reports
-_site
-doc
+/logs/*
+!/logs/.gitkeep
+/.history
+/megalinter-reports
+/_site
+/doc

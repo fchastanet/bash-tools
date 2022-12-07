@@ -1,15 +1,12 @@
 #!/usr/bin/env bash
+# BIN_FILE=${ROOT_DIR}/bin/dbQueryAllDatabases
+# ROOT_DIR_RELATIVE_TO_BIN_DIR=..
 
-CURRENT_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
-# load bash-framework
-# shellcheck source=bash-framework/_bootstrap.sh
-source "$( cd "${CURRENT_DIR}/.." && pwd )/bash-framework/_bootstrap.sh"
+.INCLUDE "${TEMPLATE_DIR}/_includes/_header.tpl"
 
-Framework::expectNonRootUser
+Assert::expectNonRootUser
 
-import bash-framework/Database
-import bash-framework/Functions
-import bash-framework/Version
+Framework::loadEnv
 
 # ensure that Ctrl-C is trapped by this script and not sub mysql process
 trap 'exit 130' INT
@@ -26,11 +23,11 @@ declare -a PARALLEL_OPTIONS
 
 # Usage info
 showHelp() {
-local dsnList queriesList
-dsnList="$(Functions::getConfMergedList "dsn" "env")"
-queriesList="$(Functions::getConfMergedList "dbQueries" "sql" || true)"
+  local dsnList queriesList
+  dsnList="$(Profiles::getConfMergedList "dsn" "env")"
+  queriesList="$(Profiles::getConfMergedList "dbQueries" "sql" || true)"
 
-cat << EOF
+  cat <<EOF
 ${__HELP_TITLE}Description:${__HELP_NORMAL} Execute a query on multiple databases in order to generate a report with tsv format, query can be parallelized on multiple databases
 
 ${__HELP_TITLE}Usage:${__HELP_NORMAL} ${SCRIPT_NAME} [-h|--help] prints this help and exits
@@ -46,7 +43,7 @@ ${__HELP_TITLE}Usage:${__HELP_NORMAL} ${SCRIPT_NAME} <query|queryFile> [-d|--dsn
 
 ${__HELP_TITLE}List of available dsn:${__HELP_NORMAL}
 ${dsnList}
-${__HELP_TITLE}List of available queries (default dir ${QUERIES_DIR} can be overriden in home dir ${HOME_QUERIES_DIR}):${__HELP_NORMAL}
+${__HELP_TITLE}List of available queries (default dir ${QUERIES_DIR} can be overridden in home dir ${HOME_QUERIES_DIR}):${__HELP_NORMAL}
 ${queriesList}
 EOF
 }
@@ -56,77 +53,78 @@ EOF
 # -o is for short options like -h
 # -l is for long options with double dash like --help
 # the comma separates different long options
-options=$(getopt -l help,query,bar,jobs:,dsn: -o hqbj:d: -- "$@" 2> /dev/null) || {
-    showHelp
-    Log::fatal "invalid options specified"
+options=$(getopt -l help,query,bar,jobs:,dsn: -o hqbj:d: -- "$@" 2>/dev/null) || {
+  showHelp
+  Log::fatal "invalid options specified"
 }
 
 eval set -- "${options}"
-while true
-do
-case $1 in
--h|--help)
-    showHelp
-    exit 0
-    ;;
---jobs|-j)
-    shift || true
-    JOBS_NUMBER=$1
-    ;;
---bar|-b)
-    PARALLEL_OPTIONS+=("--bar")
-    ;;
---query|-q)
-    QUERY=1
-    ;;
---dsn|-d)
-    shift || true
-    DSN=${1:-:-default.local}
-    ;;
---)
-    shift || true
-    break;;
-*)
-    showHelp
-    Log::fatal "invalid argument $1"
-esac
-shift || true
+while true; do
+  case $1 in
+    -h | --help)
+      showHelp
+      exit 0
+      ;;
+    --jobs | -j)
+      shift || true
+      JOBS_NUMBER=$1
+      ;;
+    --bar | -b)
+      PARALLEL_OPTIONS+=("--bar")
+      ;;
+    --query | -q)
+      QUERY=1
+      ;;
+    --dsn | -d)
+      shift || true
+      DSN=${1:-:-default.local}
+      ;;
+    --)
+      shift || true
+      break
+      ;;
+    *)
+      showHelp
+      Log::fatal "invalid argument $1"
+      ;;
+  esac
+  shift || true
 done
 
 # additional arguments
-shift $(( OPTIND - 1 )) || true
+shift $((OPTIND - 1)) || true
 
 # check dependencies
-Functions::checkCommandExists mysql "sudo apt-get install -y mysql-client"
-Functions::checkCommandExists mysqlshow "sudo apt-get install -y mysql-client"
-Functions::checkCommandExists parallel "sudo apt-get install -y parallel"
-Functions::checkCommandExists gawk "sudo apt-get install -y gawk"
-Functions::checkCommandExists awk "sudo apt-get install -y gawk"
+Assert::commandExists mysql "sudo apt-get install -y mysql-client"
+Assert::commandExists mysqlshow "sudo apt-get install -y mysql-client"
+Assert::commandExists parallel "sudo apt-get install -y parallel"
+Assert::commandExists gawk "sudo apt-get install -y gawk"
+Assert::commandExists awk "sudo apt-get install -y gawk"
 Version::checkMinimal "gawk" "gawk --version" "5.0.1"
 
 # if -q option provided (QUERY =1), queryFile is supposed to be a file,
 # else it is a query string by default
 queryFile=$1
 if [[ -z "${queryFile}" ]]; then
-    if [[ "${QUERY}" = "0" ]]; then
-        Log::fatal "You must provide the sql file to be executed"
-    else
-        Log::fatal "You must provide the sql string to be executed"
-    fi
+  if [[ "${QUERY}" = "0" ]]; then
+    Log::fatal "You must provide the sql file to be executed"
+  else
+    Log::fatal "You must provide the sql string to be executed"
+  fi
 fi
 
 # query contains the sql from queryFile or from query string if -q option is provided
 declare query="${queryFile}"
 if [[ "${QUERY}" = "0" ]]; then
-    declare queryAbsoluteFile
-    queryAbsoluteFile="$(Functions::getAbsoluteConfFile "dbQueries" "${queryFile}" "sql")" ||
-        Log::fatal "the file ${queryFile} does not exist"
-    query="$(cat "${queryAbsoluteFile}")"
-    Log::displayInfo "Using query file ${queryAbsoluteFile}"
+  declare queryAbsoluteFile
+  queryAbsoluteFile="$(Profiles::getAbsoluteConfFile "dbQueries" "${queryFile}" "sql")" ||
+    Log::fatal "the file ${queryFile} does not exist"
+  query="$(cat "${queryAbsoluteFile}")"
+  Log::displayInfo "Using query file ${queryAbsoluteFile}"
 fi
 
-if ! [[ ${JOBS_NUMBER} =~ ^[0-9]+$ ]] ; then
-   Log::fatal "number of jobs is incorrect"
+if ! [[ ${JOBS_NUMBER} =~ ^[0-9]+$ ]]; then
+  Log::fatal "number of jobs is incorrect"
 fi
 
 [[ ${JOBS_NUMBER} -lt 1 ]] && Log::fatal "number of jobs must be greater than 0"
@@ -140,7 +138,13 @@ allDbs="$(Database::getUserDbList dbInstance)"
 PARALLEL_OPTIONS+=("--linebuffer" "-j" "${JOBS_NUMBER}")
 
 export query
+awkScript="$(
+  cat <<'EOF'
+.INCLUDE "${CURRENT_DIR}/dbQueryAllDatabases.awk"
+EOF
+)"
+
 echo "${allDbs}" |
-    parallel --eta --progress "${PARALLEL_OPTIONS[@]}" \
-        "${CURRENT_DIR}/_dbQueryOneDatabase.sh" "${DSN}" \
-        | awk -f "${CURRENT_DIR}/dbQueryAllDatabases.awk" -
+  parallel --eta --progress "${PARALLEL_OPTIONS[@]}" \
+    "${CURRENT_DIR}/dbQueryOneDatabase.sh" "${DSN}" |
+  awk --source "${awkScript}" -

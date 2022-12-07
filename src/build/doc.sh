@@ -1,12 +1,11 @@
 #!/usr/bin/env bash
+# BIN_FILE=${ROOT_DIR}/bin/doc
+# ROOT_DIR_RELATIVE_TO_BIN_DIR=..
 
-set -o errexit
-set -o pipefail
+.INCLUDE "${TEMPLATE_DIR}/_includes/_header.tpl"
 
-CURRENT_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
-
-if [ "${IN_BASH_DOCKER:-}" != "You're in docker" ]; then
-  "${CURRENT_DIR}/.build/runBuildContainer.sh" "/bash/doc.sh" "$@"
+if [[ "${IN_BASH_DOCKER:-}" != "You're in docker" ]]; then
+  "${BIN_DIR}/runBuildContainer.sh" "/bash/doc.sh" "$@"
   exit $?
 fi
 
@@ -20,20 +19,22 @@ generateShDoc() {
   local basename="${file##*/}"
   local basenameNoExtension="${basename%.*}"
 
-  cd "${currentDir}" || exit 1
-  echo "generate markdown doc for ${relativeFile} in doc/${basenameNoExtension}.md"
+  (
+    cd "${currentDir}" || exit 1
+    echo "generate markdown doc for ${relativeFile} in doc/${basenameNoExtension}.md"
 
-  local doc
-  doc="$("./vendor/fchastanet.tomdoc.sh/tomdoc.sh" "${relativeFile}")"
-  if [[ -n "${doc}" ]]; then
-    echo "${doc}" > "${currentDir}/doc/${basenameNoExtension}.md"
+    local doc
+    doc="$("${ROOT_DIR}/vendor/fchastanet.tomdoc.sh/tomdoc.sh" "${relativeFile}")"
+    if [[ -n "${doc}" ]]; then
+      echo "${doc}" >"${currentDir}/doc/${basenameNoExtension}.md"
 
-    # add reference to index file
-    echo "* [${relativeFile}](doc/${basenameNoExtension}.md)" >> "${indexFile}"
-  else
-    # empty doc
-    rm -f "${currentDir}/doc/${basenameNoExtension}.md" || true
-  fi
+      # add reference to index file
+      echo "* [${relativeFile}](doc/${basenameNoExtension}.md)" >>"${indexFile}"
+    else
+      # empty doc
+      rm -f "${currentDir}/doc/${basenameNoExtension}.md" || true
+    fi
+  )
 }
 export -f generateShDoc
 
@@ -47,15 +48,15 @@ generateReadme() {
 
   replaceTokenByFileContent() {
     local TOKEN="$1"
-    "${CURRENT_DIR}/bin/${TOKEN}" --help | escapeColorCodes > "${TMP_DIR}/${TOKEN}_help"
+    "${BIN_DIR}/${TOKEN}" --help | escapeColorCodes >"${TMP_DIR}/${TOKEN}_help"
     (
-      cd "${TMP_DIR}"
+      cd "${TMP_DIR}" || exit 1
       sed -i -e "/@@@${TOKEN}_help@@@/r ${TOKEN}_help" -e "/@@@${TOKEN}_help@@@/d" "${CURRENT_DIR}/README.md"
     )
   }
 
-  cp "${CURRENT_DIR}/tests/tools/data/mysql2puml.puml" "${TMP_DIR}/mysql2puml_plantuml_diagram"
-  cp "${CURRENT_DIR}/README.tmpl.md" "${CURRENT_DIR}/README.md"
+  cp "${ROOT_DIR}/tests/tools/data/mysql2puml.puml" "${TMP_DIR}/mysql2puml_plantuml_diagram"
+  cp "${ROOT_DIR}/Commands.tmpl.md" "${CURRENT_DIR}/Commands.md"
 
   replaceTokenByFileContent "gitRenameBranch"
   replaceTokenByFileContent "dbQueryAllDatabases"
@@ -82,16 +83,16 @@ sed -i \
 # fake docker command
 touch /tmp/docker
 chmod 755 /tmp/docker
-export PATH=/tmp:$PATH
+export PATH=/tmp:${PATH}
 
 #-----------------------------
 # doc generation
 #-----------------------------
 # generate doc + index
 echo "generate bash-framework index"
-mkdir -p "${CURRENT_DIR}/doc"
+mkdir -p "${ROOT_DIR}/doc"
 while IFS= read -r file; do
-  generateShDoc "${file}" "${CURRENT_DIR}" "${INDEX_FILE}"
+  generateShDoc "${file}" "${ROOT_DIR}" "${INDEX_FILE}"
 done < <(find "${CURRENT_DIR}/bash-framework" -name "*.sh" | sort)
 
 # generate readme
