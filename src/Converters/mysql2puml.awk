@@ -212,7 +212,7 @@ BEGIN {
 END {
     uml_end()
     exit 0
-    # fake call occuring after exit to remove warning about unused function
+    # fake call occurring after exit to remove warning about unused function
     column_sort()
 }
 # =========================================================================

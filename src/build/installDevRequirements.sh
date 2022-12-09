@@ -13,12 +13,6 @@ else
 fi
 
 Git::shallowClone \
-  "https://github.com/fchastanet/tomdoc.sh.git" \
-  "${ROOT_DIR}/vendor/fchastanet.tomdoc.sh" \
-  "master" \
-  "FORCE_DELETION"
-
-Git::shallowClone \
   "https://github.com/bats-core/bats-core.git" \
   "${ROOT_DIR}/vendor/bats" \
   "v1.5.0" \

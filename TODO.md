@@ -3,6 +3,7 @@
 - build.sh move md5 computation from build.sh to workflow script
 - merge buildDoc.sh and doc.sh
 - doc.sh move bash-framework doc generation to bash-tools-framework
+- migrate jekyll to <https://nextra.site/docs/guide/organize-files> ?
 - Bash-tools only contains commands, build tools (linters, ...)
 
   - move build.sh to bin/build

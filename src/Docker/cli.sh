@@ -115,10 +115,7 @@ if [[ -n "${containerArg}" ]]; then
 fi
 
 declare -a cmd=()
-if [[ "$(
-  Assert::windows
-  echo $?
-)" = "1" ]]; then
+if Assert::windows; then
   # open tty for git bash
   cmd+=(winpty)
 fi

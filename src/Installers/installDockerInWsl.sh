@@ -90,14 +90,15 @@ else
 fi
 
 Log::displayInfo "Installing docker-compose v1"
-[[ -f /usr/local/bin/docker-compose ]] && cp /usr/local/bin/docker-compose /tmp/docker-compose
+tempDownload="$(Framework::createTempFile docker-compose)"
+[[ -f /usr/local/bin/docker-compose ]] && cp /usr/local/bin/docker-compose "${tempDownload}"
 upgradeGithubRelease \
   "docker/compose" \
-  "/tmp/docker-compose" \
+  "${tempDownload}" \
   "https://github.com/docker/compose/releases/download/v@latestVersion@/docker-compose-$(uname -s | tr '[:upper:]' '[:lower:]')-$(uname -m)" \
   defaultVersion
 
-sudo mv /tmp/docker-compose /usr/local/bin/docker-compose
+sudo mv "${tempDownload}" /usr/local/bin/docker-compose
 sudo ln -sf /usr/local/bin/docker-compose /usr/bin/docker-compose
 
 Log::displayInfo "Installing docker-compose v2"

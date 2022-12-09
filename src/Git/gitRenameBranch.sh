@@ -17,7 +17,7 @@ ${__HELP_TITLE}Description:${__HELP_NORMAL} rename git local branch, use options
 ${__HELP_TITLE}Usage:${__HELP_NORMAL} ${SCRIPT_NAME} [-h|--help] prints this help and exits
 ${__HELP_TITLE}Usage:${__HELP_NORMAL} ${SCRIPT_NAME} <newBranchName> [<oldBranchName>] [--push|-p] [--delete|-d] [--assume-yes|-yes|-y]
     --help,-h prints this help and exits
-     -y, --yes, --assume-yes do not ask for confirmation (use with caution)
+    -y, --yes, --assume-yes do not ask for confirmation (use with caution)
         Automatic yes to prompts; assume "y" as answer to all prompts
         and run non-interactively.
     --push,-p push new branch

@@ -133,12 +133,12 @@ Database::ifDbExists dbFromInstance "${FROM_DB}" || {
 }
 read -r -d '' QUERY <<EOM2 || true
 SELECT
-	TABLE_NAME AS tableName,
-	ROUND((DATA_LENGTH + INDEX_LENGTH) / 1024 / 1024) as maxSize
+  TABLE_NAME AS tableName,
+  ROUND((DATA_LENGTH + INDEX_LENGTH) / 1024 / 1024) as maxSize
 FROM information_schema.TABLES
 WHERE
-	TABLE_SCHEMA = '${FROM_DB}'
-    AND TABLE_TYPE NOT IN('VIEW')
+  TABLE_SCHEMA = '${FROM_DB}'
+  AND TABLE_TYPE NOT IN('VIEW')
 ORDER BY maxSize DESC
 EOM2
 TABLE_LIST="$(Database::query dbFromInstance "${QUERY}" "information_schema")"

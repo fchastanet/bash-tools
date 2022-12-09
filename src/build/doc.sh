@@ -15,8 +15,7 @@ replaceTokenByInput() {
 
   (
     local tokenFile
-    trap 'rm -f "${tokenFile}" || true' ERR EXIT
-    tokenFile="$(mktemp "bash-tools.XXXXXXXX")"
+    tokenFile="$(Framework::createTempFile "replaceTokenByInput")"
 
     cat - | Filters::escapeColorCodes >"${tokenFile}"
 
@@ -70,9 +69,8 @@ export PATH=/tmp:${PATH}
 #-----------------------------
 
 (
-  trap 'rm -f "${indexFile}" || true' ERR EXIT
   declare indexFile
-  indexFile="$(mktemp "bash-tools-index.XXXXXXXX")"
+  indexFile="$(Framework::createTempFile "bash-tools-doc-indexFile")"
 
   Log::displayInfo 'generate doc folder'
   "${BIN_DIR}/generateShellDoc" "${ROOT_DIR}/src" "${ROOT_DIR}/doc" "${indexFile}"

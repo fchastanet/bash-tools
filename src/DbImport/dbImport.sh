@@ -209,9 +209,8 @@ if [[ -n "${TABLES}" ]]; then
 fi
 
 if [[ "${PROFILE}" = 'default' && -n "${TABLES}" ]]; then
-  PROFILE_COMMAND=$(mktemp -p "${TMPDIR:-/tmp}" -t "profileCmd.XXXXXXXXXXXX")
+  PROFILE_COMMAND=$(Framework::createTempFile "profileCmd.XXXXXXXXXXXX")
   chmod +x "${PROFILE_COMMAND}"
-  Framework::trapAdd "rm -f \"${PROFILE_COMMAND}\" 2>/dev/null || true" ERR EXIT
   PROFILE_MSG_INFO="only ${TABLES} will be imported"
   (
     echo '#!/usr/bin/env bash'
@@ -292,7 +291,7 @@ if [[ "${DOWNLOAD_DUMP}" = "1" ]]; then
       Log::fatal "unable to get information on S3 object : ${S3_URL}"
     }
     Log::displayInfo "Download dump from ${S3_URL} ..."
-    TMPDIR="${TEMP_FOLDER:-/tmp}" aws s3 cp "${S3_URL}" "${REMOTE_DB_DUMP_TEMP_FILE}" || {
+    TMPDIR="${TMDIR:-/tmp}" aws s3 cp "${S3_URL}" "${REMOTE_DB_DUMP_TEMP_FILE}" || {
       Log::fatal "unable to download dump from S3 : ${S3_URL}"
     }
   else

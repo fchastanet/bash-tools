@@ -4,8 +4,6 @@
 
 .INCLUDE "${TEMPLATE_DIR}/_includes/_header.tpl"
 
-.INCLUDE "${TEMPLATE_DIR}/_includes/generateShellDocFunction.sh"
-
 # Usage info
 showHelp() {
   cat <<EOF
@@ -51,19 +49,35 @@ while true; do
   shift || true
 done
 
+if (($# != 3)); then
+  Log::fatal "yous should provide exactly 3 parameters"
+fi
+
 declare fromDir="$1"
 declare docDir="$2"
 declare indexFile="$3"
-
-if [[ ! -d "${fromDir}" ]]; then
-  Log::fatal "Directory ${fromDir} does not exists"
-fi
 
 fromDir="$(realpath "${fromDir}")"
 docDir="$(realpath "${docDir}")"
 indexFile="$(realpath "${indexFile}")"
 
-generateShellDocsFromDir \
+if [[ ! -d "${fromDir}" ]]; then
+  Log::fatal "From directory '${fromDir}' does not exists"
+fi
+if [[ ! -r "${fromDir}" ]]; then
+  Log::fatal "From directory '${fromDir}' is not readable"
+fi
+
+mkdir -p "${docDir}" || true
+if [[ ! -w "${docDir}" ]]; then
+  Log::fatal "From directory '${fromDir}' is not writeable"
+fi
+
+if ! Assert::fileWritable "${indexFile}"; then
+  Log::fatal "File ${indexFile} is not writeable"
+fi
+
+ShellDoc::generateShellDocsFromDir \
   "${fromDir}" \
   "${docDir}" \
   "${indexFile}"
