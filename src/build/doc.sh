@@ -5,99 +5,92 @@
 .INCLUDE "${TEMPLATE_DIR}/_includes/_header.tpl"
 
 if [[ "${IN_BASH_DOCKER:-}" != "You're in docker" ]]; then
-  "${BIN_DIR}/runBuildContainer.sh" "/bash/doc.sh" "$@"
+  "${BIN_DIR}/runBuildContainer" "/bash/bin/doc" "$@"
   exit $?
 fi
 
-INDEX_FILE="/tmp/Index.md"
-
-generateShDoc() {
-  local file="$1"
-  local currentDir="$2"
-  local indexFile="$3"
-  local relativeFile="${file#"${currentDir}/"}"
-  local basename="${file##*/}"
-  local basenameNoExtension="${basename%.*}"
+replaceTokenByInput() {
+  local token="$1"
+  local targetFile="$2"
 
   (
-    cd "${currentDir}" || exit 1
-    echo "generate markdown doc for ${relativeFile} in doc/${basenameNoExtension}.md"
+    local tokenFile
+    trap 'rm -f "${tokenFile}" || true' ERR EXIT
+    tokenFile="$(mktemp "bash-tools.XXXXXXXX")"
 
-    local doc
-    doc="$("${ROOT_DIR}/vendor/fchastanet.tomdoc.sh/tomdoc.sh" "${relativeFile}")"
-    if [[ -n "${doc}" ]]; then
-      echo "${doc}" >"${currentDir}/doc/${basenameNoExtension}.md"
+    cat - | Filters::escapeColorCodes >"${tokenFile}"
 
-      # add reference to index file
-      echo "* [${relativeFile}](doc/${basenameNoExtension}.md)" >>"${indexFile}"
-    else
-      # empty doc
-      rm -f "${currentDir}/doc/${basenameNoExtension}.md" || true
-    fi
+    sed -i \
+      -e "/${token}/r ${tokenFile}" \
+      -e "/${token}/d" \
+      "${targetFile}"
   )
 }
-export -f generateShDoc
 
-escapeColorCodes() {
-  cat - | sed $'s/\e\\[[0-9;:]*[a-zA-Z]//g'
-}
+generateMdFileFromTemplate() {
+  local templateFile="$1"
+  local targetFile="$2"
+  local fromDir="$3"
 
-generateReadme() {
-  TMP_DIR="$(mktemp -d "/tmp/bash-tools.XXXXXXXX")"
-  trap 'rm -rf "${TMP_DIR}"' ERR EXIT
-
-  replaceTokenByFileContent() {
-    local TOKEN="$1"
-    "${BIN_DIR}/${TOKEN}" --help | escapeColorCodes >"${TMP_DIR}/${TOKEN}_help"
-    (
-      cd "${TMP_DIR}" || exit 1
-      sed -i -e "/@@@${TOKEN}_help@@@/r ${TOKEN}_help" -e "/@@@${TOKEN}_help@@@/d" "${CURRENT_DIR}/README.md"
-    )
-  }
-
-  cp "${ROOT_DIR}/tests/tools/data/mysql2puml.puml" "${TMP_DIR}/mysql2puml_plantuml_diagram"
-  cp "${ROOT_DIR}/Commands.tmpl.md" "${CURRENT_DIR}/Commands.md"
-
-  replaceTokenByFileContent "gitRenameBranch"
-  replaceTokenByFileContent "dbQueryAllDatabases"
-  replaceTokenByFileContent "dbScriptAllDatabases"
-  replaceTokenByFileContent "dbImport"
-  replaceTokenByFileContent "dbImportProfile"
-  replaceTokenByFileContent "gitIsAncestorOf"
-  replaceTokenByFileContent "gitIsBranch"
-  replaceTokenByFileContent "mysql2puml"
-  replaceTokenByFileContent "cli"
-  sed -i -e "/@@@mysql2puml_plantuml_diagram@@@/r ${CURRENT_DIR}/tests/tools/data/mysql2puml.puml" -e "/@@@mysql2puml_plantuml_diagram@@@/d" "${CURRENT_DIR}/README.md"
-  sed -i -e "/@@@bash_doc_index@@@/r ${INDEX_FILE}" -e "/@@@bash_doc_index@@@/d" "${CURRENT_DIR}/README.md"
+  cp "${templateFile}" "${targetFile}"
+  (
+    while IFS= read -r relativeFile; do
+      local token="${relativeFile#./}"
+      token="${token///_}"
+      if grep -q "@@@${token}_help@@@" "${targetFile}"; then
+        Log::displayInfo "generate help for ${token}"
+        (cd "${fromDir}" && "${relativeFile}" --help) | replaceTokenByInput "@@@${token}_help@@@" "${targetFile}"
+      elif [[ "${token}" != "${SCRIPT_NAME}" ]]; then
+        Log::displayWarning "token ${token} not found in ${targetFile}"
+      fi
+    done < <(cd "${fromDir}" && find . -type f -executable)
+  )
 }
 
 #-----------------------------
-# configure environment
+# configure docker environment
 #-----------------------------
 mkdir -p ~/.bash-tools
-cp -R conf/. ~/.bash-tools
-sed -i \
-  -e "s@^BASH_TOOLS_FOLDER=.*@BASH_TOOLS_FOLDER=$(pwd)@g" \
-  -e "s@^S3_BASE_URL=.*@S3_BASE_URL=s3://example.com/exports/@g" \
-  ~/.bash-tools/.env
-# fake docker command
-touch /tmp/docker
-chmod 755 /tmp/docker
+
+(
+  cd "${ROOT_DIR}" || exit 1
+  cp -R conf/. ~/.bash-tools
+  sed -i \
+    -e "s@^BASH_TOOLS_FOLDER=.*@BASH_TOOLS_FOLDER=$(pwd)@g" \
+    -e "s@^S3_BASE_URL=.*@S3_BASE_URL=s3://example.com/exports/@g" \
+    ~/.bash-tools/.env
+  # fake docker command
+  touch /tmp/docker
+  chmod 755 /tmp/docker
+)
 export PATH=/tmp:${PATH}
 
 #-----------------------------
 # doc generation
 #-----------------------------
-# generate doc + index
-echo "generate bash-framework index"
-mkdir -p "${ROOT_DIR}/doc"
-while IFS= read -r file; do
-  generateShDoc "${file}" "${ROOT_DIR}" "${INDEX_FILE}"
-done < <(find "${CURRENT_DIR}/bash-framework" -name "*.sh" | sort)
 
-# generate readme
-echo "generate README.md"
-generateReadme
+(
+  trap 'rm -f "${indexFile}" || true' ERR EXIT
+  declare indexFile
+  indexFile="$(mktemp "bash-tools-index.XXXXXXXX")"
 
-# cleaning
-rm -f "${INDEX_FILE}"
+  Log::displayInfo 'generate doc folder'
+  "${BIN_DIR}/generateShellDoc" "${ROOT_DIR}/src" "${ROOT_DIR}/doc" "${indexFile}"
+
+  Log::displayInfo 'generate Commands.md'
+  #cp "${ROOT_DIR}/tests/tools/data/mysql2puml.puml" "${TMP_DIR}/mysql2puml_plantuml_diagram"
+  generateMdFileFromTemplate \
+    "${ROOT_DIR}/Commands.tmpl.md" \
+    "${ROOT_DIR}/Commands.md" \
+    "${BIN_DIR}"
+
+  sed -i \
+    -e "/@@@mysql2puml_plantuml_diagram@@@/r ${ROOT_DIR}/tests/tools/data/mysql2puml.puml" \
+    -e "/@@@mysql2puml_plantuml_diagram@@@/d" \
+    "${ROOT_DIR}/Commands.md"
+  # inject index file
+  sed -i \
+    -e "/@@@bash_doc_index@@@/r ${indexFile}" \
+    -e "/@@@bash_doc_index@@@/d" \
+    "${ROOT_DIR}/Commands.md"
+)

@@ -38,7 +38,11 @@ compileFile() {
   mkdir -p "$(dirname "${BIN_FILE}")"
   local oldMd5
   oldMd5="$(md5sum "${BIN_FILE}" 2>/dev/null | awk '{print $1}' || echo "new")"
-  "${FRAMEWORK_DIR}/bin/compile" "${srcFile}" "${srcRelativeFile}" "${ROOT_DIR_RELATIVE_TO_BIN_DIR}" |
+  "${FRAMEWORK_DIR}/bin/compile" \
+    "${srcFile}" \
+    "${srcRelativeFile}" \
+    "${ROOT_DIR_RELATIVE_TO_BIN_DIR}" \
+    --template-dir "${SRC_DIR}" |
     sed -r '/^# (BIN_FILE|ROOT_DIR_RELATIVE_TO_BIN_DIR)=.*$/d' >"${BIN_FILE}"
   chmod +x "${BIN_FILE}"
 

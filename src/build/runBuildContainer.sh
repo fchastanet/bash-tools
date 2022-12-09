@@ -13,11 +13,11 @@ DOCKER_BUILD_OPTIONS="${DOCKER_BUILD_OPTIONS:-}"
 cd "${ROOT_DIR}" || exit 1
 
 if [[ ! -d "${ROOT_DIR}/vendor" ]]; then
-  ./.build/installBuildDeps.sh
+  "${BIN_DIR}/installDevRequirements"
 fi
 
 if [[ "${SKIP_BUILD:-0}" = "0" ]]; then
-  ./.build/buildPushDockerImages.sh "${VENDOR}" "${BASH_TAR_VERSION}" "${BASH_IMAGE}"
+  "${BIN_DIR}/buildPushDockerImages" "${VENDOR}" "${BASH_TAR_VERSION}" "${BASH_IMAGE}"
 
   # build docker image with user configuration
   # shellcheck disable=SC2086

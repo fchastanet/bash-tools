@@ -38,100 +38,146 @@ export DEBCONF_NONINTERACTIVE_SEEN=true
 
 # FUNCTIONS
 
-if [[ "${IN_BASH_DOCKER:-}" != "You're in docker" ]]; then
-  "${BIN_DIR}/runBuildContainer.sh" "/bash/doc.sh" "$@"
-  exit $?
-fi
-
-INDEX_FILE="/tmp/Index.md"
-
-generateShDoc() {
-  local file="$1"
-  local currentDir="$2"
-  local indexFile="$3"
-  local relativeFile="${file#"${currentDir}/"}"
-  local basename="${file##*/}"
-  local basenameNoExtension="${basename%.*}"
-
-  (
-    cd "${currentDir}" || exit 1
-    echo "generate markdown doc for ${relativeFile} in doc/${basenameNoExtension}.md"
-
-    local doc
-    doc="$("${ROOT_DIR}/vendor/fchastanet.tomdoc.sh/tomdoc.sh" "${relativeFile}")"
-    if [[ -n "${doc}" ]]; then
-      echo "${doc}" >"${currentDir}/doc/${basenameNoExtension}.md"
-
-      # add reference to index file
-      echo "* [${relativeFile}](doc/${basenameNoExtension}.md)" >>"${indexFile}"
-    else
-      # empty doc
-      rm -f "${currentDir}/doc/${basenameNoExtension}.md" || true
-    fi
-  )
-}
-export -f generateShDoc
-
-escapeColorCodes() {
+Filters::escapeColorCodes() {
   cat - | sed $'s/\e\\[[0-9;:]*[a-zA-Z]//g'
 }
 
-generateReadme() {
-  TMP_DIR="$(mktemp -d "/tmp/bash-tools.XXXXXXXX")"
-  trap 'rm -rf "${TMP_DIR}"' ERR EXIT
+if [[ -t 0 ]]; then
+  # check colors applicable https://misc.flogisoft.com/bash/tip_colors_and_formatting
+  export readonly __ERROR_COLOR='\e[31m'      # Red
+  export readonly __INFO_COLOR='\e[44m'       # white on lightBlue
+  export readonly __SUCCESS_COLOR='\e[32m'    # Green
+  export readonly __WARNING_COLOR='\e[33m'    # Yellow
+  export readonly __SKIPPED_COLOR='\e[93m'    # Light Yellow
+  export readonly __TEST_COLOR='\e[100m'      # Light magenta
+  export readonly __TEST_ERROR_COLOR='\e[41m' # white on red
+  export readonly __SKIPPED_COLOR='\e[33m'    # Yellow
+  export readonly __DEBUG_COLOR='\e[37m'      # Grey
+  # Internal: reset color
+  export readonly __RESET_COLOR='\e[0m' # Reset Color
+  # shellcheck disable=SC2155,SC2034
+  export readonly __HELP_EXAMPLE="$(echo -e "\e[1;30m")"
+  # shellcheck disable=SC2155,SC2034
+  export readonly __HELP_TITLE="$(echo -e "\e[1;37m")"
+  # shellcheck disable=SC2155,SC2034
+  export readonly __HELP_NORMAL="$(echo -e "\033[0m")"
+else
+  # check colors applicable https://misc.flogisoft.com/bash/tip_colors_and_formatting
+  export readonly __ERROR_COLOR=''
+  export readonly __INFO_COLOR=''
+  export readonly __SUCCESS_COLOR=''
+  export readonly __WARNING_COLOR=''
+  export readonly __SKIPPED_COLOR=''
+  export readonly __TEST_COLOR=''
+  export readonly __TEST_ERROR_COLOR=''
+  export readonly __SKIPPED_COLOR=''
+  export readonly __DEBUG_COLOR=''
+  # Internal: reset color
+  export readonly __RESET_COLOR=''
+  export readonly __HELP_EXAMPLE=''
+  export readonly __HELP_TITLE=''
+  export readonly __HELP_NORMAL=''
+fi
 
-  replaceTokenByFileContent() {
-    local TOKEN="$1"
-    "${BIN_DIR}/${TOKEN}" --help | escapeColorCodes >"${TMP_DIR}/${TOKEN}_help"
-    (
-      cd "${TMP_DIR}" || exit 1
-      sed -i -e "/@@@${TOKEN}_help@@@/r ${TOKEN}_help" -e "/@@@${TOKEN}_help@@@/d" "${CURRENT_DIR}/README.md"
-    )
-  }
+# Display message using info color (bg light blue/fg white)
+# @param {String} $1 message
+Log::displayInfo() {
+  echo -e "${__INFO_COLOR}INFO    - ${1}${__RESET_COLOR}"
+}
 
-  cp "${ROOT_DIR}/tests/tools/data/mysql2puml.puml" "${TMP_DIR}/mysql2puml_plantuml_diagram"
-  cp "${ROOT_DIR}/Commands.tmpl.md" "${CURRENT_DIR}/Commands.md"
+# Display message using warning color (yellow)
+# @param {String} $1 message
+Log::displayWarning() {
+  echo -e "${__WARNING_COLOR}WARN    - ${1}${__RESET_COLOR}"
+}
 
-  replaceTokenByFileContent "gitRenameBranch"
-  replaceTokenByFileContent "dbQueryAllDatabases"
-  replaceTokenByFileContent "dbScriptAllDatabases"
-  replaceTokenByFileContent "dbImport"
-  replaceTokenByFileContent "dbImportProfile"
-  replaceTokenByFileContent "gitIsAncestorOf"
-  replaceTokenByFileContent "gitIsBranch"
-  replaceTokenByFileContent "mysql2puml"
-  replaceTokenByFileContent "cli"
-  sed -i -e "/@@@mysql2puml_plantuml_diagram@@@/r ${CURRENT_DIR}/tests/tools/data/mysql2puml.puml" -e "/@@@mysql2puml_plantuml_diagram@@@/d" "${CURRENT_DIR}/README.md"
-  sed -i -e "/@@@bash_doc_index@@@/r ${INDEX_FILE}" -e "/@@@bash_doc_index@@@/d" "${CURRENT_DIR}/README.md"
+if [[ "${IN_BASH_DOCKER:-}" != "You're in docker" ]]; then
+  "${BIN_DIR}/runBuildContainer" "/bash/bin/doc" "$@"
+  exit $?
+fi
+
+replaceTokenByInput() {
+  local token="$1"
+  local targetFile="$2"
+
+  (
+    local tokenFile
+    trap 'rm -f "${tokenFile}" || true' ERR EXIT
+    tokenFile="$(mktemp "bash-tools.XXXXXXXX")"
+
+    cat - | Filters::escapeColorCodes >"${tokenFile}"
+
+    sed -i \
+      -e "/${token}/r ${tokenFile}" \
+      -e "/${token}/d" \
+      "${targetFile}"
+  )
+}
+
+generateMdFileFromTemplate() {
+  local templateFile="$1"
+  local targetFile="$2"
+  local fromDir="$3"
+
+  cp "${templateFile}" "${targetFile}"
+  (
+    while IFS= read -r relativeFile; do
+      local token="${relativeFile#./}"
+      token="${token///_}"
+      if grep -q "@@@${token}_help@@@" "${targetFile}"; then
+        Log::displayInfo "generate help for ${token}"
+        (cd "${fromDir}" && "${relativeFile}" --help) | replaceTokenByInput "@@@${token}_help@@@" "${targetFile}"
+      elif [[ "${token}" != "${SCRIPT_NAME}" ]]; then
+        Log::displayWarning "token ${token} not found in ${targetFile}"
+      fi
+    done < <(cd "${fromDir}" && find . -type f -executable)
+  )
 }
 
 #-----------------------------
-# configure environment
+# configure docker environment
 #-----------------------------
 mkdir -p ~/.bash-tools
-cp -R conf/. ~/.bash-tools
-sed -i \
-  -e "s@^BASH_TOOLS_FOLDER=.*@BASH_TOOLS_FOLDER=$(pwd)@g" \
-  -e "s@^S3_BASE_URL=.*@S3_BASE_URL=s3://example.com/exports/@g" \
-  ~/.bash-tools/.env
-# fake docker command
-touch /tmp/docker
-chmod 755 /tmp/docker
+
+(
+  cd "${ROOT_DIR}" || exit 1
+  cp -R conf/. ~/.bash-tools
+  sed -i \
+    -e "s@^BASH_TOOLS_FOLDER=.*@BASH_TOOLS_FOLDER=$(pwd)@g" \
+    -e "s@^S3_BASE_URL=.*@S3_BASE_URL=s3://example.com/exports/@g" \
+    ~/.bash-tools/.env
+  # fake docker command
+  touch /tmp/docker
+  chmod 755 /tmp/docker
+)
 export PATH=/tmp:${PATH}
 
 #-----------------------------
 # doc generation
 #-----------------------------
-# generate doc + index
-echo "generate bash-framework index"
-mkdir -p "${ROOT_DIR}/doc"
-while IFS= read -r file; do
-  generateShDoc "${file}" "${ROOT_DIR}" "${INDEX_FILE}"
-done < <(find "${CURRENT_DIR}/bash-framework" -name "*.sh" | sort)
 
-# generate readme
-echo "generate README.md"
-generateReadme
+(
+  trap 'rm -f "${indexFile}" || true' ERR EXIT
+  declare indexFile
+  indexFile="$(mktemp "bash-tools-index.XXXXXXXX")"
 
-# cleaning
-rm -f "${INDEX_FILE}"
+  Log::displayInfo 'generate doc folder'
+  "${BIN_DIR}/generateShellDoc" "${ROOT_DIR}/src" "${ROOT_DIR}/doc" "${indexFile}"
+
+  Log::displayInfo 'generate Commands.md'
+  #cp "${ROOT_DIR}/tests/tools/data/mysql2puml.puml" "${TMP_DIR}/mysql2puml_plantuml_diagram"
+  generateMdFileFromTemplate \
+    "${ROOT_DIR}/Commands.tmpl.md" \
+    "${ROOT_DIR}/Commands.md" \
+    "${BIN_DIR}"
+
+  sed -i \
+    -e "/@@@mysql2puml_plantuml_diagram@@@/r ${ROOT_DIR}/tests/tools/data/mysql2puml.puml" \
+    -e "/@@@mysql2puml_plantuml_diagram@@@/d" \
+    "${ROOT_DIR}/Commands.md"
+  # inject index file
+  sed -i \
+    -e "/@@@bash_doc_index@@@/r ${indexFile}" \
+    -e "/@@@bash_doc_index@@@/d" \
+    "${ROOT_DIR}/Commands.md"
+)

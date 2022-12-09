@@ -5,7 +5,6 @@
 .INCLUDE "${TEMPLATE_DIR}/_includes/_header.tpl"
 
 #default values
-SCRIPT_NAME=${0##*/}
 SCRIPT_VERSION="0.1"
 SKIN="default"
 

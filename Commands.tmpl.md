@@ -13,6 +13,7 @@ permalink: /commands
 - [6. bin/cli](#6-bincli)
 - [7. bin/gitIsAncestorOf](#7-bingitisancestorof)
 - [8. bin/mysql2puml](#8-binmysql2puml)
+- [9. Bash Doc](#9-bash-doc)
 
 ## 1. bin/gitRenameBranch
 
@@ -210,3 +211,7 @@ Plantuml diagram generated
 using plantuml software, here an example of resulting diagram
 
 ![resulting database diagram](tests/data/mysql2puml-model.png)
+
+## 9. Bash Doc
+
+@@@bash_doc_index@@@

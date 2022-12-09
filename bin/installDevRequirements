@@ -139,18 +139,6 @@ Log::displayError() {
   echo -e "${__ERROR_COLOR}ERROR   - ${1}${__RESET_COLOR}"
 }
 
-# Display message using error color (red) and exit immediately with error status 1
-# @param {String} $1 message
-Log::fatal() {
-  Log::displayError "$1"
-  exit 1
-}
-
-if [[ "$(id -u)" = "0" ]]; then
-  Log::fatal "this script should be executed as normal user"
-  exit 1
-fi
-
 if [[ -f "${BIN_DIR}/installRequirements" ]]; then
   "${BIN_DIR}/installRequirements"
 else
