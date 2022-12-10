@@ -16,49 +16,65 @@ source "${FRAMEWORK_DIR}/src/Log/displayError.sh"
 
 # exitCode will be > 0 if at least one file has been updated or created
 ((exitCode = 0)) || true
-compileFile() {
+
+getBinFileFromSrcFile() {
   local srcFile="$1"
-  local srcRelativeFile BIN_FILE ROOT_DIR_RELATIVE_TO_BIN_DIR
-  srcRelativeFile="$(realpath -m --relative-to="${ROOT_DIR}" "${srcFile}")"
+  local rootDir="$2"
+  local binDir="$3"
+  local BIN_FILE
 
   BIN_FILE="$(grep -E '# BIN_FILE=' "${srcFile}" | sed -r 's/^#[^=]+=[ \t]*(.*)[ \t]*$/\1/' || :)"
   BIN_FILE="$(echo "${BIN_FILE}" | envsubst)"
-  ROOT_DIR_RELATIVE_TO_BIN_DIR="$(grep -E '# ROOT_DIR_RELATIVE_TO_BIN_DIR=' "${srcFile}" | sed -r 's/^#[^=]+=[ \t]*(.*)[ \t]*$/\1/' || :)"
   if [[ -z "${BIN_FILE}" ]]; then
-    BIN_FILE="$(echo "${srcFile}" | sed -E "s#^${ROOT_DIR}/src/#${BIN_DIR}/#" | sed -E 's#.sh$##')"
-  else
-    mkdir -p "$(realpath -m "$(dirname "${BIN_FILE}")")" || true
-    if ! realpath "${BIN_FILE}" &>/dev/null; then
-      Log::displayError "${srcFile} does not define a valid BIN_FILE value"
-      return 1
-    fi
+    BIN_FILE="$(echo "${srcFile}" | sed -E "s#^${rootDir}/src/#${binDir}/#" | sed -E 's#.sh$##')"
   fi
+  if ! realpath "${BIN_FILE}" &>/dev/null; then
+    Log::displayError >&2 "${srcFile} does not define a valid BIN_FILE value"
+    return 1
+  fi
+  echo "${BIN_FILE}"
+}
+
+getRootDirRelativeToBinDirFromSrcFile() {
+  local srcFile="$1"
+  grep -E '# ROOT_DIR_RELATIVE_TO_BIN_DIR=' "${srcFile}" | sed -r 's/^#[^=]+=[ \t]*(.*)[ \t]*$/\1/' || :
+}
+
+removeMetaDataFilter() {
+  sed -r '/^# (BIN_FILE|ROOT_DIR_RELATIVE_TO_BIN_DIR)=.*$/d'
+}
+
+getFileRelativeToDir() {
+  local srcFile="$1"
+  local relativeTo="$2"
+
+  realpath -m --relative-to="${relativeTo}" "${srcFile}"
+}
+
+constructBinFile() {
+  local srcFile="$1"
+
+  BIN_FILE=$(getBinFileFromSrcFile "${srcFile}" "${ROOT_DIR}" "${BIN_DIR}")
+  mkdir -p "$(realpath -m "$(dirname "${BIN_FILE}")")" || true
+
+  ROOT_DIR_RELATIVE_TO_BIN_DIR="$(getRootDirRelativeToBinDirFromSrcFile "${srcFile}")"
 
   Log::displayInfo "Writing file ${BIN_FILE} from ${srcFile}"
-  mkdir -p "$(dirname "${BIN_FILE}")"
-  local oldMd5
-  oldMd5="$(md5sum "${BIN_FILE}" 2>/dev/null | awk '{print $1}' || echo "new")"
   "${FRAMEWORK_DIR}/bin/compile" \
     "${srcFile}" \
-    "${srcRelativeFile}" \
+    "$(getFileRelativeToDir "${srcFile}" "${ROOT_DIR}")" \
     "${ROOT_DIR_RELATIVE_TO_BIN_DIR}" \
     --template-dir "${SRC_DIR}" |
-    sed -r '/^# (BIN_FILE|ROOT_DIR_RELATIVE_TO_BIN_DIR)=.*$/d' >"${BIN_FILE}"
-  chmod +x "${BIN_FILE}"
-
-  # return exit code != 0 if a bin file has been updated
-  if [[ "${oldMd5}" != "$(md5sum "${BIN_FILE}" | awk '{print $1}' || "new")" ]]; then
-    ((++exitCode))
-  fi
+    removeMetaDataFilter >"${BIN_FILE}"
 }
 
 if (($# == 0)); then
   while IFS= read -r file; do
-    compileFile "${file}"
+    constructBinFile "${file}"
   done < <(find "${SRC_DIR}" -name "*.sh")
 else
   for file in "$@"; do
-    compileFile "${file}"
+    constructBinFile "${file}"
   done
 fi
 
