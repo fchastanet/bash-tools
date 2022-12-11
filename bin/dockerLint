@@ -71,10 +71,12 @@ export DEBCONF_NONINTERACTIVE_SEEN=true
 # @return 0 on success, 1 if max retries count reached
 Retry::parameterized() {
   local maxRetries=$1
-  local delayBetweenTries=$2
-  local message="$3"
+  shift || true
+  local delayBetweenTries=$1
+  shift || true
+  local message="$1"
+  shift || true
   local retriesCount=1
-  shift 3
   while true; do
     Log::displayInfo "Attempt ${retriesCount}/${maxRetries}: ${message}"
     if "$@"; then
@@ -371,7 +373,7 @@ Version::checkMinimal() {
 # check if command in PATH is already the minimal version needed
 if ! Version::checkMinimal "hadolint" "--version" "2.12.0"; then
   Github::upgradeRelease \
-    "${BIN_DIR}/hadolint" \
+    "${VENDOR_BIN_DIR}/hadolint" \
     "https://github.com/hadolint/hadolint/releases/download/v@latestVersion@/hadolint-Linux-x86_64"
 fi
 
