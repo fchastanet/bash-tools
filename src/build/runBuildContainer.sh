@@ -21,8 +21,9 @@ if [[ "${SKIP_BUILD:-0}" = "0" ]]; then
 
   # build docker image with user configuration
   # shellcheck disable=SC2086
-  docker build \
+  DOCKER_BUILDKIT=1 docker build \
     ${DOCKER_BUILD_OPTIONS} \
+    --cache-from "scrasnups/build:bash-tools-${VENDOR}-${BASH_TAR_VERSION}" \
     --build-arg "BASH_IMAGE=bash-tools-${VENDOR}-${BASH_TAR_VERSION}:latest" \
     --build-arg USER_ID="$(id -u)" \
     --build-arg GROUP_ID="$(id -g)" \
