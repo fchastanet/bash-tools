@@ -6,7 +6,7 @@
 
 awkLintScript="$(
   cat <<'EOF'
-.INCLUDE "${CURRENT_DIR}/awkLint.awk"
+.INCLUDE "${TEMPLATE_DIR}/Linters/awkLint.awk"
 EOF
 )"
 

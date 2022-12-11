@@ -16,6 +16,10 @@ SRC_DIR="${ROOT_DIR}/src"
 # shellcheck disable=SC2034
 VENDOR_DIR="${ROOT_DIR}/vendor"
 # shellcheck disable=SC2034
+VENDOR_BIN_DIR="${ROOT_DIR}/vendor/bin"
+export PATH="${BIN_DIR}":"${VENDOR_BIN_DIR}":${PATH}
+
+# shellcheck disable=SC2034
 TMPDIR="$(mktemp -d -p "${TMPDIR:-/tmp}" -t bash-framework-$$-XXXXXX)"
 export TMPDIR
 
@@ -62,19 +66,19 @@ export DEBCONF_NONINTERACTIVE_SEEN=true
 # Display message using info color (bg light blue/fg white)
 # @param {String} $1 message
 Log::displayInfo() {
-  echo -e "${__INFO_COLOR}INFO    - ${1}${__RESET_COLOR}"
+  echo -e "${__INFO_COLOR}INFO    - ${1}${__RESET_COLOR}" >&2
 }
 
 # Display message using success color (bg green/fg white)
 # @param {String} $1 message
 Log::displaySuccess() {
-  echo -e "${__SUCCESS_COLOR}SUCCESS - ${1}${__RESET_COLOR}"
+  echo -e "${__SUCCESS_COLOR}SUCCESS - ${1}${__RESET_COLOR}" >&2
 }
 
 # Display message using warning color (yellow)
 # @param {String} $1 message
 Log::displayWarning() {
-  echo -e "${__WARNING_COLOR}WARN    - ${1}${__RESET_COLOR}"
+  echo -e "${__WARNING_COLOR}WARN    - ${1}${__RESET_COLOR}" >&2
 }
 
 # Internal: check if dsn file has all the mandatory variables set
@@ -181,7 +185,7 @@ Framework::trapAdd() {
 # Display message using debug color (grey)
 # @param {String} $1 message
 Log::displayDebug() {
-  echo -e "${__DEBUG_COLOR}DEBUG   - ${1}${__RESET_COLOR}"
+  echo -e "${__DEBUG_COLOR}DEBUG   - ${1}${__RESET_COLOR}" >&2
 }
 
 # Display message using error color (red) and exit immediately with error status 1
@@ -610,7 +614,7 @@ fi
 # Display message using error color (red)
 # @param {String} $1 message
 Log::displayError() {
-  echo -e "${__ERROR_COLOR}ERROR   - ${1}${__RESET_COLOR}"
+  echo -e "${__ERROR_COLOR}ERROR   - ${1}${__RESET_COLOR}" >&2
 }
 
 ############################################################

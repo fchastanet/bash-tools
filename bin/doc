@@ -16,6 +16,10 @@ SRC_DIR="${ROOT_DIR}/src"
 # shellcheck disable=SC2034
 VENDOR_DIR="${ROOT_DIR}/vendor"
 # shellcheck disable=SC2034
+VENDOR_BIN_DIR="${ROOT_DIR}/vendor/bin"
+export PATH="${BIN_DIR}":"${VENDOR_BIN_DIR}":${PATH}
+
+# shellcheck disable=SC2034
 TMPDIR="$(mktemp -d -p "${TMPDIR:-/tmp}" -t bash-framework-$$-XXXXXX)"
 export TMPDIR
 
@@ -149,13 +153,13 @@ fi
 # Display message using info color (bg light blue/fg white)
 # @param {String} $1 message
 Log::displayInfo() {
-  echo -e "${__INFO_COLOR}INFO    - ${1}${__RESET_COLOR}"
+  echo -e "${__INFO_COLOR}INFO    - ${1}${__RESET_COLOR}" >&2
 }
 
 # Display message using warning color (yellow)
 # @param {String} $1 message
 Log::displayWarning() {
-  echo -e "${__WARNING_COLOR}WARN    - ${1}${__RESET_COLOR}"
+  echo -e "${__WARNING_COLOR}WARN    - ${1}${__RESET_COLOR}" >&2
 }
 
 if [[ "${IN_BASH_DOCKER:-}" != "You're in docker" ]]; then

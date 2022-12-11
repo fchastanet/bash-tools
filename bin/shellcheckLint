@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 #####################################
-# GENERATED FILE FROM src/Linters/dockerLint.sh
+# GENERATED FILE FROM src/Linters/shellcheckLint.sh
 # DO NOT EDIT IT
 #####################################
 
@@ -269,15 +269,6 @@ Version::compare() {
   return 0
 }
 
-# extract software version number
-# @param $1 the command that will be called with --version parameter
-Version::getCommandVersionFromPlainText() {
-  local command="$1"
-  local argVersion="${2:---version}"
-  "${command}" "${argVersion}" 2>&1 |
-    Version::parse # keep only version numbers
-}
-
 # filter to keep only version number from a string
 # @stdin the string to parse
 Version::parse() {
@@ -368,15 +359,56 @@ Version::checkMinimal() {
 
 }
 
+# extract software version number
+# @param $1 the command that will be called with --version parameter
+Version::getCommandVersionFromPlainText() {
+  local command="$1"
+  local argVersion="${2:---version}"
+  "${command}" "${argVersion}" 2>&1 |
+    Version::parse # keep only version numbers
+}
+
 # check if command in PATH is already the minimal version needed
-if ! Version::checkMinimal "hadolint" "--version" "2.12.0"; then
+if ! Version::checkMinimal "shellcheck" "--version" "0.8.0"; then
+  install() {
+    local file="$1"
+    local targetFile="$2"
+    local version="$3"
+    local tempDir
+    tempDir="$(mktemp -d -p "${TMPDIR:-/tmp}" -t bash-framework-shellcheck-$$-XXXXXX)"
+    (
+      cd "${tempDir}" || exit 1
+      tar -xJvf "${file}"
+      mv "shellcheck-v${version}/shellcheck" "${targetFile}"
+      chmod +x "${targetFile}"
+    )
+  }
   Github::upgradeRelease \
-    "${BIN_DIR}/hadolint" \
-    "https://github.com/hadolint/hadolint/releases/download/v@latestVersion@/hadolint-Linux-x86_64"
+    "${BIN_DIR}/shellcheck" \
+    "https://github.com/koalaman/shellcheck/releases/download/v@latestVersion@/shellcheck-v@latestVersion@.linux.x86_64.tar.xz" \
+    "--version" \
+    Version::getCommandVersionFromPlainText \
+    install
 fi
 
 if (($# == 0)); then
-  set -- -f checkstyle
+  set -- --check-sourced -x -f checkstyle
 fi
 
-find . -type f -name 'Dockerfile*' -print0 | xargs -0 hadolint "$@"
+(
+  # shellcheck disable=SC2046
+  LC_ALL=C.UTF-8 shellcheck "$@" \
+    $(
+      find . -type f -executable \
+        -not -path './vendor/*' \
+        -not -path './.git/*' \
+        -not -path './megalinter-reports/*' \
+        -not -path './bin/hadolint' \
+        -not -path './bin/shellcheck' \
+        -not -path './.docker/*' \
+        -not -path './.history/*' \
+        -not -path './tests/data/*' \
+        -regextype posix-egrep \
+        ! -regex '.*\.(awk)$'
+    )
+)

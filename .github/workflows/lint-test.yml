@@ -17,26 +17,24 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v3
-      - name: Download hadolint and make available in path
-        shell: bash
-        run: |
-          mkdir -p bin || true
-          wget -q -O bin/hadolint \
-            "https://github.com/hadolint/hadolint/releases/download/v2.8.0/hadolint-Linux-x86_64"
-          chmod +x bin/hadolint
-          echo "$(pwd)/bin" >> "${GITHUB_PATH}"
-      - name: Install vendors (shellcheck follow source during linting)
-        shell: bash
-        run: ./build/installBuildDeps.sh
-      - name: Linting - Shellcheck
-        run: ./bin/linters/shellcheck.sh | tee logs/shellcheck-checkstyle.xml
-      - name: Linting - Awk
-        run: ./bin/linters/awkLint.sh | tee logs/awk-checkstyle.xml
+
+      - name: Install vendors
+        run: ./bin/installRequirements
+
       - name: Linting - Dockerfile
-        run: ./bin/linters/dockerLint.sh | tee logs/docker-checkstyle.xml
-      - uses: jwgmeligmeyling/checkstyle-github-action@master
+        run: ./bin/dockerLint | tee logs/docker-checkstyle.xml
+
+      - name: Linting - Shellcheck
+        run: ./bin/shellcheckLint | tee logs/shellcheck-checkstyle.xml
+
+      - name: Linting - Awk
+        run: ./bin/awkLint | tee logs/awk-checkstyle.xml
+
+      - name: Checkstyle aggregation
+        uses: jwgmeligmeyling/checkstyle-github-action@master
         with:
           path: 'logs/*-checkstyle.xml'
+
       - name: Archive results
         uses: actions/upload-artifact@v2
         with:

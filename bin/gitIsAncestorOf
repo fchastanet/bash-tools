@@ -16,6 +16,10 @@ SRC_DIR="${ROOT_DIR}/src"
 # shellcheck disable=SC2034
 VENDOR_DIR="${ROOT_DIR}/vendor"
 # shellcheck disable=SC2034
+VENDOR_BIN_DIR="${ROOT_DIR}/vendor/bin"
+export PATH="${BIN_DIR}":"${VENDOR_BIN_DIR}":${PATH}
+
+# shellcheck disable=SC2034
 TMPDIR="$(mktemp -d -p "${TMPDIR:-/tmp}" -t bash-framework-$$-XXXXXX)"
 export TMPDIR
 
@@ -62,7 +66,7 @@ export DEBCONF_NONINTERACTIVE_SEEN=true
 # Display message using error color (red)
 # @param {String} $1 message
 Log::displayError() {
-  echo -e "${__ERROR_COLOR}ERROR   - ${1}${__RESET_COLOR}"
+  echo -e "${__ERROR_COLOR}ERROR   - ${1}${__RESET_COLOR}" >&2
 }
 
 if [[ -t 1 || -t 2 ]]; then
