@@ -32,10 +32,11 @@ BASH_SHELLCHECK_FILTER_REGEX_EXCLUDE: (vendor/.*)
 BASH_SHELLCHECK_ARGUMENTS: --source-path=/tmp/lint
 
 BASH_SHFMT_ARGUMENTS: -i 2 -ci
+BASH_SHFMT_FILTER_REGEX_EXCLUDE: .\.zsh$|/\.zshrc|^tests/data/.*$
 
 CREDENTIALS_SECRETLINT_CONFIG_FILE: .secretlintrc.yml
 
-EDITORCONFIG_EDITORCONFIG_CHECKER_FILTER_REGEX_EXCLUDE: (\.git)
+EDITORCONFIG_EDITORCONFIG_CHECKER_FILTER_REGEX_EXCLUDE: (\.git|.\.zsh$|/\.zshrc|^tests/data/.*$)
 
 GIT_GIT_DIFF_PRE_COMMANDS:
   - command: git config --global core.autocrlf input

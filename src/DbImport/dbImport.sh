@@ -8,11 +8,7 @@ Assert::expectNonRootUser
 
 Framework::loadEnv
 
-# ensure that Ctrl-C is trapped by this script and not sub mysql process
-trap 'exit 130' INT
-
 # default values
-SCRIPT_NAME=${0##*/}
 PROFILE="default"
 TABLES=""
 DOWNLOAD_DUMP=0
@@ -150,7 +146,7 @@ Assert::commandExists mysqldump "sudo apt-get install -y mysql-client"
 Assert::commandExists pv "sudo apt-get install -y pv"
 Assert::commandExists gawk "sudo apt-get install -y gawk"
 Assert::commandExists awk "sudo apt-get install -y gawk"
-Version::checkMinimal "gawk" "gawk --version" "5.0.1"
+Version::checkMinimal "gawk" "--version" "5.0.1"
 
 # additional arguments
 shift $((OPTIND - 1)) || true
@@ -168,7 +164,6 @@ while true; do
 done
 
 if [[ -z "${REMOTE_DB}" ]]; then
-  showHelp
   Log::fatal "you must provide remoteDbName"
 fi
 

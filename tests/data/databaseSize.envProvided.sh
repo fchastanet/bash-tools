@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 
-HOSTNAME="hostOverriden"
-USER="userOverriden"
-PASSWORD="passOverriden"
+HOSTNAME="hostOverridden"
+USER="userOverridden"
+# shellcheck disable=SC2034
+PASSWORD="passOverridden"
+# shellcheck disable=SC2034
 PORT="3306"

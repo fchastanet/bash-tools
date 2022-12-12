@@ -15,6 +15,7 @@ Retry::default sudo apt-get install -y \
   gnupg2
 
 Log::displayInfo "install docker apt source list"
+# shellcheck source=/tests/data/etc_os-release
 source /etc/os-release
 
 Retry::default curl -fsSL "https://download.docker.com/linux/${ID}/gpg" | sudo apt-key add -

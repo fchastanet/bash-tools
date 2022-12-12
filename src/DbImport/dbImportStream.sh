@@ -17,7 +17,7 @@ fi
 
 awkScript="$(
   cat <<'EOF'
-.INCLUDE "${CURRENT_DIR}/dbImportStream.awk"
+.INCLUDE "${TEMPLATE_DIR}/DbImport/dbImportStream.awk"
 EOF
 )"
 # shellcheck disable=2086

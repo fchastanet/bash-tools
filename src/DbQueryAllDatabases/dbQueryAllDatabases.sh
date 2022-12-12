@@ -100,7 +100,7 @@ Assert::commandExists mysqlshow "sudo apt-get install -y mysql-client"
 Assert::commandExists parallel "sudo apt-get install -y parallel"
 Assert::commandExists gawk "sudo apt-get install -y gawk"
 Assert::commandExists awk "sudo apt-get install -y gawk"
-Version::checkMinimal "gawk" "gawk --version" "5.0.1"
+Version::checkMinimal "gawk" "--version" "5.0.1"
 
 # if -q option provided (QUERY =1), queryFile is supposed to be a file,
 # else it is a query string by default
@@ -140,11 +140,11 @@ PARALLEL_OPTIONS+=("--linebuffer" "-j" "${JOBS_NUMBER}")
 export query
 awkScript="$(
   cat <<'EOF'
-.INCLUDE "${CURRENT_DIR}/dbQueryAllDatabases.awk"
+.INCLUDE "${TEMPLATE_DIR}/DbQueryAllDatabases/dbQueryAllDatabases.awk"
 EOF
 )"
 
 echo "${allDbs}" |
   parallel --eta --progress "${PARALLEL_OPTIONS[@]}" \
-    "${CURRENT_DIR}/dbQueryOneDatabase.sh" "${DSN}" |
+    "${CURRENT_DIR}/dbQueryOneDatabase" "${DSN}" |
   awk --source "${awkScript}" -

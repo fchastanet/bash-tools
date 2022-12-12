@@ -71,7 +71,6 @@ shift || true
 oldName="${1:-}"
 shift || true
 if [[ $# -gt 0 ]]; then
-  showHelp
   Log::fatal "too much arguments provided"
 fi
 

@@ -146,7 +146,7 @@ function uml_table(createTable)
         debug("Columns order after sort")
         for (i in columns) debug("column ", i, " ", columns[i], column_weight(columns[i]))
     }
-    printf("Table(%s) { \n", tableName )
+    printf("Table(%s) {\n", tableName )
     for(i in columns) {
         columnName=columns[i]
         # column($name, $type, $null="", $pk="", $fk="", $unique="")

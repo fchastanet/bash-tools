@@ -39,7 +39,7 @@ repos:
 
       - id: shfmt
         args: [-i, '2', -ci]
-        exclude: (.\.zsh$|/\.zshrc|^vendor/.*$)
+        exclude: (.\.zsh$|/\.zshrc|^vendor/.*$|^tests/data/.*$)
 
       # Check both committed and uncommitted files for git conflict
       # markers and whitespace errors according to core.whitespace

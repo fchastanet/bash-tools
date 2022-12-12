@@ -8,7 +8,7 @@ on:
 
 jobs:
   linters:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     strategy:
       fail-fast: true
       matrix:
@@ -36,7 +36,7 @@ jobs:
           path: 'logs/*-checkstyle.xml'
 
       - name: Archive results
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: linter-reports
           path: |
@@ -65,7 +65,7 @@ jobs:
 
   buildDockerImages:
     needs: linters
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     strategy:
       fail-fast: true
       matrix:
@@ -83,11 +83,11 @@ jobs:
             bashImage: bash
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
+        uses: docker/setup-buildx-action@v2
       - name: Login to DockerHub
-        uses: docker/login-action@v1
+        uses: docker/login-action@v2
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
@@ -107,7 +107,7 @@ jobs:
 
   testDoc:
     needs: buildDockerImages
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     strategy:
       fail-fast: true
       matrix:
@@ -117,11 +117,11 @@ jobs:
           - '5.1'
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
+        uses: docker/setup-buildx-action@v2
       - name: Login to DockerHub
-        uses: docker/login-action@v1
+        uses: docker/login-action@v2
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
@@ -133,7 +133,7 @@ jobs:
 
   tests:
     needs: buildDockerImages
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     strategy:
       fail-fast: true
       matrix:
@@ -151,11 +151,11 @@ jobs:
             bashImage: bash
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
+        uses: docker/setup-buildx-action@v2
       - name: Login to DockerHub
-        uses: docker/login-action@v1
+        uses: docker/login-action@v2
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
@@ -165,14 +165,17 @@ jobs:
           matrix.bashTarVersion }}
       - name: run unit tests
         run: |
+          ./bin/installDevRequirements
           # shellcheck disable=SC2266
           VENDOR="${{ matrix.vendor }}" \
           BASH_TAR_VERSION="${{ matrix.bashTarVersion }}" \
           BASH_IMAGE="${{ matrix.bashImage }}" \
           SKIP_BUILD=0 \
-          ./bin/test --formatter junit -r tests | tee ./logs/junit.xml
+          SKIP_USER=1 \
+          ./bin/test --report-formatter junit -o logs -r tests
+
       - name: Publish Unit Test Results
         uses: EnricoMi/publish-unit-test-result-action@v1
         if: always()
         with:
-          files: logs/junit.xml
+          files: logs/report.xml

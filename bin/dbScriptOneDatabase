@@ -66,7 +66,9 @@ export DEBCONF_NONINTERACTIVE_SEEN=true
 # Display message using debug color (grey)
 # @param {String} $1 message
 Log::displayDebug() {
-  echo -e "${__DEBUG_COLOR}DEBUG   - ${1}${__RESET_COLOR}" >&2
+  if ((BASH_FRAMEWORK_LOG_LEVEL > __LEVEL_DEBUG)); then
+    echo -e "${__DEBUG_COLOR}DEBUG   - ${1}${__RESET_COLOR}" >&2
+  fi
 }
 
 # Display message using error color (red)
@@ -143,7 +145,7 @@ Database::checkDsnFile() {
 # * $@ command with arguments to execute
 Framework::run() {
   # 'bash_framework_status', 'bash_framework_duration' are global variables
-  local -i start, end
+  local -i start end
   start=$(date +%s)
   bash_framework_status=0
   bash_framework_output=""
@@ -169,7 +171,7 @@ Framework::run() {
 # Display message using error color (red) and exit immediately with error status 1
 # @param {String} $1 message
 Log::fatal() {
-  Log::displayError "$1"
+  echo -e "${__ERROR_COLOR}FATAL   - ${1}${__RESET_COLOR}" >&2
   exit 1
 }
 
@@ -475,10 +477,10 @@ Framework::loadEnv() {
   if [[ -z "${BASH_FRAMEWORK_ENV_FILEPATH+xxx}" ]]; then
     # BASH_FRAMEWORK_ENV_FILEPATH not defined
     if [[ -f "${HOME}/.bash-tools/.env" ]]; then
-      # shellcheck source=tests/data/.env
+      # shellcheck source=/tests/data/.env
       source "${HOME}/.bash-tools/.env" || exit 1
     elif [[ -f "${HOME}/.env" ]]; then
-      # shellcheck source=tests/data/.env
+      # shellcheck source=/tests/data/.env
       source "${HOME}/.env" || exit 1
     fi
   elif [[ -z "${BASH_FRAMEWORK_ENV_FILEPATH}" ]]; then
@@ -488,7 +490,7 @@ Framework::loadEnv() {
     # load BASH_FRAMEWORK_ENV_FILEPATH
     [[ ! -f "${BASH_FRAMEWORK_ENV_FILEPATH}" ]] &&
       Log::fatal "env file not not found - ${BASH_FRAMEWORK_ENV_FILEPATH}"
-    # shellcheck source=tests/data/.env
+    # shellcheck source=/tests/data/.env
     source "${BASH_FRAMEWORK_ENV_FILEPATH}"
   fi
 

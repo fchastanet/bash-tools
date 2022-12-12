@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
+# BIN_FILE=${ROOT_DIR}/conf/dbScripts/extractData
+# ROOT_DIR_RELATIVE_TO_BIN_DIR=../..
 
-# shellcheck source=src/DbScriptAllDatabases/dbScriptAllDatabases.sh
-source "$6/bin/_dbScriptOneDatabase.sh"
+.INCLUDE "${TEMPLATE_DIR}/_includes/dbScriptOneDatabase.sh"
 
 # shellcheck disable=SC2154
 if [[ -z "${scriptParameters[0]}" ]]; then

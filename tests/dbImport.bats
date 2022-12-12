@@ -1,12 +1,14 @@
 #!/usr/bin/env bash
 
-rootDir="$(cd "${BATS_TEST_DIRNAME}/../.." && pwd)"
-toolsDir="${rootDir}/bin"
+rootDir="$(cd "${BATS_TEST_DIRNAME}/.." && pwd)"
+binDir="${rootDir}/bin"
 vendorDir="${rootDir}/vendor"
 
-# shellcheck source=bash-framework/Constants.sh
-source "$(cd "${BATS_TEST_DIRNAME}/../.." && pwd)/bash-framework/Constants.sh" || exit 1
+# shellcheck source=vendor/bash-tools-framework/src/Log/_.sh
+source "${vendorDir}/bash-tools-framework/src/Log/_.sh" || exit 1
 
+load "${vendorDir}/bats-support/load.bash"
+load "${vendorDir}/bats-assert/load.bash"
 load "${vendorDir}/bats-mock-Flamefire/load.bash"
 
 setup() {
@@ -36,81 +38,81 @@ teardown() {
 }
 
 function display_help { #@test
-  run "${toolsDir}/dbImport" --help 2>&1
+  run "${binDir}/dbImport" --help 2>&1
   # shellcheck disable=SC2154
-  [[ "${lines[0]}" = "${__HELP_TITLE}Description:${__HELP_NORMAL} Import source db into target db" ]]
+  assert_line --index 0 "Description: Import source db into target db"
 }
 
 function remoteDbName_not_provided { #@test
-  run "${toolsDir}/dbImport" 2>&1
+  run "${binDir}/dbImport" 2>&1
   # shellcheck disable=SC2154
-  [[ "${output}" == *"FATAL - you must provide remoteDbName"* ]]
+  assert_output --partial "FATAL   - you must provide remoteDbName"
 }
 
 function from_aws_and_aws_not_installed { #@test
-  run "${toolsDir}/dbImport" --from-dsn default --from-aws fromDb 2>&1
-  [[ "${output}" == *"ERROR - aws is not installed, please install it"* ]]
+  run "${binDir}/dbImport" --from-dsn default --from-aws fromDb 2>&1
+  assert_output --partial "ERROR   - aws is not installed, please install it"
 }
 
 function from_aws_and_from_dsn_are_incompatible { #@test
   stub aws
-  run "${toolsDir}/dbImport" --from-dsn default --from-aws fromDb 2>&1
-  [[ "${output}" == *"FATAL - you cannot use from-dsn and from-aws at the same time"* ]]
+  run "${binDir}/dbImport" --from-dsn default --from-aws fromDb 2>&1
+  assert_output --partial "FATAL   - you cannot use from-dsn and from-aws at the same time"
 }
 
 function from_aws_missing_S3_BASE_URL { #@test
   stub aws
   sed -i -E 's#^S3_BASE_URL=.*$##g' "${HOME}/.bash-tools/.env"
-  run "${toolsDir}/dbImport" --from-aws fromDb 2>&1
-  [[ "${output}" == *"FATAL - missing S3_BASE_URL, please provide a value in .env file"* ]]
+  run "${binDir}/dbImport" --from-aws fromDb 2>&1
+  assert_output --partial "FATAL   - missing S3_BASE_URL, please provide a value in .env file"
 }
 
 function a_and_f_are_incompatible { #@test
   stub aws
-  run "${toolsDir}/dbImport" -f default -a fromDb 2>&1
-  [[ "${output}" == *"FATAL - you cannot use from-dsn and from-aws at the same time"* ]]
+  run "${binDir}/dbImport" -f default -a fromDb 2>&1
+  assert_output --partial "FATAL   - you cannot use from-dsn and from-aws at the same time"
 }
 
 function missing_aws { #@test
   # missing argument
-  run "${toolsDir}/dbImport" -a fromDb 2>&1
-  [[ "${output}" == *"ERROR - aws is not installed, please install it"* ]]
-  [[ "${output}" == *"INFO  - missing aws, please check"* ]]
+  run "${binDir}/dbImport" -a fromDb 2>&1
+  assert_output --partial "ERROR   - aws is not installed, please install it"
+  assert_output --partial "INFO    - missing aws, please check"
 }
 
 function tables_invalid { #@test
   stub aws
   # missing argument
-  run "${toolsDir}/dbImport" -a fromDb --tables 2>&1
-  [[ "${output}" == *"FATAL - invalid options specified"* ]]
+  run "${binDir}/dbImport" -a fromDb --tables 2>&1
+  assert_output --partial "FATAL   - invalid options specified"
 
   # invalid argument
-  run "${toolsDir}/dbImport" -a fromDb --tables ddd@ 2>&1
-  [[ "${output}" == *"FATAL - Table list is not valid : ddd@"* ]]
+  run "${binDir}/dbImport" -a fromDb --tables ddd@ 2>&1
+  assert_output --partial "FATAL   - Table list is not valid : ddd@"
 
   # invalid argument
-  run "${toolsDir}/dbImport" -a fromDb --tables ddd, 2>&1
-  [[ "${output}" == *"FATAL - Table list is not valid : ddd,"* ]]
+  run "${binDir}/dbImport" -a fromDb --tables ddd, 2>&1
+  assert_output --partial "FATAL   - Table list is not valid : ddd,"
 
   # invalid argument
-  run "${toolsDir}/dbImport" -a fromDb --tables ddd,dd, 2>&1
-  [[ "${output}" == *"FATAL - Table list is not valid : ddd,dd,"* ]]
+  run "${binDir}/dbImport" -a fromDb --tables ddd,dd, 2>&1
+  assert_output --partial "FATAL   - Table list is not valid : ddd,dd,"
 
   # invalid argument
-  run "${toolsDir}/dbImport" -a fromDb --tables ddd- 2>&1
-  [[ "${output}" == *"FATAL - Table list is not valid : ddd-"* ]]
+  run "${binDir}/dbImport" -a fromDb --tables ddd- 2>&1
+  assert_output --partial "FATAL   - Table list is not valid : ddd-"
 }
 
 function aws_file_not_found { #@test
   stub aws \
     "s3 ls --human-readable s3://s3server/exports/fromDb : exit 1"
-  run "${toolsDir}/dbImport" -a fromDb 2>&1
-  [[ "${output}" == *"FATAL - unable to get information on S3 object : s3://s3server/exports/fromDb"* ]]
+  run "${binDir}/dbImport" -a fromDb 2>&1
+  assert_output --partial "FATAL   - unable to get information on S3 object : s3://s3server/exports/fromDb"
 }
 
 function dsn_file_not_found { #@test
-  run "${toolsDir}/dbImport" -f notFound fromDb
-  [[ "${output}" == *"ERROR - conf file 'notFound' not found"* ]]
+  run "${binDir}/dbImport" -f notFound fromDb
+  assert_output --partial "ERROR   - conf file 'notFound' not found"
 }
 
 function remote_db_fully_functional { #@test
@@ -144,12 +146,12 @@ function remote_db_fully_functional { #@test
     "\* : echo 'structure'" \
     "\* : cat ${BATS_TEST_DIRNAME}/data/dumpMissingSchema.sql"
 
-  run "${toolsDir}/dbImport" -f default.local fromDb toDb 2>&1
+  run "${binDir}/dbImport" -f default.local fromDb toDb 2>&1
   unstub zcat
-  [[ "${output}" == *"Import database duration : "* ]]
-  [[ "${output}" == *"begin insert emptyTable"* ]]
-  [[ "${output}" == *"begin insert dataTable"* ]]
-  [[ "${output}" == *"begin insert otherTable"* ]]
+  assert_output --partial "Import database duration : "
+  assert_output --partial "begin insert emptyTable"
+  assert_output --partial "begin insert dataTable"
+  assert_output --partial "begin insert otherTable"
   [[ -f "${HOME}/.bash-tools/dbImportDumps/fromDb_default.sql.gz" ]]
   [[ -f "${HOME}/.bash-tools/dbImportDumps/fromDb_default_structure.sql.gz" ]]
   [[ "$(zcat "${HOME}/.bash-tools/dbImportDumps/fromDb_default.sql.gz" | grep '####data####')" = "####data####" ]]
@@ -174,12 +176,12 @@ function remote_db_dump_already_present { #@test
     "\* --connect-timeout=5 --batch --raw --default-character-set=utf8 -s --skip-column-names toDb : echo 'import structure dump'" \
     $'* --connect-timeout=5 --batch --raw --default-character-set=utf8  toDb : i=0 ; while read line; do ((i=i+1)); echo "line $i"; done < /dev/stdin'
 
-  run "${toolsDir}/dbImport" -f default.local fromDb toDb 2>&1
+  run "${binDir}/dbImport" -f default.local fromDb toDb 2>&1
 
-  [[ "${output}" == *"Import database duration : "* ]]
-  [[ "${output}" == *"begin insert emptyTable"* ]]
-  [[ "${output}" == *"begin insert dataTable"* ]]
-  [[ "${output}" == *"begin insert otherTable"* ]]
+  assert_output --partial "Import database duration : "
+  assert_output --partial "begin insert emptyTable"
+  assert_output --partial "begin insert dataTable"
+  assert_output --partial "begin insert otherTable"
   [[ -f "${HOME}/.bash-tools/dbImportDumps/fromDb_default.sql.gz" ]]
   [[ -f "${HOME}/.bash-tools/dbImportDumps/fromDb_default_structure.sql.gz" ]]
   # check files have been touched
@@ -204,12 +206,12 @@ function remote_db_fully_functional_from_aws { #@test
     $'* --batch --raw --default-character-set=utf8 --connect-timeout=5 -s --skip-column-names -e \'CREATE DATABASE IF NOT EXISTS `toDb` CHARACTER SET "utf8" COLLATE "utf8_general_ci"\' : echo "db created"' \
     $'* --connect-timeout=5  --batch --raw --default-character-set=utf8 toDb : i=0 ; while read line; do ((i=i+1)); echo "line $i"; done < /dev/stdin'
 
-  run "${toolsDir}/dbImport" --from-aws fromDb.tar.gz toDb 2>&1
+  run "${binDir}/dbImport" --from-aws fromDb.tar.gz toDb 2>&1
 
-  [[ "${output}" == *"Import database duration : "* ]]
-  [[ "${output}" == *"begin insert emptyTable"* ]]
-  [[ "${output}" == *"begin insert dataTable"* ]]
-  [[ "${output}" == *"begin insert otherTable"* ]]
+  assert_output --partial "Import database duration : "
+  assert_output --partial "begin insert emptyTable"
+  assert_output --partial "begin insert dataTable"
+  assert_output --partial "begin insert otherTable"
 }
 
 function remote_db_dump_already_present_from_aws { #@test
@@ -223,12 +225,12 @@ function remote_db_dump_already_present_from_aws { #@test
     $'* --batch --raw --default-character-set=utf8 --connect-timeout=5 -s --skip-column-names -e \'CREATE DATABASE IF NOT EXISTS `toDb` CHARACTER SET "utf8" COLLATE "utf8_general_ci"\' : echo "db created"' \
     $'* --connect-timeout=5  --batch --raw --default-character-set=utf8 toDb : i=0 ; while read line; do ((i=i+1)); echo "line $i"; done < /dev/stdin'
 
-  run "${toolsDir}/dbImport" --from-aws fromDb.tar.gz toDb 2>&1
+  run "${binDir}/dbImport" --from-aws fromDb.tar.gz toDb 2>&1
 
-  [[ "${output}" == *"Import database duration : "* ]]
-  [[ "${output}" == *"begin insert emptyTable"* ]]
-  [[ "${output}" == *"begin insert dataTable"* ]]
-  [[ "${output}" == *"begin insert otherTable"* ]]
+  assert_output --partial "Import database duration : "
+  assert_output --partial "begin insert emptyTable"
+  assert_output --partial "begin insert dataTable"
+  assert_output --partial "begin insert otherTable"
   [[ -f "${HOME}/.bash-tools/dbImportDumps/fromDb.tar.gz" ]]
   # check files have been touched
   (($(date +%s) - $(stat -c "%Y" "${HOME}/.bash-tools/dbImportDumps/fromDb.tar.gz") < 60))
@@ -248,11 +250,11 @@ function import_local_dump_not_aws_with_tables_filter { #@test
     "\* --connect-timeout=5 --batch --raw --default-character-set=utf8 -s --skip-column-names toDb : echo 'import structure dump'" \
     $'* --connect-timeout=5 --batch --raw --default-character-set=utf8  toDb : i=0 ; while read line; do ((i=i+1)); echo "line $i"; done < /dev/stdin'
 
-  run "${toolsDir}/dbImport" -f default.local fromDb toDb --tables dataTable,otherTable 2>&1
-  [[ "${output}" == *"Import database duration : "* ]]
-  [[ "${output}" == *"ignore table emptyTable"* ]]
-  [[ "${output}" == *"begin insert dataTable"* ]]
-  [[ "${output}" == *"begin insert otherTable"* ]]
+  run "${binDir}/dbImport" -f default.local fromDb toDb --tables dataTable,otherTable 2>&1
+  assert_output --partial "Import database duration : "
+  assert_output --partial "ignore table emptyTable"
+  assert_output --partial "begin insert dataTable"
+  assert_output --partial "begin insert otherTable"
   [[ -f "${HOME}/.bash-tools/dbImportDumps/fromDb_default.sql.gz" ]]
   [[ -f "${HOME}/.bash-tools/dbImportDumps/fromDb_default_structure.sql.gz" ]]
   # check files have been touched
@@ -270,12 +272,12 @@ function import_from_aws_with_tables_filter { #@test
   stub mysql \
     $'* --batch --raw --default-character-set=utf8 --connect-timeout=5 -s --skip-column-names -e \'CREATE DATABASE IF NOT EXISTS `toDb` CHARACTER SET "utf8" COLLATE "utf8_general_ci"\' : echo "db created"' \
     $'* --connect-timeout=5  --batch --raw --default-character-set=utf8 toDb : i=0 ; while read line; do ((i=i+1)); echo "line $i"; done < /dev/stdin'
-  run "${toolsDir}/dbImport" --from-aws fromDb.tar.gz toDb --tables dataTable,otherTable 2>&1
+  run "${binDir}/dbImport" --from-aws fromDb.tar.gz toDb --tables dataTable,otherTable 2>&1
 
-  [[ "${output}" == *"Import database duration : "* ]]
-  [[ "${output}" == *"ignore table emptyTable"* ]]
-  [[ "${output}" == *"begin insert dataTable"* ]]
-  [[ "${output}" == *"begin insert otherTable"* ]]
+  assert_output --partial "Import database duration : "
+  assert_output --partial "ignore table emptyTable"
+  assert_output --partial "begin insert dataTable"
+  assert_output --partial "begin insert otherTable"
   [[ -f "${HOME}/.bash-tools/dbImportDumps/fromDb.tar.gz" ]]
   # check files have been touched
   (($(date +%s) - $(stat -c "%Y" "${HOME}/.bash-tools/dbImportDumps/fromDb.tar.gz") < 60))

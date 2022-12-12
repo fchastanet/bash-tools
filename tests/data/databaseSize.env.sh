@@ -6,15 +6,15 @@ USER="root"
 PASSWORD="root"
 # shellcheck disable=SC2034
 PORT="3306"
-___CURRENT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+___CURRENT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 mysqlMocked() {
-    if [[ "$6" = "show databases" ]]; then
-      cat "${___CURRENT_DIR}/databaseSize.dbList"
-    elif [[ "$5" == "db"* ]]; then
-      cat "${___CURRENT_DIR}/databaseSize.result_$5"
-    fi
-    return 0
+  if [[ "$6" = "show databases" ]]; then
+    cat "${___CURRENT_DIR}/databaseSize.dbList"
+  elif [[ "$5" == "db"* ]]; then
+    cat "${___CURRENT_DIR}/databaseSize.result_$5"
+  fi
+  return 0
 }
 alias mysql="mysqlMocked"
 # shellcheck disable=SC2034

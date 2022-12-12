@@ -143,3 +143,4 @@ Inno
 linebuffer
 winpty
 fchastanet
+coreutils

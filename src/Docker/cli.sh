@@ -11,9 +11,6 @@ Framework::loadEnv
 # ensure that Ctrl-C is trapped by this script
 trap 'exit 130' INT
 
-# check dependencies
-Assert::commandExists docker "check https://docs.docker.com/engine/install/ubuntu/"
-
 SCRIPT_NAME=${0##*/}
 PROFILES_DIR="${ROOT_DIR}/conf/cliProfiles"
 HOME_PROFILES_DIR="${HOME}/.bash-tools/cliProfiles"
@@ -101,6 +98,9 @@ fi
 if shift; then
   commandArg=("$@")
 fi
+
+# check dependencies
+Assert::commandExists docker "check https://docs.docker.com/engine/install/ubuntu/"
 
 # load default conf file
 Profiles::loadConf "cliProfiles" "default"

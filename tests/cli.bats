@@ -1,12 +1,14 @@
 #!/usr/bin/env bash
 
-rootDir="$(cd "${BATS_TEST_DIRNAME}/../.." && pwd)"
-toolsDir="${rootDir}/bin"
+rootDir="$(cd "${BATS_TEST_DIRNAME}/.." && pwd)"
+binDir="${rootDir}/bin"
 vendorDir="${rootDir}/vendor"
 
-# shellcheck source=bash-framework/Constants.sh
-source "$(cd "${BATS_TEST_DIRNAME}/../.." && pwd)/bash-framework/Constants.sh" || exit 1
+# shellcheck source=vendor/bash-tools-framework/src/Log/_.sh
+source "${vendorDir}/bash-tools-framework/src/Log/_.sh" || exit 1
 
+load "${vendorDir}/bats-support/load.bash"
+load "${vendorDir}/bats-assert/load.bash"
 load "${vendorDir}/bats-mock-Flamefire/load.bash"
 
 setup() {
@@ -34,11 +36,11 @@ teardown() {
 }
 
 function display_help { #@test
-  run "${toolsDir}/cli" --help 2>&1
+  run "${binDir}/cli" --help 2>&1
   # shellcheck disable=SC2154
-  [[ "${status}" -eq 0 ]]
+  assert_success
   # shellcheck disable=SC2154
-  [[ "${lines[0]}" == "${__HELP_TITLE}Description:${__HELP_NORMAL} easy connection to docker container" ]]
+  assert_line --index 0 "Description: easy connection to docker container"
 }
 
 function without_any_parameter_connects_to_default_container { #@test
@@ -48,10 +50,10 @@ function without_any_parameter_connects_to_default_container { #@test
   else
     stub docker 'exec -it -e COLUMNS=80 -e LINES=23 --user=www-data project-apache2 //bin/bash : echo "connected to container"'
   fi
-  run "${toolsDir}/cli" 2>&1
+  run "${binDir}/cli" 2>&1
 
-  [[ "${status}" -eq 0 ]]
-  [[ "${lines[1]}" = "connected to container" ]]
+  assert_success
+  assert_line --index 1 "connected to container"
 }
 
 function to_existing_container { #@test
@@ -61,9 +63,9 @@ function to_existing_container { #@test
   else
     stub docker 'exec -it -e COLUMNS=80 -e LINES=23 --user=mysql project-mysql8 //bin/bash -c mysql\ -h127.0.0.1\ -uroot\ -proot\ -P3306 : echo "connected to container"'
   fi
-  run "${toolsDir}/cli" mysql 2>&1
-  [[ "${status}" -eq 0 ]]
-  [[ "${lines[1]}" = "connected to container" ]]
+  run "${binDir}/cli" mysql 2>&1
+  assert_success
+  assert_line --index 1 "connected to container"
 }
 
 function to_existing_container_override_user { #@test
@@ -73,9 +75,9 @@ function to_existing_container_override_user { #@test
   else
     stub docker 'exec -it -e COLUMNS=80 -e LINES=23 --user=user2 project-apache2 //bin/bash : echo "connected to container"'
   fi
-  run "${toolsDir}/cli" web user2 2>&1
-  [[ "${status}" -eq 0 ]]
-  [[ "${lines[1]}" = "connected to container" ]]
+  run "${binDir}/cli" web user2 2>&1
+  assert_success
+  assert_line --index 1 "connected to container"
 }
 
 function to_existing_container_override_user_and_command { #@test
@@ -85,22 +87,23 @@ function to_existing_container_override_user_and_command { #@test
   else
     stub docker 'exec -it -e COLUMNS=80 -e LINES=23 --user=user2 project-apache2 gulp : echo "gulp running"'
   fi
-  run "${toolsDir}/cli" web user2 gulp 2>&1
-  [[ "${status}" -eq 0 ]]
-  [[ "${lines[1]}" = "gulp running" ]]
+  run "${binDir}/cli" web user2 gulp 2>&1
+  assert_success
+  assert_line --index 1 "gulp running"
 }
 
 function add_a_custom_profile_and_use_this_profile { #@test
   stub_tput
   cp "${BATS_TEST_DIRNAME}/data/my-container.sh" "${HOME}/.bash-tools/cliProfiles"
   if read -r -t 0; then
-    stub docker 'exec -i -e COLUMNS=80 -e LINES=23 --user=superuser my-container mycommand : echo "connected to container"'
+    stub docker 'exec -i -e COLUMNS=80 -e LINES=23 --user=superuser my-container myCommand : echo "connected to container"'
   else
-    stub docker 'exec -it -e COLUMNS=80 -e LINES=23 --user=superuser my-container mycommand : echo "connected to container"'
+    stub docker 'exec -it -e COLUMNS=80 -e LINES=23 --user=superuser my-container myCommand : echo "connected to container"'
   fi
-  run "${toolsDir}/cli" my-container 2>&1
-  [[ "${status}" -eq 0 ]]
-  [[ "${lines[1]}" = "connected to container" ]]
+  run "${binDir}/cli" my-container 2>&1
+
+  assert_success
+  assert_line --index 1 "connected to container"
 }
 
 function to_a_container_without_a_matching_profile { #@test
@@ -110,7 +113,8 @@ function to_a_container_without_a_matching_profile { #@test
   else
     stub docker 'exec -it -e COLUMNS=80 -e LINES=23 --user=www-data my-container //bin/bash : echo "connected to container"'
   fi
-  run "${toolsDir}/cli" my-container 2>&1
-  [[ "${status}" -eq 0 ]]
-  [[ "${lines[1]}" = "connected to container" ]]
+  run "${binDir}/cli" my-container 2>&1
+
+  assert_success
+  assert_line --index 1 "connected to container"
 }

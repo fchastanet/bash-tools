@@ -1,19 +1,15 @@
 #!/usr/bin/env bash
-# BIN_FILE=${ROOT_DIR}/bin/dbScriptOneDatabase
-# ROOT_DIR_RELATIVE_TO_BIN_DIR=..
 
 .INCLUDE "${TEMPLATE_DIR}/_includes/_header.tpl"
 
 ############################################################
 # INTERNAL USE ONLY
-# USED BY bin/dbScriptAllDatabases
+# USED BY bin/dbScriptAllDatabases sub scripts
+# eg: src/DbScriptAllDatabases/extractData.sh
 ############################################################
 Assert::expectNonRootUser
 
 Framework::loadEnv
-
-# ensure that Ctrl-C is trapped by this script and not sub mysql process
-Framework::trapAdd 'exit 130' INT
 
 declare DSN="$1"
 # shellcheck disable=SC2034
@@ -27,7 +23,7 @@ declare callingDir="$5"
 
 declare -i length=$(($# - 6))
 # shellcheck disable=SC2034
-declare -a scriptParameters=("${@:7:${length}}")
+declare -a scriptParameters=("${@:6:${length}}")
 # shellcheck disable=SC2034,SC2124
 declare db="${@:$(($#)):1}"
 

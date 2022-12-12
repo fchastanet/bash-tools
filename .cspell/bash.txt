@@ -99,3 +99,11 @@ SIGINT
 BUSYTIMEFLAG
 hqbj
 TMDIR
+substr
+unstub
+cvzf
+sigpipe
+WORKDIR
+userdel
+addgroup
+MPFR

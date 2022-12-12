@@ -12,7 +12,7 @@ BEGIN{
       map[tableName] = (system(profileCmd) == 0)
     }
     if (map[tableName]) {
-      print "\033[44mbegin insert " tableName "\033[0m"  > "/dev/stderr"
+      print "\033[44m" "begin insert " tableName "\033[0m"  > "/dev/stderr"
       line = line "\nTRUNCATE TABLE `" tableName "`;"
       write=1
     } else {
