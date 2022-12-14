@@ -1,0 +1,79 @@
+' entities
+table(core_customer) {
+column ( `id` ): int(11
+column ( `created_at` ): datetime(6)
+column ( `updated_at` ): datetime(6)
+column ( `instance_name` ): varchar(128)
+column ( PRIMARY ): KEY
+column ( UNIQUE ): KEY
+}
+
+
+table(core_learner) {
+column ( `created_at` ): datetime(6
+column ( `updated_at` ): datetime(6)
+column ( `id` ): int(10)
+column ( `external_id` ): varchar(255)
+column ( `customer_id` ): int(11)
+column ( PRIMARY ): KEY
+column ( UNIQUE ): KEY
+column ( `customer_id`) ):
+column ( KEY ): `core_learner_customer_id_6d356da8_fk_core_customer_id`
+foreign_key ( CONSTRAINT ): `core_learner_customer_id_6d356da8_fk_core_customer_id`
+}
+
+table(core_learner_skill) {
+column ( `id` ): int(11
+column ( `created_at` ): datetime(6)
+column ( `updated_at` ): datetime(6)
+column ( `level` ): double
+column ( `interest` ): double
+column ( `learner_id` ): int(10)
+column ( `skill_id` ): int(10)
+column ( PRIMARY ): KEY
+column ( KEY ): `core_learner_skill_learner_id_684f904f_fk_core_learner_id`
+column ( KEY ): `core_learner_skill_skill_id_fa4d99ac_fk_core_skill_id`
+foreign_key ( CONSTRAINT ): `core_learner_skill_learner_id_684f904f_fk_core_learner_id`
+foreign_key ( CONSTRAINT ): `core_learner_skill_skill_id_fa4d99ac_fk_core_skill_id`
+}
+
+table(core_skill) {
+column ( `created_at` ): datetime(6
+column ( `updated_at` ): datetime(6)
+column ( `id` ): int(10)
+column ( `translations` ): json
+column ( `mapped_skill_id` ): int(10)
+column ( `internal_id` ): int(11)
+column ( PRIMARY ): KEY
+column ( UNIQUE ): KEY
+column ( KEY ): `core_skill_mapped_skill_id_7b712770_fk_core_skill_id`
+foreign_key ( CONSTRAINT ): `core_skill_mapped_skill_id_7b712770_fk_core_skill_id`
+}
+
+table(core_trainingcourse) {
+column ( `created_at` ): datetime(6
+column ( `updated_at` ): datetime(6)
+column ( `id` ): int(10)
+column ( `external_id` ): int(10)
+column ( `customer_id` ): int(11)
+column ( PRIMARY ): KEY
+column ( UNIQUE ): KEY
+column ( `customer_id`) ):
+column ( KEY ): `core_trainingcourse_customer_id_0137ae93_fk_core_customer_id`
+foreign_key ( CONSTRAINT ): `core_trainingcourse_customer_id_0137ae93_fk_core_customer_id`
+}
+
+table(core_trainingcourseskill) {
+column ( `id` ): int(11
+column ( `created_at` ): datetime(6)
+column ( `updated_at` ): datetime(6)
+column ( `relevance` ): double
+column ( `skill_id` ): int(10)
+column ( `training_course_id` ): int(10)
+column ( PRIMARY ): KEY
+column ( KEY ): `core_trainingcourseskill_skill_id_1d096250_fk_core_skill_id`
+column ( KEY ): `core_trainingcourses_training_course_id_56f0012b_fk_core_trai`
+foreign_key ( CONSTRAINT ): `core_trainingcourses_training_course_id_56f0012b_fk_core_trai`
+foreign_key ( CONSTRAINT ): `core_trainingcourseskill_skill_id_1d096250_fk_core_skill_id`
+}
+@enduml

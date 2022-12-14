@@ -1,15 +1,803 @@
 #!/usr/bin/env bash
 
-CURRENT_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
-# load bash-framework
-# shellcheck source=bash-framework/_bootstrap.sh
-source "$( cd "${CURRENT_DIR}/.." && pwd )/bash-framework/_bootstrap.sh"
+#####################################
+# GENERATED FILE FROM src/DbQueryAllDatabases/dbQueryAllDatabases.sh
+# DO NOT EDIT IT
+#####################################
 
-Framework::expectNonRootUser
+# shellcheck disable=SC2034
+SCRIPT_NAME=${0##*/}
+# shellcheck disable=SC2034
+CURRENT_DIR=$(cd "$(readlink -e "${BASH_SOURCE[0]%/*}")" && pwd -P)
+BIN_DIR=$(cd "$(readlink -e "${BASH_SOURCE[0]%/*}")" && pwd -P)
+ROOT_DIR="$(cd "${BIN_DIR}/.." && pwd -P)"
+# shellcheck disable=SC2034
+SRC_DIR="${ROOT_DIR}/src"
+# shellcheck disable=SC2034
+VENDOR_DIR="${ROOT_DIR}/vendor"
+# shellcheck disable=SC2034
+VENDOR_BIN_DIR="${ROOT_DIR}/vendor/bin"
+export PATH="${BIN_DIR}":"${VENDOR_BIN_DIR}":${PATH}
 
-import bash-framework/Database
-import bash-framework/Functions
-import bash-framework/Version
+# shellcheck disable=SC2034
+TMPDIR="$(mktemp -d -p "${TMPDIR:-/tmp}" -t bash-framework-$$-XXXXXX)"
+export TMPDIR
+
+# temp dir cleaning
+cleanOnExit() {
+  rm -Rf "${TMPDIR}" >/dev/null 2>&1
+}
+trap cleanOnExit EXIT HUP QUIT ABRT TERM
+
+# @see https://unix.stackexchange.com/a/386856
+interruptManagement() {
+  # restore SIGINT handler
+  trap - INT
+  # ensure that Ctrl-C is trapped by this script and not by sub process
+  # report to the parent that we have indeed been interrupted
+  kill -s INT "$$"
+}
+trap interruptManagement INT
+
+# shellcheck disable=SC2034
+((failures = 0)) || true
+
+shopt -s expand_aliases
+
+# Bash will remember & return the highest exit code in a chain of pipes.
+# This way you can catch the error inside pipes, e.g. mysqldump | gzip
+set -o pipefail
+set -o errexit
+
+# a log is generated when a command fails
+set -o errtrace
+
+# use nullglob so that (file*.php) will return an empty array if no file matches the wildcard
+shopt -s nullglob
+
+export TERM=xterm-256color
+
+#avoid interactive install
+export DEBIAN_FRONTEND=noninteractive
+export DEBCONF_NONINTERACTIVE_SEEN=true
+
+# FUNCTIONS
+
+# Display message using success color (bg green/fg white)
+# @param {String} $1 message
+Log::displaySuccess() {
+  echo -e "${__SUCCESS_COLOR}SUCCESS - ${1}${__RESET_COLOR}" >&2
+}
+
+# Internal: check if dsn file has all the mandatory variables set
+# Mandatory variables are: HOSTNAME, USER, PASSWORD, PORT
+#
+# **Arguments**:
+# * $1 - dsn absolute filename
+#
+# Returns 0 on valid file, 1 otherwise with log output
+Database::checkDsnFile() {
+  local DSN_FILENAME="$1"
+  if [[ ! -f "${DSN_FILENAME}" ]]; then
+    Log::displayError "dsn file ${DSN_FILENAME} not found"
+    return 1
+  fi
+
+  (
+    unset HOSTNAME PORT PASSWORD USER
+    # shellcheck source=/tests/data/dsn_valid.env
+    source "${DSN_FILENAME}"
+    if [[ -z ${HOSTNAME+x} ]]; then
+      Log::displayError "dsn file ${DSN_FILENAME} : HOSTNAME not provided"
+      return 1
+    fi
+    if [[ -z "${HOSTNAME}" ]]; then
+      Log::displayWarning "dsn file ${DSN_FILENAME} : HOSTNAME value not provided"
+    fi
+    if [[ "${HOSTNAME}" = "localhost" ]]; then
+      Log::displayWarning "dsn file ${DSN_FILENAME} : check that HOSTNAME should not be 127.0.0.1 instead of localhost"
+    fi
+    if [[ -z "${PORT+x}" ]]; then
+      Log::displayError "dsn file ${DSN_FILENAME} : PORT not provided"
+      return 1
+    fi
+    if ! [[ ${PORT} =~ ^[0-9]+$ ]]; then
+      Log::displayError "dsn file ${DSN_FILENAME} : PORT invalid"
+      return 1
+    fi
+    if [[ -z "${USER+x}" ]]; then
+      Log::displayError "dsn file ${DSN_FILENAME} : USER not provided"
+      return 1
+    fi
+    if [[ -z "${PASSWORD+x}" ]]; then
+      Log::displayError "dsn file ${DSN_FILENAME} : PASSWORD not provided"
+      return 1
+    fi
+  )
+}
+
+# Public: mysql query on a given db
+#
+# **Arguments**:
+# * $1 (passed by reference) database instance to use
+# * $2 sql query to execute.
+#    if not provided or empty, the command can be piped (eg: cat file.sql | Database::query ...)
+# * _$3 (optional)_ the db name
+#
+# **Returns**: mysql command status code
+Database::query() {
+  local -n instanceQuery=$1
+  local -a mysqlCommand=()
+
+  mysqlCommand+=(mysql)
+  mysqlCommand+=("--defaults-extra-file=${instanceQuery['AUTH_FILE']}")
+  IFS=' ' read -r -a queryOptions <<<"${instanceQuery['QUERY_OPTIONS']}"
+  mysqlCommand+=("${queryOptions[@]}")
+  if [[ "${instanceQuery['SKIP_COLUMN_NAMES']}" = "1" ]]; then
+    mysqlCommand+=("-s" "--skip-column-names")
+  fi
+  # add optional db name
+  if [[ -n "${3+x}" ]]; then
+    mysqlCommand+=("$3")
+  fi
+  # add optional sql query
+  if [[ -n "${2+x}" && -n "$2" ]]; then
+    if [[ ! -f "$2" ]]; then
+      mysqlCommand+=("-e")
+      mysqlCommand+=("$2")
+    fi
+  fi
+  Log::displayDebug "$(printf "execute command: '%s'" "${mysqlCommand[*]}")"
+
+  if [[ -f "$2" ]]; then
+    "${mysqlCommand[@]}" <"$2"
+  else
+    "${mysqlCommand[@]}"
+  fi
+}
+
+# *Public*: run command and store data in following global variables :
+# * bash_framework_status the exit status of the command
+# * bash_framework_duration the duration of the command
+# * bash_framework_output the output of the command
+# redirecting error output to stdout is not supported, you can instead redirect stderr to a file if needed
+# **Arguments**:
+# * $@ command with arguments to execute
+Framework::run() {
+  # 'bash_framework_status', 'bash_framework_duration' are global variables
+  local -i start end
+  start=$(date +%s)
+  bash_framework_status=0
+  bash_framework_output=""
+
+  local origFlags="$-"
+  set +eET
+  local origIFS="${IFS}"
+
+  # execute command
+  # shellcheck disable=SC2034
+  bash_framework_output="$("$@")"
+  # shellcheck disable=SC2034
+  bash_framework_status="$?"
+  IFS="${origIFS}"
+  set "-${origFlags}"
+
+  # calculate duration
+  end=$(date +%s)
+  # shellcheck disable=SC2034
+  bash_framework_duration=$((end - start))
+}
+
+# appends a command to a trap
+#
+# - 1st arg:  code to add
+# - remaining args:  names of traps to modify
+#
+Framework::trapAdd() {
+  local trapAddCmd="$1"
+  shift || Log::fatal "${FUNCNAME[0]} usage error"
+  # helper fn to get existing trap command from output
+  # of trap -p
+  extract_trap_cmd() { printf '%s\n' "$3"; }
+  for trapAddName in "$@"; do
+    trap -- "$(
+      # print existing trap command with newline
+      eval "extract_trap_cmd $(trap -p "${trapAddName}")"
+      # print the new trap command
+      printf '%s\n' "${trapAddCmd}"
+    )" "${trapAddName}" ||
+      Log::fatal "unable to add to trap ${trapAddName}"
+  done
+}
+
+# Display message using debug color (grey)
+# @param {String} $1 message
+Log::displayDebug() {
+  if ((BASH_FRAMEWORK_LOG_LEVEL > __LEVEL_DEBUG)); then
+    echo -e "${__DEBUG_COLOR}DEBUG   - ${1}${__RESET_COLOR}" >&2
+  fi
+}
+
+# Display message using error color (red)
+# @param {String} $1 message
+Log::displayError() {
+  echo -e "${__ERROR_COLOR}ERROR   - ${1}${__RESET_COLOR}" >&2
+}
+
+# Display message using warning color (yellow)
+# @param {String} $1 message
+Log::displayWarning() {
+  echo -e "${__WARNING_COLOR}WARN    - ${1}${__RESET_COLOR}" >&2
+}
+
+# TODO use alias deactivated by default
+# TODO displayXXX should call _logMessage too
+Log::loadEnv() {
+  # Log::fatal() {
+  #   __displayFatal "$@"
+  #   exit 1
+  # }
+
+  # Log::logError() { :; }
+  # Log::logWarning() { :; }
+  # Log::logInfo() { :; }
+  # Log::logSuccess() { :; }
+  # Log::logDebug() { :; }
+
+  # Log::displayError() { :; }
+  # Log::displayWarning() { :; }
+  # Log::displayInfo() { :; }
+  # Log::displaySuccess() { :; }
+  # Log::displayDebug() { :; }
+
+  BASH_FRAMEWORK_LOG_LEVEL=${BASH_FRAMEWORK_LOG_LEVEL:-${__LEVEL_OFF}}
+  if ((BASH_FRAMEWORK_LOG_LEVEL > __LEVEL_OFF)); then
+    if [[ -z "${BASH_FRAMEWORK_LOG_FILE}" ]]; then
+      BASH_FRAMEWORK_LOG_LEVEL=${__LEVEL_OFF}
+    else
+      if ! mkdir -p "$(dirname "${BASH_FRAMEWORK_LOG_FILE}")" 2>/dev/null; then
+        # TODO use _logMessage to be sure to display the message during env lading
+        Log::displayError "Log file directory '$(dirname "${BASH_FRAMEWORK_LOG_FILE}")' cannot be created"
+        BASH_FRAMEWORK_LOG_LEVEL=${__LEVEL_OFF}
+      elif ! touch --no-create "${BASH_FRAMEWORK_LOG_FILE}" 2>/dev/null; then
+        Log::displayError "Log file ${BASH_FRAMEWORK_LOG_FILE} is not writable"
+        BASH_FRAMEWORK_LOG_LEVEL=${__LEVEL_OFF}
+      fi
+    fi
+    # if ((BASH_FRAMEWORK_LOG_LEVEL >= __LEVEL_ERROR)); then
+    #   Log::logError() { __logMessage "ERROR  " "$@"; }
+    # fi
+    # if ((BASH_FRAMEWORK_LOG_LEVEL >= __LEVEL_WARNING)); then
+    #   Log::logWarning() { __logMessage "WARNING" "$@"; }
+    # fi
+    # if ((BASH_FRAMEWORK_LOG_LEVEL >= __LEVEL_INFO)); then
+    #   Log::logInfo() { __logMessage "INFO   " "$@"; }
+    # fi
+    # if ((BASH_FRAMEWORK_LOG_LEVEL >= __LEVEL_SUCCESS)); then
+    #   Log::logSuccess() { __logMessage "SUCCESS" "$@"; }
+    # fi
+    # if ((BASH_FRAMEWORK_LOG_LEVEL >= __LEVEL_DEBUG)); then
+    #   Log::logDebug() { __logMessage "DEBUG  " "$@"; }
+    # fi
+  fi
+
+  BASH_FRAMEWORK_DISPLAY_LEVEL=${BASH_FRAMEWORK_DISPLAY_LEVEL:-${__LEVEL_OFF}}
+  # if ((BASH_FRAMEWORK_DISPLAY_LEVEL > __LEVEL_OFF)); then
+  #   if ((BASH_FRAMEWORK_DISPLAY_LEVEL >= __LEVEL_ERROR)); then
+  #     Log::displayError() { __displayError "$@"; }
+  #   fi
+  #   if ((BASH_FRAMEWORK_DISPLAY_LEVEL >= __LEVEL_WARNING)); then
+  #     Log::displayWarning() { __displayWarning "$@"; }
+  #   fi
+  #   if ((BASH_FRAMEWORK_DISPLAY_LEVEL >= __LEVEL_INFO)); then
+  #     Log::displayInfo() { __displayInfo "$@"; }
+  #   fi
+  #   if ((BASH_FRAMEWORK_DISPLAY_LEVEL >= __LEVEL_SUCCESS)); then
+  #     Log::displaySuccess() { __displaySuccess "$@"; }
+  #   fi
+  #   if ((BASH_FRAMEWORK_DISPLAY_LEVEL >= __LEVEL_DEBUG)); then
+  #     Log::displayDebug() { __displayDebug "$@"; }
+  #   fi
+  # fi
+}
+
+# Public: list files of dir with given extension and display it as a list one by line
+#
+# **Arguments**:
+# * $1 the directory to list
+# * $2 the profile file prefix (default: "")
+# * $3 the extension
+# * $4 find options (default: '-type f', eg: -type d)
+# * $5 the indentation ('       - ' by default) can be any string compatible with sed not containing any /
+# **Output**: list of files without extension/directory
+# eg:
+#       - default.local
+#       - default.remote
+#       - localhost-root
+Profiles::list() {
+  local DIR="$1"
+  local PREFIX="${2:-}"
+  local EXT="${3}"
+  local FIND_OPTIONS="${4--type f}"
+  local INDENT_STR="${5-       - }"
+
+  local extension="${EXT}"
+  if [[ -n "${EXT}" && "${EXT:0:1}" != "." ]]; then
+    extension=".${EXT}"
+  fi
+
+  (
+    # shellcheck disable=SC2086
+    cd "${DIR}" &&
+      find . -maxdepth 1 ${FIND_OPTIONS} -name "${PREFIX}*${extension}" |
+      sed "s#^\./${PREFIX}##g" |
+        sed "s/${EXT}$//g" | sort | sed "s/^/${INDENT_STR}/"
+  )
+}
+
+# @param $1 version 1
+# @param $2 version 2
+# @return
+#   0 if equal
+#   1 if version1 > version2
+#   2 else
+Version::compare() {
+  if [[ "$1" = "$2" ]]; then
+    return 0
+  fi
+  local IFS=.
+  # shellcheck disable=2206
+  local i ver1=($1) ver2=($2)
+  # fill empty fields in ver1 with zeros
+  for ((i = ${#ver1[@]}; i < ${#ver2[@]}; i++)); do
+    ver1[i]=0
+  done
+  for ((i = 0; i < ${#ver1[@]}; i++)); do
+    if [[ -z "${ver2[i]+unset}" ]] || [[ -z ${ver2[i]} ]]; then
+      # fill empty fields in ver2 with zeros
+      ver2[i]=0
+    fi
+    if ((10#${ver1[i]} > 10#${ver2[i]})); then
+      return 1
+    fi
+    if ((10#${ver1[i]} < 10#${ver2[i]})); then
+      return 2
+    fi
+  done
+  return 0
+}
+
+# filter to keep only version number from a string
+# @stdin the string to parse
+Version::parse() {
+  sed -nre 's/[^0-9]*(([0-9]+\.)*[0-9]+).*/\1/p' | head -n1
+}
+
+# Public: check if command specified exists or return 1
+# with error and message if not
+#
+# **Arguments**:
+# * $1 commandName on which existence must be checked
+# * $2 helpIfNotExists a help command to display if the command does not exist
+#
+# **Exit**: code 1 if the command specified does not exist
+Assert::commandExists() {
+  local commandName="$1"
+  local helpIfNotExists="$2"
+
+  command -v "${commandName}" >/dev/null 2>/dev/null || {
+    Log::displayError "${commandName} is not installed, please install it"
+    if [[ -n "${helpIfNotExists}" ]]; then
+      Log::displayInfo "${helpIfNotExists}"
+    fi
+    return 1
+  }
+  return 0
+}
+
+# Public: exits with message if current user is root
+#
+# **Exit**: code 1 if current user is root
+Assert::expectNonRootUser() {
+  if [[ "$(id -u)" = "0" ]]; then
+    Log::fatal "The script must not be run as root"
+  fi
+}
+
+#  Public: lis dbs of given mysql server
+# **Output**:
+# the list of db except mysql admin ones :
+# - information_schema
+# - mysql
+# - performance_schema
+# - sys
+#
+# **Arguments**:
+# * $1 (passed by reference) database instance to use
+Database::getUserDbList() {
+  # shellcheck disable=SC2034
+  local -n instanceUserDbList=$1
+  # shellcheck disable=SC2016
+  local sql='SELECT `schema_name` from INFORMATION_SCHEMA.SCHEMATA WHERE `schema_name` NOT IN("information_schema", "mysql", "performance_schema", "sys")'
+  Database::query instanceUserDbList "${sql}"
+}
+
+# Public: create a new db instance
+#
+# **Arguments**:
+# * $1 - (passed by reference) database instance to create
+# * $2 - dsn profile - load the dsn.env profile
+#     absolute file is deduced using rules defined in Profiles::getAbsoluteConfFile
+#
+# **Example:**
+# ```shell
+# declare -Agx dbInstance
+# Database::newInstance dbInstance "default.local"
+# ```
+#
+# Returns immediately if the instance is already initialized
+Database::newInstance() {
+  local -n instanceNewInstance=$1
+  local dsn
+  dsn="$2"
+
+  if [[ -v instanceNewInstance['INITIALIZED'] && "${instanceNewInstance['INITIALIZED']:-0}" == "1" ]]; then
+    return
+  fi
+
+  # final auth file generated from dns file
+  instanceNewInstance['AUTH_FILE']=""
+  instanceNewInstance['DSN_FILE']=""
+
+  # check dsn file
+  DSN_FILE="$(Profiles::getAbsoluteConfFile "dsn" "${dsn}" "env")" || exit 1
+  Database::checkDsnFile "${DSN_FILE}"
+  instanceNewInstance['DSN_FILE']="${DSN_FILE}"
+
+  # shellcheck source=/tests/data/dsn_valid.env
+  source "${instanceNewInstance['DSN_FILE']}"
+
+  instanceNewInstance['USER']="${USER}"
+  instanceNewInstance['PASSWORD']="${PASSWORD}"
+  instanceNewInstance['HOSTNAME']="${HOSTNAME}"
+  instanceNewInstance['PORT']="${PORT}"
+
+  # generate authFile for easy authentication
+  instanceNewInstance['AUTH_FILE']=$(mktemp -p "${TMPDIR:-/tmp}" -t "mysql.XXXXXXXXXXXX")
+  (
+    echo "[client]"
+    echo "user = ${USER}"
+    echo "password = ${PASSWORD}"
+    echo "host = ${HOSTNAME}"
+    echo "port = ${PORT}"
+  ) >"${instanceNewInstance['AUTH_FILE']}"
+  Framework::trapAdd "rm -f \"${instanceNewInstance['AUTH_FILE']}\" 2>/dev/null || true" ERR EXIT
+
+  # some of those values can be overridden using the dsn file
+  # SKIP_COLUMN_NAMES enabled by default
+  instanceNewInstance['SKIP_COLUMN_NAMES']="${SKIP_COLUMN_NAMES:-1}"
+  instanceNewInstance['SSL_OPTIONS']="${MYSQL_SSL_OPTIONS:---ssl-mode=DISABLED}"
+  instanceNewInstance['QUERY_OPTIONS']="${MYSQL_QUERY_OPTIONS:---batch --raw --default-character-set=utf8}"
+  instanceNewInstance['DUMP_OPTIONS']="${MYSQL_DUMP_OPTIONS:---default-character-set=utf8 --compress --hex-blob --routines --triggers --single-transaction --set-gtid-purged=OFF --column-statistics=0 ${instanceNewInstance['SSL_OPTIONS']}}"
+  instanceNewInstance['DB_IMPORT_OPTIONS']="${DB_IMPORT_OPTIONS:---connect-timeout=5 --batch --raw --default-character-set=utf8}"
+
+  instanceNewInstance['INITIALIZED']=1
+}
+
+# Public: set the general options to use on mysql command to query the database
+# Differs than setOptions in the way that these options could change each time
+#
+# **Arguments**:
+# * $1 - (passed by reference) database instance to use
+# * $2 - options list
+Database::setQueryOptions() {
+  local -n instanceSetQueryOptions=$1
+  # shellcheck disable=SC2034
+  instanceSetQueryOptions['QUERY_OPTIONS']="$2"
+}
+
+# global variables used by Framework::run
+declare -gx bash_framework_status
+declare -gix bash_framework_duration
+declare -gx bash_framework_output
+
+## Initialize some default variables
+## List of variables
+## * BASH_FRAMEWORK_INITIALIZED=1 lazy initialization
+##
+## default tests/data/.env file is loaded
+##
+## then all these variables can be overridden by a .env file that will be searched in the following directories
+## in this order (stop on first file found):
+## * __BASH_FRAMEWORK_CALLING_SCRIPT: upper directory
+## * ~/ : home path
+## * ~/.bash-tools : home path .bash-tools
+## alternatively you can force a given .env file to be loaded using
+## BASH_FRAMEWORK_ENV_FILEPATH=<fullPathToEnvFile or empty if no file to be loaded>
+Framework::loadEnv() {
+  # import default .env file
+  #!/usr/bin/env bash
+
+  # Default settings
+  # you can override these settings by creating ${HOME}/.bash-tools/.env file
+  ###
+  ### LOG Level
+  ### minimum level of the messages that will be logged into LOG_FILE
+  ###
+  ### 0: NO LOG
+  ### 1: ERROR
+  ### 2: WARNING
+  ### 3: INFO
+  ### 4: DEBUG
+  ###
+  BASH_FRAMEWORK_LOG_LEVEL=${BASH_FRAMEWORK_LOG_LEVEL-0}
+
+  ###
+  ### DISPLAY Level
+  ### minimum level of the messages that will be displayed on screen
+  ###
+  ### 0: NO LOG
+  ### 1: ERROR
+  ### 2: WARNING
+  ### 3: INFO
+  ### 4: DEBUG
+  ###
+  BASH_FRAMEWORK_DISPLAY_LEVEL=${BASH_FRAMEWORK_DISPLAY_LEVEL-3}
+
+  ###
+  ### Log to file
+  ###
+  ### all log messages will be redirected to log file specified
+  ### this same path will be used inside and outside of the container
+  ###
+  BASH_FRAMEWORK_LOG_FILE=${BASH_FRAMEWORK_LOG_FILE-${HOME}/.bash-tools/logs/bash.log}
+
+  # absolute directory containing db import sql dumps
+  DB_IMPORT_DUMP_DIR=${DB_IMPORT_DUMP_DIR-${HOME}/.bash-tools/dbImportDumps}
+
+  # garbage collect all files for which modification is greater than eg: 30 days (+30)
+  # each time an existing file is used by dbImport/dbImportTable
+  # the file modification time is set to now
+  DB_IMPORT_GARBAGE_COLLECT_DAYS=${DB_IMPORT_GARBAGE_COLLECT_DAYS-+30}
+
+  # absolute directory containing dbScripts used by dbScriptAllDatabases
+  SCRIPTS_FOLDER=${SCRIPTS_FOLDER-${HOME}/.bash-tools/conf/dbScripts}
+
+  # absolute directory to bash-tools project
+  BASH_TOOLS_FOLDER=${BASH_TOOLS_FOLDER-$(cd .. && pwd)}
+
+  # -----------------------------------------------------
+  # AWS Parameters
+  # -----------------------------------------------------
+  S3_BASE_URL=${S3_BASE_URL-}
+  TEMP_FOLDER=${TEMP_FOLDER-/tmp}
+
+  # import custom .env file
+  if [[ -z "${BASH_FRAMEWORK_ENV_FILEPATH+xxx}" ]]; then
+    # BASH_FRAMEWORK_ENV_FILEPATH not defined
+    if [[ -f "${HOME}/.bash-tools/.env" ]]; then
+      # shellcheck source=/tests/data/.env
+      source "${HOME}/.bash-tools/.env" || exit 1
+    elif [[ -f "${HOME}/.env" ]]; then
+      # shellcheck source=/tests/data/.env
+      source "${HOME}/.env" || exit 1
+    fi
+  elif [[ -z "${BASH_FRAMEWORK_ENV_FILEPATH}" ]]; then
+    # BASH_FRAMEWORK_ENV_FILEPATH defined but empty - nothing to do
+    true
+  else
+    # load BASH_FRAMEWORK_ENV_FILEPATH
+    [[ ! -f "${BASH_FRAMEWORK_ENV_FILEPATH}" ]] &&
+      Log::fatal "env file not not found - ${BASH_FRAMEWORK_ENV_FILEPATH}"
+    # shellcheck source=/tests/data/.env
+    source "${BASH_FRAMEWORK_ENV_FILEPATH}"
+  fi
+
+  Log::loadEnv
+
+  export BASH_FRAMEWORK_INITIALIZED=1
+
+  set +o allexport
+}
+
+if [[ -t 1 || -t 2 ]]; then
+  # check colors applicable https://misc.flogisoft.com/bash/tip_colors_and_formatting
+  readonly __ERROR_COLOR='\e[31m'      # Red
+  readonly __INFO_COLOR='\e[44m'       # white on lightBlue
+  readonly __SUCCESS_COLOR='\e[32m'    # Green
+  readonly __WARNING_COLOR='\e[33m'    # Yellow
+  readonly __TEST_COLOR='\e[100m'      # Light magenta
+  readonly __TEST_ERROR_COLOR='\e[41m' # white on red
+  readonly __SKIPPED_COLOR='\e[33m'    # Yellow
+  readonly __DEBUG_COLOR='\e[37m'      # Grey
+  # Internal: reset color
+  readonly __RESET_COLOR='\e[0m' # Reset Color
+  # shellcheck disable=SC2155,SC2034
+  readonly __HELP_EXAMPLE="$(echo -e "\e[1;30m")"
+  # shellcheck disable=SC2155,SC2034
+  readonly __HELP_TITLE="$(echo -e "\e[1;37m")"
+  # shellcheck disable=SC2155,SC2034
+  readonly __HELP_NORMAL="$(echo -e "\033[0m")"
+else
+  # check colors applicable https://misc.flogisoft.com/bash/tip_colors_and_formatting
+  readonly __ERROR_COLOR=''
+  readonly __INFO_COLOR=''
+  readonly __SUCCESS_COLOR=''
+  readonly __WARNING_COLOR=''
+  readonly __SKIPPED_COLOR=''
+  readonly __TEST_COLOR=''
+  readonly __TEST_ERROR_COLOR=''
+  readonly __DEBUG_COLOR=''
+  # Internal: reset color
+  readonly __RESET_COLOR=''
+  readonly __HELP_EXAMPLE=''
+  readonly __HELP_TITLE=''
+  readonly __HELP_NORMAL=''
+fi
+export __ERROR_COLOR
+export __INFO_COLOR
+export __SUCCESS_COLOR
+export __WARNING_COLOR
+export __SKIPPED_COLOR
+export __TEST_COLOR
+export __TEST_ERROR_COLOR
+export __SKIPPED_COLOR
+export __DEBUG_COLOR
+export __RESET_COLOR
+export __HELP_EXAMPLE
+export __HELP_TITLE
+export __HELP_NORMAL
+
+# Display message using info color (bg light blue/fg white)
+# @param {String} $1 message
+Log::displayInfo() {
+  echo -e "${__INFO_COLOR}INFO    - ${1}${__RESET_COLOR}" >&2
+}
+
+# Display message using error color (red) and exit immediately with error status 1
+# @param {String} $1 message
+Log::fatal() {
+  echo -e "${__ERROR_COLOR}FATAL   - ${1}${__RESET_COLOR}" >&2
+  exit 1
+}
+
+# shellcheck disable=SC2034
+declare -Ag allDepsResultSeen=()
+declare -ag allDepsResult=()
+
+# Public: get absolute conf file from specified conf folder deduced using these rules
+#   * from absolute file (ignores <confFolder> and <extension>)
+#   * relative to where script is executed (ignores <confFolder> and <extension>)
+#   * from home/.bash-tools/<confFolder>
+#   * from framework conf/<confFolder>
+#
+# **Arguments**:
+# * $1 confFolder the directory name (not the path) to list
+# * $2 conf file to use without extension
+# * $3 the extension (sh by default)
+#
+# Returns absolute conf filename
+Profiles::getAbsoluteConfFile() {
+  local confFolder="$1"
+  local conf="$2"
+  local extension="${3-.sh}"
+
+  getAbs() {
+    local absoluteConfFile=""
+    # load conf from absolute file, then home folder, then bash framework conf folder
+    absoluteConfFile="${conf}"
+    if [[ "${absoluteConfFile:0:1}" = "/" && -f "${absoluteConfFile}" ]]; then
+      # file contains /, consider it as absolute filename
+      echo "${absoluteConfFile}"
+      return 0
+    fi
+
+    # relative to where script is executed
+    absoluteConfFile="$(realpath "${__BASH_FRAMEWORK_CALLING_SCRIPT}/${conf}" 2>/dev/null || echo "")"
+    if [[ -f "${absoluteConfFile}" ]]; then
+      echo "${absoluteConfFile}"
+      return 0
+    fi
+
+    # take extension into account
+    if [[ -n "${extension}" && "${extension:0:1}" != "." ]]; then
+      extension=".${extension}"
+    fi
+
+    # shellcheck source=/conf/dsn/default.local.env
+    absoluteConfFile="${HOME}/.bash-tools/${confFolder}/${conf}${extension}"
+    if [[ -f "${absoluteConfFile}" ]]; then
+      echo "${absoluteConfFile}"
+      return 0
+    fi
+    absoluteConfFile="${ROOT_DIR:?}/conf/${confFolder}/${conf}${extension}"
+    if [[ -f "${absoluteConfFile}" ]]; then
+      echo "${absoluteConfFile}"
+      return 0
+    fi
+
+    return 1
+  }
+  local abs=""
+  abs="$(getAbs)" || {
+    # file not found
+    Log::displayError "conf file '${conf}' not found"
+    return 1
+  }
+  Log::displayDebug "conf file '${conf}' matching '${abs}' file"
+  echo "${abs}"
+  return 0
+}
+
+# Public: list the conf files list available in bash-tools/conf/<conf> folder
+# and those overridden in ${HOME}/.bash-tools/<conf> folder
+# **Arguments**:
+# * $1 confFolder the directory name (not the path) to list
+# * $2 the extension (sh by default)
+# * $3 the indentation ('       - ' by default) can be any string compatible with sed not containing any /
+#
+# **Output**: list of files without extension/directory
+# eg:
+#       - default.local
+#       - default.remote
+#       - localhost-root
+Profiles::getConfMergedList() {
+  local confFolder="$1"
+  local extension="${2:-sh}"
+  local indentStr="${3:-       - }"
+
+  local DEFAULT_CONF_DIR="${ROOT_DIR:?}/conf/${confFolder}"
+  local HOME_CONF_DIR="${HOME}/.bash-tools/${confFolder}"
+
+  (
+    if [[ -d "${DEFAULT_CONF_DIR}" ]]; then
+      Profiles::list "${DEFAULT_CONF_DIR}" "" "${extension}" "-type f" "${indentStr}"
+    fi
+    if [[ -d "${HOME_CONF_DIR}" ]]; then
+      Profiles::list "${HOME_CONF_DIR}" "" "${extension}" "-type f" "${indentStr}"
+    fi
+  ) | sort | uniq
+}
+
+# Check that command version is greater than expected minimal version
+# display warning if command version greater than expected minimal version
+# display error if command version less than expected minimal version and exit 1
+# @param {String} $1 command path
+# @param {String} $2 command line parameters to launch to get command version
+# @param {String} $3 expected minimal command version
+# @param {String} $4 optional help message to display if command does not exist
+# @return 1 if command version less than expected minimal version, 0 otherwise
+# @return 2 if command does not exist
+Version::checkMinimal() {
+  local commandName="$1"
+  local argVersion="$2"
+  local minimalVersion="$3"
+  local parseVersionCallback=${4:-Version::parse}
+  local help="${4:-}"
+
+  Assert::commandExists "${commandName}" "${help}" || return 2
+
+  local version
+  version="$("${commandName}" "${argVersion}" 2>&1 | ${parseVersionCallback})"
+
+  Log::displayDebug "check ${commandName} version ${version} against minimal ${minimalVersion}"
+
+  Version::compare "${version}" "${minimalVersion}" || {
+    local result=$?
+    if [[ "${result}" = "1" ]]; then
+      Log::displayWarning "${commandName} version is ${version} greater than ${minimalVersion}, OK let's continue"
+    elif [[ "${result}" = "2" ]]; then
+      Log::displayError "${commandName} minimal version is ${minimalVersion}, your version is ${version}"
+      return 1
+    fi
+    return 0
+  }
+
+}
+
+Assert::expectNonRootUser
+
+Framework::loadEnv
 
 # ensure that Ctrl-C is trapped by this script and not sub mysql process
 trap 'exit 130' INT
@@ -26,18 +814,18 @@ declare -a PARALLEL_OPTIONS
 
 # Usage info
 showHelp() {
-local dsnList queriesList 
-dsnList="$(Functions::getConfMergedList "dsn" "env")"
-queriesList="$(Functions::getConfMergedList "dbQueries" "sql" || true)"
+  local dsnList queriesList
+  dsnList="$(Profiles::getConfMergedList "dsn" "env")"
+  queriesList="$(Profiles::getConfMergedList "dbQueries" "sql" || true)"
 
-cat << EOF
+  cat <<EOF
 ${__HELP_TITLE}Description:${__HELP_NORMAL} Execute a query on multiple databases in order to generate a report with tsv format, query can be parallelized on multiple databases
 
 ${__HELP_TITLE}Usage:${__HELP_NORMAL} ${SCRIPT_NAME} [-h|--help] prints this help and exits
 ${__HELP_TITLE}Usage:${__HELP_NORMAL} ${SCRIPT_NAME} <query|queryFile> [-d|--dsn <dsn>] [-q|--query] [--jobs|-j <jobsCount>] [--bar|-b]
 
     -q|--query            implies <query> parameter is a mysql query string
-    -d|--dsn <dsn>        to use for target mysql server (Default: ${DSN}) 
+    -d|--dsn <dsn>        to use for target mysql server (Default: ${DSN})
     -j|--jobs <jobsCount> specify the number of db to query in parallel (this needs the use of gnu parallel)
     -b|--bar              Show progress as a progress bar. In the bar is shown: % of jobs completed, estimated seconds left, and number of jobs started.
     <query|queryFile>
@@ -46,7 +834,7 @@ ${__HELP_TITLE}Usage:${__HELP_NORMAL} ${SCRIPT_NAME} <query|queryFile> [-d|--dsn
 
 ${__HELP_TITLE}List of available dsn:${__HELP_NORMAL}
 ${dsnList}
-${__HELP_TITLE}List of available queries (default dir ${QUERIES_DIR} overridable in home dir ${HOME_QUERIES_DIR}):${__HELP_NORMAL}
+${__HELP_TITLE}List of available queries (default dir ${QUERIES_DIR} can be overridden in home dir ${HOME_QUERIES_DIR}):${__HELP_NORMAL}
 ${queriesList}
 EOF
 }
@@ -56,77 +844,78 @@ EOF
 # -o is for short options like -h
 # -l is for long options with double dash like --help
 # the comma separates different long options
-options=$(getopt -l help,query,bar,jobs:,dsn: -o hqbj:d: -- "$@" 2> /dev/null) || {
-    showHelp
-    Log::fatal "invalid options specified"
+options=$(getopt -l help,query,bar,jobs:,dsn: -o hqbj:d: -- "$@" 2>/dev/null) || {
+  showHelp
+  Log::fatal "invalid options specified"
 }
 
 eval set -- "${options}"
-while true
-do
-case $1 in
--h|--help)
-    showHelp
-    exit 0
-    ;;
---jobs|-j)
-    shift || true 
-    JOBS_NUMBER=$1
-    ;;
---bar|-b)
-    PARALLEL_OPTIONS+=("--bar")
-    ;;
---query|-q)
-    QUERY=1
-    ;;
---dsn|-d)
-    shift || true 
-    DSN=${1:-:-default.local}
-    ;;
---)
-    shift || true
-    break;;
-*)
-    showHelp
-    Log::fatal "invalid argument $1"
-esac
-shift || true
+while true; do
+  case $1 in
+    -h | --help)
+      showHelp
+      exit 0
+      ;;
+    --jobs | -j)
+      shift || true
+      JOBS_NUMBER=$1
+      ;;
+    --bar | -b)
+      PARALLEL_OPTIONS+=("--bar")
+      ;;
+    --query | -q)
+      QUERY=1
+      ;;
+    --dsn | -d)
+      shift || true
+      DSN=${1:-:-default.local}
+      ;;
+    --)
+      shift || true
+      break
+      ;;
+    *)
+      showHelp
+      Log::fatal "invalid argument $1"
+      ;;
+  esac
+  shift || true
 done
 
 # additional arguments
-shift $(( OPTIND - 1 )) || true
+shift $((OPTIND - 1)) || true
 
 # check dependencies
-Functions::checkCommandExists mysql "sudo apt-get install -y mysql-client"
-Functions::checkCommandExists mysqlshow "sudo apt-get install -y mysql-client"
-Functions::checkCommandExists parallel "sudo apt-get install -y parallel"
-Functions::checkCommandExists gawk "sudo apt-get install -y gawk"
-Functions::checkCommandExists awk "sudo apt-get install -y gawk"
-Version::checkMinimal "gawk" "gawk --version" "5.0.1"
+Assert::commandExists mysql "sudo apt-get install -y mysql-client"
+Assert::commandExists mysqlshow "sudo apt-get install -y mysql-client"
+Assert::commandExists parallel "sudo apt-get install -y parallel"
+Assert::commandExists gawk "sudo apt-get install -y gawk"
+Assert::commandExists awk "sudo apt-get install -y gawk"
+Version::checkMinimal "gawk" "--version" "5.0.1"
 
-# if -q option provided (QUERY =1), queryFile is supposed to be a file, 
+# if -q option provided (QUERY =1), queryFile is supposed to be a file,
 # else it is a query string by default
 queryFile=$1
 if [[ -z "${queryFile}" ]]; then
-    if [[ "${QUERY}" = "0" ]]; then
-        Log::fatal "You must provide the sql file to be executed"
-    else
-        Log::fatal "You must provide the sql string to be executed"
-    fi
+  if [[ "${QUERY}" = "0" ]]; then
+    Log::fatal "You must provide the sql file to be executed"
+  else
+    Log::fatal "You must provide the sql string to be executed"
+  fi
 fi
 
 # query contains the sql from queryFile or from query string if -q option is provided
 declare query="${queryFile}"
 if [[ "${QUERY}" = "0" ]]; then
-    declare queryAbsoluteFile
-    queryAbsoluteFile="$(Functions::getAbsoluteConfFile "dbQueries" "${queryFile}" "sql")" || 
-        Log::fatal "the file ${queryFile} does not exist"
-    query="$(cat "${queryAbsoluteFile}")"
-    Log::displayInfo "Using query file ${queryAbsoluteFile}"
+  declare queryAbsoluteFile
+  queryAbsoluteFile="$(Profiles::getAbsoluteConfFile "dbQueries" "${queryFile}" "sql")" ||
+    Log::fatal "the file ${queryFile} does not exist"
+  query="$(cat "${queryAbsoluteFile}")"
+  Log::displayInfo "Using query file ${queryAbsoluteFile}"
 fi
 
-if ! [[ ${JOBS_NUMBER} =~ ^[0-9]+$ ]] ; then
-   Log::fatal "number of jobs is incorrect"
+if ! [[ ${JOBS_NUMBER} =~ ^[0-9]+$ ]]; then
+  Log::fatal "number of jobs is incorrect"
 fi
 
 [[ ${JOBS_NUMBER} -lt 1 ]] && Log::fatal "number of jobs must be greater than 0"
@@ -140,7 +929,29 @@ allDbs="$(Database::getUserDbList dbInstance)"
 PARALLEL_OPTIONS+=("--linebuffer" "-j" "${JOBS_NUMBER}")
 
 export query
+awkScript="$(
+  cat <<'EOF'
+BEGIN{
+  headerPrinted=0
+}
+{
+  buffer = substr($0, 0, 35)
+  line = $0
+  if(buffer == "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@") {
+    if (headerPrinted == 0) {
+      line=substr(line, 36)
+      headerPrinted=1
+    } else {
+      next
+    }
+  }
+  print line
+
+}
+EOF
+)"
+
 echo "${allDbs}" |
-    parallel --eta --progress "${PARALLEL_OPTIONS[@]}" \
-        "${CURRENT_DIR}/_dbQueryOneDatabase.sh" "${DSN}" \
-        | awk -f "${CURRENT_DIR}/dbQueryAllDatabases.awk" -
+  parallel --eta --progress "${PARALLEL_OPTIONS[@]}" \
+    "${CURRENT_DIR}/dbQueryOneDatabase" "${DSN}" |
+  awk --source "${awkScript}" -

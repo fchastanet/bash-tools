@@ -13,6 +13,6 @@ finalUserArg="${userArg:-mysql}"
 finalCommandArg="${commandArg}"
 
 if [[ -z "${commandArg}" ]]; then
-    loadDsn "default.local"
-    finalCommandArg=(//bin/bash -c "mysql -h${HOSTNAME} -u${USER} -p${PASSWORD} -P${PORT}")
+  loadDsn "default.local"
+  finalCommandArg=(//bin/bash -c "mysql -h${HOSTNAME} -u${USER} -p${PASSWORD} -P${PORT}")
 fi

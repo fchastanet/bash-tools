@@ -1,29 +1,180 @@
 #!/usr/bin/env bash
 
-# load bash-framework
-CURRENT_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
-# shellcheck source=/bash-framework/_bootstrap.sh
-source "$( cd "${CURRENT_DIR}/.." && pwd )/bash-framework/_bootstrap.sh"
+#####################################
+# GENERATED FILE FROM src/Git/gitRenameBranch.sh
+# DO NOT EDIT IT
+#####################################
 
-import bash-framework/UI
+# shellcheck disable=SC2034
+SCRIPT_NAME=${0##*/}
+# shellcheck disable=SC2034
+CURRENT_DIR=$(cd "$(readlink -e "${BASH_SOURCE[0]%/*}")" && pwd -P)
+BIN_DIR=$(cd "$(readlink -e "${BASH_SOURCE[0]%/*}")" && pwd -P)
+ROOT_DIR="$(cd "${BIN_DIR}/.." && pwd -P)"
+# shellcheck disable=SC2034
+SRC_DIR="${ROOT_DIR}/src"
+# shellcheck disable=SC2034
+VENDOR_DIR="${ROOT_DIR}/vendor"
+# shellcheck disable=SC2034
+VENDOR_BIN_DIR="${ROOT_DIR}/vendor/bin"
+export PATH="${BIN_DIR}":"${VENDOR_BIN_DIR}":${PATH}
+
+# shellcheck disable=SC2034
+TMPDIR="$(mktemp -d -p "${TMPDIR:-/tmp}" -t bash-framework-$$-XXXXXX)"
+export TMPDIR
+
+# temp dir cleaning
+cleanOnExit() {
+  rm -Rf "${TMPDIR}" >/dev/null 2>&1
+}
+trap cleanOnExit EXIT HUP QUIT ABRT TERM
+
+# @see https://unix.stackexchange.com/a/386856
+interruptManagement() {
+  # restore SIGINT handler
+  trap - INT
+  # ensure that Ctrl-C is trapped by this script and not by sub process
+  # report to the parent that we have indeed been interrupted
+  kill -s INT "$$"
+}
+trap interruptManagement INT
+
+# shellcheck disable=SC2034
+((failures = 0)) || true
+
+shopt -s expand_aliases
+
+# Bash will remember & return the highest exit code in a chain of pipes.
+# This way you can catch the error inside pipes, e.g. mysqldump | gzip
+set -o pipefail
+set -o errexit
+
+# a log is generated when a command fails
+set -o errtrace
+
+# use nullglob so that (file*.php) will return an empty array if no file matches the wildcard
+shopt -s nullglob
+
+export TERM=xterm-256color
+
+#avoid interactive install
+export DEBIAN_FRONTEND=noninteractive
+export DEBCONF_NONINTERACTIVE_SEEN=true
+
+# FUNCTIONS
+
+# Display message using error color (red)
+# @param {String} $1 message
+Log::displayError() {
+  echo -e "${__ERROR_COLOR}ERROR   - ${1}${__RESET_COLOR}" >&2
+}
+
+if [[ -t 1 || -t 2 ]]; then
+  # check colors applicable https://misc.flogisoft.com/bash/tip_colors_and_formatting
+  readonly __ERROR_COLOR='\e[31m'      # Red
+  readonly __INFO_COLOR='\e[44m'       # white on lightBlue
+  readonly __SUCCESS_COLOR='\e[32m'    # Green
+  readonly __WARNING_COLOR='\e[33m'    # Yellow
+  readonly __TEST_COLOR='\e[100m'      # Light magenta
+  readonly __TEST_ERROR_COLOR='\e[41m' # white on red
+  readonly __SKIPPED_COLOR='\e[33m'    # Yellow
+  readonly __DEBUG_COLOR='\e[37m'      # Grey
+  # Internal: reset color
+  readonly __RESET_COLOR='\e[0m' # Reset Color
+  # shellcheck disable=SC2155,SC2034
+  readonly __HELP_EXAMPLE="$(echo -e "\e[1;30m")"
+  # shellcheck disable=SC2155,SC2034
+  readonly __HELP_TITLE="$(echo -e "\e[1;37m")"
+  # shellcheck disable=SC2155,SC2034
+  readonly __HELP_NORMAL="$(echo -e "\033[0m")"
+else
+  # check colors applicable https://misc.flogisoft.com/bash/tip_colors_and_formatting
+  readonly __ERROR_COLOR=''
+  readonly __INFO_COLOR=''
+  readonly __SUCCESS_COLOR=''
+  readonly __WARNING_COLOR=''
+  readonly __SKIPPED_COLOR=''
+  readonly __TEST_COLOR=''
+  readonly __TEST_ERROR_COLOR=''
+  readonly __DEBUG_COLOR=''
+  # Internal: reset color
+  readonly __RESET_COLOR=''
+  readonly __HELP_EXAMPLE=''
+  readonly __HELP_TITLE=''
+  readonly __HELP_NORMAL=''
+fi
+export __ERROR_COLOR
+export __INFO_COLOR
+export __SUCCESS_COLOR
+export __WARNING_COLOR
+export __SKIPPED_COLOR
+export __TEST_COLOR
+export __TEST_ERROR_COLOR
+export __SKIPPED_COLOR
+export __DEBUG_COLOR
+export __RESET_COLOR
+export __HELP_EXAMPLE
+export __HELP_TITLE
+export __HELP_NORMAL
+
+# Display message using debug color (grey)
+# @param {String} $1 message
+Log::displayDebug() {
+  if ((BASH_FRAMEWORK_LOG_LEVEL > __LEVEL_DEBUG)); then
+    echo -e "${__DEBUG_COLOR}DEBUG   - ${1}${__RESET_COLOR}" >&2
+  fi
+}
+
+# Display message using info color (bg light blue/fg white)
+# @param {String} $1 message
+Log::displayInfo() {
+  echo -e "${__INFO_COLOR}INFO    - ${1}${__RESET_COLOR}" >&2
+}
+
+# Display message using error color (red) and exit immediately with error status 1
+# @param {String} $1 message
+Log::fatal() {
+  echo -e "${__ERROR_COLOR}FATAL   - ${1}${__RESET_COLOR}" >&2
+  exit 1
+}
+
+# Ask user to enter y or n, retry until answer is correct
+# @param {String} $1 message to display before asking
+# @output displays message <pre>[msg arg $1] (y or n)?</pre>
+# @output if characters entered different than [yYnN] displays "Invalid answer" and continue to ask
+# @return 0 if yes, 1 else
+UI::askYesNo() {
+  while true; do
+    read -p "$1 (y or n)? " -n 1 -r
+    echo # move to a new line
+    case ${REPLY} in
+      [yY]) return 0 ;;
+      [nN]) return 1 ;;
+      *)
+        read -r -N 10000000 -t '0.01' || true # empty stdin in case of control characters
+        # \\r to go back to the beginning of the line
+        Log::displayError "\\r invalid answer                                                          "
+        ;;
+    esac
+  done
+}
 
 #default values
-SCRIPT_NAME=${0##*/}
 PUSH="0"
 DELETE="0"
 INTERACTIVE="1"
 
 # Usage info
 showHelp() {
-cat << EOF
+  cat <<EOF
 ${__HELP_TITLE}Description:${__HELP_NORMAL} rename git local branch, use options to push new branch and delete old branch
 
 ${__HELP_TITLE}Usage:${__HELP_NORMAL} ${SCRIPT_NAME} [-h|--help] prints this help and exits
 ${__HELP_TITLE}Usage:${__HELP_NORMAL} ${SCRIPT_NAME} <newBranchName> [<oldBranchName>] [--push|-p] [--delete|-d] [--assume-yes|-yes|-y]
     --help,-h prints this help and exits
-     -y, --yes, --assume-yes do not ask for confirmation (use with caution)
+    -y, --yes, --assume-yes do not ask for confirmation (use with caution)
         Automatic yes to prompts; assume "y" as answer to all prompts
-        and run non-interactively. 
+        and run non-interactively.
     --push,-p push new branch
     --delete,-d delete old remote branch
     <newBranchName> the new branch name to give to current branch
@@ -37,79 +188,79 @@ EOF
 # -l is for long options with double dash like --help
 # the comma separates different long options
 options=$(getopt -l help,push,delete,yes,assume-yes -o hpdy -- "$@" 2>/dev/null) || {
-    showHelp
-    Log::fatal "invalid options specified"
+  showHelp
+  Log::fatal "invalid options specified"
 }
 
 eval set -- "${options}"
-while true
-do
-case $1 in
--h|--help)
-    showHelp
-    exit 0
-    ;;
---push|-p)
-    PUSH="1"
-    ;;
---delete|-d)
-    DELETE="1"
-    ;;
---assume-yes|-yes|-y)
-    INTERACTIVE="0"
-    ;;
---)
-    shift || true
-    break;;
-*)
-    showHelp
-    Log::fatal "invalid argument $1"
-esac
-shift || true
+while true; do
+  case $1 in
+    -h | --help)
+      showHelp
+      exit 0
+      ;;
+    --push | -p)
+      PUSH="1"
+      ;;
+    --delete | -d)
+      DELETE="1"
+      ;;
+    --assume-yes | -yes | -y)
+      INTERACTIVE="0"
+      ;;
+    --)
+      shift || true
+      break
+      ;;
+    *)
+      showHelp
+      Log::fatal "invalid argument $1"
+      ;;
+  esac
+  shift || true
 done
-shift $(( OPTIND - 1 )) || true
+shift $((OPTIND - 1)) || true
 
 newName="$1"
 shift || true
 oldName="${1:-}"
 shift || true
-if [ $# -gt 0 ]; then
-  showHelp
+if [[ $# -gt 0 ]]; then
   Log::fatal "too much arguments provided"
 fi
 
-if ! git rev-parse --git-dir >/dev/null 2>&1; then 
+if ! git rev-parse --git-dir >/dev/null 2>&1; then
   Log::fatal "not a git repository (or any of the parent directories)"
 fi
 
-if [ -z "${oldName}" ]; then
+if [[ -z "${oldName}" ]]; then
   oldName="$(git branch --show-current)"
-  [ -z "${oldName}" ] && Log::fatal "Impossible to calculate current branch name"
+  [[ -z "${oldName}" ]] && Log::fatal "Impossible to calculate current branch name"
 fi
 [[ "${oldName}" =~ ^(master|main)$ ]] &&
   Log::fatal "master/main branch not supported by this command, please do it manually"
 [[ "${newName}" =~ ^(master|main)$ ]] &&
   Log::fatal "master/main branch not supported by this command, please do it manually"
-[ -z "${newName}" ] && Log::fatal "new branch name not provided"
-[ "${oldName}" = "${newName}" ] && Log::fatal "Branch name has not changed"
+[[ -z "${newName}" ]] && Log::fatal "new branch name not provided"
+[[ "${oldName}" = "${newName}" ]] && Log::fatal "Branch name has not changed"
 
 Log::displayInfo "Renaming branch locally from ${oldName} to ${newName}"
 CMD="git branch -m \"${oldName}\" \"${newName}\""
 Log::displayDebug "Running '${CMD}'"
 eval "${CMD}"
 
-if [ "${DELETE}" = "1" ]; then
+if [[ "${DELETE}" = "1" ]]; then
   deleteBranch() {
     Log::displayInfo "Removing eventual old remote branch ${oldName}"
     CMD="git push origin \":${oldName}\""
     Log::displayDebug "Running '${CMD}'"
     eval "${CMD}" || true
   }
-  if [[ "${INTERACTIVE}" = "0" ]] || UI::askYesNo "remove eventual old remote branch ${oldName}" ; then
+  if [[ "${INTERACTIVE}" = "0" ]] || UI::askYesNo "remove eventual old remote branch ${oldName}"; then
     deleteBranch
   fi
 fi
-if [ "${PUSH}" = "1" ]; then
+if [[ "${PUSH}" = "1" ]]; then
   push() {
     Log::displayInfo "Pushing new branch name ${newName}"
     CMD="git push --set-upstream origin \"${newName}\""

@@ -1,4 +1,8 @@
-logs/*
-!logs/.gitkeep
-vendor/
-.history/
+/logs/*
+!/logs/.gitkeep
+/.history
+/megalinter-reports
+/_site
+/doc
+/vendor
+/Commands.md

@@ -1,0 +1,263 @@
+#!/usr/bin/env bash
+
+#####################################
+# GENERATED FILE FROM src/build/doc.sh
+# DO NOT EDIT IT
+#####################################
+
+# shellcheck disable=SC2034
+SCRIPT_NAME=${0##*/}
+# shellcheck disable=SC2034
+CURRENT_DIR=$(cd "$(readlink -e "${BASH_SOURCE[0]%/*}")" && pwd -P)
+BIN_DIR=$(cd "$(readlink -e "${BASH_SOURCE[0]%/*}")" && pwd -P)
+ROOT_DIR="$(cd "${BIN_DIR}/.." && pwd -P)"
+# shellcheck disable=SC2034
+SRC_DIR="${ROOT_DIR}/src"
+# shellcheck disable=SC2034
+VENDOR_DIR="${ROOT_DIR}/vendor"
+# shellcheck disable=SC2034
+VENDOR_BIN_DIR="${ROOT_DIR}/vendor/bin"
+export PATH="${BIN_DIR}":"${VENDOR_BIN_DIR}":${PATH}
+
+# shellcheck disable=SC2034
+TMPDIR="$(mktemp -d -p "${TMPDIR:-/tmp}" -t bash-framework-$$-XXXXXX)"
+export TMPDIR
+
+# temp dir cleaning
+cleanOnExit() {
+  rm -Rf "${TMPDIR}" >/dev/null 2>&1
+}
+trap cleanOnExit EXIT HUP QUIT ABRT TERM
+
+# @see https://unix.stackexchange.com/a/386856
+interruptManagement() {
+  # restore SIGINT handler
+  trap - INT
+  # ensure that Ctrl-C is trapped by this script and not by sub process
+  # report to the parent that we have indeed been interrupted
+  kill -s INT "$$"
+}
+trap interruptManagement INT
+
+# shellcheck disable=SC2034
+((failures = 0)) || true
+
+shopt -s expand_aliases
+
+# Bash will remember & return the highest exit code in a chain of pipes.
+# This way you can catch the error inside pipes, e.g. mysqldump | gzip
+set -o pipefail
+set -o errexit
+
+# a log is generated when a command fails
+set -o errtrace
+
+# use nullglob so that (file*.php) will return an empty array if no file matches the wildcard
+shopt -s nullglob
+
+export TERM=xterm-256color
+
+#avoid interactive install
+export DEBIAN_FRONTEND=noninteractive
+export DEBCONF_NONINTERACTIVE_SEEN=true
+
+# FUNCTIONS
+
+# *Public*: run command and store data in following global variables :
+# * bash_framework_status the exit status of the command
+# * bash_framework_duration the duration of the command
+# * bash_framework_output the output of the command
+# redirecting error output to stdout is not supported, you can instead redirect stderr to a file if needed
+# **Arguments**:
+# * $@ command with arguments to execute
+Framework::run() {
+  # 'bash_framework_status', 'bash_framework_duration' are global variables
+  local -i start end
+  start=$(date +%s)
+  bash_framework_status=0
+  bash_framework_output=""
+
+  local origFlags="$-"
+  set +eET
+  local origIFS="${IFS}"
+
+  # execute command
+  # shellcheck disable=SC2034
+  bash_framework_output="$("$@")"
+  # shellcheck disable=SC2034
+  bash_framework_status="$?"
+  IFS="${origIFS}"
+  set "-${origFlags}"
+
+  # calculate duration
+  end=$(date +%s)
+  # shellcheck disable=SC2034
+  bash_framework_duration=$((end - start))
+}
+
+Filters::escapeColorCodes() {
+  cat - | sed $'s/\e\\[[0-9;:]*[a-zA-Z]//g'
+}
+
+# global variables used by Framework::run
+declare -gx bash_framework_status
+declare -gix bash_framework_duration
+declare -gx bash_framework_output
+
+# Public: create a temp file using default TMPDIR variable
+# initialized in src/_includes/_header.tpl
+#
+# **Arguments**:
+# @param $1 {String} template (optional)
+Framework::createTempFile() {
+  mktemp -p "${TMPDIR:-/tmp}" -t "$1.XXXXXXXXXXXX"
+}
+
+if [[ -t 1 || -t 2 ]]; then
+  # check colors applicable https://misc.flogisoft.com/bash/tip_colors_and_formatting
+  readonly __ERROR_COLOR='\e[31m'      # Red
+  readonly __INFO_COLOR='\e[44m'       # white on lightBlue
+  readonly __SUCCESS_COLOR='\e[32m'    # Green
+  readonly __WARNING_COLOR='\e[33m'    # Yellow
+  readonly __TEST_COLOR='\e[100m'      # Light magenta
+  readonly __TEST_ERROR_COLOR='\e[41m' # white on red
+  readonly __SKIPPED_COLOR='\e[33m'    # Yellow
+  readonly __DEBUG_COLOR='\e[37m'      # Grey
+  # Internal: reset color
+  readonly __RESET_COLOR='\e[0m' # Reset Color
+  # shellcheck disable=SC2155,SC2034
+  readonly __HELP_EXAMPLE="$(echo -e "\e[1;30m")"
+  # shellcheck disable=SC2155,SC2034
+  readonly __HELP_TITLE="$(echo -e "\e[1;37m")"
+  # shellcheck disable=SC2155,SC2034
+  readonly __HELP_NORMAL="$(echo -e "\033[0m")"
+else
+  # check colors applicable https://misc.flogisoft.com/bash/tip_colors_and_formatting
+  readonly __ERROR_COLOR=''
+  readonly __INFO_COLOR=''
+  readonly __SUCCESS_COLOR=''
+  readonly __WARNING_COLOR=''
+  readonly __SKIPPED_COLOR=''
+  readonly __TEST_COLOR=''
+  readonly __TEST_ERROR_COLOR=''
+  readonly __DEBUG_COLOR=''
+  # Internal: reset color
+  readonly __RESET_COLOR=''
+  readonly __HELP_EXAMPLE=''
+  readonly __HELP_TITLE=''
+  readonly __HELP_NORMAL=''
+fi
+export __ERROR_COLOR
+export __INFO_COLOR
+export __SUCCESS_COLOR
+export __WARNING_COLOR
+export __SKIPPED_COLOR
+export __TEST_COLOR
+export __TEST_ERROR_COLOR
+export __SKIPPED_COLOR
+export __DEBUG_COLOR
+export __RESET_COLOR
+export __HELP_EXAMPLE
+export __HELP_TITLE
+export __HELP_NORMAL
+
+# Display message using info color (bg light blue/fg white)
+# @param {String} $1 message
+Log::displayInfo() {
+  echo -e "${__INFO_COLOR}INFO    - ${1}${__RESET_COLOR}" >&2
+}
+
+# Display message using warning color (yellow)
+# @param {String} $1 message
+Log::displayWarning() {
+  echo -e "${__WARNING_COLOR}WARN    - ${1}${__RESET_COLOR}" >&2
+}
+
+if [[ "${IN_BASH_DOCKER:-}" != "You're in docker" ]]; then
+  "${BIN_DIR}/runBuildContainer" "/bash/bin/doc" "$@"
+  exit $?
+fi
+
+replaceTokenByInput() {
+  local token="$1"
+  local targetFile="$2"
+
+  (
+    local tokenFile
+    tokenFile="$(Framework::createTempFile "replaceTokenByInput")"
+
+    cat - | Filters::escapeColorCodes >"${tokenFile}"
+
+    sed -i \
+      -e "/${token}/r ${tokenFile}" \
+      -e "/${token}/d" \
+      "${targetFile}"
+  )
+}
+
+generateMdFileFromTemplate() {
+  local templateFile="$1"
+  local targetFile="$2"
+  local fromDir="$3"
+
+  cp "${templateFile}" "${targetFile}"
+  (
+    while IFS= read -r relativeFile; do
+      local token="${relativeFile#./}"
+      token="${token///_}"
+      if grep -q "@@@${token}_help@@@" "${targetFile}"; then
+        Log::displayInfo "generate help for ${token}"
+        (cd "${fromDir}" && "${relativeFile}" --help) | replaceTokenByInput "@@@${token}_help@@@" "${targetFile}"
+      elif [[ "${token}" != "${SCRIPT_NAME}" ]]; then
+        Log::displayWarning "token ${token} not found in ${targetFile}"
+      fi
+    done < <(cd "${fromDir}" && find . -type f -executable)
+  )
+}
+
+#-----------------------------
+# configure docker environment
+#-----------------------------
+mkdir -p ~/.bash-tools
+
+(
+  cd "${ROOT_DIR}" || exit 1
+  cp -R conf/. ~/.bash-tools
+  sed -i \
+    -e "s@^BASH_TOOLS_FOLDER=.*@BASH_TOOLS_FOLDER=$(pwd)@g" \
+    -e "s@^S3_BASE_URL=.*@S3_BASE_URL=s3://example.com/exports/@g" \
+    ~/.bash-tools/.env
+  # fake docker command
+  touch /tmp/docker
+  chmod 755 /tmp/docker
+)
+export PATH=/tmp:${PATH}
+
+#-----------------------------
+# doc generation
+#-----------------------------
+
+(
+  declare indexFile
+  indexFile="$(Framework::createTempFile "bash-tools-doc-indexFile")"
+
+  Log::displayInfo 'generate doc folder'
+  "${BIN_DIR}/generateShellDoc" "${ROOT_DIR}/src" "${ROOT_DIR}/doc" "${indexFile}"
+
+  Log::displayInfo 'generate Commands.md'
+  #cp "${ROOT_DIR}/tests/tools/data/mysql2puml.puml" "${TMP_DIR}/mysql2puml_plantuml_diagram"
+  generateMdFileFromTemplate \
+    "${ROOT_DIR}/Commands.tmpl.md" \
+    "${ROOT_DIR}/Commands.md" \
+    "${BIN_DIR}"
+
+  sed -i \
+    -e "/@@@mysql2puml_plantuml_diagram@@@/r ${ROOT_DIR}/tests/tools/data/mysql2puml.puml" \
+    -e "/@@@mysql2puml_plantuml_diagram@@@/d" \
+    "${ROOT_DIR}/Commands.md"
+  # inject index file
+  sed -i \
+    -e "/@@@bash_doc_index@@@/r ${indexFile}" \
+    -e "/@@@bash_doc_index@@@/d" \
+    "${ROOT_DIR}/Commands.md"
+)

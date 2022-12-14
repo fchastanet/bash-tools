@@ -1,21 +1,279 @@
 #!/usr/bin/env bash
 
-# load bash-framework
-CURRENT_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
-# shellcheck source=/bash-framework/_bootstrap.sh
-source "$( cd "${CURRENT_DIR}/.." && pwd )/bash-framework/_bootstrap.sh"
+#####################################
+# GENERATED FILE FROM src/Converters/mysql2puml.sh
+# DO NOT EDIT IT
+#####################################
+
+# shellcheck disable=SC2034
+SCRIPT_NAME=${0##*/}
+# shellcheck disable=SC2034
+CURRENT_DIR=$(cd "$(readlink -e "${BASH_SOURCE[0]%/*}")" && pwd -P)
+BIN_DIR=$(cd "$(readlink -e "${BASH_SOURCE[0]%/*}")" && pwd -P)
+ROOT_DIR="$(cd "${BIN_DIR}/.." && pwd -P)"
+# shellcheck disable=SC2034
+SRC_DIR="${ROOT_DIR}/src"
+# shellcheck disable=SC2034
+VENDOR_DIR="${ROOT_DIR}/vendor"
+# shellcheck disable=SC2034
+VENDOR_BIN_DIR="${ROOT_DIR}/vendor/bin"
+export PATH="${BIN_DIR}":"${VENDOR_BIN_DIR}":${PATH}
+
+# shellcheck disable=SC2034
+TMPDIR="$(mktemp -d -p "${TMPDIR:-/tmp}" -t bash-framework-$$-XXXXXX)"
+export TMPDIR
+
+# temp dir cleaning
+cleanOnExit() {
+  rm -Rf "${TMPDIR}" >/dev/null 2>&1
+}
+trap cleanOnExit EXIT HUP QUIT ABRT TERM
+
+# @see https://unix.stackexchange.com/a/386856
+interruptManagement() {
+  # restore SIGINT handler
+  trap - INT
+  # ensure that Ctrl-C is trapped by this script and not by sub process
+  # report to the parent that we have indeed been interrupted
+  kill -s INT "$$"
+}
+trap interruptManagement INT
+
+# shellcheck disable=SC2034
+((failures = 0)) || true
+
+shopt -s expand_aliases
+
+# Bash will remember & return the highest exit code in a chain of pipes.
+# This way you can catch the error inside pipes, e.g. mysqldump | gzip
+set -o pipefail
+set -o errexit
+
+# a log is generated when a command fails
+set -o errtrace
+
+# use nullglob so that (file*.php) will return an empty array if no file matches the wildcard
+shopt -s nullglob
+
+export TERM=xterm-256color
+
+#avoid interactive install
+export DEBIAN_FRONTEND=noninteractive
+export DEBCONF_NONINTERACTIVE_SEEN=true
+
+# FUNCTIONS
+
+# Display message using debug color (grey)
+# @param {String} $1 message
+Log::displayDebug() {
+  if ((BASH_FRAMEWORK_LOG_LEVEL > __LEVEL_DEBUG)); then
+    echo -e "${__DEBUG_COLOR}DEBUG   - ${1}${__RESET_COLOR}" >&2
+  fi
+}
+
+# Display message using error color (red)
+# @param {String} $1 message
+Log::displayError() {
+  echo -e "${__ERROR_COLOR}ERROR   - ${1}${__RESET_COLOR}" >&2
+}
+
+# Public: list files of dir with given extension and display it as a list one by line
+#
+# **Arguments**:
+# * $1 the directory to list
+# * $2 the profile file prefix (default: "")
+# * $3 the extension
+# * $4 find options (default: '-type f', eg: -type d)
+# * $5 the indentation ('       - ' by default) can be any string compatible with sed not containing any /
+# **Output**: list of files without extension/directory
+# eg:
+#       - default.local
+#       - default.remote
+#       - localhost-root
+Profiles::list() {
+  local DIR="$1"
+  local PREFIX="${2:-}"
+  local EXT="${3}"
+  local FIND_OPTIONS="${4--type f}"
+  local INDENT_STR="${5-       - }"
+
+  local extension="${EXT}"
+  if [[ -n "${EXT}" && "${EXT:0:1}" != "." ]]; then
+    extension=".${EXT}"
+  fi
+
+  (
+    # shellcheck disable=SC2086
+    cd "${DIR}" &&
+      find . -maxdepth 1 ${FIND_OPTIONS} -name "${PREFIX}*${extension}" |
+      sed "s#^\./${PREFIX}##g" |
+        sed "s/${EXT}$//g" | sort | sed "s/^/${INDENT_STR}/"
+  )
+}
+
+if [[ -t 1 || -t 2 ]]; then
+  # check colors applicable https://misc.flogisoft.com/bash/tip_colors_and_formatting
+  readonly __ERROR_COLOR='\e[31m'      # Red
+  readonly __INFO_COLOR='\e[44m'       # white on lightBlue
+  readonly __SUCCESS_COLOR='\e[32m'    # Green
+  readonly __WARNING_COLOR='\e[33m'    # Yellow
+  readonly __TEST_COLOR='\e[100m'      # Light magenta
+  readonly __TEST_ERROR_COLOR='\e[41m' # white on red
+  readonly __SKIPPED_COLOR='\e[33m'    # Yellow
+  readonly __DEBUG_COLOR='\e[37m'      # Grey
+  # Internal: reset color
+  readonly __RESET_COLOR='\e[0m' # Reset Color
+  # shellcheck disable=SC2155,SC2034
+  readonly __HELP_EXAMPLE="$(echo -e "\e[1;30m")"
+  # shellcheck disable=SC2155,SC2034
+  readonly __HELP_TITLE="$(echo -e "\e[1;37m")"
+  # shellcheck disable=SC2155,SC2034
+  readonly __HELP_NORMAL="$(echo -e "\033[0m")"
+else
+  # check colors applicable https://misc.flogisoft.com/bash/tip_colors_and_formatting
+  readonly __ERROR_COLOR=''
+  readonly __INFO_COLOR=''
+  readonly __SUCCESS_COLOR=''
+  readonly __WARNING_COLOR=''
+  readonly __SKIPPED_COLOR=''
+  readonly __TEST_COLOR=''
+  readonly __TEST_ERROR_COLOR=''
+  readonly __DEBUG_COLOR=''
+  # Internal: reset color
+  readonly __RESET_COLOR=''
+  readonly __HELP_EXAMPLE=''
+  readonly __HELP_TITLE=''
+  readonly __HELP_NORMAL=''
+fi
+export __ERROR_COLOR
+export __INFO_COLOR
+export __SUCCESS_COLOR
+export __WARNING_COLOR
+export __SKIPPED_COLOR
+export __TEST_COLOR
+export __TEST_ERROR_COLOR
+export __SKIPPED_COLOR
+export __DEBUG_COLOR
+export __RESET_COLOR
+export __HELP_EXAMPLE
+export __HELP_TITLE
+export __HELP_NORMAL
+
+# Display message using error color (red) and exit immediately with error status 1
+# @param {String} $1 message
+Log::fatal() {
+  echo -e "${__ERROR_COLOR}FATAL   - ${1}${__RESET_COLOR}" >&2
+  exit 1
+}
+
+# shellcheck disable=SC2034
+declare -Ag allDepsResultSeen=()
+declare -ag allDepsResult=()
+
+# Public: get absolute conf file from specified conf folder deduced using these rules
+#   * from absolute file (ignores <confFolder> and <extension>)
+#   * relative to where script is executed (ignores <confFolder> and <extension>)
+#   * from home/.bash-tools/<confFolder>
+#   * from framework conf/<confFolder>
+#
+# **Arguments**:
+# * $1 confFolder the directory name (not the path) to list
+# * $2 conf file to use without extension
+# * $3 the extension (sh by default)
+#
+# Returns absolute conf filename
+Profiles::getAbsoluteConfFile() {
+  local confFolder="$1"
+  local conf="$2"
+  local extension="${3-.sh}"
+
+  getAbs() {
+    local absoluteConfFile=""
+    # load conf from absolute file, then home folder, then bash framework conf folder
+    absoluteConfFile="${conf}"
+    if [[ "${absoluteConfFile:0:1}" = "/" && -f "${absoluteConfFile}" ]]; then
+      # file contains /, consider it as absolute filename
+      echo "${absoluteConfFile}"
+      return 0
+    fi
+
+    # relative to where script is executed
+    absoluteConfFile="$(realpath "${__BASH_FRAMEWORK_CALLING_SCRIPT}/${conf}" 2>/dev/null || echo "")"
+    if [[ -f "${absoluteConfFile}" ]]; then
+      echo "${absoluteConfFile}"
+      return 0
+    fi
+
+    # take extension into account
+    if [[ -n "${extension}" && "${extension:0:1}" != "." ]]; then
+      extension=".${extension}"
+    fi
+
+    # shellcheck source=/conf/dsn/default.local.env
+    absoluteConfFile="${HOME}/.bash-tools/${confFolder}/${conf}${extension}"
+    if [[ -f "${absoluteConfFile}" ]]; then
+      echo "${absoluteConfFile}"
+      return 0
+    fi
+    absoluteConfFile="${ROOT_DIR:?}/conf/${confFolder}/${conf}${extension}"
+    if [[ -f "${absoluteConfFile}" ]]; then
+      echo "${absoluteConfFile}"
+      return 0
+    fi
+
+    return 1
+  }
+  local abs=""
+  abs="$(getAbs)" || {
+    # file not found
+    Log::displayError "conf file '${conf}' not found"
+    return 1
+  }
+  Log::displayDebug "conf file '${conf}' matching '${abs}' file"
+  echo "${abs}"
+  return 0
+}
+
+# Public: list the conf files list available in bash-tools/conf/<conf> folder
+# and those overridden in ${HOME}/.bash-tools/<conf> folder
+# **Arguments**:
+# * $1 confFolder the directory name (not the path) to list
+# * $2 the extension (sh by default)
+# * $3 the indentation ('       - ' by default) can be any string compatible with sed not containing any /
+#
+# **Output**: list of files without extension/directory
+# eg:
+#       - default.local
+#       - default.remote
+#       - localhost-root
+Profiles::getConfMergedList() {
+  local confFolder="$1"
+  local extension="${2:-sh}"
+  local indentStr="${3:-       - }"
+
+  local DEFAULT_CONF_DIR="${ROOT_DIR:?}/conf/${confFolder}"
+  local HOME_CONF_DIR="${HOME}/.bash-tools/${confFolder}"
+
+  (
+    if [[ -d "${DEFAULT_CONF_DIR}" ]]; then
+      Profiles::list "${DEFAULT_CONF_DIR}" "" "${extension}" "-type f" "${indentStr}"
+    fi
+    if [[ -d "${HOME_CONF_DIR}" ]]; then
+      Profiles::list "${HOME_CONF_DIR}" "" "${extension}" "-type f" "${indentStr}"
+    fi
+  ) | sort | uniq
+}
 
 #default values
-SCRIPT_NAME=${0##*/}
 SCRIPT_VERSION="0.1"
 SKIN="default"
 
 # Usage info
 showHelp() {
-local skinList=""
-skinList="$(Functions::getConfMergedList "mysql2pumlSkins" "puml")"
+  local skinList=""
+  skinList="$(Profiles::getConfMergedList "mysql2pumlSkins" ".puml")"
 
-cat << EOF
+  cat <<EOF
 ${__HELP_TITLE}Description:${__HELP_NORMAL} convert mysql dump sql schema to plantuml format
 
 ${__HELP_TITLE}Usage:${__HELP_NORMAL} ${SCRIPT_NAME} [-h|--help] prints this help and exits
@@ -26,7 +284,7 @@ ${__HELP_TITLE}Usage:${__HELP_NORMAL} ${SCRIPT_NAME} [-s|--skin skin] inputSqlFi
   --version,-v   : display version and exit
   --skin,-s skin : (optional) header configuration of the plant uml file (default: default)
   inputSqlFile   : sql filepath to parse
-  
+
 ${__HELP_TITLE}Examples${__HELP_NORMAL}
 mysql2puml dump.dql
 
@@ -48,45 +306,46 @@ showVersion() {
 # -l is for long options with double dash like --help
 # the comma separates different long options
 options=$(getopt -l help,version,skin: -o hvs: -- "$@" 2>/dev/null) || {
-    showHelp
-    Log::fatal "invalid options specified"
+  showHelp
+  Log::fatal "invalid options specified"
 }
 
 eval set -- "${options}"
-while true
-do
-case $1 in
--h|--help)
-    showHelp
-    exit 0
-    ;;
---version|-v)
-    showVersion
-    exit 0
-    ;;
---skin|-s)
-    shift
-    SKIN="$1"
-    ;;
---)
-    shift || true
-    break;;
-*)
-    showHelp
-    Log::fatal "invalid argument $1"
-esac
-shift || true
+while true; do
+  case $1 in
+    -h | --help)
+      showHelp
+      exit 0
+      ;;
+    --version | -v)
+      showVersion
+      exit 0
+      ;;
+    --skin | -s)
+      shift
+      SKIN="$1"
+      ;;
+    --)
+      shift || true
+      break
+      ;;
+    *)
+      showHelp
+      Log::fatal "invalid argument $1"
+      ;;
+  esac
+  shift || true
 done
-shift $(( OPTIND - 1 )) || true
+shift $((OPTIND - 1)) || true
 
 sqlFile="${1:-}"
 shift || true
-if [ $# -gt 0 ]; then
+if (($# > 0)); then
   showHelp
   Log::fatal "too much arguments provided"
 fi
 
-absSkinFile="$(Functions::getAbsoluteConfFile "mysql2pumlSkins" "${SKIN}" "puml")" || 
+absSkinFile="$(Profiles::getAbsoluteConfFile "mysql2pumlSkins" "${SKIN}" "puml")" ||
   Log::fatal "the skin ${SKIN} does not exist"
 
 if [[ -n "${sqlFile}" ]]; then
@@ -97,7 +356,228 @@ if [[ -n "${sqlFile}" ]]; then
 elif [[ ! -t 0 ]]; then
   exec 3<&0
 else
-    Log::fatal "No sql file provided..."
+  Log::fatal "No sql file provided..."
 fi
 
-awk -f "${CURRENT_DIR}/mysql2puml.awk" "${absSkinFile}" - <&3
+awkScript="$(
+  cat <<'EOF'
+# =========================================================================
+#
+# mysql2puml - SQL DDL to markdown converter
+#
+# Invocation/Execution:
+#   awk -f mysql2puml.awk skinFile < inputFile > outputFile
+#   DEBUG=1 awk -f mysql2puml.awk skinFile < inputFile > outputFile
+#
+# Supports
+#   PlantUML format
+# =========================================================================
+
+function debug(first, second, third, fourth, fifth, sixth, seventh, eighth, ninth, tenth, eleventh, twelfth) {
+    if (DEBUG == 1) print("DEBUG - ", first, second, third, fourth, fifth, sixth, seventh, eighth, ninth, tenth, eleventh, twelfth) > "/dev/stderr"
+}
+
+# =========================================================================
+
+function uml_start()
+{
+    if (!skinFile) {
+        print("skinFile parameter missing") > "/dev/stderr"
+        exit 1
+    }
+    while ((getline tmp < skinFile) > 0) {
+        if (match(tmp, /@enduml/)) {
+            break
+        }
+        print(tmp)
+    }
+    print "' entities"
+}
+
+# =========================================================================
+
+function uml_end()
+{
+    print "@enduml"
+}
+
+# =========================================================================
+
+function ltrim(s) { sub(/^[ \t\r\n]+/, "", s); return s }
+function rtrim(s) { sub(/[ \t\r\n]+$/, "", s); return s }
+function trim(s) { return rtrim(ltrim(s)); }
+
+# =========================================================================
+
+function column_weight(column)
+{
+    return (columnsDetails[column ",pk"] == "1" ? 8 : 0) \
+        + (columnsDetails[column ",fk"] == "1" ? 4 : 0) \
+        + (columnsDetails[column ",unique"] == "1" ? 2 : 0) \
+        + (columnsDetails[column ",null"] == "0" ? 1 : 0)
+}
+
+function column_sort(i1, column1, i2, column2)
+{
+    weight1 = column_weight(column1)
+    weight2 = column_weight(column2)
+    if (weight1 == weight2) {
+        l = tolower(column1)
+        r = tolower(column2)
+
+        if (l < r) {
+            return -1
+        } else if (l == r) {
+            return 0
+        } else {
+            return 1
+        }
+    } else {
+        return weight2 - weight1
+    }
+}
+
+# =========================================================================
+
+function uml_table(createTable)
+# DDL to plantuml
+# CREATE TABLE `core_customer` (`id` int(11) NOT NULL AUTO_INCREMENT, `instance_name` varchar(128) NOT NULL, PRIMARY KEY (`id`), UNIQUE KEY `instance_name` (`instance_name`) ) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8;
+# CREATE TABLE `core_learner_skill` (`id` int(11) NOT NULL AUTO_INCREMENT, `customer_id` int(10) unsigned NOT NULL, PRIMARY KEY (`id`), KEY `customer_id_684f904f_fk_core_learner_id` (`customer_id`), CONSTRAINT `customer_id_684f904f_fk_core_customer_id` FOREIGN KEY (`customer_id`) REFERENCES `core_customer` (`id`)) ENGINE=InnoDB AUTO_INCREMENT=415 DEFAULT CHARSET=utf8;
+#table( user ) {
+#  primary_key( id ): UUID
+#  column( isActive ): BOOLEAN
+#}
+#LearnerSkill "0..*" --> "1" Learner : "learner_id"
+{
+    debug("uml_table", createTable)
+    split(createTable,lines,"\n")
+    columnIdx=0
+    for (line in lines) {
+        debug(lines[line])
+        if (match(lines[line], /CREATE TABLE `([^`]+)` \(/, arr)) {
+            debug("TABLE ", lines[line])
+            tableName = arr[1]
+        } else if (match(lines[line], /PRIMARY KEY \(([^)]+)\)/, arr)) {
+            # PRIMARY KEY (`id`),
+            debug("PK ", lines[line])
+            split(arr[1],primaryKeys,",")
+            for (i in primaryKeys) {
+                if(match(primaryKeys[i], /[ ]?`([^`]+)+`[ ]?/, arr)) {
+                    columnsDetails[arr[1] ",pk"] = "1"
+                }
+            }
+        } else if (match(lines[line], /CONSTRAINT `[^`]+` FOREIGN KEY \(`([^`]+)`\) REFERENCES `([^`]+)` \(`([^`]+)`\)/, arr)) {
+            # CONSTRAINT `core_learner_customer_id_6d356da8_fk_core_customer_id` FOREIGN KEY (`customer_id`) REFERENCES `core_customer` (`id`)
+            debug("Constraint ", lines[line])
+            columnName=arr[1]
+            columnsDetails[columnName ",fk"]="1"
+            columnsDetails[columnName ",fkTable"]=arr[2]
+            columnsDetails[columnName ",fkColumn"]=arr[3]
+        } else if (match(lines[line], /UNIQUE KEY `[^`]+` \(([^)]+)\)/, arr)) {
+            # UNIQUE KEY `unique_learner_by_customer` (`external_id`,`customer_id`),
+            debug("Unique Key ", lines[line])
+            split(arr[1],uniqueKeys,",")
+            for (i in uniqueKeys) {
+                if(match(uniqueKeys[i], /[ ]?`([^`]+)+`[ ]?/, arr)) {
+                    columnsDetails[arr[1] ",unique"] = "1"
+                }
+            }
+        } else if (match(lines[line], /`([^`]+)` (([A-Za-z]+)((\([^)]+\)|)[ ]?(unsigned|)))[ ]?(NOT NULL|NULL|)[ ]?(AUTO_INCREMENT|)/, arr)) {
+            # `id` int(11) NOT NULL AUTO_INCREMENT
+            # `test` int(11) unsigned NULL
+            # `instance_name` varchar(128) NOT NULL
+            debug("Column ", lines[line])
+            columnName = arr[1]
+            columns[columnIdx++] = columnName
+            columnType=arr[2]
+            gsub(/\(|\)/, "", columnType)
+            columnsDetails[columnName ",type"] = columnType  # eg: int(11) unsigned => int11 unsigned
+            columnsDetails[columnName ",null"] = arr[7]=="NOT NULL" ? "0" : "1" # eg: NOT NULL
+            columnsDetails[columnName ",autoIncrement"] = arr[8] # eg: AUTO_INCREMENT
+        }
+    }
+
+    if (DEBUG == 1) {
+        debug("Table ", tableName)
+        for (i in columns) debug("column ", i, " ", columns[i])
+        for (i in columnsDetails) debug("match ", i, " ", columnsDetails[i])
+    }
+    asort(columns, columns, "column_sort")
+    if (DEBUG == 1) {
+        debug("***************************************************************")
+        debug("Columns order after sort")
+        for (i in columns) debug("column ", i, " ", columns[i], column_weight(columns[i]))
+    }
+    printf("Table(%s) {\n", tableName )
+    for(i in columns) {
+        columnName=columns[i]
+        # column($name, $type, $null="", $pk="", $fk="", $unique="")
+        printf( \
+            "  column(\"%s\", \"%s\", \"%s\", \"%s\", \"%s\", \"%s\")\n", \
+            columnName, \
+            trim(columnsDetails[columnName ",type"]), \
+            (columnsDetails[columnName ",null"] == "1") ? "NULL" : "NOT NULL", \
+            (columnsDetails[columnName ",pk"] == "1") ? "PK" : "", \
+            (columnsDetails[columnName ",fkTable"] == "1") ? "FK" : "", \
+            (columnsDetails[columnName ",unique"] == "1") ? "UNIQUE" : "" \
+        )
+    }
+    print("}")
+
+    for(i in columns) {
+        columnName=columns[i]
+        if (columnsDetails[columnName ",fk"] == "1") {
+            #LearnerSkill "0..*" --> "1" Learner : "learner_id"
+            printf("%s \"0..*\" --> \"1\" %s : \"%s\"\n", tableName, columnsDetails[columnName ",fkTable"], columnsDetails[columnName ",fkColumn"] )
+        }
+    }
+    print("")
+
+    delete columnsDetails
+    delete columns
+}
+
+# =========================================================================
+function uml_parse_line(currentLine)
+{
+    if (length(currentLine) < 2 || match(currentLine, "^--") > 0) {
+        return
+    }
+
+    if (match(currentLine,";")>0) {
+        sqlLine = sqlLine "\n" currentLine
+        debug(sqlLine)
+        if (match(sqlLine,"CREATE TABLE") > 0) {
+            uml_table(sqlLine)
+        }
+        sqlLine=""
+    }
+    else {
+        sqlLine = sqlLine "\n" currentLine
+    }
+}
+
+# =========================================================================
+
+BEGIN {
+    DEBUG=ENVIRON["DEBUG"]
+    skinFile=ARGV[1]
+    debug("Skin file", skinFile)
+    uml_start()
+}
+
+{
+    line=$0
+    uml_parse_line(line)
+}
+
+END {
+    uml_end()
+    exit 0
+    # fake call occurring after exit to remove warning about unused function
+    column_sort()
+}
+# =========================================================================
+EOF
+)"
+awk --source "${awkScript}" "${absSkinFile}" - <&3

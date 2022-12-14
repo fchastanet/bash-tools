@@ -15,4 +15,3 @@ finalUserArg="www-data"
 # shellcheck disable=SC2034
 # shellcheck disable=SC2154
 finalCommandArg=("//bin/bash")
-
