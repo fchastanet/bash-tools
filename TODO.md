@@ -1,6 +1,5 @@
 # Todo
 
-- build.sh move md5 computation from build.sh to workflow script
 - migrate jekyll to <https://nextra.site/docs/guide/organize-files> ?
 - Bash-tools only contains commands, build tools (linters, ...)
 
