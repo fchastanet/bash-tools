@@ -3,7 +3,6 @@
 name: Lint and test
 on:
   push:
-  pull_request:
   workflow_dispatch:
 
 jobs:
@@ -17,6 +16,11 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v3
+
+      - uses: ouzi-dev/commit-status-updater@v2
+        with:
+          name: lint
+          status: pending
 
       - name: Install vendors
         run: ./bin/installRequirements
@@ -47,27 +51,13 @@ jobs:
             logs/*.xml
             logs/*.log
 
-      - name: set github status lint success
-        if: success()
-        uses: Sibz/github-status-action@v1
+      - uses: ouzi-dev/commit-status-updater@v2
+        if: always()
         with:
-          authToken: ${{secrets.GITHUB_TOKEN}}
-          context: 'Lint'
-          description: 'Linters success'
-          state: 'success'
-          sha: ${{github.event.pull_request.head.sha || github.sha}}
+          name: lint
+          status: ${{ job.status }}
 
-      - name: set github status lint failure
-        if: failure()
-        uses: Sibz/github-status-action@v1
-        with:
-          authToken: ${{secrets.GITHUB_TOKEN}}
-          context: 'Lint'
-          description: 'Linters failures'
-          state: 'failure'
-          sha: ${{github.event.pull_request.head.sha || github.sha}}
-
-  buildDockerImages:
+  buildDockerImagesAndTest:
     needs: linters
     runs-on: ubuntu-22.04
     strategy:
@@ -88,13 +78,21 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
+
       - name: Login to DockerHub
         uses: docker/login-action@v2
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - uses: ouzi-dev/commit-status-updater@v2
+        with:
+          name: build bash-tools-${{matrix.vendor}}-${{matrix.bashTarVersion}}
+          status: pending
+
       - name: Pull/Build/Push docker image
         env:
           BRANCH: ${{ github.ref }}
@@ -103,70 +101,13 @@ jobs:
           ./bin/buildPushDockerImages "${{matrix.vendor}}"
           "${{matrix.bashTarVersion}}" "${{matrix.bashImage}}" "${BRANCH}"
           "${PUSH}"
+
       - name: Check image
         run: |
           docker run --rm \
           "bash-tools-${{matrix.vendor}}-${{matrix.bashTarVersion}}" bash \
           --version
 
-  testDoc:
-    needs: buildDockerImages
-    runs-on: ubuntu-22.04
-    strategy:
-      fail-fast: true
-      matrix:
-        vendor:
-          - ubuntu
-        bashTarVersion:
-          - '5.1'
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v3
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
-      - name: Login to DockerHub
-        uses: docker/login-action@v2
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-      - name: docker pull image
-        run: docker pull scrasnups/build:bash-tools-ubuntu-5.1
-      - name: Check if doc up to date
-        run: |
-          ./bin/doc
-
-  tests:
-    needs: buildDockerImages
-    runs-on: ubuntu-22.04
-    strategy:
-      fail-fast: true
-      matrix:
-        vendor:
-          - ubuntu
-          - alpine
-        bashTarVersion:
-          - '4.4'
-          - '5.0'
-          - '5.1'
-        include:
-          - vendor: ubuntu
-            bashImage: ubuntu:20.04
-          - vendor: alpine
-            bashImage: bash
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v3
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
-      - name: Login to DockerHub
-        uses: docker/login-action@v2
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-      - name: docker pull image
-        run:
-          docker pull scrasnups/build:bash-tools-${{ matrix.vendor }}-${{
-          matrix.bashTarVersion }}
       - name: run unit tests
         run: |
           ./bin/installDevRequirements
@@ -183,3 +124,9 @@ jobs:
         if: always()
         with:
           files: logs/report.xml
+
+      - uses: ouzi-dev/commit-status-updater@v2
+        if: always()
+        with:
+          name: build bash-tools-${{matrix.vendor}}-${{matrix.bashTarVersion}}
+          status: ${{ job.status }}

@@ -1,9 +1,7 @@
 # Todo
 
 - migrate jekyll to <https://nextra.site/docs/guide/organize-files> ?
-- Bash-tools only contains commands, build tools (linters, ...)
 
-  - move build.sh to bin/build
   - copy jekyll conf
   - check if all variable = are declared local
 
@@ -25,7 +23,6 @@
 - support nested namespace
 - import bash-tools commands + libs
 - import ck_ip_dev_env commands
-- fix github actions scripts
 - add megalinter <https://github.com/marketplace/actions/megalinter>
 - new function Env::get "HOME"
   - eg: Env::get "HOME" will get HOME variable from .env file if exists or get
