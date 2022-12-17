@@ -84,9 +84,12 @@ generateMdFileFromTemplate \
 
 # inject plantuml diagram source code into command
 sed -i \
-  -e "/@@@mysql2puml_plantuml_diagram@@@/r ${ROOT_DIR}/tests/tools/data/mysql2puml.puml" \
+  -e "/@@@mysql2puml_plantuml_diagram@@@/r ${ROOT_DIR}/tests/data/mysql2puml.puml" \
   -e "/@@@mysql2puml_plantuml_diagram@@@/d" \
   "${DOC_DIR}/Commands.md"
+
+mkdir -p "${DOC_DIR}/tests/data" || true
+cp "${ROOT_DIR}/tests/data/mysql2puml-model.png" "${DOC_DIR}/tests/data"
 
 # copy other files
 cp "${ROOT_DIR}/README.md" "${DOC_DIR}/README.md"
