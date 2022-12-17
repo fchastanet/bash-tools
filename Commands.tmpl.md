@@ -8,13 +8,12 @@ permalink: /commands
 - [1. Build tools](#1-build-tools)
   - [1.1. bin/test](#11-bintest)
   - [1.2. bin/waitForIt](#12-binwaitforit)
-  - [1.3. bin/publishDeepsourceArtifact](#13-binpublishdeepsourceartifact)
-  - [1.4. bin/installRequirements](#14-bininstallrequirements)
-  - [1.5. bin/installDevRequirements](#15-bininstalldevrequirements)
-  - [1.6. bin/runBuildContainer](#16-binrunbuildcontainer)
-  - [1.7. bin/buildPushDockerImages](#17-binbuildpushdockerimages)
-  - [1.8. bin/waitForIt](#18-binwaitforit)
-  - [1.9. bin/waitForMysql](#19-binwaitformysql)
+  - [1.3. bin/installRequirements](#13-bininstallrequirements)
+  - [1.4. bin/installDevRequirements](#14-bininstalldevrequirements)
+  - [1.5. bin/runBuildContainer](#15-binrunbuildcontainer)
+  - [1.6. bin/buildPushDockerImages](#16-binbuildpushdockerimages)
+  - [1.7. bin/waitForIt](#17-binwaitforit)
+  - [1.8. bin/waitForMysql](#18-binwaitformysql)
 - [2. Linters](#2-linters)
   - [2.1. bin/dockerLint](#21-bindockerlint)
   - [2.2. bin/shellcheckLint](#22-binshellchecklint)
@@ -56,15 +55,7 @@ permalink: /commands
 @@@waitForIt_help@@@
 ```
 
-### 1.3. bin/publishDeepsourceArtifact
-
-**Help**
-
-```text
-@@@publishDeepsourceArtifact_help@@@
-```
-
-### 1.4. bin/installRequirements
+### 1.3. bin/installRequirements
 
 **Help**
 
@@ -72,7 +63,7 @@ permalink: /commands
 @@@installRequirements_help@@@
 ```
 
-### 1.5. bin/installDevRequirements
+### 1.4. bin/installDevRequirements
 
 **Help**
 
@@ -80,7 +71,7 @@ permalink: /commands
 @@@installDevRequirements_help@@@
 ```
 
-### 1.6. bin/runBuildContainer
+### 1.5. bin/runBuildContainer
 
 **Help**
 
@@ -88,7 +79,7 @@ permalink: /commands
 @@@runBuildContainer_help@@@
 ```
 
-### 1.7. bin/buildPushDockerImages
+### 1.6. bin/buildPushDockerImages
 
 **Help**
 
@@ -96,7 +87,7 @@ permalink: /commands
 @@@buildPushDockerImages_help@@@
 ```
 
-### 1.8. bin/waitForIt
+### 1.7. bin/waitForIt
 
 **Help**
 
@@ -104,7 +95,7 @@ permalink: /commands
 @@@waitForIt_help@@@
 ```
 
-### 1.9. bin/waitForMysql
+### 1.8. bin/waitForMysql
 
 **Help**
 
