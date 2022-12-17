@@ -4,16 +4,27 @@
 
 .INCLUDE "${TEMPLATE_DIR}/_includes/_header.tpl"
 
-# use this in order to debug inside the container
-# docker build -t bash-tools-ubuntu:5.1 -f .docker/Dockerfile.ubuntu
-# docker run --rm -it -v "$(pwd):/bash"  --user "$(id -u):$(id -g)"  bash-tools-ubuntu-5.1-user bash
-# docker run --rm -it -v "$(pwd):/bash"  --user "$(id -u):$(id -g)"  bash-tools-alpine-5.1-user bash
-#
-# to force image rebuilding
-# DOCKER_BUILD_OPTIONS=--no-cache ./bin/test
-#
-# rebuild alpine image
-# DOCKER_BUILD_OPTIONS=--no-cache VENDOR=alpine BASH_IMAGE=bash:5.1 BASH_TAR_VERSION=5.1 ./bin/test
+HELP="$(
+  cat <<EOF
+${__HELP_TITLE}Usage:${__HELP_NORMAL} ${SCRIPT_NAME}
+Launch bats inside docker container
+
+${__HELP_TITLE}Examples:${__HELP_NORMAL}
+to force image rebuilding
+    DOCKER_BUILD_OPTIONS=--no-cache ./bin/test
+
+rebuild alpine image
+    DOCKER_BUILD_OPTIONS=--no-cache VENDOR=alpine BASH_IMAGE=bash:5.1 BASH_TAR_VERSION=5.1 ./bin/test
+
+${__HELP_TITLE}In order to debug inside container:${__HELP_NORMAL}
+    docker build -t bash-tools-ubuntu:5.1 -f .docker/Dockerfile.ubuntu
+    docker run --rm -it -v "$(pwd):/bash"  --user "$(id -u):$(id -g)"  bash-tools-ubuntu-5.1-user bash
+    docker run --rm -it -v "$(pwd):/bash"  --user "$(id -u):$(id -g)"  bash-tools-alpine-5.1-user bash
+
+${__HELP_TITLE}Bats help:${__HELP_NORMAL}
+EOF
+)"
+Args::defaultHelpNoExit "${HELP}" "$@" || "${VENDOR_DIR}/bats/bin/bats" --help && exit 0
 
 if [[ "${IN_BASH_DOCKER:-}" = "You're in docker" ]]; then
   (

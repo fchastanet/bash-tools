@@ -4,20 +4,15 @@
 
 .INCLUDE "${TEMPLATE_DIR}/_includes/_header.tpl"
 
-showHelp() {
+HELP="$(
   cat <<EOF
 ${__HELP_TITLE}Usage:${__HELP_NORMAL} ${SCRIPT_NAME} <branch> <commit>
 show an error if commit is not an ancestor of branch
 EOF
-}
-
-if [[ "$1" == '--help' || "$1" == '-h' ]]; then
-  showHelp
-  exit 0
-fi
+)"
+Args::defaultHelp "${HELP}" "$@"
 
 if [[ "$#" != "2" ]]; then
-  showHelp
   Log::fatal "${SCRIPT_NAME}: invalid arguments"
 fi
 

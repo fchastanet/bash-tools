@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 #####################################
-# GENERATED FILE FROM src/build/buildPushDockerImages.sh
+# GENERATED FILE FROM https://github.com/fchastanet/bash-tools/src/build/buildPushDockerImages.sh
 # DO NOT EDIT IT
 #####################################
 
@@ -36,6 +36,7 @@ interruptManagement() {
   # ensure that Ctrl-C is trapped by this script and not by sub process
   # report to the parent that we have indeed been interrupted
   kill -s INT "$$"
+  exit 130
 }
 trap interruptManagement INT
 
@@ -62,6 +63,41 @@ export DEBIAN_FRONTEND=noninteractive
 export DEBCONF_NONINTERACTIVE_SEEN=true
 
 # FUNCTIONS
+
+Args::showHelp() {
+  local helpArg="$1"
+  echo -e "${helpArg}"
+}
+
+Args::defaultHelpNoExit() {
+  local helpArg="$1"
+  shift || true
+  # shellcheck disable=SC2034
+  local args
+  args="$(getopt -l help -o h -- "$@" 2>/dev/null)" || true
+  eval set -- "${args}"
+
+  while true; do
+    case $1 in
+      -h | --help)
+        Args::showHelp "${helpArg}"
+        return 1
+        ;;
+      --)
+        break
+        ;;
+      *)
+        # ignore
+        ;;
+    esac
+  done
+}
+
+Args::defaultHelp() {
+  if ! Args::defaultHelpNoExit "$@"; then
+    exit 0
+  fi
+}
 
 if [[ -t 1 || -t 2 ]]; then
   # check colors applicable https://misc.flogisoft.com/bash/tip_colors_and_formatting
@@ -117,6 +153,20 @@ Log::fatal() {
   echo -e "${__ERROR_COLOR}FATAL   - ${1}${__RESET_COLOR}" >&2
   exit 1
 }
+
+HELP="$(
+  cat <<EOF
+${__HELP_TITLE}Description:${__HELP_NORMAL} pull, build and push docker image
+- pull previous docker image from docker hub if exists
+- build new image using previous image as cache
+- tag built image
+- push it to docker registry
+
+${__HELP_TITLE}Usage:${__HELP_NORMAL} ${SCRIPT_NAME} <vendor> <bash_tar_version> <bash_base_image> <branch_name> <push_image>
+additional docker build options can be passed via DOCKER_BUILD_OPTIONS env variable
+EOF
+)"
+Args::defaultHelp "${HELP}" "$@" || true
 
 VENDOR="$1"
 BASH_TAR_VERSION="$2"

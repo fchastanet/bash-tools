@@ -2,7 +2,7 @@ version = 1
 
 test_patterns = ["tests/**"]
 
-exclude_patterns = ["doc/**", "bin/deepsource"]
+exclude_patterns = ["doc/**", "jekyll/**", "bin/deepsource"]
 
 [[analyzers]]
 name = "test-coverage"

@@ -4,6 +4,17 @@
 
 .INCLUDE "${TEMPLATE_DIR}/_includes/_header.tpl"
 
+HELP="$(
+  cat <<EOF
+${__HELP_TITLE}Description:${__HELP_NORMAL} stream tar.gz file or gz file through mysql
+
+${__HELP_TITLE}Usage:${__HELP_NORMAL} ${SCRIPT_NAME} <dumpFile> <targetDbName> <mysqlAuthFile> [characterSet] [dbImportOptions]
+characterSet: default value utf8
+dbImportOptions: default value empty
+EOF
+)"
+Args::defaultHelp "${HELP}" "$@"
+
 DUMP_FILE="$1"
 DB_NAME="$2"
 PROFILE_COMMAND="${3}"
