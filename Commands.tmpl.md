@@ -14,6 +14,7 @@ permalink: /commands
   - [1.6. bin/buildPushDockerImages](#16-binbuildpushdockerimages)
   - [1.7. bin/waitForIt](#17-binwaitforit)
   - [1.8. bin/waitForMysql](#18-binwaitformysql)
+  - [1.9. bin/doc](#19-bindoc)
 - [2. Linters](#2-linters)
   - [2.1. bin/dockerLint](#21-bindockerlint)
   - [2.2. bin/shellcheckLint](#22-binshellchecklint)
@@ -36,6 +37,7 @@ permalink: /commands
   - [7.3. bin/dbImport](#73-bindbimport)
   - [7.4. bin/dbImportProfile](#74-bindbimportprofile)
   - [7.5. bin/dbImportStream](#75-bindbimportstream)
+  - [7.6. bin/dbQueryOneDatabase](#76-bindbqueryonedatabase)
 
 ## 1. Build tools
 
@@ -101,6 +103,14 @@ permalink: /commands
 
 ```text
 @@@waitForMysql_help@@@
+```
+
+### 1.9. bin/doc
+
+**Help**
+
+```text
+@@@doc_help@@@
 ```
 
 ## 2. Linters
@@ -392,4 +402,12 @@ saved in ${HOME}/.bash-tools/dbImportProfiles with this format `auto*<dsn>*<db>`
 
 ```text
 @@@dbImportStream_help@@@
+```
+
+### 7.6. bin/dbQueryOneDatabase
+
+**Internal use only**
+
+```text
+@@@dbQueryOneDatabase_help@@@
 ```
