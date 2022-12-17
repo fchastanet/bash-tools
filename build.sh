@@ -16,7 +16,7 @@ source "${FRAMEWORK_DIR}/src/Log/displayError.sh"
 # shellcheck source=./vendor/bash-tools-framework/src/Log/fatal.sh
 source "${FRAMEWORK_DIR}/src/Log/fatal.sh"
 
-export REPOSITORY_URL="https://github.com/fchastanet/bash-tools"
+export REPOSITORY_URL="https://github.com/fchastanet/bash-tools/tree/master"
 if (($# == 0)); then
   while IFS= read -r file; do
     "${FRAMEWORK_DIR}/bin/constructBinFile" "${file}" "${SRC_DIR}" "${BIN_DIR}" "${ROOT_DIR}"
