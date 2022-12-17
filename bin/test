@@ -113,7 +113,10 @@ ${__HELP_TITLE}In order to debug inside container:${__HELP_NORMAL}
 ${__HELP_TITLE}Bats help:${__HELP_NORMAL}
 EOF
 )"
-Args::defaultHelpNoExit "${HELP}" "$@" || "${VENDOR_DIR}/bats/bin/bats" --help && exit 0
+if ! Args::defaultHelpNoExit "${HELP}" "$@"; then
+  "${VENDOR_DIR}/bats/bin/bats" --help
+  exit 0
+fi
 
 if [[ "${IN_BASH_DOCKER:-}" = "You're in docker" ]]; then
   (
