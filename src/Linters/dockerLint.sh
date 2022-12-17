@@ -26,7 +26,7 @@ if ! Version::checkMinimal "hadolint" "--version" "${MIN_HADOLINT_VERSION}" >/de
 fi
 
 if (($# == 0)); then
-  set -- -f checkstyle
+  set -- "${DEFAULT_ARGS[@]}"
 fi
 
 find . -type f -name 'Dockerfile*' -print0 | xargs -0 hadolint "$@"
