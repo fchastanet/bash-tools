@@ -4,6 +4,20 @@
 
 .INCLUDE "${TEMPLATE_DIR}/_includes/_header.tpl"
 
+HELP="$(
+  cat <<EOF
+${__HELP_TITLE}Description:${__HELP_NORMAL} pull, build and push docker image
+- pull previous docker image from docker hub if exists
+- build new image using previous image as cache
+- tag built image
+- push it to docker registry
+
+${__HELP_TITLE}Usage:${__HELP_NORMAL} ${SCRIPT_NAME} <vendor> <bash_tar_version> <bash_base_image> <branch_name> <push_image>
+additional docker build options can be passed via DOCKER_BUILD_OPTIONS env variable
+EOF
+)"
+Args::defaultHelp "${HELP}" "$@" || true
+
 VENDOR="$1"
 BASH_TAR_VERSION="$2"
 BASH_BASE_IMAGE="$3"

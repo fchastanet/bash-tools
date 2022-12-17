@@ -149,7 +149,7 @@ Launch locally
 sudo apt-get install ruby-dev
 sudo gem install bundler
 bundle install
-bundle exec jekyll serve
+bundle exec jekyll serve --source jekyll
 ```
 
 Navigate to <http://localhost:4000/>

@@ -3,6 +3,8 @@
 /.history
 /megalinter-reports
 /_site
-/doc
 /vendor
-/Commands.md
+/jekyll/*.md
+/jekyll/_site
+/jekyll/bashDoc
+/jekyll/tests

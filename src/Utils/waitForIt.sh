@@ -8,7 +8,7 @@
 .INCLUDE "${TEMPLATE_DIR}/_includes/_header.tpl"
 
 showHelp() {
-  cat <<USAGE >&2
+  cat <<USAGE
 ${__HELP_TITLE}Usage:${__HELP_NORMAL} ${SCRIPT_NAME} host:port [-s] [-t timeout] [-- command args]
     -h HOST | --host=HOST       Host or IP under test
     -p PORT | --port=PORT       TCP port under test
@@ -19,7 +19,6 @@ ${__HELP_TITLE}Usage:${__HELP_NORMAL} ${SCRIPT_NAME} host:port [-s] [-t timeout]
                                 Timeout in seconds, zero for no timeout
     -- COMMAND ARGS             Execute command with args after the test finishes
 USAGE
-  exit 1
 }
 
 waitFor() {
@@ -123,6 +122,7 @@ while [[ $# -gt 0 ]]; do
       ;;
     --help)
       showHelp
+      exit 0
       ;;
     *)
       showHelp

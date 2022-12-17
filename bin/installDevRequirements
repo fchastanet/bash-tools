@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 #####################################
-# GENERATED FILE FROM src/build/installDevRequirements.sh
+# GENERATED FILE FROM https://github.com/fchastanet/bash-tools/tree/master/src/build/installDevRequirements.sh
 # DO NOT EDIT IT
 #####################################
 
@@ -36,6 +36,7 @@ interruptManagement() {
   # ensure that Ctrl-C is trapped by this script and not by sub process
   # report to the parent that we have indeed been interrupted
   kill -s INT "$$"
+  exit 130
 }
 trap interruptManagement INT
 
@@ -63,6 +64,35 @@ export DEBCONF_NONINTERACTIVE_SEEN=true
 
 # FUNCTIONS
 
+Args::showHelp() {
+  local helpArg="$1"
+  echo -e "${helpArg}"
+}
+
+Args::defaultHelpNoExit() {
+  local helpArg="$1"
+  shift || true
+  # shellcheck disable=SC2034
+  local args
+  args="$(getopt -l help -o h -- "$@" 2>/dev/null)" || true
+  eval set -- "${args}"
+
+  while true; do
+    case $1 in
+      -h | --help)
+        Args::showHelp "${helpArg}"
+        return 1
+        ;;
+      --)
+        break
+        ;;
+      *)
+        # ignore
+        ;;
+    esac
+  done
+}
+
 # Display message using info color (bg light blue/fg white)
 # @param {String} $1 message
 Log::displayInfo() {
@@ -73,6 +103,12 @@ Log::displayInfo() {
 # @param {String} $1 message
 Log::displayWarning() {
   echo -e "${__WARNING_COLOR}WARN    - ${1}${__RESET_COLOR}" >&2
+}
+
+Args::defaultHelp() {
+  if ! Args::defaultHelpNoExit "$@"; then
+    exit 0
+  fi
 }
 
 # Public: shallow clone a repository at specific commit sha, tag or branch
@@ -174,6 +210,15 @@ export __HELP_NORMAL
 Log::displayError() {
   echo -e "${__ERROR_COLOR}ERROR   - ${1}${__RESET_COLOR}" >&2
 }
+
+HELP="$(
+  cat <<EOF
+${__HELP_TITLE}Description:${__HELP_NORMAL} installs all requirements
+unit testing, fchastanet/bash-tools-framework
+${__HELP_TITLE}Usage:${__HELP_NORMAL} ${SCRIPT_NAME}
+EOF
+)"
+Args::defaultHelp "${HELP}" "$@"
 
 if [[ -f "${BIN_DIR}/installRequirements" ]]; then
   "${BIN_DIR}/installRequirements"

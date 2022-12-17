@@ -1,5 +1,13 @@
 # Todo
 
+- add code coverage <https://github.com/SimonKagstrom/kcov>
+  - upload code coverage to deepsource using github action
+- all command that should not generate help should respond internal tool when
+  called with --help
+- refact buildPushDockerImages/runBuildContainer so it is independent of
+  bash-tools
+- dbImportStream ability to import from dbAuthFile internally or from db
+  parameters
 - migrate jekyll to <https://nextra.site/docs/guide/organize-files> ?
 
   - copy jekyll conf

@@ -4,6 +4,18 @@
 
 .INCLUDE "${TEMPLATE_DIR}/_includes/_header.tpl"
 
+HELP="$(
+  cat <<EOF
+${__HELP_TITLE}Description:${__HELP_NORMAL} lint awk files
+
+${__HELP_TITLE}Usage:${__HELP_NORMAL} ${SCRIPT_NAME} <directory>
+Lint all files with .awk extension in specified folder.
+Filters out eventual .history folder
+Result in checkstyle format.
+EOF
+)"
+Args::defaultHelp "${HELP}" "$@"
+
 awkLintScript="$(
   cat <<'EOF'
 .INCLUDE "${TEMPLATE_DIR}/Linters/awkLint.awk"

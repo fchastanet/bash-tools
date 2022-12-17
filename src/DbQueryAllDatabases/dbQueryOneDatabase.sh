@@ -11,6 +11,8 @@
 
 Assert::expectNonRootUser
 
+Args::defaultHelp "INTERNAL USE ONLY - USED BY bin/dbQueryAllDatabases" "$@"
+
 Framework::loadEnv
 
 # ensure that Ctrl-C is trapped by this script and not sub mysql process

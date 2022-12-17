@@ -4,7 +4,7 @@
 #  https://github.com/vishnubob/wait-for-it
 
 #####################################
-# GENERATED FILE FROM src/Utils/waitForIt.sh
+# GENERATED FILE FROM https://github.com/fchastanet/bash-tools/tree/master/src/Utils/waitForIt.sh
 # DO NOT EDIT IT
 #####################################
 
@@ -39,6 +39,7 @@ interruptManagement() {
   # ensure that Ctrl-C is trapped by this script and not by sub process
   # report to the parent that we have indeed been interrupted
   kill -s INT "$$"
+  exit 130
 }
 trap interruptManagement INT
 
@@ -134,7 +135,7 @@ Log::fatal() {
 }
 
 showHelp() {
-  cat <<USAGE >&2
+  cat <<USAGE
 ${__HELP_TITLE}Usage:${__HELP_NORMAL} ${SCRIPT_NAME} host:port [-s] [-t timeout] [-- command args]
     -h HOST | --host=HOST       Host or IP under test
     -p PORT | --port=PORT       TCP port under test
@@ -145,7 +146,6 @@ ${__HELP_TITLE}Usage:${__HELP_NORMAL} ${SCRIPT_NAME} host:port [-s] [-t timeout]
                                 Timeout in seconds, zero for no timeout
     -- COMMAND ARGS             Execute command with args after the test finishes
 USAGE
-  exit 1
 }
 
 waitFor() {
@@ -249,6 +249,7 @@ while [[ $# -gt 0 ]]; do
       ;;
     --help)
       showHelp
+      exit 0
       ;;
     *)
       showHelp

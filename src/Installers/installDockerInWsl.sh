@@ -4,6 +4,15 @@
 
 .INCLUDE "${TEMPLATE_DIR}/_includes/_header.tpl"
 
+HELP="$(
+  cat <<EOF
+${__HELP_TITLE}Description:${__HELP_NORMAL} install and configure docker and docker compose inside WSL2
+
+${__HELP_TITLE}Usage:${__HELP_NORMAL} ${SCRIPT_NAME}
+EOF
+)"
+Args::defaultHelp "${HELP}" "$@"
+
 Assert::expectNonRootUser
 
 Log::displayInfo "install docker required packages"

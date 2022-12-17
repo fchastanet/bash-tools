@@ -4,12 +4,24 @@
 
 .INCLUDE "${TEMPLATE_DIR}/_includes/_header.tpl"
 
+HELP="$(
+  cat <<EOF
+${__HELP_TITLE}Description:${__HELP_NORMAL} run the container specified by args provided.
+Command to run is passed via the rest of arguments
+TTY allocation is detected automatically
+
+${__HELP_TITLE}Usage:${__HELP_NORMAL} ${SCRIPT_NAME} <vendor> <bash_tar_version> <bash_base_image> <bash_image> ...
+additional docker build options can be passed via DOCKER_BUILD_OPTIONS env variable
+EOF
+)"
+Args::defaultHelp "${HELP}" "$@" || true
+
 VENDOR="${VENDOR:-ubuntu}"
 BASH_TAR_VERSION="${BASH_TAR_VERSION:-5.1}"
 BASH_IMAGE="${BASH_IMAGE:-ubuntu:20.04}"
 DOCKER_BUILD_OPTIONS="${DOCKER_BUILD_OPTIONS:-}"
 
-(echo >&2 "run tests using ${VENDOR}:${BASH_TAR_VERSION}")
+Log::displayInfo "Using ${VENDOR}:${BASH_TAR_VERSION}"
 cd "${ROOT_DIR}" || exit 1
 
 if [[ ! -d "${ROOT_DIR}/vendor" ]]; then

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 #####################################
-# GENERATED FILE FROM src/Installers/installDockerInWsl.sh
+# GENERATED FILE FROM https://github.com/fchastanet/bash-tools/tree/master/src/Installers/installDockerInWsl.sh
 # DO NOT EDIT IT
 #####################################
 
@@ -36,6 +36,7 @@ interruptManagement() {
   # ensure that Ctrl-C is trapped by this script and not by sub process
   # report to the parent that we have indeed been interrupted
   kill -s INT "$$"
+  exit 130
 }
 trap interruptManagement INT
 
@@ -63,6 +64,11 @@ export DEBCONF_NONINTERACTIVE_SEEN=true
 
 # FUNCTIONS
 
+Args::showHelp() {
+  local helpArg="$1"
+  echo -e "${helpArg}"
+}
+
 # Display message using error color (red)
 # @param {String} $1 message
 Log::displayError() {
@@ -79,6 +85,30 @@ Log::displayWarning() {
 # @stdin json result of github API
 Version::githubApiExtractVersion() {
   jq -r ".tag_name" | Version::parse
+}
+
+Args::defaultHelpNoExit() {
+  local helpArg="$1"
+  shift || true
+  # shellcheck disable=SC2034
+  local args
+  args="$(getopt -l help -o h -- "$@" 2>/dev/null)" || true
+  eval set -- "${args}"
+
+  while true; do
+    case $1 in
+      -h | --help)
+        Args::showHelp "${helpArg}"
+        return 1
+        ;;
+      --)
+        break
+        ;;
+      *)
+        # ignore
+        ;;
+    esac
+  done
 }
 
 # *Public*: run command and store data in following global variables :
@@ -207,6 +237,12 @@ Version::parse() {
   sed -nre 's/[^0-9]*(([0-9]+\.)*[0-9]+).*/\1/p' | head -n1
 }
 
+Args::defaultHelp() {
+  if ! Args::defaultHelpNoExit "$@"; then
+    exit 0
+  fi
+}
+
 # Public: exits with message if current user is root
 #
 # **Exit**: code 1 if current user is root
@@ -247,7 +283,6 @@ Github::upgradeRelease() {
   local latestVersion
   local repo
 
-  set -x
   repo="$(Github::extractRepoFromGithubUrl "${releaseUrl}")"
   Github::getLatestRelease "${repo}" latestVersion
   Log::displayInfo "Repo ${repo} latest version found is ${latestVersion}"
@@ -367,6 +402,15 @@ Version::getCommandVersionFromJson() {
     jq -r ".tag_name" | # Get tag line
     Version::parse      # keep only version numbers
 }
+
+HELP="$(
+  cat <<EOF
+${__HELP_TITLE}Description:${__HELP_NORMAL} install and configure docker and docker compose inside WSL2
+
+${__HELP_TITLE}Usage:${__HELP_NORMAL} ${SCRIPT_NAME}
+EOF
+)"
+Args::defaultHelp "${HELP}" "$@"
 
 Assert::expectNonRootUser
 

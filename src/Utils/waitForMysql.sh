@@ -4,6 +4,15 @@
 
 .INCLUDE "${TEMPLATE_DIR}/_includes/_header.tpl"
 
+HELP="$(
+  cat <<EOF
+${__HELP_TITLE}Description:${__HELP_NORMAL} wait for mysql to be ready
+
+${__HELP_TITLE}Usage:${__HELP_NORMAL} ${SCRIPT_NAME} <host> <port> <user> <pass>
+EOF
+)"
+Args::defaultHelp "${HELP}" "$@"
+
 declare mysqlHost="$1"
 declare mysqlPort="$2"
 declare mysqlUser="$3"

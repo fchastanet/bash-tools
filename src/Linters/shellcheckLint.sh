@@ -4,8 +4,22 @@
 
 .INCLUDE "${TEMPLATE_DIR}/_includes/_header.tpl"
 
+DEFAULT_ARGS=(--check-sourced -x -f checkstyle)
+MIN_SHELLCHECK_VERSION="0.9.0"
+HELP="$(
+  cat <<EOF
+${__HELP_TITLE}Description:${__HELP_NORMAL} shellcheck wrapper
+- installs new shellcheck version(>${MIN_SHELLCHECK_VERSION}) automatically
+- lint this project files using default files filter
+- use the default options '${DEFAULT_ARGS[*]}' if no parameter specified
+
+${__HELP_TITLE}Usage:${__HELP_NORMAL} ${SCRIPT_NAME} <shellcheck options>
+EOF
+)"
+Args::defaultHelpNoExit "${HELP}" "$@" || true
+
 # check if command in PATH is already the minimal version needed
-if ! Version::checkMinimal "shellcheck" "--version" "0.8.0"; then
+if ! Version::checkMinimal "shellcheck" "--version" "${MIN_SHELLCHECK_VERSION}" >/dev/null 2>&1; then
   install() {
     local file="$1"
     local targetFile="$2"
@@ -28,7 +42,7 @@ if ! Version::checkMinimal "shellcheck" "--version" "0.8.0"; then
 fi
 
 if (($# == 0)); then
-  set -- --check-sourced -x -f checkstyle
+  set -- "${DEFAULT_ARGS[@]}"
 fi
 
 (

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 #####################################
-# GENERATED FILE FROM src/build/installRequirements.sh
+# GENERATED FILE FROM https://github.com/fchastanet/bash-tools/tree/master/src/build/installRequirements.sh
 # DO NOT EDIT IT
 #####################################
 
@@ -36,6 +36,7 @@ interruptManagement() {
   # ensure that Ctrl-C is trapped by this script and not by sub process
   # report to the parent that we have indeed been interrupted
   kill -s INT "$$"
+  exit 130
 }
 trap interruptManagement INT
 
@@ -63,10 +64,39 @@ export DEBCONF_NONINTERACTIVE_SEEN=true
 
 # FUNCTIONS
 
+Args::showHelp() {
+  local helpArg="$1"
+  echo -e "${helpArg}"
+}
+
 # Display message using warning color (yellow)
 # @param {String} $1 message
 Log::displayWarning() {
   echo -e "${__WARNING_COLOR}WARN    - ${1}${__RESET_COLOR}" >&2
+}
+
+Args::defaultHelpNoExit() {
+  local helpArg="$1"
+  shift || true
+  # shellcheck disable=SC2034
+  local args
+  args="$(getopt -l help -o h -- "$@" 2>/dev/null)" || true
+  eval set -- "${args}"
+
+  while true; do
+    case $1 in
+      -h | --help)
+        Args::showHelp "${helpArg}"
+        return 1
+        ;;
+      --)
+        break
+        ;;
+      *)
+        # ignore
+        ;;
+    esac
+  done
 }
 
 # pull the repository if no change in it
@@ -143,6 +173,12 @@ Log::displayInfo() {
   echo -e "${__INFO_COLOR}INFO    - ${1}${__RESET_COLOR}" >&2
 }
 
+Args::defaultHelp() {
+  if ! Args::defaultHelpNoExit "$@"; then
+    exit 0
+  fi
+}
+
 # clone the repository if not done yet, else pull it if no change in it
 # @param {String} $1 directory in which repository is installed or will be cloned
 # @param {String} $2 repository url
@@ -178,6 +214,14 @@ Git::cloneOrPullIfNoChanges() {
     )
   fi
 }
+
+HELP="$(
+  cat <<EOF
+${__HELP_TITLE}Description:${__HELP_NORMAL} installs requirements(fchastanet/bash-tools-framework)
+${__HELP_TITLE}Usage:${__HELP_NORMAL} ${SCRIPT_NAME}
+EOF
+)"
+Args::defaultHelp "${HELP}" "$@"
 
 Git::cloneOrPullIfNoChanges \
   "${ROOT_DIR}/vendor/bash-tools-framework" \
