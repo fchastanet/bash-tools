@@ -4,7 +4,7 @@
 
 .INCLUDE "${TEMPLATE_DIR}/_includes/_header.tpl"
 
-.INCLUDE "${TEMPLATE_DIR}/_includes/executedAsUser.sh"
+.INCLUDE "${ORIGINAL_TEMPLATE_DIR}/_includes/executedAsUser.sh"
 
 HELP="$(
   cat <<EOF

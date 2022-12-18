@@ -101,7 +101,7 @@ fi
 
 awkScript="$(
   cat <<'EOF'
-.INCLUDE "$(cd "$(dirname ${SRC_FILE_PATH})" && pwd -P)/mysql2puml.awk"
+.INCLUDE "$(cd "$(dirname ${SRC_ABSOLUTE_PATH})" && pwd -P)/mysql2puml.awk"
 EOF
 )"
 awk --source "${awkScript}" "${absSkinFile}" - <&3

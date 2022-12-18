@@ -119,6 +119,54 @@ Git::pullIfNoChanges() {
   return 1
 }
 
+# Display message using info color (bg light blue/fg white)
+# @param {String} $1 message
+Log::displayInfo() {
+  echo -e "${__INFO_COLOR}INFO    - ${1}${__RESET_COLOR}" >&2
+}
+
+Args::defaultHelp() {
+  if ! Args::defaultHelpNoExit "$@"; then
+    exit 0
+  fi
+}
+
+# clone the repository if not done yet, else pull it if no change in it
+# @param {String} $1 directory in which repository is installed or will be cloned
+# @param {String} $2 repository url
+# @param {function} $3 callback on successful clone
+# @param {function} $4 callback on successful pull
+# @param {$@} gitCloneOptions
+# @return 0 on successful pulling/cloning, 1 on failure
+Git::cloneOrPullIfNoChanges() {
+  local dir="$1"
+  shift || true
+  local repo="$1"
+  shift || true
+  local cloneCallback=${1:-}
+  shift || true
+  local pullCallback=${1:-}
+  shift || true
+
+  if [[ -d "${dir}/.git" ]]; then
+    Git::pullIfNoChanges "${dir}" && (
+      # shellcheck disable=SC2086
+      if [[ "$(type -t ${pullCallback})" = "function" ]]; then
+        ${pullCallback} "${dir}"
+      fi
+    )
+  else
+    Log::displayInfo "cloning ${repo} ..."
+    mkdir -p "$(dirname "${dir}")"
+    git clone "${GIT_CLONE_OPTIONS[@]}" --progress "$@" "${repo}" "${dir}" && (
+      # shellcheck disable=SC2086
+      if [[ "$(type -t ${cloneCallback})" = "function" ]]; then
+        ${cloneCallback} "${dir}"
+      fi
+    )
+  fi
+}
+
 if [[ -t 1 || -t 2 ]]; then
   # check colors applicable https://misc.flogisoft.com/bash/tip_colors_and_formatting
   readonly __ERROR_COLOR='\e[31m'      # Red
@@ -167,53 +215,16 @@ export __HELP_EXAMPLE
 export __HELP_TITLE
 export __HELP_NORMAL
 
-# Display message using info color (bg light blue/fg white)
+# Display message using error color (red) and exit immediately with error status 1
 # @param {String} $1 message
-Log::displayInfo() {
-  echo -e "${__INFO_COLOR}INFO    - ${1}${__RESET_COLOR}" >&2
+Log::fatal() {
+  echo -e "${__ERROR_COLOR}FATAL   - ${1}${__RESET_COLOR}" >&2
+  exit 1
 }
 
-Args::defaultHelp() {
-  if ! Args::defaultHelpNoExit "$@"; then
-    exit 0
-  fi
-}
-
-# clone the repository if not done yet, else pull it if no change in it
-# @param {String} $1 directory in which repository is installed or will be cloned
-# @param {String} $2 repository url
-# @param {function} $3 callback on successful clone
-# @param {function} $4 callback on successful pull
-# @param {$@} gitCloneOptions
-# @return 0 on successful pulling/cloning, 1 on failure
-Git::cloneOrPullIfNoChanges() {
-  local dir="$1"
-  shift || true
-  local repo="$1"
-  shift || true
-  local cloneCallback=${1:-}
-  shift || true
-  local pullCallback=${1:-}
-  shift || true
-
-  if [[ -d "${dir}/.git" ]]; then
-    Git::pullIfNoChanges "${dir}" && (
-      # shellcheck disable=SC2086
-      if [[ "$(type -t ${pullCallback})" = "function" ]]; then
-        ${pullCallback} "${dir}"
-      fi
-    )
-  else
-    Log::displayInfo "cloning ${repo} ..."
-    mkdir -p "$(dirname "${dir}")"
-    git clone "${GIT_CLONE_OPTIONS[@]}" --progress "$@" "${repo}" "${dir}" && (
-      # shellcheck disable=SC2086
-      if [[ "$(type -t ${cloneCallback})" = "function" ]]; then
-        ${cloneCallback} "${dir}"
-      fi
-    )
-  fi
-}
+if [[ "$(id -u)" = "0" ]]; then
+  Log::fatal "this script should be executed as normal user"
+fi
 
 HELP="$(
   cat <<EOF

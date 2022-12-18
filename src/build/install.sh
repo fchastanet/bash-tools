@@ -4,7 +4,7 @@
 
 .INCLUDE "${TEMPLATE_DIR}/_includes/_header.tpl"
 
-.INCLUDE "${TEMPLATE_DIR}/_includes/executedAsUser.sh"
+.INCLUDE "${ORIGINAL_TEMPLATE_DIR}/_includes/executedAsUser.sh"
 
 if ! command -v parallel 2>/dev/null; then
   Log::displayInfo "We will install GNU parallel software, please enter you sudo password"
