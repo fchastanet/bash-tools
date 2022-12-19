@@ -62,206 +62,6 @@ export TERM=xterm-256color
 export DEBIAN_FRONTEND=noninteractive
 export DEBCONF_NONINTERACTIVE_SEEN=true
 
-# FUNCTIONS
-
-# Display message using success color (bg green/fg white)
-# @param {String} $1 message
-Log::displaySuccess() {
-  echo -e "${__SUCCESS_COLOR}SUCCESS - ${1}${__RESET_COLOR}" >&2
-}
-
-# Display message using warning color (yellow)
-# @param {String} $1 message
-Log::displayWarning() {
-  echo -e "${__WARNING_COLOR}WARN    - ${1}${__RESET_COLOR}" >&2
-}
-
-# Internal: check if dsn file has all the mandatory variables set
-# Mandatory variables are: HOSTNAME, USER, PASSWORD, PORT
-#
-# **Arguments**:
-# * $1 - dsn absolute filename
-#
-# Returns 0 on valid file, 1 otherwise with log output
-Database::checkDsnFile() {
-  local DSN_FILENAME="$1"
-  if [[ ! -f "${DSN_FILENAME}" ]]; then
-    Log::displayError "dsn file ${DSN_FILENAME} not found"
-    return 1
-  fi
-
-  (
-    unset HOSTNAME PORT PASSWORD USER
-    # shellcheck source=/tests/data/dsn_valid.env
-    source "${DSN_FILENAME}"
-    if [[ -z ${HOSTNAME+x} ]]; then
-      Log::displayError "dsn file ${DSN_FILENAME} : HOSTNAME not provided"
-      return 1
-    fi
-    if [[ -z "${HOSTNAME}" ]]; then
-      Log::displayWarning "dsn file ${DSN_FILENAME} : HOSTNAME value not provided"
-    fi
-    if [[ "${HOSTNAME}" = "localhost" ]]; then
-      Log::displayWarning "dsn file ${DSN_FILENAME} : check that HOSTNAME should not be 127.0.0.1 instead of localhost"
-    fi
-    if [[ -z "${PORT+x}" ]]; then
-      Log::displayError "dsn file ${DSN_FILENAME} : PORT not provided"
-      return 1
-    fi
-    if ! [[ ${PORT} =~ ^[0-9]+$ ]]; then
-      Log::displayError "dsn file ${DSN_FILENAME} : PORT invalid"
-      return 1
-    fi
-    if [[ -z "${USER+x}" ]]; then
-      Log::displayError "dsn file ${DSN_FILENAME} : USER not provided"
-      return 1
-    fi
-    if [[ -z "${PASSWORD+x}" ]]; then
-      Log::displayError "dsn file ${DSN_FILENAME} : PASSWORD not provided"
-      return 1
-    fi
-  )
-}
-
-# *Public*: run command and store data in following global variables :
-# * bash_framework_status the exit status of the command
-# * bash_framework_duration the duration of the command
-# * bash_framework_output the output of the command
-# redirecting error output to stdout is not supported, you can instead redirect stderr to a file if needed
-# **Arguments**:
-# * $@ command with arguments to execute
-Framework::run() {
-  # 'bash_framework_status', 'bash_framework_duration' are global variables
-  local -i start end
-  start=$(date +%s)
-  bash_framework_status=0
-  bash_framework_output=""
-
-  local origFlags="$-"
-  set +eET
-  local origIFS="${IFS}"
-
-  # execute command
-  # shellcheck disable=SC2034
-  bash_framework_output="$("$@")"
-  # shellcheck disable=SC2034
-  bash_framework_status="$?"
-  IFS="${origIFS}"
-  set "-${origFlags}"
-
-  # calculate duration
-  end=$(date +%s)
-  # shellcheck disable=SC2034
-  bash_framework_duration=$((end - start))
-}
-
-# appends a command to a trap
-#
-# - 1st arg:  code to add
-# - remaining args:  names of traps to modify
-#
-Framework::trapAdd() {
-  local trapAddCmd="$1"
-  shift || Log::fatal "${FUNCNAME[0]} usage error"
-  # helper fn to get existing trap command from output
-  # of trap -p
-  extract_trap_cmd() { printf '%s\n' "$3"; }
-  for trapAddName in "$@"; do
-    trap -- "$(
-      # print existing trap command with newline
-      eval "extract_trap_cmd $(trap -p "${trapAddName}")"
-      # print the new trap command
-      printf '%s\n' "${trapAddCmd}"
-    )" "${trapAddName}" ||
-      Log::fatal "unable to add to trap ${trapAddName}"
-  done
-}
-
-# Display message using debug color (grey)
-# @param {String} $1 message
-Log::displayDebug() {
-  if ((BASH_FRAMEWORK_LOG_LEVEL > __LEVEL_DEBUG)); then
-    echo -e "${__DEBUG_COLOR}DEBUG   - ${1}${__RESET_COLOR}" >&2
-  fi
-}
-
-# Display message using error color (red)
-# @param {String} $1 message
-Log::displayError() {
-  echo -e "${__ERROR_COLOR}ERROR   - ${1}${__RESET_COLOR}" >&2
-}
-
-# TODO use alias deactivated by default
-# TODO displayXXX should call _logMessage too
-Log::loadEnv() {
-  # Log::fatal() {
-  #   __displayFatal "$@"
-  #   exit 1
-  # }
-
-  # Log::logError() { :; }
-  # Log::logWarning() { :; }
-  # Log::logInfo() { :; }
-  # Log::logSuccess() { :; }
-  # Log::logDebug() { :; }
-
-  # Log::displayError() { :; }
-  # Log::displayWarning() { :; }
-  # Log::displayInfo() { :; }
-  # Log::displaySuccess() { :; }
-  # Log::displayDebug() { :; }
-
-  BASH_FRAMEWORK_LOG_LEVEL=${BASH_FRAMEWORK_LOG_LEVEL:-${__LEVEL_OFF}}
-  if ((BASH_FRAMEWORK_LOG_LEVEL > __LEVEL_OFF)); then
-    if [[ -z "${BASH_FRAMEWORK_LOG_FILE}" ]]; then
-      BASH_FRAMEWORK_LOG_LEVEL=${__LEVEL_OFF}
-    else
-      if ! mkdir -p "$(dirname "${BASH_FRAMEWORK_LOG_FILE}")" 2>/dev/null; then
-        # TODO use _logMessage to be sure to display the message during env lading
-        Log::displayError "Log file directory '$(dirname "${BASH_FRAMEWORK_LOG_FILE}")' cannot be created"
-        BASH_FRAMEWORK_LOG_LEVEL=${__LEVEL_OFF}
-      elif ! touch --no-create "${BASH_FRAMEWORK_LOG_FILE}" 2>/dev/null; then
-        Log::displayError "Log file ${BASH_FRAMEWORK_LOG_FILE} is not writable"
-        BASH_FRAMEWORK_LOG_LEVEL=${__LEVEL_OFF}
-      fi
-    fi
-    # if ((BASH_FRAMEWORK_LOG_LEVEL >= __LEVEL_ERROR)); then
-    #   Log::logError() { __logMessage "ERROR  " "$@"; }
-    # fi
-    # if ((BASH_FRAMEWORK_LOG_LEVEL >= __LEVEL_WARNING)); then
-    #   Log::logWarning() { __logMessage "WARNING" "$@"; }
-    # fi
-    # if ((BASH_FRAMEWORK_LOG_LEVEL >= __LEVEL_INFO)); then
-    #   Log::logInfo() { __logMessage "INFO   " "$@"; }
-    # fi
-    # if ((BASH_FRAMEWORK_LOG_LEVEL >= __LEVEL_SUCCESS)); then
-    #   Log::logSuccess() { __logMessage "SUCCESS" "$@"; }
-    # fi
-    # if ((BASH_FRAMEWORK_LOG_LEVEL >= __LEVEL_DEBUG)); then
-    #   Log::logDebug() { __logMessage "DEBUG  " "$@"; }
-    # fi
-  fi
-
-  BASH_FRAMEWORK_DISPLAY_LEVEL=${BASH_FRAMEWORK_DISPLAY_LEVEL:-${__LEVEL_OFF}}
-  # if ((BASH_FRAMEWORK_DISPLAY_LEVEL > __LEVEL_OFF)); then
-  #   if ((BASH_FRAMEWORK_DISPLAY_LEVEL >= __LEVEL_ERROR)); then
-  #     Log::displayError() { __displayError "$@"; }
-  #   fi
-  #   if ((BASH_FRAMEWORK_DISPLAY_LEVEL >= __LEVEL_WARNING)); then
-  #     Log::displayWarning() { __displayWarning "$@"; }
-  #   fi
-  #   if ((BASH_FRAMEWORK_DISPLAY_LEVEL >= __LEVEL_INFO)); then
-  #     Log::displayInfo() { __displayInfo "$@"; }
-  #   fi
-  #   if ((BASH_FRAMEWORK_DISPLAY_LEVEL >= __LEVEL_SUCCESS)); then
-  #     Log::displaySuccess() { __displaySuccess "$@"; }
-  #   fi
-  #   if ((BASH_FRAMEWORK_DISPLAY_LEVEL >= __LEVEL_DEBUG)); then
-  #     Log::displayDebug() { __displayDebug "$@"; }
-  #   fi
-  # fi
-}
-
 # Public: exits with message if current user is root
 #
 # **Exit**: code 1 if current user is root
@@ -398,109 +198,115 @@ Database::skipColumnNames() {
   instanceSkipColumnNames['SKIP_COLUMN_NAMES']="$2"
 }
 
-# global variables used by Framework::run
-declare -gx bash_framework_status
-declare -gix bash_framework_duration
-declare -gx bash_framework_output
+# lazy initialization
+declare -g BASH_FRAMEWORK_INITIALIZED="0"
 
-## Initialize some default variables
-## List of variables
-## * BASH_FRAMEWORK_INITIALIZED=1 lazy initialization
-##
-## default tests/data/.env file is loaded
-##
-## then all these variables can be overridden by a .env file that will be searched in the following directories
-## in this order (stop on first file found):
-## * __BASH_FRAMEWORK_CALLING_SCRIPT: upper directory
-## * ~/ : home path
-## * ~/.bash-tools : home path .bash-tools
-## alternatively you can force a given .env file to be loaded using
-## BASH_FRAMEWORK_ENV_FILEPATH=<fullPathToEnvFile or empty if no file to be loaded>
-Framework::loadEnv() {
-  # import default .env file
-  #!/usr/bin/env bash
+declare BASH_FRAMEWORK_CACHED_ENV_FILE
+BASH_FRAMEWORK_CACHED_ENV_FILE="$(mktemp -p "${TMPDIR:-/tmp}" -t "env_vars.XXXXXXX")"
 
-  # Default settings
-  # you can override these settings by creating ${HOME}/.bash-tools/.env file
-  ###
-  ### LOG Level
-  ### minimum level of the messages that will be logged into LOG_FILE
-  ###
-  ### 0: NO LOG
-  ### 1: ERROR
-  ### 2: WARNING
-  ### 3: INFO
-  ### 4: DEBUG
-  ###
-  BASH_FRAMEWORK_LOG_LEVEL=${BASH_FRAMEWORK_LOG_LEVEL-0}
+declare BASH_FRAMEWORK_DEFAULT_ENV_FILE
+BASH_FRAMEWORK_DEFAULT_ENV_FILE="$(mktemp -p "${TMPDIR:-/tmp}" -t "default_env_file.XXXXXXX")"
 
-  ###
-  ### DISPLAY Level
-  ### minimum level of the messages that will be displayed on screen
-  ###
-  ### 0: NO LOG
-  ### 1: ERROR
-  ### 2: WARNING
-  ### 3: INFO
-  ### 4: DEBUG
-  ###
-  BASH_FRAMEWORK_DISPLAY_LEVEL=${BASH_FRAMEWORK_DISPLAY_LEVEL-3}
+# shellcheck source=tests/data/.env
+cat >"${BASH_FRAMEWORK_DEFAULT_ENV_FILE}" <<'EOF'
+BASH_FRAMEWORK_LOG_LEVEL=0
+BASH_FRAMEWORK_DISPLAY_LEVEL=3
+BASH_FRAMEWORK_LOG_FILE=${ROOT_DIR}/logs/${SCRIPT_NAME}.log
+BASH_FRAMEWORK_LOG_FILE_MAX_ROTATION=5
+EOF
 
-  ###
-  ### Log to file
-  ###
-  ### all log messages will be redirected to log file specified
-  ### this same path will be used inside and outside of the container
-  ###
-  BASH_FRAMEWORK_LOG_FILE=${BASH_FRAMEWORK_LOG_FILE-${HOME}/.bash-tools/logs/bash.log}
-
-  # absolute directory containing db import sql dumps
-  DB_IMPORT_DUMP_DIR=${DB_IMPORT_DUMP_DIR-${HOME}/.bash-tools/dbImportDumps}
-
-  # garbage collect all files for which modification is greater than eg: 30 days (+30)
-  # each time an existing file is used by dbImport/dbImportTable
-  # the file modification time is set to now
-  DB_IMPORT_GARBAGE_COLLECT_DAYS=${DB_IMPORT_GARBAGE_COLLECT_DAYS-+30}
-
-  # absolute directory containing dbScripts used by dbScriptAllDatabases
-  SCRIPTS_FOLDER=${SCRIPTS_FOLDER-${HOME}/.bash-tools/conf/dbScripts}
-
-  # absolute directory to bash-tools project
-  BASH_TOOLS_FOLDER=${BASH_TOOLS_FOLDER-$(cd .. && pwd)}
-
-  # -----------------------------------------------------
-  # AWS Parameters
-  # -----------------------------------------------------
-  S3_BASE_URL=${S3_BASE_URL-}
-  TEMP_FOLDER=${TEMP_FOLDER-/tmp}
-
-  # import custom .env file
-  if [[ -z "${BASH_FRAMEWORK_ENV_FILEPATH+xxx}" ]]; then
-    # BASH_FRAMEWORK_ENV_FILEPATH not defined
-    if [[ -f "${HOME}/.bash-tools/.env" ]]; then
-      # shellcheck source=/tests/data/.env
-      source "${HOME}/.bash-tools/.env" || exit 1
-    elif [[ -f "${HOME}/.env" ]]; then
-      # shellcheck source=/tests/data/.env
-      source "${HOME}/.env" || exit 1
-    fi
-  elif [[ -z "${BASH_FRAMEWORK_ENV_FILEPATH}" ]]; then
-    # BASH_FRAMEWORK_ENV_FILEPATH defined but empty - nothing to do
-    true
-  else
-    # load BASH_FRAMEWORK_ENV_FILEPATH
-    [[ ! -f "${BASH_FRAMEWORK_ENV_FILEPATH}" ]] &&
-      Log::fatal "env file not not found - ${BASH_FRAMEWORK_ENV_FILEPATH}"
-    # shellcheck source=/tests/data/.env
-    source "${BASH_FRAMEWORK_ENV_FILEPATH}"
+# load variables in order(from less specific to more specific) from :
+# - ${ROOT_DIR}/tests/data/.env file
+# - ${ROOT_DIR}/.env file if exists
+# - ~/.env file if exists
+# - ~/.bash-tools/.env file if exists
+# - BASH_FRAMEWORK_ENV_FILEPATH=<fullPathToEnvFile or empty if no file to be loaded>
+Env::load() {
+  if [[ "${BASH_FRAMEWORK_INITIALIZED}" = "1" ]]; then
+    return 0
   fi
+  (
+    # reset temp file
+    echo >"${BASH_FRAMEWORK_CACHED_ENV_FILE}"
 
-  Log::loadEnv
+    # ensure all sourced variables will be exported
+    set -o allexport
+
+    # 1. list .env files that need to be loaded
+    local -a files=(
+      "${BASH_FRAMEWORK_DEFAULT_ENV_FILE}"
+    )
+    if [[ -f "${ROOT_DIR}/conf/.env" && -r "${ROOT_DIR}/conf/.env" ]]; then
+      files+=("${ROOT_DIR}/conf/.env")
+    fi
+    if [[ -f "${HOME}/.env" && -r "${HOME}/.env" ]]; then
+      files+=("${HOME}/.env")
+    fi
+    local file
+    for file in "$@"; do
+      if [[ -f "${file}" && -r "${file}" ]]; then
+        files+=("${file}")
+      fi
+    done
+    # import custom .env file
+    if [[ -n "${BASH_FRAMEWORK_ENV_FILEPATH+xxx}" ]]; then
+      # load BASH_FRAMEWORK_ENV_FILEPATH
+      if [[ -f "${BASH_FRAMEWORK_ENV_FILEPATH}" && -r "${BASH_FRAMEWORK_ENV_FILEPATH}" ]]; then
+        files+=("${BASH_FRAMEWORK_ENV_FILEPATH}")
+      else
+        Log::fatal "env file not not found - ${BASH_FRAMEWORK_ENV_FILEPATH}"
+      fi
+    fi
+
+    # 2. source each file in order
+    local file
+    for file in "${files[@]}"; do
+      # shellcheck source=tests/data/.env
+      source "${file}" || {
+        Log::displayWarning "Cannot load '${file}'"
+      }
+    done
+
+    # 4. copy only the variables to the tmp file
+    local varName
+    while IFS=$'\n' read -r varName; do
+      echo "${varName}='${!varName}'" >>"${BASH_FRAMEWORK_CACHED_ENV_FILE}"
+
+      # 3. using awk deduce all variables that need to be copied in tmp file
+      #    from less specific file to the most
+    done < <(awk -F= '!a[$1]++' "${files[@]}" | grep -v '^$\|^\s*\#' | cut -d= -f1)
+    set +o allexport
+  )
+
+  # Finally load the temp file to make the variables available in current script
+  set -o allexport
+  # shellcheck source=tests/data/.env
+  source "${BASH_FRAMEWORK_CACHED_ENV_FILE}"
 
   export BASH_FRAMEWORK_INITIALIZED=1
 
   set +o allexport
 }
+
+# Public: log level off
+export __LEVEL_OFF=0
+# Public: log level error
+export __LEVEL_ERROR=1
+# Public: log level warning
+export __LEVEL_WARNING=2
+# Public: log level info
+export __LEVEL_INFO=3
+# Public: log level success
+export __LEVEL_SUCCESS=3
+# Public: log level debug
+export __LEVEL_DEBUG=4
+
+export __LEVEL_OFF
+export __LEVEL_ERROR
+export __LEVEL_WARNING
+export __LEVEL_INFO
+export __LEVEL_SUCCESS
+export __LEVEL_DEBUG
 
 if [[ -t 1 || -t 2 ]]; then
   # check colors applicable https://misc.flogisoft.com/bash/tip_colors_and_formatting
@@ -554,6 +360,7 @@ export __HELP_NORMAL
 # @param {String} $1 message
 Log::displayInfo() {
   echo -e "${__INFO_COLOR}INFO    - ${1}${__RESET_COLOR}" >&2
+  Log::logInfo "$1"
 }
 
 # Display message using error color (red) and exit immediately with error status 1
@@ -631,6 +438,262 @@ Profiles::getAbsoluteConfFile() {
   return 0
 }
 
+# Internal: check if dsn file has all the mandatory variables set
+# Mandatory variables are: HOSTNAME, USER, PASSWORD, PORT
+#
+# **Arguments**:
+# * $1 - dsn absolute filename
+#
+# Returns 0 on valid file, 1 otherwise with log output
+Database::checkDsnFile() {
+  local DSN_FILENAME="$1"
+  if [[ ! -f "${DSN_FILENAME}" ]]; then
+    Log::displayError "dsn file ${DSN_FILENAME} not found"
+    return 1
+  fi
+
+  (
+    unset HOSTNAME PORT PASSWORD USER
+    # shellcheck source=/tests/data/dsn_valid.env
+    source "${DSN_FILENAME}"
+    if [[ -z ${HOSTNAME+x} ]]; then
+      Log::displayError "dsn file ${DSN_FILENAME} : HOSTNAME not provided"
+      return 1
+    fi
+    if [[ -z "${HOSTNAME}" ]]; then
+      Log::displayWarning "dsn file ${DSN_FILENAME} : HOSTNAME value not provided"
+    fi
+    if [[ "${HOSTNAME}" = "localhost" ]]; then
+      Log::displayWarning "dsn file ${DSN_FILENAME} : check that HOSTNAME should not be 127.0.0.1 instead of localhost"
+    fi
+    if [[ -z "${PORT+x}" ]]; then
+      Log::displayError "dsn file ${DSN_FILENAME} : PORT not provided"
+      return 1
+    fi
+    if ! [[ ${PORT} =~ ^[0-9]+$ ]]; then
+      Log::displayError "dsn file ${DSN_FILENAME} : PORT invalid"
+      return 1
+    fi
+    if [[ -z "${USER+x}" ]]; then
+      Log::displayError "dsn file ${DSN_FILENAME} : USER not provided"
+      return 1
+    fi
+    if [[ -z "${PASSWORD+x}" ]]; then
+      Log::displayError "dsn file ${DSN_FILENAME} : PASSWORD not provided"
+      return 1
+    fi
+  )
+}
+
+# appends a command to a trap
+#
+# - 1st arg:  code to add
+# - remaining args:  names of traps to modify
+#
+Framework::trapAdd() {
+  local trapAddCmd="$1"
+  shift || Log::fatal "${FUNCNAME[0]} usage error"
+  # helper fn to get existing trap command from output
+  # of trap -p
+  extract_trap_cmd() { printf '%s\n' "$3"; }
+  for trapAddName in "$@"; do
+    trap -- "$(
+      # print existing trap command with newline
+      eval "extract_trap_cmd $(trap -p "${trapAddName}")"
+      # print the new trap command
+      printf '%s\n' "${trapAddCmd}"
+    )" "${trapAddName}" ||
+      Log::fatal "unable to add to trap ${trapAddName}"
+  done
+}
+
+# Display message using debug color (grey)
+# @param {String} $1 message
+Log::displayDebug() {
+  echo -e "${__DEBUG_COLOR}DEBUG   - ${1}${__RESET_COLOR}" >&2
+  Log::logDebug "$1"
+}
+
+# Display message using error color (red)
+# @param {String} $1 message
+Log::displayError() {
+  echo -e "${__ERROR_COLOR}ERROR   - ${1}${__RESET_COLOR}" >&2
+  Log::logError "$1"
+}
+
+# Display message using info color (bg light blue/fg white)
+# @param {String} $1 message
+Log::displayHelp() {
+  echo -e "${__INFO_COLOR}HELP    - ${1}${__RESET_COLOR}" >&2
+  Log::logHelp "$1"
+}
+
+# Display message using skip color (yellow)
+# @param {String} $1 message
+Log::displaySkipped() {
+  echo -e "${__SKIPPED_COLOR}SKIPPED - ${1}${__RESET_COLOR}" >&2
+  Log::logSkipped "$1"
+}
+
+# Display message using success color (bg green/fg white)
+# @param {String} $1 message
+Log::displaySuccess() {
+  echo -e "${__SUCCESS_COLOR}SUCCESS - ${1}${__RESET_COLOR}" >&2
+  Log::logSuccess "$1"
+}
+
+# Display message using warning color (yellow)
+# @param {String} $1 message
+Log::displayWarning() {
+  echo -e "${__WARNING_COLOR}WARN    - ${1}${__RESET_COLOR}" >&2
+  Log::logWarning "$1"
+}
+
+# log message to file
+# @param {String} $1 message
+Log::logDebug() {
+  Log::logMessage "DEBUG" "$@"
+}
+
+# log message to file
+# @param {String} $1 message
+Log::logError() {
+  Log::logMessage "ERROR" "$@"
+}
+
+# log message to file
+# @param {String} $1 message
+Log::logFatal() {
+  Log::logMessage "FATAL" "$@"
+}
+
+# log message to file
+# @param {String} $1 message
+Log::logHelp() {
+  Log::logMessage "HELP" "$@"
+}
+
+# log message to file
+# @param {String} $1 message
+Log::logInfo() {
+  Log::logMessage "INFO" "$@"
+}
+
+# log message to file
+# @param {String} $1 message
+Log::logSkipped() {
+  Log::logMessage "SKIPPED" "$@"
+}
+
+# log message to file
+# @param {String} $1 message
+Log::logSuccess() {
+  Log::logMessage "SUCCESS" "$@"
+}
+
+# log message to file
+# @param {String} $1 message
+Log::logWarning() {
+  Log::logMessage "WARNING" "$@"
+}
+
+# To be called before logging in the log file
+# @param $1 log file name
+# @param $2 maximum number of log files
+Log::rotate() {
+  local FILENAME="$1"
+  local MAX_LOG="${2:-5}"
+  for i in $(seq $((MAX_LOG - 1)) -1 1); do
+    Log::displayInfo "Log rotation ${FILENAME}.${i} to ${FILENAME}.$((i + 1))"
+    mv "${FILENAME}."{"${i}","$((i + 1))"} &>/dev/null || true
+  done
+  if mv "${FILENAME}" "${FILENAME}.1" &>/dev/null; then
+    Log::displayInfo "Log rotation ${FILENAME} to ${FILENAME}.1"
+  fi
+}
+
+# Internal: common log message
+#
+# **Arguments**:
+# * $1 - message's level description
+# * $2 - message
+# **Output**:
+# [date]|[levelMsg]|message
+#
+# **Examples**:
+# <pre>
+# 2020-01-19 19:20:21|ERROR  |log error
+# 2020-01-19 19:20:21|SKIPPED|log skipped
+# </pre>
+Log::logMessage() {
+  local levelMsg="$1"
+  local msg="$2"
+  local date
+
+  date="$(date '+%Y-%m-%d %H:%M:%S')"
+
+  printf "%s|%7s|%s\n" "${date}" "${levelMsg}" "${msg}" >>"${BASH_FRAMEWORK_LOG_FILE}"
+}
+
+# FUNCTIONS
+
+Env::load
+
+if [[ -z "${BASH_FRAMEWORK_LOG_FILE}" ]]; then
+  BASH_FRAMEWORK_LOG_LEVEL=${__LEVEL_OFF}
+  export BASH_FRAMEWORK_LOG_LEVEL
+elif [[ ! -f "${BASH_FRAMEWORK_LOG_FILE}" ]]; then
+  if ! mkdir -p "$(dirname "${BASH_FRAMEWORK_LOG_FILE}")" 2>/dev/null; then
+    Log::fatal "Log dir cannot be created $(dirname "${BASH_FRAMEWORK_LOG_FILE}")"
+  fi
+  if ! touch --no-create "${BASH_FRAMEWORK_LOG_FILE}" 2>/dev/null; then
+    Log::fatal "Log file '${BASH_FRAMEWORK_LOG_FILE}' cannot be created"
+  fi
+fi
+if ((BASH_FRAMEWORK_LOG_LEVEL > __LEVEL_OFF)); then
+  Log::displayInfo "Logging to file ${BASH_FRAMEWORK_LOG_FILE}"
+  if ((BASH_FRAMEWORK_LOG_FILE_MAX_ROTATION > 0)); then
+    Log::rotate "${BASH_FRAMEWORK_LOG_FILE}" "${BASH_FRAMEWORK_LOG_FILE_MAX_ROTATION}"
+  fi
+fi
+
+# disable display methods following display level
+if ((BASH_FRAMEWORK_DISPLAY_LEVEL > __LEVEL_DEBUG)); then
+  Log::displayDebug() { :; }
+fi
+if ((BASH_FRAMEWORK_DISPLAY_LEVEL > __LEVEL_ERROR)); then
+  Log::displayError() { :; }
+fi
+if ((BASH_FRAMEWORK_DISPLAY_LEVEL > __LEVEL_INFO)); then
+  Log::displayHelp() { :; }
+  Log::displayInfo() { :; }
+  Log::displaySkipped() { :; }
+  Log::displaySuccess() { :; }
+fi
+if ((BASH_FRAMEWORK_DISPLAY_LEVEL > __LEVEL_WARNING)); then
+  Log::displayWarning() { :; }
+fi
+
+# disable log methods following log level
+if ((BASH_FRAMEWORK_LOG_LEVEL > __LEVEL_DEBUG)); then
+  Log::logDebug() { :; }
+fi
+if ((BASH_FRAMEWORK_LOG_LEVEL > __LEVEL_ERROR)); then
+  Log::logError() { :; }
+  Log::logFatal() {
+    Log::fatal "$1"
+  }
+fi
+if ((BASH_FRAMEWORK_LOG_LEVEL > __LEVEL_INFO)); then
+  Log::logHelp() { :; }
+  Log::logInfo() { :; }
+  Log::logSkipped() { :; }
+  Log::logSuccess() { :; }
+fi
+if ((BASH_FRAMEWORK_LOG_LEVEL > __LEVEL_WARNING)); then
+  Log::logWarning() { :; }
+fi
+
 ############################################################
 # INTERNAL USE ONLY
 # USED BY bin/dbScriptAllDatabases sub scripts
@@ -638,7 +701,7 @@ Profiles::getAbsoluteConfFile() {
 ############################################################
 Assert::expectNonRootUser
 
-Framework::loadEnv
+Env::load
 
 declare DSN="$1"
 # shellcheck disable=SC2034

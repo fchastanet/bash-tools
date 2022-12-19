@@ -6,7 +6,6 @@
 <!-- markdownlint-capture -->
 <!-- markdownlint-disable MD013 -->
 
-Build status:
 [![CI/CD](https://github.com/fchastanet/bash-tools/actions/workflows/lint-test.yml/badge.svg)](https://github.com/fchastanet/bash-tools/actions?query=workflow%3A%22Lint+and+test%22+branch%3Amaster)
 [![Project Status](http://opensource.box.com/badges/active.svg)](http://opensource.box.com/badges)
 [![DeepSource](https://deepsource.io/gh/fchastanet/bash-tools.svg/?label=active+issues&show_trend=true)](https://deepsource.io/gh/fchastanet/bash-tools/?ref=repository-badge)

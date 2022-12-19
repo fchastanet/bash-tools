@@ -6,10 +6,7 @@
 
 Assert::expectNonRootUser
 
-Framework::loadEnv
-
-# make bash-tools folder available for db scripts
-export BASH_TOOLS_FOLDER
+Env::load
 
 # ensure that Ctrl-C is trapped by this script and not sub mysql process
 trap 'exit 130' INT

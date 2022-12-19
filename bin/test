@@ -62,13 +62,6 @@ export TERM=xterm-256color
 export DEBIAN_FRONTEND=noninteractive
 export DEBCONF_NONINTERACTIVE_SEEN=true
 
-# FUNCTIONS
-
-Args::showHelp() {
-  local helpArg="$1"
-  echo -e "${helpArg}"
-}
-
 Args::defaultHelpNoExit() {
   local helpArg="$1"
   shift || true
@@ -92,6 +85,13 @@ Args::defaultHelpNoExit() {
     esac
   done
 }
+
+Args::showHelp() {
+  local helpArg="$1"
+  echo -e "${helpArg}"
+}
+
+# FUNCTIONS
 
 HELP="$(
   cat <<EOF

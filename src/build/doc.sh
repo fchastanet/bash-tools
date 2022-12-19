@@ -63,7 +63,6 @@ mkdir -p ~/.bash-tools
   cd "${ROOT_DIR}" || exit 1
   cp -R conf/. ~/.bash-tools
   sed -i \
-    -e "s@^BASH_TOOLS_FOLDER=.*@BASH_TOOLS_FOLDER=$(pwd)@g" \
     -e "s@^S3_BASE_URL=.*@S3_BASE_URL=s3://example.com/exports/@g" \
     ~/.bash-tools/.env
   # fake docker command

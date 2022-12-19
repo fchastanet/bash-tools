@@ -9,7 +9,7 @@
 ############################################################
 Assert::expectNonRootUser
 
-Framework::loadEnv
+Env::load
 
 declare DSN="$1"
 # shellcheck disable=SC2034

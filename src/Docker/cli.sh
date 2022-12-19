@@ -6,7 +6,7 @@
 
 Assert::expectNonRootUser
 
-Framework::loadEnv
+Env::load
 
 # ensure that Ctrl-C is trapped by this script
 trap 'exit 130' INT

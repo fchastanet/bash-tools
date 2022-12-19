@@ -27,5 +27,4 @@ if [[ -d "${HOME}/.bash-tools" ]]; then
 else
   mkdir -p ~/.bash-tools
   cp -R conf/. ~/.bash-tools
-  sed -i -e "s@^BASH_TOOLS_FOLDER=.*@BASH_TOOLS_FOLDER=$(pwd)@g" ~/.bash-tools/.env
 fi
