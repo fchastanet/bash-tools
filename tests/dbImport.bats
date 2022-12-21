@@ -4,8 +4,10 @@ rootDir="$(cd "${BATS_TEST_DIRNAME}/.." && pwd)"
 binDir="${rootDir}/bin"
 vendorDir="${rootDir}/vendor"
 
-# shellcheck source=vendor/bash-tools-framework/src/Log/_.sh
-source "${vendorDir}/bash-tools-framework/src/Log/_.sh" || exit 1
+# shellcheck source=vendor/bash-tools-framework/src/Env/load.sh
+source "${vendorDir}/bash-tools-framework/src/Env/load.sh" || exit 1
+# shellcheck source=vendor/bash-tools-framework/src/Log/_all.sh
+FRAMEWORK_DIR="${vendorDir}/bash-tools-framework" source "${vendorDir}/bash-tools-framework/src/Log/__all.sh" || exit 1
 
 load "${vendorDir}/bats-support/load.bash"
 load "${vendorDir}/bats-assert/load.bash"
@@ -30,6 +32,8 @@ setup() {
     chmod +x bin/*
   )
   export PATH="${PATH}:/tmp/home/bin"
+
+  unset BASH_FRAMEWORK_ENV_FILEPATH
 }
 
 teardown() {
@@ -82,6 +86,9 @@ function missing_aws { #@test
 
 function tables_invalid { #@test
   stub aws
+
+  export BASH_FRAMEWORK_ENV_FILEPATH="${rootDir}/tests/data/.env"
+
   # missing argument
   run "${binDir}/dbImport" -a fromDb --tables 2>&1
   assert_output --partial "FATAL   - invalid options specified"
@@ -106,6 +113,9 @@ function tables_invalid { #@test
 function aws_file_not_found { #@test
   stub aws \
     "s3 ls --human-readable s3://s3server/exports/fromDb : exit 1"
+
+  export BASH_FRAMEWORK_ENV_FILEPATH="${rootDir}/tests/data/.env"
+
   run "${binDir}/dbImport" -a fromDb 2>&1
   assert_output --partial "FATAL   - unable to get information on S3 object : s3://s3server/exports/fromDb"
 }
@@ -146,6 +156,8 @@ function remote_db_fully_functional { #@test
     "\* : echo 'structure'" \
     "\* : cat ${BATS_TEST_DIRNAME}/data/dumpMissingSchema.sql"
 
+  export BASH_FRAMEWORK_ENV_FILEPATH="${rootDir}/tests/data/.env"
+
   run "${binDir}/dbImport" -f default.local fromDb toDb 2>&1
   unstub zcat
   assert_output --partial "Import database duration : "
@@ -175,6 +187,8 @@ function remote_db_dump_already_present { #@test
     $'* --batch --raw --default-character-set=utf8 --connect-timeout=5 -s --skip-column-names -e \'CREATE DATABASE IF NOT EXISTS `toDb` CHARACTER SET "utf8" COLLATE "utf8_general_ci"\' : echo "db created"' \
     "\* --connect-timeout=5 --batch --raw --default-character-set=utf8 -s --skip-column-names toDb : echo 'import structure dump'" \
     $'* --connect-timeout=5 --batch --raw --default-character-set=utf8  toDb : i=0 ; while read line; do ((i=i+1)); echo "line $i"; done < /dev/stdin'
+
+  export BASH_FRAMEWORK_ENV_FILEPATH="${rootDir}/tests/data/.env"
 
   run "${binDir}/dbImport" -f default.local fromDb toDb 2>&1
 
@@ -206,6 +220,8 @@ function remote_db_fully_functional_from_aws { #@test
     $'* --batch --raw --default-character-set=utf8 --connect-timeout=5 -s --skip-column-names -e \'CREATE DATABASE IF NOT EXISTS `toDb` CHARACTER SET "utf8" COLLATE "utf8_general_ci"\' : echo "db created"' \
     $'* --connect-timeout=5  --batch --raw --default-character-set=utf8 toDb : i=0 ; while read line; do ((i=i+1)); echo "line $i"; done < /dev/stdin'
 
+  export BASH_FRAMEWORK_ENV_FILEPATH="${rootDir}/tests/data/.env"
+
   run "${binDir}/dbImport" --from-aws fromDb.tar.gz toDb 2>&1
 
   assert_output --partial "Import database duration : "
@@ -224,6 +240,8 @@ function remote_db_dump_already_present_from_aws { #@test
   stub mysql \
     $'* --batch --raw --default-character-set=utf8 --connect-timeout=5 -s --skip-column-names -e \'CREATE DATABASE IF NOT EXISTS `toDb` CHARACTER SET "utf8" COLLATE "utf8_general_ci"\' : echo "db created"' \
     $'* --connect-timeout=5  --batch --raw --default-character-set=utf8 toDb : i=0 ; while read line; do ((i=i+1)); echo "line $i"; done < /dev/stdin'
+
+  export BASH_FRAMEWORK_ENV_FILEPATH="${rootDir}/tests/data/.env"
 
   run "${binDir}/dbImport" --from-aws fromDb.tar.gz toDb 2>&1
 
@@ -272,6 +290,9 @@ function import_from_aws_with_tables_filter { #@test
   stub mysql \
     $'* --batch --raw --default-character-set=utf8 --connect-timeout=5 -s --skip-column-names -e \'CREATE DATABASE IF NOT EXISTS `toDb` CHARACTER SET "utf8" COLLATE "utf8_general_ci"\' : echo "db created"' \
     $'* --connect-timeout=5  --batch --raw --default-character-set=utf8 toDb : i=0 ; while read line; do ((i=i+1)); echo "line $i"; done < /dev/stdin'
+
+  export BASH_FRAMEWORK_ENV_FILEPATH="${rootDir}/tests/data/.env"
+
   run "${binDir}/dbImport" --from-aws fromDb.tar.gz toDb --tables dataTable,otherTable 2>&1
 
   assert_output --partial "Import database duration : "

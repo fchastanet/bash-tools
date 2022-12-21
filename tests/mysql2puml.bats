@@ -1,13 +1,20 @@
 #!/usr/bin/env bash
 
-binDir="$(cd "${BATS_TEST_DIRNAME}/../bin" && pwd)"
-vendorDir="$(cd "${BATS_TEST_DIRNAME}/../vendor" && pwd)"
+rootDir="$(cd "${BATS_TEST_DIRNAME}/.." && pwd)"
+binDir="${rootDir}/bin"
+vendorDir="${rootDir}/vendor"
 
 load "${vendorDir}/bats-support/load.bash"
 load "${vendorDir}/bats-assert/load.bash"
 
-# shellcheck source=vendor/bash-tools-framework/src/Log/_.sh
-source "${vendorDir}/bash-tools-framework/src/Log/_.sh" || exit 1
+# shellcheck source=vendor/bash-tools-framework/src/Env/load.sh
+source "${vendorDir}/bash-tools-framework/src/Env/load.sh" || exit 1
+# shellcheck source=vendor/bash-tools-framework/src/Log/_all.sh
+FRAMEWORK_DIR="${vendorDir}/bash-tools-framework" source "${vendorDir}/bash-tools-framework/src/Log/__all.sh" || exit 1
+
+setup() {
+  export BASH_FRAMEWORK_ENV_FILEPATH="${rootDir}/tests/data/.env"
+}
 
 function display_help { #@test
   run "${binDir}/mysql2puml" --help 2>&1

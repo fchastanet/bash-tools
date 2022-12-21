@@ -808,8 +808,8 @@ Profiles::list() {
     # shellcheck disable=SC2086
     cd "${DIR}" &&
       find . -maxdepth 1 ${FIND_OPTIONS} -name "${PREFIX}*${extension}" |
-      sed "s#^\./${PREFIX}##g" |
-        sed "s/${EXT}$//g" | sort | sed "s/^/${INDENT_STR}/"
+      sed -E "s#^\./${PREFIX}##g" |
+        sed -E "s/${EXT}$//g" | sort | sed -E "s/^/${INDENT_STR}/"
   )
 }
 
@@ -848,7 +848,7 @@ Version::compare() {
 # filter to keep only version number from a string
 # @stdin the string to parse
 Version::parse() {
-  sed -nre 's/[^0-9]*(([0-9]+\.)*[0-9]+).*/\1/p' | head -n1
+  sed -En 's/[^0-9]*(([0-9]+\.)*[0-9]+).*/\1/p' | head -n1
 }
 
 # Internal: common log message
@@ -868,28 +868,30 @@ Log::logMessage() {
   local levelMsg="$1"
   local msg="$2"
   local date
-
-  date="$(date '+%Y-%m-%d %H:%M:%S')"
-
-  printf "%s|%7s|%s\n" "${date}" "${levelMsg}" "${msg}" >>"${BASH_FRAMEWORK_LOG_FILE}"
+  if ((BASH_FRAMEWORK_LOG_LEVEL > __LEVEL_OFF)) && [[ -f "${BASH_FRAMEWORK_LOG_FILE}" ]]; then
+    date="$(date '+%Y-%m-%d %H:%M:%S')"
+    printf "%s|%7s|%s\n" "${date}" "${levelMsg}" "${msg}" >>"${BASH_FRAMEWORK_LOG_FILE}"
+  fi
 }
 
 # FUNCTIONS
 
 Env::load
 
-if [[ -z "${BASH_FRAMEWORK_LOG_FILE}" ]]; then
-  BASH_FRAMEWORK_LOG_LEVEL=${__LEVEL_OFF}
-  export BASH_FRAMEWORK_LOG_LEVEL
-elif [[ ! -f "${BASH_FRAMEWORK_LOG_FILE}" ]]; then
-  if ! mkdir -p "$(dirname "${BASH_FRAMEWORK_LOG_FILE}")" 2>/dev/null; then
-    Log::fatal "Log dir cannot be created $(dirname "${BASH_FRAMEWORK_LOG_FILE}")"
-  fi
-  if ! touch --no-create "${BASH_FRAMEWORK_LOG_FILE}" 2>/dev/null; then
-    Log::fatal "Log file '${BASH_FRAMEWORK_LOG_FILE}' cannot be created"
-  fi
-fi
 if ((BASH_FRAMEWORK_LOG_LEVEL > __LEVEL_OFF)); then
+  if [[ -z "${BASH_FRAMEWORK_LOG_FILE}" ]]; then
+    BASH_FRAMEWORK_LOG_LEVEL=${__LEVEL_OFF}
+    export BASH_FRAMEWORK_LOG_LEVEL
+  elif [[ ! -f "${BASH_FRAMEWORK_LOG_FILE}" ]]; then
+    if ! mkdir -p "$(dirname "${BASH_FRAMEWORK_LOG_FILE}")" 2>/dev/null; then
+      BASH_FRAMEWORK_LOG_LEVEL=__LEVEL_OFF
+      Log::displayWarning "Log dir cannot be created $(dirname "${BASH_FRAMEWORK_LOG_FILE}")"
+    fi
+    if ! touch --no-create "${BASH_FRAMEWORK_LOG_FILE}" 2>/dev/null; then
+      BASH_FRAMEWORK_LOG_LEVEL=__LEVEL_OFF
+      Log::displayWarning "Log file '${BASH_FRAMEWORK_LOG_FILE}' cannot be created"
+    fi
+  fi
   Log::displayInfo "Logging to file ${BASH_FRAMEWORK_LOG_FILE}"
   if ((BASH_FRAMEWORK_LOG_FILE_MAX_ROTATION > 0)); then
     Log::rotate "${BASH_FRAMEWORK_LOG_FILE}" "${BASH_FRAMEWORK_LOG_FILE_MAX_ROTATION}"
@@ -897,40 +899,39 @@ if ((BASH_FRAMEWORK_LOG_LEVEL > __LEVEL_OFF)); then
 fi
 
 # disable display methods following display level
-if ((BASH_FRAMEWORK_DISPLAY_LEVEL > __LEVEL_DEBUG)); then
+if ((BASH_FRAMEWORK_DISPLAY_LEVEL < __LEVEL_DEBUG)); then
   Log::displayDebug() { :; }
 fi
-if ((BASH_FRAMEWORK_DISPLAY_LEVEL > __LEVEL_ERROR)); then
-  Log::displayError() { :; }
-fi
-if ((BASH_FRAMEWORK_DISPLAY_LEVEL > __LEVEL_INFO)); then
+if ((BASH_FRAMEWORK_DISPLAY_LEVEL < __LEVEL_INFO)); then
   Log::displayHelp() { :; }
   Log::displayInfo() { :; }
   Log::displaySkipped() { :; }
   Log::displaySuccess() { :; }
 fi
-if ((BASH_FRAMEWORK_DISPLAY_LEVEL > __LEVEL_WARNING)); then
+if ((BASH_FRAMEWORK_DISPLAY_LEVEL < __LEVEL_WARNING)); then
   Log::displayWarning() { :; }
 fi
-
+if ((BASH_FRAMEWORK_DISPLAY_LEVEL < __LEVEL_ERROR)); then
+  Log::displayError() { :; }
+fi
 # disable log methods following log level
-if ((BASH_FRAMEWORK_LOG_LEVEL > __LEVEL_DEBUG)); then
+if ((BASH_FRAMEWORK_LOG_LEVEL < __LEVEL_DEBUG)); then
   Log::logDebug() { :; }
 fi
-if ((BASH_FRAMEWORK_LOG_LEVEL > __LEVEL_ERROR)); then
-  Log::logError() { :; }
-  Log::logFatal() {
-    Log::fatal "$1"
-  }
-fi
-if ((BASH_FRAMEWORK_LOG_LEVEL > __LEVEL_INFO)); then
+if ((BASH_FRAMEWORK_LOG_LEVEL < __LEVEL_INFO)); then
   Log::logHelp() { :; }
   Log::logInfo() { :; }
   Log::logSkipped() { :; }
   Log::logSuccess() { :; }
 fi
-if ((BASH_FRAMEWORK_LOG_LEVEL > __LEVEL_WARNING)); then
+if ((BASH_FRAMEWORK_LOG_LEVEL < __LEVEL_WARNING)); then
   Log::logWarning() { :; }
+fi
+if ((BASH_FRAMEWORK_LOG_LEVEL < __LEVEL_ERROR)); then
+  Log::logError() { :; }
+  Log::logFatal() {
+    Log::fatal "$1"
+  }
 fi
 
 Assert::expectNonRootUser

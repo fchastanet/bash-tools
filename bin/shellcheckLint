@@ -392,7 +392,7 @@ Version::compare() {
 # filter to keep only version number from a string
 # @stdin the string to parse
 Version::parse() {
-  sed -nre 's/[^0-9]*(([0-9]+\.)*[0-9]+).*/\1/p' | head -n1
+  sed -En 's/[^0-9]*(([0-9]+\.)*[0-9]+).*/\1/p' | head -n1
 }
 
 # lazy initialization
@@ -582,6 +582,7 @@ Log::rotate() {
 # @param {String} $3 message to display to describe the attempt
 # @param ...      $@ rest of parameters, the command to run
 # @return 0 on success, 1 if max retries count reached
+# @return 2 if maxRetries invalid value
 Retry::parameterized() {
   local maxRetries=$1
   shift || true
@@ -590,11 +591,15 @@ Retry::parameterized() {
   local message="$1"
   shift || true
   local retriesCount=1
+  if [[ "${maxRetries}" -lt 1 ]]; then
+    Log::displayError "invalid maxRetry value"
+  fi
+
   while true; do
     Log::displayInfo "Attempt ${retriesCount}/${maxRetries}: ${message}"
     if "$@"; then
       break
-    elif [[ ${retriesCount} -le ${maxRetries} ]]; then
+    elif [[ "${retriesCount}" -lt "${maxRetries}" ]]; then
       Log::displayWarning "Command failed. Wait for ${delayBetweenTries} seconds"
       ((retriesCount++))
       sleep "${delayBetweenTries}"
@@ -629,28 +634,30 @@ Log::logMessage() {
   local levelMsg="$1"
   local msg="$2"
   local date
-
-  date="$(date '+%Y-%m-%d %H:%M:%S')"
-
-  printf "%s|%7s|%s\n" "${date}" "${levelMsg}" "${msg}" >>"${BASH_FRAMEWORK_LOG_FILE}"
+  if ((BASH_FRAMEWORK_LOG_LEVEL > __LEVEL_OFF)) && [[ -f "${BASH_FRAMEWORK_LOG_FILE}" ]]; then
+    date="$(date '+%Y-%m-%d %H:%M:%S')"
+    printf "%s|%7s|%s\n" "${date}" "${levelMsg}" "${msg}" >>"${BASH_FRAMEWORK_LOG_FILE}"
+  fi
 }
 
 # FUNCTIONS
 
 Env::load
 
-if [[ -z "${BASH_FRAMEWORK_LOG_FILE}" ]]; then
-  BASH_FRAMEWORK_LOG_LEVEL=${__LEVEL_OFF}
-  export BASH_FRAMEWORK_LOG_LEVEL
-elif [[ ! -f "${BASH_FRAMEWORK_LOG_FILE}" ]]; then
-  if ! mkdir -p "$(dirname "${BASH_FRAMEWORK_LOG_FILE}")" 2>/dev/null; then
-    Log::fatal "Log dir cannot be created $(dirname "${BASH_FRAMEWORK_LOG_FILE}")"
-  fi
-  if ! touch --no-create "${BASH_FRAMEWORK_LOG_FILE}" 2>/dev/null; then
-    Log::fatal "Log file '${BASH_FRAMEWORK_LOG_FILE}' cannot be created"
-  fi
-fi
 if ((BASH_FRAMEWORK_LOG_LEVEL > __LEVEL_OFF)); then
+  if [[ -z "${BASH_FRAMEWORK_LOG_FILE}" ]]; then
+    BASH_FRAMEWORK_LOG_LEVEL=${__LEVEL_OFF}
+    export BASH_FRAMEWORK_LOG_LEVEL
+  elif [[ ! -f "${BASH_FRAMEWORK_LOG_FILE}" ]]; then
+    if ! mkdir -p "$(dirname "${BASH_FRAMEWORK_LOG_FILE}")" 2>/dev/null; then
+      BASH_FRAMEWORK_LOG_LEVEL=__LEVEL_OFF
+      Log::displayWarning "Log dir cannot be created $(dirname "${BASH_FRAMEWORK_LOG_FILE}")"
+    fi
+    if ! touch --no-create "${BASH_FRAMEWORK_LOG_FILE}" 2>/dev/null; then
+      BASH_FRAMEWORK_LOG_LEVEL=__LEVEL_OFF
+      Log::displayWarning "Log file '${BASH_FRAMEWORK_LOG_FILE}' cannot be created"
+    fi
+  fi
   Log::displayInfo "Logging to file ${BASH_FRAMEWORK_LOG_FILE}"
   if ((BASH_FRAMEWORK_LOG_FILE_MAX_ROTATION > 0)); then
     Log::rotate "${BASH_FRAMEWORK_LOG_FILE}" "${BASH_FRAMEWORK_LOG_FILE_MAX_ROTATION}"
@@ -658,40 +665,39 @@ if ((BASH_FRAMEWORK_LOG_LEVEL > __LEVEL_OFF)); then
 fi
 
 # disable display methods following display level
-if ((BASH_FRAMEWORK_DISPLAY_LEVEL > __LEVEL_DEBUG)); then
+if ((BASH_FRAMEWORK_DISPLAY_LEVEL < __LEVEL_DEBUG)); then
   Log::displayDebug() { :; }
 fi
-if ((BASH_FRAMEWORK_DISPLAY_LEVEL > __LEVEL_ERROR)); then
-  Log::displayError() { :; }
-fi
-if ((BASH_FRAMEWORK_DISPLAY_LEVEL > __LEVEL_INFO)); then
+if ((BASH_FRAMEWORK_DISPLAY_LEVEL < __LEVEL_INFO)); then
   Log::displayHelp() { :; }
   Log::displayInfo() { :; }
   Log::displaySkipped() { :; }
   Log::displaySuccess() { :; }
 fi
-if ((BASH_FRAMEWORK_DISPLAY_LEVEL > __LEVEL_WARNING)); then
+if ((BASH_FRAMEWORK_DISPLAY_LEVEL < __LEVEL_WARNING)); then
   Log::displayWarning() { :; }
 fi
-
+if ((BASH_FRAMEWORK_DISPLAY_LEVEL < __LEVEL_ERROR)); then
+  Log::displayError() { :; }
+fi
 # disable log methods following log level
-if ((BASH_FRAMEWORK_LOG_LEVEL > __LEVEL_DEBUG)); then
+if ((BASH_FRAMEWORK_LOG_LEVEL < __LEVEL_DEBUG)); then
   Log::logDebug() { :; }
 fi
-if ((BASH_FRAMEWORK_LOG_LEVEL > __LEVEL_ERROR)); then
-  Log::logError() { :; }
-  Log::logFatal() {
-    Log::fatal "$1"
-  }
-fi
-if ((BASH_FRAMEWORK_LOG_LEVEL > __LEVEL_INFO)); then
+if ((BASH_FRAMEWORK_LOG_LEVEL < __LEVEL_INFO)); then
   Log::logHelp() { :; }
   Log::logInfo() { :; }
   Log::logSkipped() { :; }
   Log::logSuccess() { :; }
 fi
-if ((BASH_FRAMEWORK_LOG_LEVEL > __LEVEL_WARNING)); then
+if ((BASH_FRAMEWORK_LOG_LEVEL < __LEVEL_WARNING)); then
   Log::logWarning() { :; }
+fi
+if ((BASH_FRAMEWORK_LOG_LEVEL < __LEVEL_ERROR)); then
+  Log::logError() { :; }
+  Log::logFatal() {
+    Log::fatal "$1"
+  }
 fi
 
 DEFAULT_ARGS=(--check-sourced -x -f checkstyle)

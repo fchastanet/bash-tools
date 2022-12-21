@@ -73,6 +73,17 @@ repos:
         fail_fast: true
         verbose: true
 
+  - repo: local
+    hooks:
+      - id: run-unit-tests
+        name: run-unit-tests
+        entry: bash -c './bin/test'
+        language: system
+        always_run: true
+        require_serial: true
+        fail_fast: true
+        verbose: true
+
   ## Python, Polyglot, Git, pre-commit
   - repo: https://github.com/ScribeMD/pre-commit-hooks
     rev: 0.15.0

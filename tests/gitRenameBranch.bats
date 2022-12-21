@@ -1,15 +1,17 @@
 #!/usr/bin/env bash
-
-binDir="$(cd "${BATS_TEST_DIRNAME}/../bin" && pwd)"
-vendorDir="$(cd "${BATS_TEST_DIRNAME}/../vendor" && pwd)"
+rootDir="$(cd "${BATS_TEST_DIRNAME}/.." && pwd)"
+binDir="${rootDir}/bin"
+vendorDir="${rootDir}/vendor"
 
 load "${vendorDir}/bash-tools-framework/src/Bats/assert_lines_count.sh"
 load "${vendorDir}/bats-assert/load.bash"
 load "${vendorDir}/bats-support/load.bash"
 load "${vendorDir}/bats-assert/load.bash"
 
-# shellcheck source=vendor/bash-tools-framework/src/Log/_.sh
-source "${vendorDir}/bash-tools-framework/src/Log/_.sh" || exit 1
+# shellcheck source=vendor/bash-tools-framework/src/Env/load.sh
+source "${vendorDir}/bash-tools-framework/src/Env/load.sh" || exit 1
+# shellcheck source=vendor/bash-tools-framework/src/Log/_all.sh
+FRAMEWORK_DIR="${vendorDir}/bash-tools-framework" source "${vendorDir}/bash-tools-framework/src/Log/__all.sh" || exit 1
 
 setup() {
   rm -Rf /tmp/gitRepo || true
@@ -25,6 +27,8 @@ setup() {
   git commit -m 'test'
   git checkout -b main master
   git checkout -b oldBranch master
+
+  export BASH_FRAMEWORK_ENV_FILEPATH="${rootDir}/tests/data/.env"
 }
 
 teardown() {
