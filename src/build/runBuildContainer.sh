@@ -28,7 +28,7 @@ if [[ ! -d "${ROOT_DIR}/vendor" ]]; then
   "${BIN_DIR}/installDevRequirements"
 fi
 
-if [[ "${SKIP_BUILD:-0}" = "0" ]]; then
+if [[ "${SKIP_BUILD:-0}" = "0" && -f "${ROOT_DIR}/.docker/DockerfileUser" ]]; then
   "${BIN_DIR}/buildPushDockerImages" "${VENDOR}" "${BASH_TAR_VERSION}" "${BASH_IMAGE}"
 
   # build docker image with user configuration
@@ -40,9 +40,9 @@ if [[ "${SKIP_BUILD:-0}" = "0" ]]; then
     --build-arg SKIP_USER="${SKIP_USER:-0}" \
     --build-arg USER_ID="$(id -u)" \
     --build-arg GROUP_ID="$(id -g)" \
-    -f .docker/DockerfileUser \
+    -f "${ROOT_DIR}/.docker/DockerfileUser" \
     -t "bash-tools-${VENDOR}-${BASH_TAR_VERSION}-user" \
-    ".docker"
+    "${ROOT_DIR}/.docker"
 fi
 
 # run tests
