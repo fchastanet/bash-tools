@@ -744,17 +744,5 @@ fi
 (
   # shellcheck disable=SC2046
   LC_ALL=C.UTF-8 shellcheck "$@" \
-    $(
-      find . -type f -executable \
-        -not -path './vendor/*' \
-        -not -path './.git/*' \
-        -not -path './megalinter-reports/*' \
-        -not -path './bin/hadolint' \
-        -not -path './bin/shellcheck' \
-        -not -path './.docker/*' \
-        -not -path './.history/*' \
-        -not -path './tests/data/*' \
-        -regextype posix-egrep \
-        ! -regex '.*\.(awk)$'
-    )
+    $(git ls-files | grep -E '\.(sh|bats)$')
 )
