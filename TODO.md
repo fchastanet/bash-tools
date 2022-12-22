@@ -1,5 +1,6 @@
 # Todo
 
+- add https://github.com/fchastanet/bash-tools in help of each command
 - refact buildPushDockerImages/runBuildContainer so it is independent of
   bash-tools
 - dbImportStream ability to import from dbAuthFile internally or from db

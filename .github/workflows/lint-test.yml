@@ -25,14 +25,15 @@ jobs:
       - name: Install vendors
         run: ./bin/installRequirements
 
-      - name: Linting - Dockerfile
-        run: ./bin/dockerLint | tee logs/docker-checkstyle.xml
-
       - name: Linting - Shellcheck
-        run: ./bin/shellcheckLint | tee logs/shellcheck-checkstyle.xml
+        run:
+          ./vendor/bash-tools-framework/bin/shellcheckLint | tee
+          logs/shellcheck-checkstyle.xml
 
       - name: Linting - Awk
-        run: ./bin/awkLint | tee logs/awk-checkstyle.xml
+        run:
+          ./vendor/bash-tools-framework/bin/awkLint | tee
+          logs/awk-checkstyle.xml
 
       - name: build bin files + check md5
         run:
@@ -57,7 +58,7 @@ jobs:
           name: lint
           status: ${{ job.status }}
 
-  buildDockerImagesAndTest:
+  tests:
     needs: linters
     runs-on: ubuntu-22.04
     strategy:
@@ -82,25 +83,14 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
 
-      - name: Login to DockerHub
-        uses: docker/login-action@v2
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-
       - uses: ouzi-dev/commit-status-updater@v2
         with:
           name: build bash-tools-${{matrix.vendor}}-${{matrix.bashTarVersion}}
           status: pending
 
-      - name: Pull/Build/Push docker image
-        env:
-          BRANCH: ${{ github.ref }}
-          PUSH: push
-        run:
-          ./bin/buildPushDockerImages "${{matrix.vendor}}"
-          "${{matrix.bashTarVersion}}" "${{matrix.bashImage}}" "${BRANCH}"
-          "${PUSH}"
+      - name: Pull image
+        run: |
+          docker pull "scrasnups/build:bash-tools-${{matrix.vendor}}-${{matrix.bashTarVersion}}:master"
 
       - name: Check image
         run: |
@@ -117,7 +107,7 @@ jobs:
           BASH_IMAGE="${{ matrix.bashImage }}" \
           SKIP_BUILD=0 \
           SKIP_USER=1 \
-          ./bin/test --report-formatter junit -o logs -r tests
+          vendor/bash-tools-framework/bin/test --report-formatter junit -o logs -r tests
 
       - name: Publish Unit Test Results
         uses: EnricoMi/publish-unit-test-result-action@v1
@@ -135,7 +125,7 @@ jobs:
     if: ${{ always() }}
     runs-on: ubuntu-latest
     name: Final Build Results
-    needs: [buildDockerImagesAndTest]
+    needs: [linters, tests]
     steps:
       # run this action to get the workflow conclusion
       # You can get the conclusion via env (env.WORKFLOW_CONCLUSION)
