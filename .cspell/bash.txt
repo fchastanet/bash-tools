@@ -107,3 +107,4 @@ WORKDIR
 userdel
 addgroup
 MPFR
+canonicalize

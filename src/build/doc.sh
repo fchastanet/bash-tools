@@ -24,7 +24,7 @@ replaceTokenByInput() {
 
     cat - | Filters::escapeColorCodes >"${tokenFile}"
 
-    sed -i \
+    sed -E -i \
       -e "/${token}/r ${tokenFile}" \
       -e "/${token}/d" \
       "${targetFile}"
@@ -82,7 +82,7 @@ generateMdFileFromTemplate \
   "${BIN_DIR}"
 
 # inject plantuml diagram source code into command
-sed -i \
+sed -E -i \
   -e "/@@@mysql2puml_plantuml_diagram@@@/r ${ROOT_DIR}/tests/data/mysql2puml.puml" \
   -e "/@@@mysql2puml_plantuml_diagram@@@/d" \
   "${DOC_DIR}/Commands.md"

@@ -77,6 +77,11 @@ if ! Assert::fileWritable "${indexFile}"; then
   Log::fatal "File ${indexFile} is not writeable"
 fi
 
+# reset index file
+if [[ -f "${indexFile}" ]]; then
+  echo >"${indexFile}"
+fi
+
 ShellDoc::generateShellDocsFromDir \
   "${fromDir}" \
   "${docDir}" \
