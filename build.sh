@@ -19,6 +19,7 @@ if (($# == 0)); then
   done < <(find "${SRC_DIR}" -name "*.sh")
 else
   for file in "$@"; do
+    file="$(realpath "${file}")"
     "${FRAMEWORK_DIR}/bin/constructBinFile" "${file}" "${SRC_DIR}" "${BIN_DIR}" "${ROOT_DIR}"
   done
 fi
