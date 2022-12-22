@@ -8,3 +8,12 @@
 /jekyll/_site
 /jekyll/bashDoc
 /jekyll/tests
+
+# bash-tools-framework binaries
+/bin/awkLint
+/bin/buildPushDockerImages
+/bin/dockerLint
+/bin/generateShellDoc
+/bin/runBuildContainer
+/bin/shellcheckLint
+/bin/test

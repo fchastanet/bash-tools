@@ -172,6 +172,13 @@ export __HELP_EXAMPLE
 export __HELP_TITLE
 export __HELP_NORMAL
 
+# Display message using info color (bg light blue/fg white)
+# @param {String} $1 message
+Log::displayInfo() {
+  echo -e "${__INFO_COLOR}INFO    - ${1}${__RESET_COLOR}" >&2
+  Log::logInfo "$1"
+}
+
 # Display message using error color (red) and exit immediately with error status 1
 # @param {String} $1 message
 Log::fatal() {
@@ -332,13 +339,6 @@ Log::displayError() {
 Log::displayHelp() {
   echo -e "${__INFO_COLOR}HELP    - ${1}${__RESET_COLOR}" >&2
   Log::logHelp "$1"
-}
-
-# Display message using info color (bg light blue/fg white)
-# @param {String} $1 message
-Log::displayInfo() {
-  echo -e "${__INFO_COLOR}INFO    - ${1}${__RESET_COLOR}" >&2
-  Log::logInfo "$1"
 }
 
 # Display message using skip color (yellow)
@@ -528,3 +528,19 @@ Args::defaultHelp "${HELP}" "$@"
 Git::cloneOrPullIfNoChanges \
   "${ROOT_DIR}/vendor/bash-tools-framework" \
   "https://github.com/fchastanet/bash-tools-framework.git"
+
+declare -a externalBinaries=(
+  awkLint
+  buildPushDockerImages
+  dockerLint
+  generateShellDoc
+  runBuildContainer
+  shellcheckLint
+  "test"
+)
+
+declare bin
+for bin in "${externalBinaries[@]}"; do
+  Log::displayInfo "Creating symlink to bash-tools-framework/bin/${bin} in bin directory"
+  ln -srf "${VENDOR_DIR}/bash-tools-framework/bin/${bin}" "${ROOT_DIR}/bin/${bin}"
+done
