@@ -507,6 +507,7 @@ Log::displayWarning() {
 # @param {String} $1 message
 Log::fatal() {
   echo -e "${__ERROR_COLOR}FATAL   - ${1}${__RESET_COLOR}" >&2
+  Log::logFatal "$1"
   exit 1
 }
 
@@ -520,12 +521,6 @@ Log::logDebug() {
 # @param {String} $1 message
 Log::logError() {
   Log::logMessage "ERROR" "$@"
-}
-
-# log message to file
-# @param {String} $1 message
-Log::logFatal() {
-  Log::logMessage "FATAL" "$@"
 }
 
 # log message to file
@@ -646,6 +641,12 @@ Args::showHelp() {
   echo -e "${helpArg}"
 }
 
+# log message to file
+# @param {String} $1 message
+Log::logFatal() {
+  Log::logMessage "FATAL" "$@"
+}
+
 # Internal: common log message
 #
 # **Arguments**:
@@ -724,9 +725,6 @@ if ((BASH_FRAMEWORK_LOG_LEVEL < __LEVEL_WARNING)); then
 fi
 if ((BASH_FRAMEWORK_LOG_LEVEL < __LEVEL_ERROR)); then
   Log::logError() { :; }
-  Log::logFatal() {
-    Log::fatal "$1"
-  }
 fi
 
 ############################################################
@@ -746,7 +744,7 @@ ${__HELP_TITLE}Author:${__HELP_NORMAL}
 ${__HELP_TITLE}License:${__HELP_NORMAL}
 MIT License
 
-Copyright (c) 2020 Scrasnups
+Copyright (c) 2022 François Chastanet
 EOF
 )"
 Args::defaultHelp "${HELP}" "$@"
