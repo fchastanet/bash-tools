@@ -10,6 +10,8 @@ HELP="$(
   cat <<EOF
 ${__HELP_TITLE}Description:${__HELP_NORMAL} installs requirements(fchastanet/bash-tools-framework)
 ${__HELP_TITLE}Usage:${__HELP_NORMAL} ${SCRIPT_NAME}
+
+.INCLUDE "${ORIGINAL_TEMPLATE_DIR}/_includes/author.tpl"
 EOF
 )"
 Args::defaultHelp "${HELP}" "$@"

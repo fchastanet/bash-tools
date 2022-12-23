@@ -10,7 +10,15 @@ if [[ "${IN_BASH_DOCKER:-}" != "You're in docker" ]]; then
   exit $?
 fi
 
-Args::defaultHelp "Generate Jekyll documentation" "$@"
+HELP="$(
+  cat <<EOF
+${__HELP_TITLE}Usage:${__HELP_NORMAL} ${SCRIPT_NAME}
+Generate Jekyll documentation
+
+.INCLUDE "${ORIGINAL_TEMPLATE_DIR}/_includes/author.tpl"
+EOF
+)"
+Args::defaultHelp "${HELP}" "$@"
 
 ((TOKEN_NOT_FOUND_COUNT = 0)) || true
 

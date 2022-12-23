@@ -46,6 +46,8 @@ and should provide value for the following variables finalUserArg finalContainer
 
 ${__HELP_TITLE}List of available profiles (from ${PROFILES_DIR} and can be overridden in ${HOME_PROFILES_DIR}):${__HELP_NORMAL}
 ${profilesList}
+
+.INCLUDE "${ORIGINAL_TEMPLATE_DIR}/_includes/author.tpl"
 EOF
 }
 

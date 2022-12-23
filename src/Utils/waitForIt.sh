@@ -18,6 +18,8 @@ ${__HELP_TITLE}Usage:${__HELP_NORMAL} ${SCRIPT_NAME} host:port [-s] [-t timeout]
     -t TIMEOUT | --timeout=TIMEOUT
                                 Timeout in seconds, zero for no timeout
     -- COMMAND ARGS             Execute command with args after the test finishes
+
+.INCLUDE "${ORIGINAL_TEMPLATE_DIR}/_includes/author.tpl"
 USAGE
 }
 

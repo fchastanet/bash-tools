@@ -6,6 +6,19 @@
 
 .INCLUDE "${ORIGINAL_TEMPLATE_DIR}/_includes/executedAsUser.sh"
 
+HELP="$(
+  cat <<EOF
+${__HELP_TITLE}Description:${__HELP_NORMAL}
+Install dependent softwares (GNU parallel)
+Install configuration files
+
+${__HELP_TITLE}Usage:${__HELP_NORMAL} ${SCRIPT_NAME}
+
+.INCLUDE "${ORIGINAL_TEMPLATE_DIR}/_includes/author.tpl"
+EOF
+)"
+Args::defaultHelp "${HELP}" "$@"
+
 if ! command -v parallel 2>/dev/null; then
   Log::displayInfo "We will install GNU parallel software, please enter you sudo password"
   sudo apt update || true

@@ -90,7 +90,7 @@ jobs:
 
       - name: Pull image
         run: |
-          docker pull "scrasnups/build:bash-tools-${{matrix.vendor}}-${{matrix.bashTarVersion}}:master"
+          docker pull "scrasnups/build:bash-tools-${{matrix.vendor}}-${{matrix.bashTarVersion}}"
 
       - name: Check image
         run: |

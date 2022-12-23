@@ -49,6 +49,8 @@ ${__HELP_TITLE}List of available profiles (default profiles dir ${PROFILES_DIR} 
 ${profilesList}
 ${__HELP_TITLE}List of available dsn:${__HELP_NORMAL}
 ${dsnList}
+
+.INCLUDE "${ORIGINAL_TEMPLATE_DIR}/_includes/author.tpl"
 EOF
 }
 

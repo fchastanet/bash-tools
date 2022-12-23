@@ -108,3 +108,5 @@ userdel
 addgroup
 MPFR
 canonicalize
+Chastanet
+Scrasnups

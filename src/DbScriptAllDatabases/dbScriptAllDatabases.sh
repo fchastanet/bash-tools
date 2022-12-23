@@ -62,6 +62,8 @@ ${__HELP_TITLE}List of available dsn:${__HELP_NORMAL}
 ${dsnList}
 ${__HELP_TITLE}list of available scripts (${SCRIPTS_FOLDER}):${__HELP_NORMAL}
 ${scriptsList}
+
+.INCLUDE "${ORIGINAL_TEMPLATE_DIR}/_includes/author.tpl"
 EOF
 }
 

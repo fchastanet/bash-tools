@@ -11,7 +11,14 @@
 
 Assert::expectNonRootUser
 
-Args::defaultHelp "INTERNAL USE ONLY - USED BY bin/dbQueryAllDatabases" "$@"
+HELP="$(
+  cat <<EOF
+${__HELP_TITLE}Description:${__HELP_NORMAL} INTERNAL USE ONLY - USED BY bin/dbQueryAllDatabases
+
+.INCLUDE "${ORIGINAL_TEMPLATE_DIR}/_includes/author.tpl"
+EOF
+)"
+Args::defaultHelp "${HELP}" "$@"
 
 Env::load
 

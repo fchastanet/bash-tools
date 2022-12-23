@@ -33,6 +33,7 @@ mysqldump --skip-add-drop-table --skip-add-locks --skip-disable-keys --skip-set-
 ${__HELP_TITLE}List of available skins:${__HELP_NORMAL}
 ${skinList}
 
+.INCLUDE "${ORIGINAL_TEMPLATE_DIR}/_includes/author.tpl"
 EOF
 }
 

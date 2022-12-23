@@ -45,6 +45,8 @@ ${__HELP_TITLE}List of available dsn:${__HELP_NORMAL}
 ${dsnList}
 ${__HELP_TITLE}List of available queries (default dir ${QUERIES_DIR} can be overridden in home dir ${HOME_QUERIES_DIR}):${__HELP_NORMAL}
 ${queriesList}
+
+.INCLUDE "${ORIGINAL_TEMPLATE_DIR}/_includes/author.tpl"
 EOF
 }
 

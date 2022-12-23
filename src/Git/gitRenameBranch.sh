@@ -24,6 +24,8 @@ ${__HELP_TITLE}Usage:${__HELP_NORMAL} ${SCRIPT_NAME} <newBranchName> [<oldBranch
     --delete,-d delete old remote branch
     <newBranchName> the new branch name to give to current branch
     <oldBranchName> (optional) the name of the old branch if not current one
+
+.INCLUDE "${ORIGINAL_TEMPLATE_DIR}/_includes/author.tpl"
 EOF
 }
 
