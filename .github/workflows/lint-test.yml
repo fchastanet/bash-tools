@@ -23,20 +23,25 @@ jobs:
           status: pending
 
       - name: Install vendors
-        run: ./bin/installRequirements
+        run: |
+          set -exo pipefail
+          ./bin/installRequirements
 
       - name: Linting - Shellcheck
-        run:
+        run: |
+          set -exo pipefail
           ./vendor/bash-tools-framework/bin/shellcheckLint | tee
           logs/shellcheck-checkstyle.xml
 
       - name: Linting - Awk
-        run:
+        run: |
+          set -exo pipefail
           ./vendor/bash-tools-framework/bin/awkLint | tee
           logs/awk-checkstyle.xml
 
       - name: build bin files + check md5
-        run:
+        run: |
+          set -exo pipefail
           ./.github/workflows/buildBinFiles.sh 2>&1 | tee logs/buidBinFiles.log
 
       - name: Checkstyle aggregation
@@ -83,31 +88,81 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
 
+      - name: Login to DockerHub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      # - name: Cache Docker layers
+      #   uses: actions/cache@v3
+      #   with:
+      #     path: /tmp/.buildx-cache
+      #     key: ${{ runner.os }}-buildx-${{matrix.vendor}}-${{matrix.bashTarVersion}}-${{ github.sha }}
+      #     restore-keys: |
+      #       ${{ runner.os }}-buildx-
+
       - uses: ouzi-dev/commit-status-updater@v2
         with:
           name: build bash-tools-${{matrix.vendor}}-${{matrix.bashTarVersion}}
           status: pending
 
-      - name: Pull image
-        run: |
-          docker pull "scrasnups/build:bash-tools-${{matrix.vendor}}-${{matrix.bashTarVersion}}"
+      # In this step, this action saves a list of existing images,
+      # the cache is created without them in the post run.
+      # It also restores the cache if it exists.
+      - uses: jpribyl/action-docker-layer-caching@v0.1.1
+        # Ignore the failure of a step and avoid terminating the job.
+        continue-on-error: true
+        with:
+          key: scrasnups-docker-cache-{hash}-${{matrix.vendor}}-${{matrix.bashTarVersion}}-${{ github.sha }}
+          restore-keys: |
+            scrasnups-docker-cache-
 
-      - name: Check image
-        run: |
-          docker run --rm \
-          "bash-tools-${{matrix.vendor}}-${{matrix.bashTarVersion}}" bash \
-          --version
+      # - name: Build and push
+      #   uses: docker/build-push-action@v3
+      #   with:
+      #     context: .docker
+      #     file: .docker/DockerfileUser
+      #     push: false
+      #     build-args: |
+      #       BASH_IMAGE=scrasnups/build:bash-tools-${{matrix.vendor}}-${{matrix.bashTarVersion}}
+      #       SKIP_USER=1
+      #     tags: |
+      #       scrasnups/build:bash-tools-${{matrix.vendor}}-${{matrix.bashTarVersion}}
+      #       bash-tools-${{matrix.vendor}}-${{matrix.bashTarVersion}}-user:latest
+      #     cache-from: type=local,src=/tmp/.buildx-cache
+      #     cache-to: type=local,dest=/tmp/.buildx-cache-new,mode=max
 
-      - name: run unit tests
+      - name: run tests using existing docker image
         run: |
+          set -exo pipefail
+          docker build \
+            --file .docker/DockerfileUser \
+            --tag bash-tools-${{matrix.vendor}}-${{matrix.bashTarVersion}}-user:latest \
+            --build-arg BASH_IMAGE=scrasnups/build:bash-tools-${{matrix.vendor}}-${{matrix.bashTarVersion}} \
+            --build-arg SKIP_USER=1 \
+            --build-arg USER_ID="$(id -u)" \
+            --build-arg GROUP_ID="$(id -g)" \
+            .docker
+
           ./bin/installDevRequirements
-          # shellcheck disable=SC2266
-          VENDOR="${{ matrix.vendor }}" \
-          BASH_TAR_VERSION="${{ matrix.bashTarVersion }}" \
-          BASH_IMAGE="${{ matrix.bashImage }}" \
-          SKIP_BUILD=0 \
-          SKIP_USER=1 \
-          vendor/bash-tools-framework/bin/test --report-formatter junit -o logs -r tests
+
+          docker run \
+            --rm -w /bash -v "$(pwd):/bash" \
+            --user "$(id -u):$(id -g)" \
+            "bash-tools-${{matrix.vendor}}-${{matrix.bashTarVersion}}-user:latest" \
+            vendor/bats/bin/bats --report-formatter junit -o logs -r tests
+
+      # -
+      #   # Temp fix
+      #   # https://github.com/docker/build-push-action/issues/252
+      #   # https://github.com/moby/buildkit/issues/1896
+      #   name: Move cache
+      #   run: |
+      #     set -x
+      #     set -o errexit
+      #     rm -rf /tmp/.buildx-cache
+      #     mv /tmp/.buildx-cache-new /tmp/.buildx-cache
 
       - name: Publish Unit Test Results
         uses: EnricoMi/publish-unit-test-result-action@v1
