@@ -8,6 +8,7 @@
 /jekyll/_site
 /jekyll/bashDoc
 /jekyll/tests
+*.bak
 
 # bash-tools-framework binaries
 /bin/awkLint

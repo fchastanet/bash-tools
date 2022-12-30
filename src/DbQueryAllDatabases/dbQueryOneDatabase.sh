@@ -20,11 +20,6 @@ EOF
 )"
 Args::defaultHelp "${HELP}" "$@"
 
-Env::load
-
-# ensure that Ctrl-C is trapped by this script and not sub mysql process
-trap 'exit 130' INT
-
 # query is passed via export
 declare DSN_FILE="$1"
 declare DB="$2"

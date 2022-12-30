@@ -6,11 +6,6 @@
 
 Assert::expectNonRootUser
 
-Env::load
-
-# ensure that Ctrl-C is trapped by this script and not sub mysql process
-trap 'exit 130' INT
-
 #default values
 SCRIPT_NAME=${0##*/}
 JOBS_NUMBER=1
@@ -96,7 +91,7 @@ while true; do
       VERBOSE=1
       ;;
     --dsn | -d)
-      shift
+      shift || true
       DSN=${1:-:-default.local}
       ;;
     --database)

@@ -77,7 +77,7 @@ repos:
     hooks:
       - id: run-unit-tests
         name: run-unit-tests
-        entry: bash -c './bin/test -r src'
+        entry: bash -c 'SKIP_BUILD=1 ./bin/test -r tests -j 8'
         language: system
         always_run: true
         require_serial: true

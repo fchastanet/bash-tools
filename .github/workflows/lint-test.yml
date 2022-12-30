@@ -30,7 +30,7 @@ jobs:
       - name: Linting - Shellcheck
         run: |
           set -exo pipefail
-          ./vendor/bash-tools-framework/bin/shellcheckLint | tee
+          ./vendor/bash-tools-framework/bin/shellcheckLint --source-path=SCRIPTDIR --external-sources | tee
           logs/shellcheck-checkstyle.xml
 
       - name: Linting - Awk
@@ -79,8 +79,10 @@ jobs:
         include:
           - vendor: ubuntu
             bashImage: ubuntu:20.04
+            options: -j 8
           - vendor: alpine
             bashImage: bash
+            options: -j 2
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -114,7 +116,9 @@ jobs:
         # Ignore the failure of a step and avoid terminating the job.
         continue-on-error: true
         with:
-          key: scrasnups-docker-cache-{hash}-${{matrix.vendor}}-${{matrix.bashTarVersion}}-${{ github.sha }}
+          key:
+            scrasnups-docker-cache-{hash}-${{matrix.vendor}}-${{matrix.bashTarVersion}}-${{
+            github.sha }}
           restore-keys: |
             scrasnups-docker-cache-
 
@@ -151,7 +155,7 @@ jobs:
             --rm -w /bash -v "$(pwd):/bash" \
             --user "$(id -u):$(id -g)" \
             "bash-tools-${{matrix.vendor}}-${{matrix.bashTarVersion}}-user:latest" \
-            vendor/bats/bin/bats --report-formatter junit -o logs -r tests
+            vendor/bats/bin/bats ${{matrix.options}} --report-formatter junit -o logs -r tests
 
       # -
       #   # Temp fix

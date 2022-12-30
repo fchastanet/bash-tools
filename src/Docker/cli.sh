@@ -6,11 +6,6 @@
 
 Assert::expectNonRootUser
 
-Env::load
-
-# ensure that Ctrl-C is trapped by this script
-trap 'exit 130' INT
-
 SCRIPT_NAME=${0##*/}
 PROFILES_DIR="${ROOT_DIR}/conf/cliProfiles"
 HOME_PROFILES_DIR="${HOME}/.bash-tools/cliProfiles"

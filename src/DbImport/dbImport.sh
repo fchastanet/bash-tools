@@ -6,8 +6,6 @@
 
 Assert::expectNonRootUser
 
-Env::load
-
 # default values
 PROFILE="default"
 TABLES=""

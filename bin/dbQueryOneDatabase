@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+# shellcheck disable=SC2034
+
 #####################################
 # GENERATED FILE FROM https://github.com/fchastanet/bash-tools/tree/master/src/DbQueryAllDatabases/dbQueryOneDatabase.sh
 # DO NOT EDIT IT
@@ -70,6 +72,7 @@ if [[ -t 1 || -t 2 ]]; then
   readonly __TEST_COLOR='\e[100m'      # Light magenta
   readonly __TEST_ERROR_COLOR='\e[41m' # white on red
   readonly __SKIPPED_COLOR='\e[33m'    # Yellow
+  readonly __HELP_COLOR='\e[7;49;33m'  # Black on Gold
   readonly __DEBUG_COLOR='\e[37m'      # Grey
   # Internal: reset color
   readonly __RESET_COLOR='\e[0m' # Reset Color
@@ -86,6 +89,7 @@ else
   readonly __SUCCESS_COLOR=''
   readonly __WARNING_COLOR=''
   readonly __SKIPPED_COLOR=''
+  readonly __HELP_COLOR=''
   readonly __TEST_COLOR=''
   readonly __TEST_ERROR_COLOR=''
   readonly __DEBUG_COLOR=''
@@ -103,6 +107,7 @@ export __SKIPPED_COLOR
 export __TEST_COLOR
 export __TEST_ERROR_COLOR
 export __SKIPPED_COLOR
+export __HELP_COLOR
 export __DEBUG_COLOR
 export __RESET_COLOR
 export __HELP_EXAMPLE
@@ -140,8 +145,8 @@ Assert::expectNonRootUser() {
 # Returns immediately if the instance is already initialized
 Database::newInstance() {
   local -n instanceNewInstance=$1
-  local dsn
-  dsn="$2"
+  local dsn="$2"
+  local DSN_FILE
 
   if [[ -v instanceNewInstance['INITIALIZED'] && "${instanceNewInstance['INITIALIZED']:-0}" == "1" ]]; then
     return
@@ -152,8 +157,8 @@ Database::newInstance() {
   instanceNewInstance['DSN_FILE']=""
 
   # check dsn file
-  DSN_FILE="$(Profiles::getAbsoluteConfFile "dsn" "${dsn}" "env")" || exit 1
-  Database::checkDsnFile "${DSN_FILE}"
+  DSN_FILE="$(Profiles::getAbsoluteConfFile "dsn" "${dsn}" "env")" || return 1
+  Database::checkDsnFile "${DSN_FILE}" || return 1
   instanceNewInstance['DSN_FILE']="${DSN_FILE}"
 
   # shellcheck source=/tests/data/dsn_valid.env
@@ -173,7 +178,6 @@ Database::newInstance() {
     echo "host = ${HOSTNAME}"
     echo "port = ${PORT}"
   ) >"${instanceNewInstance['AUTH_FILE']}"
-  Framework::trapAdd "rm -f \"${instanceNewInstance['AUTH_FILE']}\" 2>/dev/null || true" ERR EXIT
 
   # some of those values can be overridden using the dsn file
   # SKIP_COLUMN_NAMES enabled by default
@@ -249,96 +253,6 @@ Database::skipColumnNames() {
   local -n instanceSkipColumnNames=$1
   # shellcheck disable=SC2034
   instanceSkipColumnNames['SKIP_COLUMN_NAMES']="$2"
-}
-
-# lazy initialization
-declare -g BASH_FRAMEWORK_INITIALIZED="0"
-
-declare BASH_FRAMEWORK_CACHED_ENV_FILE
-BASH_FRAMEWORK_CACHED_ENV_FILE="$(mktemp -p "${TMPDIR:-/tmp}" -t "env_vars.XXXXXXX")"
-
-declare BASH_FRAMEWORK_DEFAULT_ENV_FILE
-BASH_FRAMEWORK_DEFAULT_ENV_FILE="$(mktemp -p "${TMPDIR:-/tmp}" -t "default_env_file.XXXXXXX")"
-
-# shellcheck source=tests/data/.env
-cat >"${BASH_FRAMEWORK_DEFAULT_ENV_FILE}" <<'EOF'
-BASH_FRAMEWORK_LOG_LEVEL=0
-BASH_FRAMEWORK_DISPLAY_LEVEL=3
-BASH_FRAMEWORK_LOG_FILE=${ROOT_DIR}/logs/${SCRIPT_NAME}.log
-BASH_FRAMEWORK_LOG_FILE_MAX_ROTATION=5
-EOF
-
-# load variables in order(from less specific to more specific) from :
-# - ${ROOT_DIR}/tests/data/.env file
-# - ${ROOT_DIR}/.env file if exists
-# - ~/.env file if exists
-# - ~/.bash-tools/.env file if exists
-# - BASH_FRAMEWORK_ENV_FILEPATH=<fullPathToEnvFile or empty if no file to be loaded>
-Env::load() {
-  if [[ "${BASH_FRAMEWORK_INITIALIZED}" = "1" ]]; then
-    return 0
-  fi
-  (
-    # reset temp file
-    echo >"${BASH_FRAMEWORK_CACHED_ENV_FILE}"
-
-    # ensure all sourced variables will be exported
-    set -o allexport
-
-    # 1. list .env files that need to be loaded
-    local -a files=(
-      "${BASH_FRAMEWORK_DEFAULT_ENV_FILE}"
-    )
-    if [[ -f "${ROOT_DIR}/conf/.env" && -r "${ROOT_DIR}/conf/.env" ]]; then
-      files+=("${ROOT_DIR}/conf/.env")
-    fi
-    if [[ -f "${HOME}/.env" && -r "${HOME}/.env" ]]; then
-      files+=("${HOME}/.env")
-    fi
-    local file
-    for file in "$@"; do
-      if [[ -f "${file}" && -r "${file}" ]]; then
-        files+=("${file}")
-      fi
-    done
-    # import custom .env file
-    if [[ -n "${BASH_FRAMEWORK_ENV_FILEPATH+xxx}" ]]; then
-      # load BASH_FRAMEWORK_ENV_FILEPATH
-      if [[ -f "${BASH_FRAMEWORK_ENV_FILEPATH}" && -r "${BASH_FRAMEWORK_ENV_FILEPATH}" ]]; then
-        files+=("${BASH_FRAMEWORK_ENV_FILEPATH}")
-      else
-        Log::fatal "env file not not found - ${BASH_FRAMEWORK_ENV_FILEPATH}"
-      fi
-    fi
-
-    # 2. source each file in order
-    local file
-    for file in "${files[@]}"; do
-      # shellcheck source=tests/data/.env
-      source "${file}" || {
-        Log::displayWarning "Cannot load '${file}'"
-      }
-    done
-
-    # 4. copy only the variables to the tmp file
-    local varName
-    while IFS=$'\n' read -r varName; do
-      echo "${varName}='${!varName}'" >>"${BASH_FRAMEWORK_CACHED_ENV_FILE}"
-
-      # 3. using awk deduce all variables that need to be copied in tmp file
-      #    from less specific file to the most
-    done < <(awk -F= '!a[$1]++' "${files[@]}" | grep -v '^$\|^\s*\#' | cut -d= -f1)
-    set +o allexport
-  )
-
-  # Finally load the temp file to make the variables available in current script
-  set -o allexport
-  # shellcheck source=tests/data/.env
-  source "${BASH_FRAMEWORK_CACHED_ENV_FILE}"
-
-  export BASH_FRAMEWORK_INITIALIZED=1
-
-  set +o allexport
 }
 
 # Public: log level off
@@ -439,26 +353,96 @@ Database::checkDsnFile() {
   )
 }
 
-# appends a command to a trap
-#
-# - 1st arg:  code to add
-# - remaining args:  names of traps to modify
-#
-Framework::trapAdd() {
-  local trapAddCmd="$1"
-  shift || Log::fatal "${FUNCNAME[0]} usage error"
-  # helper fn to get existing trap command from output
-  # of trap -p
-  extract_trap_cmd() { printf '%s\n' "$3"; }
-  for trapAddName in "$@"; do
-    trap -- "$(
-      # print existing trap command with newline
-      eval "extract_trap_cmd $(trap -p "${trapAddName}")"
-      # print the new trap command
-      printf '%s\n' "${trapAddCmd}"
-    )" "${trapAddName}" ||
-      Log::fatal "unable to add to trap ${trapAddName}"
-  done
+# lazy initialization
+declare -g BASH_FRAMEWORK_INITIALIZED="0"
+declare -g BASH_FRAMEWORK_CACHED_ENV_FILE
+declare -g BASH_FRAMEWORK_DEFAULT_ENV_FILE
+
+# load variables in order(from less specific to more specific) from :
+# - ${ROOT_DIR}/src/Env/testsData/.env file
+# - ${ROOT_DIR}/conf/.env file if exists
+# - ~/.env file if exists
+# - ~/.bash-tools/.env file if exists
+# - BASH_FRAMEWORK_ENV_FILEPATH=<fullPathToEnvFile or empty if no file to be loaded>
+Env::load() {
+  if [[ "${BASH_FRAMEWORK_INITIALIZED}" = "1" ]]; then
+    return 0
+  fi
+  BASH_FRAMEWORK_CACHED_ENV_FILE="$(mktemp -p "${TMPDIR:-/tmp}" -t "env_vars.XXXXXXX")"
+  BASH_FRAMEWORK_DEFAULT_ENV_FILE="$(mktemp -p "${TMPDIR:-/tmp}" -t "default_env_file.XXXXXXX")"
+  # shellcheck source=src/Env/testsData/.env
+  (
+    echo "BASH_FRAMEWORK_LOG_LEVEL=${BASH_FRAMEWORK_LOG_LEVEL:-0}"
+    echo "BASH_FRAMEWORK_DISPLAY_LEVEL=${BASH_FRAMEWORK_DISPLAY_LEVEL:-3}"
+    echo "BASH_FRAMEWORK_LOG_FILE=${BASH_FRAMEWORK_LOG_FILE:-${ROOT_DIR}/logs/${SCRIPT_NAME}.log}"
+    echo "BASH_FRAMEWORK_LOG_FILE_MAX_ROTATION=${BASH_FRAMEWORK_LOG_FILE_MAX_ROTATION:-5}"
+  ) >"${BASH_FRAMEWORK_DEFAULT_ENV_FILE}"
+
+  (
+    # reset temp file
+    echo >"${BASH_FRAMEWORK_CACHED_ENV_FILE}"
+
+    # ensure all sourced variables will be exported
+    set -o allexport
+
+    # list .env files that need to be loaded
+    local -a files=()
+    if [[ -f "${BASH_FRAMEWORK_DEFAULT_ENV_FILE}" ]]; then
+      files+=("${BASH_FRAMEWORK_DEFAULT_ENV_FILE}")
+    fi
+    if [[ -f "${ROOT_DIR}/conf/.env" && -r "${ROOT_DIR}/conf/.env" ]]; then
+      files+=("${ROOT_DIR}/conf/.env")
+    fi
+    if [[ -f "${HOME}/.env" && -r "${HOME}/.env" ]]; then
+      files+=("${HOME}/.env")
+    fi
+    local file
+    for file in "$@"; do
+      if [[ -f "${file}" && -r "${file}" ]]; then
+        files+=("${file}")
+      fi
+    done
+    # import custom .env file
+    if [[ -n "${BASH_FRAMEWORK_ENV_FILEPATH+xxx}" ]]; then
+      # load BASH_FRAMEWORK_ENV_FILEPATH
+      if [[ -f "${BASH_FRAMEWORK_ENV_FILEPATH}" && -r "${BASH_FRAMEWORK_ENV_FILEPATH}" ]]; then
+        files+=("${BASH_FRAMEWORK_ENV_FILEPATH}")
+      else
+        Log::displayWarning "env file not not found - ${BASH_FRAMEWORK_ENV_FILEPATH}"
+      fi
+    fi
+
+    # add all files added as parameters
+    files+=("$@")
+
+    # source each file in order
+    local file
+    for file in "${files[@]}"; do
+      # shellcheck source=src/Env/testsData/.env
+      source "${file}" || {
+        Log::displayWarning "Cannot load '${file}'"
+      }
+    done
+
+    # copy only the variables to the tmp file
+    local varName
+    while IFS=$'\n' read -r varName; do
+      echo "${varName}='${!varName}'" >>"${BASH_FRAMEWORK_CACHED_ENV_FILE}"
+
+      # using awk deduce all variables that need to be copied in tmp file
+      #   from less specific file to the most
+    done < <(awk -F= '!a[$1]++' "${files[@]}" | grep -v '^$\|^\s*\#' | cut -d= -f1)
+    set +o allexport
+  ) || exit 1
+
+  # Finally load the temp file to make the variables available in current script
+  set -o allexport
+  # shellcheck source=src/Env/testsData/.env
+  source "${BASH_FRAMEWORK_CACHED_ENV_FILE}"
+
+  export BASH_FRAMEWORK_INITIALIZED=1
+
+  set +o allexport
 }
 
 # Display message using debug color (grey)
@@ -471,7 +455,7 @@ Log::displayDebug() {
 # Display message using info color (bg light blue/fg white)
 # @param {String} $1 message
 Log::displayHelp() {
-  echo -e "${__INFO_COLOR}HELP    - ${1}${__RESET_COLOR}" >&2
+  echo -e "${__HELP_COLOR}HELP    - ${1}${__RESET_COLOR}" >&2
   Log::logHelp "$1"
 }
 
@@ -588,57 +572,62 @@ Profiles::getAbsoluteConfFile() {
   local confFolder="$1"
   local conf="$2"
   local extension="${3-.sh}"
+  if [[ -n "${extension}" && "${extension:0:1}" != "." ]]; then
+    extension=".${extension}"
+  fi
 
-  getAbs() {
-    local absoluteConfFile=""
-    # load conf from absolute file, then home folder, then bash framework conf folder
-    absoluteConfFile="${conf}"
-    if [[ "${absoluteConfFile:0:1}" = "/" && -f "${absoluteConfFile}" ]]; then
-      # file contains /, consider it as absolute filename
-      echo "${absoluteConfFile}"
+  testAbs() {
+    local result
+    result="$(realpath -e "$1" 2>/dev/null)"
+    # shellcheck disable=SC2181
+    if [[ "$?" = "0" && -f "${result}" ]]; then
+      echo "${result}"
       return 0
     fi
-
-    # relative to where script is executed
-    absoluteConfFile="$(realpath "${__BASH_FRAMEWORK_CALLING_SCRIPT}/${conf}" 2>/dev/null || echo "")"
-    if [[ -f "${absoluteConfFile}" ]]; then
-      echo "${absoluteConfFile}"
-      return 0
-    fi
-
-    # take extension into account
-    if [[ -n "${extension}" && "${extension:0:1}" != "." ]]; then
-      extension=".${extension}"
-    fi
-
-    # shellcheck source=/conf/dsn/default.local.env
-    absoluteConfFile="${HOME}/.bash-tools/${confFolder}/${conf}${extension}"
-    if [[ -f "${absoluteConfFile}" ]]; then
-      echo "${absoluteConfFile}"
-      return 0
-    fi
-    absoluteConfFile="${ROOT_DIR:?}/conf/${confFolder}/${conf}${extension}"
-    if [[ -f "${absoluteConfFile}" ]]; then
-      echo "${absoluteConfFile}"
-      return 0
-    fi
-
     return 1
   }
-  local abs=""
-  abs="$(getAbs)" || {
-    # file not found
-    Log::displayError "conf file '${conf}' not found"
-    return 1
-  }
-  Log::displayDebug "conf file '${conf}' matching '${abs}' file"
-  echo "${abs}"
-  return 0
+
+  # conf is absolute file (including extension)
+  testAbs "${confFolder}${extension}" && return 0
+  # conf is absolute file
+  testAbs "${confFolder}" && return 0
+  # conf is absolute file (including extension)
+  testAbs "${conf}${extension}" && return 0
+  # conf is absolute file
+  testAbs "${conf}" && return 0
+
+  # relative to where script is executed (including extension)
+  if [[ -n "${CURRENT_DIR+xxx}" ]]; then
+    testAbs "$(File::concatenatePath "${CURRENT_DIR}" "${confFolder}")/${conf}${extension}" && return 0
+  fi
+  # from home/.bash-tools/<confFolder>
+  testAbs "$(File::concatenatePath "${HOME}/.bash-tools" "${confFolder}")/${conf}${extension}" && return 0
+
+  if [[ -n "${ROOT_DIR+xxx}" ]]; then
+    # from framework conf/<confFolder> (including extension)
+    testAbs "$(File::concatenatePath "${ROOT_DIR}/conf" "${confFolder}")/${conf}${extension}" && return 0
+
+    # from framework conf/<confFolder>
+    testAbs "$(File::concatenatePath "${ROOT_DIR}/conf" "${confFolder}")/${conf}" && return 0
+  fi
+
+  # file not found
+  Log::displayError "conf file '${conf}' not found"
+
+  return 1
 }
 
 Args::showHelp() {
   local helpArg="$1"
   echo -e "${helpArg}"
+}
+
+File::concatenatePath() {
+  local basePath="${1}"
+  local subPath=${2}
+  local fullPath="${basePath:+${basePath}/}${subPath}"
+
+  realpath -m "${fullPath}" 2>/dev/null
 }
 
 # log message to file
@@ -664,7 +653,8 @@ Log::logMessage() {
   local levelMsg="$1"
   local msg="$2"
   local date
-  if ((BASH_FRAMEWORK_LOG_LEVEL > __LEVEL_OFF)) && [[ -f "${BASH_FRAMEWORK_LOG_FILE}" ]]; then
+
+  if ((BASH_FRAMEWORK_LOG_LEVEL > __LEVEL_OFF)); then
     date="$(date '+%Y-%m-%d %H:%M:%S')"
     printf "%s|%7s|%s\n" "${date}" "${levelMsg}" "${msg}" >>"${BASH_FRAMEWORK_LOG_FILE}"
   fi
@@ -673,26 +663,6 @@ Log::logMessage() {
 # FUNCTIONS
 
 Env::load
-
-if ((BASH_FRAMEWORK_LOG_LEVEL > __LEVEL_OFF)); then
-  if [[ -z "${BASH_FRAMEWORK_LOG_FILE}" ]]; then
-    BASH_FRAMEWORK_LOG_LEVEL=${__LEVEL_OFF}
-    export BASH_FRAMEWORK_LOG_LEVEL
-  elif [[ ! -f "${BASH_FRAMEWORK_LOG_FILE}" ]]; then
-    if ! mkdir -p "$(dirname "${BASH_FRAMEWORK_LOG_FILE}")" 2>/dev/null; then
-      BASH_FRAMEWORK_LOG_LEVEL=__LEVEL_OFF
-      Log::displayWarning "Log dir cannot be created $(dirname "${BASH_FRAMEWORK_LOG_FILE}")"
-    fi
-    if ! touch --no-create "${BASH_FRAMEWORK_LOG_FILE}" 2>/dev/null; then
-      BASH_FRAMEWORK_LOG_LEVEL=__LEVEL_OFF
-      Log::displayWarning "Log file '${BASH_FRAMEWORK_LOG_FILE}' cannot be created"
-    fi
-  fi
-  Log::displayInfo "Logging to file ${BASH_FRAMEWORK_LOG_FILE}"
-  if ((BASH_FRAMEWORK_LOG_FILE_MAX_ROTATION > 0)); then
-    Log::rotate "${BASH_FRAMEWORK_LOG_FILE}" "${BASH_FRAMEWORK_LOG_FILE_MAX_ROTATION}"
-  fi
-fi
 
 # disable display methods following display level
 if ((BASH_FRAMEWORK_DISPLAY_LEVEL < __LEVEL_DEBUG)); then
@@ -727,6 +697,28 @@ if ((BASH_FRAMEWORK_LOG_LEVEL < __LEVEL_ERROR)); then
   Log::logError() { :; }
 fi
 
+if ((BASH_FRAMEWORK_LOG_LEVEL > __LEVEL_OFF)); then
+  if [[ -z "${BASH_FRAMEWORK_LOG_FILE}" ]]; then
+    BASH_FRAMEWORK_LOG_LEVEL=${__LEVEL_OFF}
+    export BASH_FRAMEWORK_LOG_LEVEL
+  elif [[ ! -f "${BASH_FRAMEWORK_LOG_FILE}" ]]; then
+    if ! mkdir -p "$(dirname "${BASH_FRAMEWORK_LOG_FILE}")" 2>/dev/null; then
+      BASH_FRAMEWORK_LOG_LEVEL=__LEVEL_OFF
+      Log::displayWarning "Log dir cannot be created $(dirname "${BASH_FRAMEWORK_LOG_FILE}")"
+    fi
+    if ! touch --no-create "${BASH_FRAMEWORK_LOG_FILE}" 2>/dev/null; then
+      BASH_FRAMEWORK_LOG_LEVEL=__LEVEL_OFF
+      Log::displayWarning "Log file '${BASH_FRAMEWORK_LOG_FILE}' cannot be created"
+    fi
+  fi
+  Log::displayInfo "Logging to file ${BASH_FRAMEWORK_LOG_FILE}"
+  if ((BASH_FRAMEWORK_LOG_FILE_MAX_ROTATION > 0)); then
+    Log::rotate "${BASH_FRAMEWORK_LOG_FILE}" "${BASH_FRAMEWORK_LOG_FILE_MAX_ROTATION}"
+  fi
+fi
+
+BASH_FRAMEWORK_ENV_FILEPATH=${HOME}/.bash-tools/.env
+
 ############################################################
 # INTERNAL USE ONLY
 # USED BY bin/dbQueryAllDatabases
@@ -748,11 +740,6 @@ Copyright (c) 2022 François Chastanet
 EOF
 )"
 Args::defaultHelp "${HELP}" "$@"
-
-Env::load
-
-# ensure that Ctrl-C is trapped by this script and not sub mysql process
-trap 'exit 130' INT
 
 # query is passed via export
 declare DSN_FILE="$1"
