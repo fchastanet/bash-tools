@@ -3,17 +3,51 @@
 > **_NOTE:_** **Documentation is best viewed on
 > [github-pages](https://fchastanet.github.io/bash-tools/)**
 
+<!-- prettier-ignore-start -->
 <!-- markdownlint-capture -->
 <!-- markdownlint-disable -->
 
-[![CI/CD](https://github.com/fchastanet/bash-tools/actions/workflows/lint-test.yml/badge.svg)](https://github.com/fchastanet/bash-tools/actions?query=workflow%3A%22Lint+and+test%22+branch%3Amaster)
-[![Project Status](http://opensource.box.com/badges/active.svg)](http://opensource.box.com/badges)
-[![DeepSource](https://deepsource.io/gh/fchastanet/bash-tools.svg/?label=active+issues&show_trend=true)](https://deepsource.io/gh/fchastanet/bash-tools/?ref=repository-badge)
-[![DeepSource](https://deepsource.io/gh/fchastanet/bash-tools.svg/?label=resolved+issues&show_trend=true)](https://deepsource.io/gh/fchastanet/bash-tools/?ref=repository-badge)
-[![Average time to resolve an issue](http://isitmaintained.com/badge/resolution/fchastanet/bash-tools.svg)](http://isitmaintained.com/project/fchastanet/bash-tools)
-[![Percentage of issues still open](http://isitmaintained.com/badge/open/fchastanet/bash-tools.svg)](http://isitmaintained.com/project/fchastanet/bash-tools)
+[![CI/CD](
+  https://github.com/fchastanet/bash-tools/actions/workflows/lint-test.yml/badge.svg
+)](
+  https://github.com/fchastanet/bash-tools/actions?query=workflow%3A%22Lint+and+test%22+branch%3Amaster
+)
+
+[![ProjectStatus](
+  http://opensource.box.com/badges/active.svg
+)](
+  http://opensource.box.com/badges
+  'Project Status'
+)
+
+[![DeepSource](
+  https://deepsource.io/gh/fchastanet/bash-tools.svg/?label=active+issues&show_trend=true
+)](
+  https://deepsource.io/gh/fchastanet/bash-tools/?ref=repository-badge
+)
+
+[![DeepSource](
+  https://deepsource.io/gh/fchastanet/bash-tools.svg/?label=resolved+issues&show_trend=true
+)](
+  https://deepsource.io/gh/fchastanet/bash-tools/?ref=repository-badge
+)
+
+[![AverageTimeToResolveAnIssue](
+  http://isitmaintained.com/badge/resolution/fchastanet/bash-tools.svg
+)](
+  http://isitmaintained.com/project/fchastanet/bash-tools
+  'Average time to resolve an issue'
+)
+
+[![PercentageOfIssuesStillOpen](
+  http://isitmaintained.com/badge/open/fchastanet/bash-tools.svg
+)](
+  http://isitmaintained.com/project/fchastanet/bash-tools
+  'Percentage of issues still open'
+)
 
 <!-- markdownlint-restore -->
+<!-- prettier-ignore-end -->
 
 - [1. Excerpt](#1-excerpt)
 - [2. Installation/Configuration](#2-installationconfiguration)
