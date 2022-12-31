@@ -4,14 +4,14 @@
 > [github-pages](https://fchastanet.github.io/bash-tools/)**
 
 <!-- markdownlint-capture -->
-<!-- markdownlint-disable MD013 -->
+<!-- markdownlint-disable -->
 
 [![CI/CD](https://github.com/fchastanet/bash-tools/actions/workflows/lint-test.yml/badge.svg)](https://github.com/fchastanet/bash-tools/actions?query=workflow%3A%22Lint+and+test%22+branch%3Amaster)
 [![Project Status](http://opensource.box.com/badges/active.svg)](http://opensource.box.com/badges)
 [![DeepSource](https://deepsource.io/gh/fchastanet/bash-tools.svg/?label=active+issues&show_trend=true)](https://deepsource.io/gh/fchastanet/bash-tools/?ref=repository-badge)
 [![DeepSource](https://deepsource.io/gh/fchastanet/bash-tools.svg/?label=resolved+issues&show_trend=true)](https://deepsource.io/gh/fchastanet/bash-tools/?ref=repository-badge)
-[![Average time to resolve an issue](http://isitmaintained.com/badge/resolution/fchastanet/bash-tools.svg)](http://isitmaintained.com/project/fchastanet/bash-tools 'Average time to resolve an issue')
-[![Percentage of issues still open](http://isitmaintained.com/badge/open/fchastanet/bash-tools.svg)](http://isitmaintained.com/project/fchastanet/bash-tools 'Percentage of issues still open')
+[![Average time to resolve an issue](http://isitmaintained.com/badge/resolution/fchastanet/bash-tools.svg)](http://isitmaintained.com/project/fchastanet/bash-tools)
+[![Percentage of issues still open](http://isitmaintained.com/badge/open/fchastanet/bash-tools.svg)](http://isitmaintained.com/project/fchastanet/bash-tools)
 
 <!-- markdownlint-restore -->
 
@@ -126,13 +126,19 @@ using the following command
 Launch UT on different environments:
 
 ```bash
-VENDOR="alpine" BASH_TAR_VERSION=4.4 BASH_IMAGE=bash SKIP_BUILD=0 SKIP_USER=1 ./bin/test -r src -j 16
-VENDOR="alpine" BASH_TAR_VERSION=5.0 BASH_IMAGE=bash SKIP_BUILD=0 SKIP_USER=1 ./bin/test -r src -j 16
-VENDOR="alpine" BASH_TAR_VERSION=5.1 BASH_IMAGE=bash SKIP_BUILD=0 SKIP_USER=1 ./bin/test -r src -j 16
+VENDOR="alpine" BASH_TAR_VERSION=4.4 BASH_IMAGE=bash \
+  SKIP_BUILD=0 SKIP_USER=1 ./bin/test -r src -j 16
+VENDOR="alpine" BASH_TAR_VERSION=5.0 BASH_IMAGE=bash \
+  SKIP_BUILD=0 SKIP_USER=1 ./bin/test -r src -j 16
+VENDOR="alpine" BASH_TAR_VERSION=5.1 BASH_IMAGE=bash \
+  SKIP_BUILD=0 SKIP_USER=1 ./bin/test -r src -j 16
 
-VENDOR="ubuntu" BASH_TAR_VERSION=4.4 BASH_IMAGE=ubuntu:20.04 SKIP_BUILD=0 SKIP_USER=1 ./bin/test -r src -j 16
-VENDOR="ubuntu" BASH_TAR_VERSION=5.0 BASH_IMAGE=ubuntu:20.04 SKIP_BUILD=0 SKIP_USER=1 ./bin/test -r src -j 16
-VENDOR="ubuntu" BASH_TAR_VERSION=5.1 BASH_IMAGE=ubuntu:20.04 SKIP_BUILD=0 SKIP_USER=1 ./bin/test -r src -j 16
+VENDOR="ubuntu" BASH_TAR_VERSION=4.4 BASH_IMAGE=ubuntu:20.04 \
+  SKIP_BUILD=0 SKIP_USER=1 ./bin/test -r src -j 16
+VENDOR="ubuntu" BASH_TAR_VERSION=5.0 BASH_IMAGE=ubuntu:20.04 \
+  SKIP_BUILD=0 SKIP_USER=1 ./bin/test -r src -j 16
+VENDOR="ubuntu" BASH_TAR_VERSION=5.1 BASH_IMAGE=ubuntu:20.04 \
+  SKIP_BUILD=0 SKIP_USER=1 ./bin/test -r src -j 16
 ```
 
 ### 3.3. auto generated bash doc

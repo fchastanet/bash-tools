@@ -6,7 +6,7 @@ vendorDir="${rootDir}/vendor"
 
 # shellcheck source=vendor/bash-tools-framework/src/Env/load.sh
 source "${vendorDir}/bash-tools-framework/src/Env/load.sh" || exit 1
-# shellcheck source=vendor/bash-tools-framework/src/Log/_all.sh
+# shellcheck source=vendor/bash-tools-framework/src/Log/__all.sh
 FRAMEWORK_DIR="${vendorDir}/bash-tools-framework" source "${vendorDir}/bash-tools-framework/src/Log/__all.sh" || exit 1
 
 load "${vendorDir}/bats-support/load.bash"

@@ -27,15 +27,10 @@
     {"name": "config", "path": ".cspell/config.txt"},
     {"name": "softwares", "path": ".cspell/softwares.txt"},
     {"name": "readme", "path": ".cspell/readme.txt"},
-    {"name": "dirColors", "path": ".cspell/dirColors.txt"}
+    {"name": "dirColors", "path": ".cspell/dirColors.txt"},
+    {"name": "plantUml", "path": ".cspell/plantUml.txt"}
   ],
-  "dictionaries": [
-    "bash",
-    "bashCustom",
-    "config",
-    "softwares",
-    "softwareTerms"
-  ],
+  "dictionaries": ["bash", "bashCustom", "config", "softwares", "plantUml"],
   "languageSettings": [
     {
       "languageId": "dirColors",
@@ -61,12 +56,21 @@
       "languageId": "readme",
       "locale": "*",
       "dictionaries": ["readme"]
+    },
+    {
+      "languageId": "plantUml",
+      "locale": "*",
+      "dictionaries": ["plantUml"]
     }
   ],
   "overrides": [
     {
       "filename": "**/conf/bash_profile/.dir_colors",
       "languageId": "dirColors"
+    },
+    {
+      "filename": "**/*.puml",
+      "languageId": "plantUml"
     },
     {
       "filename": "README.md",

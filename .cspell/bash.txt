@@ -110,3 +110,5 @@ MPFR
 canonicalize
 Chastanet
 Scrasnups
+datetime
+gensub

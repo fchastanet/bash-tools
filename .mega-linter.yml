@@ -36,7 +36,7 @@ BASH_SHFMT_FILTER_REGEX_EXCLUDE: .\.zsh$|/\.zshrc|^tests/data/.*$|^Gemfile.lock$
 
 CREDENTIALS_SECRETLINT_CONFIG_FILE: .secretlintrc.yml
 
-EDITORCONFIG_EDITORCONFIG_CHECKER_FILTER_REGEX_EXCLUDE: (\.git|.\.zsh$|/\.zshrc|^tests/data/.*$|^Gemfile.lock$)
+EDITORCONFIG_EDITORCONFIG_CHECKER_FILTER_REGEX_EXCLUDE: \.git|^tests/data/.*$|^Gemfile.lock$
 
 GIT_GIT_DIFF_PRE_COMMANDS:
   - command: git config --global core.autocrlf input
