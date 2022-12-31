@@ -37,6 +37,7 @@ setup() {
 }
 
 teardown() {
+  cd - || exit 1
   rm -Rf "${BATS_TMP_DIR}" || true
   unstub_all
 }
@@ -118,142 +119,130 @@ function Git::gitRenameBranch::too_much_parameters { #@test
 }
 
 function Git::gitRenameBranch::rename_local_and_push_branch { #@test
-  git() {
-    if [[ "$2" = "--show-current" ]]; then
-      echo "oldBranch"
-    else
-      echo "git $*"
-    fi
-  }
-  export -f git
+  stub git \
+    'rev-parse --git-dir : exit 0' \
+    'branch --show-current : echo "oldName"' \
+    'branch -m oldName newBranch : exit 0' \
+    'push --set-upstream origin newBranch : exit 0'
 
   testRename5() {
+    # shellcheck disable=SC2317
     echo -n 'y' | "${binDir}/gitRenameBranch" newBranch --push 2>&1
   }
   run testRename5
 
   assert_success
-  assert_line -n 1 "git branch -m oldBranch newBranch"
-  assert_line -n 3 "git push --set-upstream origin newBranch"
-  assert_lines_count 4
+  assert_line -n 0 --partial "INFO    - Renaming branch locally from oldName to newBranch"
+  assert_line -n 1 --partial "INFO    - Pushing new branch name newBranch"
+  assert_lines_count 2
 }
 
 function Git::gitRenameBranch::rename_local_push_delete_remote_branch { #@test
-  git() {
-    if [[ "$2" = "--show-current" ]]; then
-      echo "oldBranch"
-    else
-      echo "git $*"
-    fi
-  }
-  export -f git
+  stub git \
+    'rev-parse --git-dir : exit 0' \
+    'branch --show-current : echo "oldName"' \
+    'branch -m oldName newBranch : exit 0' \
+    'push origin :oldName : exit 0' \
+    'push --set-upstream origin newBranch : exit 0'
+
   testRename() {
+    # shellcheck disable=SC2317
     echo -n 'yy' | "${binDir}/gitRenameBranch" newBranch --push --delete 2>&1
   }
   run testRename
-
   assert_success
-  assert_line -n 1 "git branch -m oldBranch newBranch"
-  assert_line -n 3 "git push origin :oldBranch"
-  assert_line -n 5 "git push --set-upstream origin newBranch"
-  assert_lines_count 6
+  assert_line -n 0 --partial "INFO    - Renaming branch locally from oldName to newBranch"
+  assert_line -n 1 --partial "INFO    - Removing eventual old remote branch oldName"
+  assert_line -n 2 --partial "INFO    - Pushing new branch name newBranch"
+  assert_lines_count 3
 }
 
 function Git::gitRenameBranch::rename_local_and_delete_remote_branch { #@test
-  git() {
-    if [[ "$2" = "--show-current" ]]; then
-      # should not call this as oldBranch provided
-      exit 1
-    else
-      echo "git $*"
-    fi
-  }
-  export -f git
+  stub git \
+    'rev-parse --git-dir : exit 0' \
+    'branch -m oldName newBranch : exit 0' \
+    'push origin :oldName : exit 0'
 
   testRename4() {
+    # shellcheck disable=SC2317
     echo -n 'y' | "${binDir}/gitRenameBranch" newBranch oldName --delete 2>&1
   }
 
   run testRename4
   assert_success
 
-  assert_line -n 1 "git branch -m oldName newBranch"
-  assert_line -n 3 "git push origin :oldName"
-  assert_lines_count 4
+  assert_line -n 0 --partial "INFO    - Renaming branch locally from oldName to newBranch"
+  assert_line -n 1 --partial "INFO    - Removing eventual old remote branch oldName"
+  assert_lines_count 2
 }
 
 function Git::gitRenameBranch::rename_local_and_delete_remote_branch_without_oldName { #@test
-  git() {
-    if [[ "$2" = "--show-current" ]]; then
-      echo "oldBranch"
-    else
-      echo "git $*"
-    fi
-  }
-  export -f git
+  stub git \
+    'rev-parse --git-dir : exit 0' \
+    'branch --show-current : echo "oldName"' \
+    'branch -m oldName newBranch : exit 0' \
+    'push origin :oldName : exit 0'
+
   testRename6() {
+    # shellcheck disable=SC2317
     echo -n 'y' | "${binDir}/gitRenameBranch" newBranch --delete 2>&1
   }
   run testRename6
 
   assert_success
-  assert_line -n 1 "git branch -m oldBranch newBranch"
-  assert_line -n 3 "git push origin :oldBranch"
-  assert_lines_count 4
+  assert_line -n 0 --partial "INFO    - Renaming branch locally from oldName to newBranch"
+  assert_line -n 1 --partial "INFO    - Removing eventual old remote branch oldName"
+  assert_lines_count 2
 }
 
 function Git::gitRenameBranch::rename_local_and_push_branch_assume_yes { #@test
-  git() {
-    if [[ "$2" = "--show-current" ]]; then
-      echo "oldBranch"
-    else
-      echo "git $*"
-    fi
-  }
-  export -f git
+  stub git \
+    'rev-parse --git-dir : exit 0' \
+    'branch --show-current : echo "oldName"' \
+    'branch -m oldName newBranch : exit 0' \
+    'push --set-upstream origin newBranch : exit 0'
+
   testRename7() {
+    # shellcheck disable=SC2317
     "${binDir}/gitRenameBranch" newBranch --push --assume-yes 2>&1
   }
   run testRename7
 
   assert_success
-  assert_line -n 1 "git branch -m oldBranch newBranch"
-  assert_line -n 3 "git push --set-upstream origin newBranch"
-  assert_lines_count 4
+  assert_line -n 0 --partial "INFO    - Renaming branch locally from oldName to newBranch"
+  assert_line -n 1 --partial "INFO    - Pushing new branch name newBranch"
+  assert_lines_count 2
 }
 
 function Git::gitRenameBranch::rename_local_push_delete_remote_branch_assume_yes { #@test
-  git() {
-    if [[ "$2" = "--show-current" ]]; then
-      echo "oldBranch"
-    else
-      echo "git $*"
-    fi
-  }
-  export -f git
+  stub git \
+    'rev-parse --git-dir : exit 0' \
+    'branch --show-current : echo "oldName"' \
+    'branch -m oldName newBranch : exit 0' \
+    'push origin :oldName : exit 0' \
+    'push --set-upstream origin newBranch : exit 0'
+
   testRename8() {
+    # shellcheck disable=SC2317
     echo -n 'yy' | "${binDir}/gitRenameBranch" newBranch --push --delete --assume-yes 2>&1
   }
   run testRename8
 
   assert_success
-  assert_line -n 1 "git branch -m oldBranch newBranch"
-  assert_line -n 3 "git push origin :oldBranch"
-  assert_line -n 5 "git push --set-upstream origin newBranch"
-  assert_lines_count 6
+  assert_line -n 0 --partial "INFO    - Renaming branch locally from oldName to newBranch"
+  assert_line -n 1 --partial "INFO    - Removing eventual old remote branch oldName"
+  assert_line -n 2 --partial "INFO    - Pushing new branch name newBranch"
+  assert_lines_count 3
 }
 
 function Git::gitRenameBranch::rename_local_and_delete_remote_branch_assume_yes { #@test
-  git() {
-    if [[ "$2" = "--show-current" ]]; then
-      # should not call this as oldBranch provided
-      exit 1
-    else
-      echo "git $*"
-    fi
-  }
-  export -f git
+  stub git \
+    'rev-parse --git-dir : echo "git rev-parse --git-dir"' \
+    'branch -m oldName newBranch : echo "git branch -m oldName newBranch"' \
+    'push origin :oldName : echo "git push origin :oldName"'
+
   runRename3() {
+    # shellcheck disable=SC2317
     echo -n 'y' | "${binDir}/gitRenameBranch" newBranch oldName --delete --assume-yes 2>&1
   }
   run runRename3
@@ -265,21 +254,20 @@ function Git::gitRenameBranch::rename_local_and_delete_remote_branch_assume_yes 
 }
 
 function Git::gitRenameBranch::rename_local_and_delete_remote_branch_without_oldName_assume_yes { #@test
-  git() {
-    if [[ "$2" = "--show-current" ]]; then
-      echo "oldBranch"
-    else
-      echo "git $*"
-    fi
-  }
-  export -f git
+  stub git \
+    'rev-parse --git-dir : exit 0' \
+    'branch --show-current : echo "oldName"' \
+    'branch -m oldName newBranch : echo "git branch -m oldName newBranch"' \
+    'push origin :oldName : echo "git push origin :oldName"'
+
   runRename2() {
+    # shellcheck disable=SC2317
     echo -n 'y' | "${binDir}/gitRenameBranch" newBranch --delete --assume-yes 2>&1
   }
   run runRename2
 
   assert_success
-  assert_line -n 1 "git branch -m oldBranch newBranch"
-  assert_line -n 3 "git push origin :oldBranch"
+  assert_line -n 1 "git branch -m oldName newBranch"
+  assert_line -n 3 "git push origin :oldName"
   assert_lines_count 4
 }

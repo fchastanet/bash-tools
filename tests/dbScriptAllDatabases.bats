@@ -53,6 +53,7 @@ function Database::dbScriptAllDatabases::script_file_not_provided { #@test
   cp "${BATS_TEST_DIRNAME}/mocks/parallel" "${HOME}/bin"
 
   f() {
+    # shellcheck disable=SC2317
     "${binDir}/dbScriptAllDatabases" 2>&1
   }
   run f

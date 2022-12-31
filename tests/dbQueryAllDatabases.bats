@@ -67,6 +67,7 @@ function Database::dbQueryAllDatabases::providing_env_file_change_db_connection_
     '\* --batch --raw --default-character-set=utf8 --connect-timeout=5 db2 -e \* : echo -n "${8}" >'" "${HOME}/query3" ; cat "${BATS_TEST_DIRNAME}/data/databaseSize.result_db2""
 
   f() {
+    # shellcheck disable=SC2317
     "${binDir}/dbQueryAllDatabases" \
       -d "${BATS_TEST_DIRNAME}/data/databaseSize.envProvided.sh" \
       "${rootDir}/conf/dbQueries/databaseSize.sql" 2>/dev/null
