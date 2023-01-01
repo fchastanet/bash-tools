@@ -30,14 +30,13 @@ jobs:
       - name: Linting - Shellcheck
         run: |
           set -exo pipefail
-          ./vendor/bash-tools-framework/bin/shellcheckLint --source-path=SCRIPTDIR --external-sources | tee
-          logs/shellcheck-checkstyle.xml
+          ./vendor/bash-tools-framework/bin/shellcheckLint --source-path=SCRIPTDIR --external-sources | \
+            tee logs/shellcheck-checkstyle.xml
 
       - name: Linting - Awk
         run: |
           set -exo pipefail
-          ./vendor/bash-tools-framework/bin/awkLint | tee
-          logs/awk-checkstyle.xml
+          ./vendor/bash-tools-framework/bin/awkLint | tee logs/awk-checkstyle.xml
 
       - name: build bin files + check md5
         run: |

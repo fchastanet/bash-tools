@@ -19,6 +19,7 @@ Args::defaultHelp "${HELP}" "$@"
 Git::cloneOrPullIfNoChanges \
   "${ROOT_DIR}/vendor/bash-tools-framework" \
   "https://github.com/fchastanet/bash-tools-framework.git"
+(cd "${ROOT_DIR}/vendor/bash-tools-framework" && git checkout debug)
 
 declare -a externalBinaries=(
   awkLint
