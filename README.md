@@ -1,4 +1,4 @@
-# bash-tools-framework
+# bash-tools
 
 > **_NOTE:_** **Documentation is best viewed on
 > [github-pages](https://fchastanet.github.io/bash-tools/)**
@@ -12,40 +12,34 @@
 )](
   https://github.com/fchastanet/bash-tools/actions?query=workflow%3A%22Lint+and+test%22+branch%3Amaster
 )
-
 [![ProjectStatus](
   http://opensource.box.com/badges/active.svg
 )](
   http://opensource.box.com/badges
   'Project Status'
 )
-
 [![DeepSource](
   https://deepsource.io/gh/fchastanet/bash-tools.svg/?label=active+issues&show_trend=true
 )](
   https://deepsource.io/gh/fchastanet/bash-tools/?ref=repository-badge
 )
-
 [![DeepSource](
   https://deepsource.io/gh/fchastanet/bash-tools.svg/?label=resolved+issues&show_trend=true
 )](
   https://deepsource.io/gh/fchastanet/bash-tools/?ref=repository-badge
 )
-
 [![AverageTimeToResolveAnIssue](
   http://isitmaintained.com/badge/resolution/fchastanet/bash-tools.svg
 )](
   http://isitmaintained.com/project/fchastanet/bash-tools
   'Average time to resolve an issue'
 )
-
 [![PercentageOfIssuesStillOpen](
   http://isitmaintained.com/badge/open/fchastanet/bash-tools.svg
 )](
   http://isitmaintained.com/project/fchastanet/bash-tools
   'Percentage of issues still open'
 )
-
 <!-- markdownlint-restore -->
 <!-- prettier-ignore-end -->
 
