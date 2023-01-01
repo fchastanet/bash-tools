@@ -155,18 +155,18 @@ Launch UT on different environments:
 
 ```bash
 VENDOR="alpine" BASH_TAR_VERSION=4.4 BASH_IMAGE=bash \
-  SKIP_BUILD=0 SKIP_USER=1 ./bin/test -r src -j 16
+  SKIP_BUILD=1 SKIP_USER=1 ./bin/test -r src -j 16
 VENDOR="alpine" BASH_TAR_VERSION=5.0 BASH_IMAGE=bash \
-  SKIP_BUILD=0 SKIP_USER=1 ./bin/test -r src -j 16
+  SKIP_BUILD=1 SKIP_USER=1 ./bin/test -r src -j 16
 VENDOR="alpine" BASH_TAR_VERSION=5.1 BASH_IMAGE=bash \
-  SKIP_BUILD=0 SKIP_USER=1 ./bin/test -r src -j 16
+  SKIP_BUILD=1 SKIP_USER=1 ./bin/test -r src -j 16
 
 VENDOR="ubuntu" BASH_TAR_VERSION=4.4 BASH_IMAGE=ubuntu:20.04 \
-  SKIP_BUILD=0 SKIP_USER=1 ./bin/test -r src -j 16
+  SKIP_BUILD=1 SKIP_USER=1 ./bin/test -r src -j 2
 VENDOR="ubuntu" BASH_TAR_VERSION=5.0 BASH_IMAGE=ubuntu:20.04 \
-  SKIP_BUILD=0 SKIP_USER=1 ./bin/test -r src -j 16
+  SKIP_BUILD=1 SKIP_USER=1 ./bin/test -r src -j 2
 VENDOR="ubuntu" BASH_TAR_VERSION=5.1 BASH_IMAGE=ubuntu:20.04 \
-  SKIP_BUILD=0 SKIP_USER=1 ./bin/test -r src -j 16
+  SKIP_BUILD=1 SKIP_USER=1 ./bin/test -r src -j 2
 ```
 
 ### 3.3. auto generated bash doc
