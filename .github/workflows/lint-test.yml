@@ -78,10 +78,10 @@ jobs:
         include:
           - vendor: ubuntu
             bashImage: ubuntu:20.04
-            options: -j 8
+            options: -j 1
           - vendor: alpine
             bashImage: bash
-            options: -j 2
+            options: -j 1
     steps:
       - name: Checkout
         uses: actions/checkout@v3
