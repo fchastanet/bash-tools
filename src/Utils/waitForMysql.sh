@@ -9,6 +9,8 @@ HELP="$(
 ${__HELP_TITLE}Description:${__HELP_NORMAL} wait for mysql to be ready
 
 ${__HELP_TITLE}Usage:${__HELP_NORMAL} ${SCRIPT_NAME} <host> <port> <user> <pass>
+
+.INCLUDE "${ORIGINAL_TEMPLATE_DIR}/_includes/author.tpl"
 EOF
 )"
 Args::defaultHelp "${HELP}" "$@"

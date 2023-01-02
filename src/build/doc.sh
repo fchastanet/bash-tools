@@ -10,7 +10,15 @@ if [[ "${IN_BASH_DOCKER:-}" != "You're in docker" ]]; then
   exit $?
 fi
 
-Args::defaultHelp "Generate Jekyll documentation" "$@"
+HELP="$(
+  cat <<EOF
+${__HELP_TITLE}Usage:${__HELP_NORMAL} ${SCRIPT_NAME}
+Generate Jekyll documentation
+
+.INCLUDE "${ORIGINAL_TEMPLATE_DIR}/_includes/author.tpl"
+EOF
+)"
+Args::defaultHelp "${HELP}" "$@"
 
 ((TOKEN_NOT_FOUND_COUNT = 0)) || true
 
@@ -24,7 +32,7 @@ replaceTokenByInput() {
 
     cat - | Filters::escapeColorCodes >"${tokenFile}"
 
-    sed -i \
+    sed -E -i \
       -e "/${token}/r ${tokenFile}" \
       -e "/${token}/d" \
       "${targetFile}"
@@ -63,7 +71,6 @@ mkdir -p ~/.bash-tools
   cd "${ROOT_DIR}" || exit 1
   cp -R conf/. ~/.bash-tools
   sed -i \
-    -e "s@^BASH_TOOLS_FOLDER=.*@BASH_TOOLS_FOLDER=$(pwd)@g" \
     -e "s@^S3_BASE_URL=.*@S3_BASE_URL=s3://example.com/exports/@g" \
     ~/.bash-tools/.env
   # fake docker command
@@ -83,7 +90,7 @@ generateMdFileFromTemplate \
   "${BIN_DIR}"
 
 # inject plantuml diagram source code into command
-sed -i \
+sed -E -i \
   -e "/@@@mysql2puml_plantuml_diagram@@@/r ${ROOT_DIR}/tests/data/mysql2puml.puml" \
   -e "/@@@mysql2puml_plantuml_diagram@@@/d" \
   "${DOC_DIR}/Commands.md"

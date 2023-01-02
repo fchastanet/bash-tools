@@ -107,3 +107,8 @@ WORKDIR
 userdel
 addgroup
 MPFR
+canonicalize
+Chastanet
+Scrasnups
+datetime
+gensub

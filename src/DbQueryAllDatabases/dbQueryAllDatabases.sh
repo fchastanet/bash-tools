@@ -6,11 +6,6 @@
 
 Assert::expectNonRootUser
 
-Framework::loadEnv
-
-# ensure that Ctrl-C is trapped by this script and not sub mysql process
-trap 'exit 130' INT
-
 #default values
 SCRIPT_NAME=${0##*/}
 JOBS_NUMBER=1
@@ -45,6 +40,8 @@ ${__HELP_TITLE}List of available dsn:${__HELP_NORMAL}
 ${dsnList}
 ${__HELP_TITLE}List of available queries (default dir ${QUERIES_DIR} can be overridden in home dir ${HOME_QUERIES_DIR}):${__HELP_NORMAL}
 ${queriesList}
+
+.INCLUDE "${ORIGINAL_TEMPLATE_DIR}/_includes/author.tpl"
 EOF
 }
 

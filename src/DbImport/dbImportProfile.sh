@@ -6,11 +6,6 @@
 
 Assert::expectNonRootUser
 
-Framework::loadEnv
-
-# ensure that Ctrl-C is trapped by this script and not sub mysql process
-trap 'exit 130' INT
-
 # default values
 SCRIPT_NAME=${0##*/}
 PROFILE=""
@@ -49,6 +44,8 @@ ${__HELP_TITLE}List of available profiles (default profiles dir ${PROFILES_DIR} 
 ${profilesList}
 ${__HELP_TITLE}List of available dsn:${__HELP_NORMAL}
 ${dsnList}
+
+.INCLUDE "${ORIGINAL_TEMPLATE_DIR}/_includes/author.tpl"
 EOF
 }
 

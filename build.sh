@@ -7,14 +7,10 @@ BIN_DIR="${ROOT_DIR}/bin"
 
 # shellcheck source=./vendor/bash-tools-framework/src/_includes/_header.sh
 source "${FRAMEWORK_DIR}/src/_includes/_header.sh"
-# shellcheck source=./vendor/bash-tools-framework/src/Log/_.sh
-source "${FRAMEWORK_DIR}/src/Log/_.sh"
-# shellcheck source=./vendor/bash-tools-framework/src/Log/displayInfo.sh
-source "${FRAMEWORK_DIR}/src/Log/displayInfo.sh"
-# shellcheck source=./vendor/bash-tools-framework/src/Log/displayError.sh
-source "${FRAMEWORK_DIR}/src/Log/displayError.sh"
-# shellcheck source=./vendor/bash-tools-framework/src/Log/fatal.sh
-source "${FRAMEWORK_DIR}/src/Log/fatal.sh"
+# shellcheck source=./vendor/bash-tools-framework/src/Env/load.sh
+source "${FRAMEWORK_DIR}/src/Env/load.sh"
+# shellcheck source=./vendor/bash-tools-framework/src/Log/__all.sh
+source "${FRAMEWORK_DIR}/src/Log/__all.sh"
 
 export REPOSITORY_URL="https://github.com/fchastanet/bash-tools/tree/master"
 if (($# == 0)); then
@@ -23,6 +19,7 @@ if (($# == 0)); then
   done < <(find "${SRC_DIR}" -name "*.sh")
 else
   for file in "$@"; do
+    file="$(realpath "${file}")"
     "${FRAMEWORK_DIR}/bin/constructBinFile" "${file}" "${SRC_DIR}" "${BIN_DIR}" "${ROOT_DIR}"
   done
 fi

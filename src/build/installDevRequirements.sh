@@ -4,13 +4,15 @@
 
 .INCLUDE "${TEMPLATE_DIR}/_includes/_header.tpl"
 
-.INCLUDE "${TEMPLATE_DIR}/_includes/executedAsUser.sh"
+.INCLUDE "${ORIGINAL_TEMPLATE_DIR}/_includes/executedAsUser.sh"
 
 HELP="$(
   cat <<EOF
 ${__HELP_TITLE}Description:${__HELP_NORMAL} installs all requirements
 unit testing, fchastanet/bash-tools-framework
 ${__HELP_TITLE}Usage:${__HELP_NORMAL} ${SCRIPT_NAME}
+
+.INCLUDE "${ORIGINAL_TEMPLATE_DIR}/_includes/author.tpl"
 EOF
 )"
 Args::defaultHelp "${HELP}" "$@"

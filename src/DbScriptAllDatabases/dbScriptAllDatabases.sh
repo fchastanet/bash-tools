@@ -6,14 +6,6 @@
 
 Assert::expectNonRootUser
 
-Framework::loadEnv
-
-# make bash-tools folder available for db scripts
-export BASH_TOOLS_FOLDER
-
-# ensure that Ctrl-C is trapped by this script and not sub mysql process
-trap 'exit 130' INT
-
 #default values
 SCRIPT_NAME=${0##*/}
 JOBS_NUMBER=1
@@ -65,6 +57,8 @@ ${__HELP_TITLE}List of available dsn:${__HELP_NORMAL}
 ${dsnList}
 ${__HELP_TITLE}list of available scripts (${SCRIPTS_FOLDER}):${__HELP_NORMAL}
 ${scriptsList}
+
+.INCLUDE "${ORIGINAL_TEMPLATE_DIR}/_includes/author.tpl"
 EOF
 }
 
@@ -97,7 +91,7 @@ while true; do
       VERBOSE=1
       ;;
     --dsn | -d)
-      shift
+      shift || true
       DSN=${1:-:-default.local}
       ;;
     --database)

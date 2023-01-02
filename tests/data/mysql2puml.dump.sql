@@ -29,8 +29,8 @@ CREATE TABLE `learner` (
   `customer_id` int(11) NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `unique_learner_by_customer` (`external_id`,`customer_id`),
-  KEY `learner_customer_id_fk_customer_id` (`customer_id`),
-  CONSTRAINT `learner_customer_id_fk_customer_id` FOREIGN KEY (`customer_id`) REFERENCES `customer` (`id`)
+  KEY `learner_customer_id_index` (`customer_id`),
+  CONSTRAINT `learner_customer_id_fk` FOREIGN KEY (`customer_id`) REFERENCES `customer` (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=13 DEFAULT CHARSET=utf8;
 
 --
@@ -46,10 +46,10 @@ CREATE TABLE `learner_attribute` (
   `learner_id` int(10) unsigned NOT NULL,
   `attribute_id` int(10) unsigned NOT NULL,
   PRIMARY KEY (`id`),
-  KEY `learner_attribute_learner_id_fk_learner_id` (`learner_id`),
-  KEY `learner_attribute_attribute_id_fk_attribute_id` (`attribute_id`),
-  CONSTRAINT `learner_attribute_learner_id_fk_learner_id` FOREIGN KEY (`learner_id`) REFERENCES `learner` (`id`),
-  CONSTRAINT `learner_attribute_attribute_id_fk_attribute_id` FOREIGN KEY (`attribute_id`) REFERENCES `attribute` (`id`)
+  KEY `learner_attribute_learner_id_index` (`learner_id`),
+  KEY `learner_attribute_attribute_id_index` (`attribute_id`),
+  CONSTRAINT `learner_attribute_learner_id_fk` FOREIGN KEY (`learner_id`) REFERENCES `learner` (`id`),
+  CONSTRAINT `learner_attribute_attribute_id_fk` FOREIGN KEY (`attribute_id`) REFERENCES `attribute` (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=415 DEFAULT CHARSET=utf8;
 
 --
@@ -65,8 +65,8 @@ CREATE TABLE `attribute` (
   `internal_id` int(11) DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `attribute_internal_id_uniq` (`internal_id`),
-  KEY `attribute_mapped_attribute_id_fk_attribute_id` (`mapped_attribute_id`),
-  CONSTRAINT `attribute_mapped_attribute_id_fk_attribute_id` FOREIGN KEY (`mapped_attribute_id`) REFERENCES `attribute` (`id`)
+  KEY `attribute_mapped_attribute_id_index` (`mapped_attribute_id`),
+  CONSTRAINT `attribute_mapped_attribute_id_fk` FOREIGN KEY (`mapped_attribute_id`) REFERENCES `attribute` (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=190 DEFAULT CHARSET=utf8;
 
 --
@@ -81,8 +81,8 @@ CREATE TABLE `product` (
   `customer_id` int(11) NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `unique_training_by_customer` (`external_id`,`customer_id`),
-  KEY `product_customer_id_fk_customer_id` (`customer_id`),
-  CONSTRAINT `product_customer_id_fk_customer_id` FOREIGN KEY (`customer_id`) REFERENCES `customer` (`id`)
+  KEY `product_customer_id_index` (`customer_id`),
+  CONSTRAINT `product_customer_id_fk` FOREIGN KEY (`customer_id`) REFERENCES `customer` (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=27 DEFAULT CHARSET=utf8;
 
 --
@@ -97,10 +97,10 @@ CREATE TABLE `product_attribute` (
   `attribute_id` int(10) unsigned NOT NULL,
   `training_course_id` int(10) unsigned NOT NULL,
   PRIMARY KEY (`id`),
-  KEY `product_attribute_attribute_id_fk_attribute_id` (`attribute_id`),
-  KEY `products_training_course_id_fk_trai` (`training_course_id`),
-  CONSTRAINT `products_training_course_id_fk_trai` FOREIGN KEY (`training_course_id`) REFERENCES `product` (`id`),
-  CONSTRAINT `product_attribute_attribute_id_fk_attribute_id` FOREIGN KEY (`attribute_id`) REFERENCES `attribute` (`id`)
+  KEY `product_attribute_attribute_id_index` (`attribute_id`),
+  KEY `products_training_course_id_index` (`training_course_id`),
+  CONSTRAINT `products_training_course_id_fk` FOREIGN KEY (`training_course_id`) REFERENCES `product` (`id`),
+  CONSTRAINT `product_attribute_attribute_id_fk` FOREIGN KEY (`attribute_id`) REFERENCES `attribute` (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=48 DEFAULT CHARSET=utf8;
 
 

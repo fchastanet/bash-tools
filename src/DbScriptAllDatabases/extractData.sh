@@ -4,6 +4,16 @@
 
 .INCLUDE "${TEMPLATE_DIR}/_includes/dbScriptOneDatabase.sh"
 
+HELP="$(
+  cat <<EOF
+${__HELP_TITLE}Description:${__HELP_NORMAL} example script file that can
+be used by bin/dbScriptAllDatabases
+
+.INCLUDE "${ORIGINAL_TEMPLATE_DIR}/_includes/author.tpl"
+EOF
+)"
+Args::defaultHelp "${HELP}" "$@"
+
 # shellcheck disable=SC2154
 if [[ -z "${scriptParameters[0]}" ]]; then
   Log::fatal "query string or file not provided"

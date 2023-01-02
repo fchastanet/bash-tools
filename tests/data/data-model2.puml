@@ -89,7 +89,7 @@ Table(core_learner, "core_learner") {
   column(id, INTEGER, "NOT NULL", PK, FK, UNIQUE)
   not_null(urn)
   unique(urn)
-  #ddd IIIIN
+  #ddd INTEGER
   column(test, NULL, UNIQUE)
   column(not_null, "", "NOT NULL")
   -mapped_skill_id uint precision=10
@@ -103,7 +103,7 @@ Table(core_test, "core_test") {
   primary_key(id) INTEGER
   not_null(urn)
   unique(urn)
-  #ddd IIIIN
+  #ddd INTEGER
   column(test, "UNIQUE", NULL)
   column(not_null, "", "NOT NULL")
   -mapped_skill_id uint precision=10

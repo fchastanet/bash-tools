@@ -11,6 +11,8 @@ ${__HELP_TITLE}Description:${__HELP_NORMAL} stream tar.gz file or gz file throug
 ${__HELP_TITLE}Usage:${__HELP_NORMAL} ${SCRIPT_NAME} <dumpFile> <targetDbName> <mysqlAuthFile> [characterSet] [dbImportOptions]
 characterSet: default value utf8
 dbImportOptions: default value empty
+
+.INCLUDE "${ORIGINAL_TEMPLATE_DIR}/_includes/author.tpl"
 EOF
 )"
 Args::defaultHelp "${HELP}" "$@"

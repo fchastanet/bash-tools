@@ -24,6 +24,8 @@ ${__HELP_TITLE}Usage:${__HELP_NORMAL} ${SCRIPT_NAME} <newBranchName> [<oldBranch
     --delete,-d delete old remote branch
     <newBranchName> the new branch name to give to current branch
     <oldBranchName> (optional) the name of the old branch if not current one
+
+.INCLUDE "${ORIGINAL_TEMPLATE_DIR}/_includes/author.tpl"
 EOF
 }
 
@@ -90,16 +92,17 @@ fi
 [[ "${oldName}" = "${newName}" ]] && Log::fatal "Branch name has not changed"
 
 Log::displayInfo "Renaming branch locally from ${oldName} to ${newName}"
-CMD="git branch -m \"${oldName}\" \"${newName}\""
-Log::displayDebug "Running '${CMD}'"
-eval "${CMD}"
+declare -a CMD=()
+CMD=(git branch -m "${oldName}" "${newName}")
+Log::displayDebug "Running '${CMD[*]}'"
+"${CMD[@]}"
 
 if [[ "${DELETE}" = "1" ]]; then
   deleteBranch() {
     Log::displayInfo "Removing eventual old remote branch ${oldName}"
-    CMD="git push origin \":${oldName}\""
-    Log::displayDebug "Running '${CMD}'"
-    eval "${CMD}" || true
+    CMD=(git push origin ":${oldName}")
+    Log::displayDebug "Running '${CMD[*]}'"
+    "${CMD[@]}" || true
   }
   if [[ "${INTERACTIVE}" = "0" ]] || UI::askYesNo "remove eventual old remote branch ${oldName}"; then
     deleteBranch
@@ -108,9 +111,9 @@ fi
 if [[ "${PUSH}" = "1" ]]; then
   push() {
     Log::displayInfo "Pushing new branch name ${newName}"
-    CMD="git push --set-upstream origin \"${newName}\""
-    Log::displayDebug "Running '${CMD}'"
-    eval "${CMD}" || true
+    CMD=(git push --set-upstream origin "${newName}")
+    Log::displayDebug "Running '${CMD[*]}'"
+    "${CMD[@]}" || true
   }
   if [[ "${INTERACTIVE}" = "0" ]] || UI::askYesNo "Push new branch name ${newName}"; then
     push

@@ -6,8 +6,6 @@
 
 Assert::expectNonRootUser
 
-Framework::loadEnv
-
 # default values
 PROFILE="default"
 TABLES=""
@@ -26,8 +24,6 @@ TIMEFORMAT='time spent : %3R'
 DB_IMPORT_DUMP_DIR=${DB_IMPORT_DUMP_DIR%/}
 PROFILES_DIR="$(cd "${CURRENT_DIR}/.." && pwd)/conf/dbImportProfiles"
 HOME_PROFILES_DIR="${HOME}/.bash-tools/dbImportProfiles"
-
-Framework::loadEnv
 
 showHelp() {
   local profilesList=""
@@ -75,6 +71,8 @@ ${__HELP_TITLE}List of available profiles (default profiles dir ${PROFILES_DIR} 
 ${profilesList}
 ${__HELP_TITLE}List of available dsn:${__HELP_NORMAL}
 ${dsnList}
+
+.INCLUDE "${ORIGINAL_TEMPLATE_DIR}/_includes/author.tpl"
 EOF
 }
 

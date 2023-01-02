@@ -11,12 +11,14 @@
 
 Assert::expectNonRootUser
 
-Args::defaultHelp "INTERNAL USE ONLY - USED BY bin/dbQueryAllDatabases" "$@"
+HELP="$(
+  cat <<EOF
+${__HELP_TITLE}Description:${__HELP_NORMAL} INTERNAL USE ONLY - USED BY bin/dbQueryAllDatabases
 
-Framework::loadEnv
-
-# ensure that Ctrl-C is trapped by this script and not sub mysql process
-trap 'exit 130' INT
+.INCLUDE "${ORIGINAL_TEMPLATE_DIR}/_includes/author.tpl"
+EOF
+)"
+Args::defaultHelp "${HELP}" "$@"
 
 # query is passed via export
 declare DSN_FILE="$1"

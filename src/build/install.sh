@@ -4,7 +4,20 @@
 
 .INCLUDE "${TEMPLATE_DIR}/_includes/_header.tpl"
 
-.INCLUDE "${TEMPLATE_DIR}/_includes/executedAsUser.sh"
+.INCLUDE "${ORIGINAL_TEMPLATE_DIR}/_includes/executedAsUser.sh"
+
+HELP="$(
+  cat <<EOF
+${__HELP_TITLE}Description:${__HELP_NORMAL}
+Install dependent softwares (GNU parallel)
+Install configuration files
+
+${__HELP_TITLE}Usage:${__HELP_NORMAL} ${SCRIPT_NAME}
+
+.INCLUDE "${ORIGINAL_TEMPLATE_DIR}/_includes/author.tpl"
+EOF
+)"
+Args::defaultHelp "${HELP}" "$@"
 
 if ! command -v parallel 2>/dev/null; then
   Log::displayInfo "We will install GNU parallel software, please enter you sudo password"
@@ -27,5 +40,4 @@ if [[ -d "${HOME}/.bash-tools" ]]; then
 else
   mkdir -p ~/.bash-tools
   cp -R conf/. ~/.bash-tools
-  sed -i -e "s@^BASH_TOOLS_FOLDER=.*@BASH_TOOLS_FOLDER=$(pwd)@g" ~/.bash-tools/.env
 fi

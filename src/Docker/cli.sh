@@ -6,11 +6,6 @@
 
 Assert::expectNonRootUser
 
-Framework::loadEnv
-
-# ensure that Ctrl-C is trapped by this script
-trap 'exit 130' INT
-
 SCRIPT_NAME=${0##*/}
 PROFILES_DIR="${ROOT_DIR}/conf/cliProfiles"
 HOME_PROFILES_DIR="${HOME}/.bash-tools/cliProfiles"
@@ -46,6 +41,8 @@ and should provide value for the following variables finalUserArg finalContainer
 
 ${__HELP_TITLE}List of available profiles (from ${PROFILES_DIR} and can be overridden in ${HOME_PROFILES_DIR}):${__HELP_NORMAL}
 ${profilesList}
+
+.INCLUDE "${ORIGINAL_TEMPLATE_DIR}/_includes/author.tpl"
 EOF
 }
 

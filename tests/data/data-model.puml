@@ -1,79 +1,122 @@
+@startuml
+' uncomment the line below if you're using computer with a retina display
+' skinparam dpi 300
+!function Table($name)
+  !return "class " + $name + " << (T,#FFAAAA) >>"
+!endfunction
+' we use bold for primary key
+' green color for unique
+' and underscore for not_null
+!function column($name, $type, $null="", $pk="", $fk="", $unique="")
+  !$label = ""
+
+  ' Display key
+  !if ($pk == "PK" && $fk != "FK")
+    !$label = "<color:red><&key></color>"
+  !elseif ($pk == "PK" && $fk == "FK")
+    !$label = "<color:blue><&key></color>"
+  !elseif ($fk == "FK")
+    !$label = "<color:green><&key></color>"
+  !else
+    !$label = "<&minus>"
+  !endif
+
+  ' Display nullable icon
+  !if ($null == "NULL")
+    !$label = $label + "<&ban>"
+  !else
+    !$label = $label + "<&minus>"
+  !endif
+
+  ' Display unique icon
+  !if ($unique == "UNIQUE")
+    !$label = $label + "<&audio-spectrum>"
+  !else
+    !$label = $label + "<&minus>"
+  !endif
+
+  ' display label in the right color (PK, FK, both, none)
+  !$label = $label + " "
+  !$columnSpec = $name + " : " + $type
+  !if ($pk == "PK" && $fk != "FK")
+    !$label = $label + "<u><color:red>" + $columnSpec + "</color></u>"
+  !elseif ($pk == "PK" && $fk == "FK")
+    !$label = $label + "<u><color:blue>" + $columnSpec + "</color></u>"
+  !elseif ($fk == "FK")
+    !$label = $label + "<u><color:green>" + $columnSpec + "</color></u>"
+  !else
+    !$label = $label + $columnSpec
+  !endif
+
+  !return $label
+!endfunction
+' other tags available:
+' <i></i>
+' <back:COLOR></color>, where color is a color name or html color code
+' (#FFAACC)
+' see: http://plantuml.com/classes.html#More
+hide methods
+hide stereotypes
+skinparam classAttributeIconSize 0
+
 ' entities
-table(core_customer) {
-column ( `id` ): int(11
-column ( `created_at` ): datetime(6)
-column ( `updated_at` ): datetime(6)
-column ( `instance_name` ): varchar(128)
-column ( PRIMARY ): KEY
-column ( UNIQUE ): KEY
+' entities
+Table(core_customer) {
+  column("id", "int11", "NOT NULL", "PK", "", "")
+  column("instance_name", "varchar128", "NOT NULL", "", "", "UNIQUE")
+  column("created_at", "datetime6", "NOT NULL", "", "", "")
+  column("updated_at", "datetime6", "NOT NULL", "", "", "")
 }
 
-
-table(core_learner) {
-column ( `created_at` ): datetime(6
-column ( `updated_at` ): datetime(6)
-column ( `id` ): int(10)
-column ( `external_id` ): varchar(255)
-column ( `customer_id` ): int(11)
-column ( PRIMARY ): KEY
-column ( UNIQUE ): KEY
-column ( `customer_id`) ):
-column ( KEY ): `core_learner_customer_id_6d356da8_fk_core_customer_id`
-foreign_key ( CONSTRAINT ): `core_learner_customer_id_6d356da8_fk_core_customer_id`
+Table(core_learner) {
+  column("id", "int10 unsigned", "NOT NULL", "PK", "", "")
+  column("customer_id", "int11", "NOT NULL", "", "", "UNIQUE")
+  column("external_id", "varchar255", "NOT NULL", "", "", "UNIQUE")
+  column("created_at", "datetime6", "NOT NULL", "", "", "")
+  column("updated_at", "datetime6", "NOT NULL", "", "", "")
 }
+core_learner "0..*" --> "1" core_customer : "id"
 
-table(core_learner_skill) {
-column ( `id` ): int(11
-column ( `created_at` ): datetime(6)
-column ( `updated_at` ): datetime(6)
-column ( `level` ): double
-column ( `interest` ): double
-column ( `learner_id` ): int(10)
-column ( `skill_id` ): int(10)
-column ( PRIMARY ): KEY
-column ( KEY ): `core_learner_skill_learner_id_684f904f_fk_core_learner_id`
-column ( KEY ): `core_learner_skill_skill_id_fa4d99ac_fk_core_skill_id`
-foreign_key ( CONSTRAINT ): `core_learner_skill_learner_id_684f904f_fk_core_learner_id`
-foreign_key ( CONSTRAINT ): `core_learner_skill_skill_id_fa4d99ac_fk_core_skill_id`
+Table(core_learner_skill) {
+  column("id", "int11", "NOT NULL", "PK", "", "")
+  column("learner_id", "int10 unsigned", "NOT NULL", "", "", "")
+  column("skill_id", "int10 unsigned", "NOT NULL", "", "", "")
+  column("created_at", "datetime6", "NOT NULL", "", "", "")
+  column("interest", "double", "NOT NULL", "", "", "")
+  column("level", "double", "NOT NULL", "", "", "")
+  column("updated_at", "datetime6", "NOT NULL", "", "", "")
 }
+core_learner_skill "0..*" --> "1" core_learner : "id"
+core_learner_skill "0..*" --> "1" core_skill : "id"
 
-table(core_skill) {
-column ( `created_at` ): datetime(6
-column ( `updated_at` ): datetime(6)
-column ( `id` ): int(10)
-column ( `translations` ): json
-column ( `mapped_skill_id` ): int(10)
-column ( `internal_id` ): int(11)
-column ( PRIMARY ): KEY
-column ( UNIQUE ): KEY
-column ( KEY ): `core_skill_mapped_skill_id_7b712770_fk_core_skill_id`
-foreign_key ( CONSTRAINT ): `core_skill_mapped_skill_id_7b712770_fk_core_skill_id`
+Table(core_skill) {
+  column("id", "int10 unsigned", "NOT NULL", "PK", "", "")
+  column("mapped_skill_id", "int10 unsigned", "NULL", "", "", "")
+  column("internal_id", "int11", "NULL", "", "", "UNIQUE")
+  column("created_at", "datetime6", "NOT NULL", "", "", "")
+  column("translations", "json", "NOT NULL", "", "", "")
+  column("updated_at", "datetime6", "NOT NULL", "", "", "")
 }
+core_skill "0..*" --> "1" core_skill : "id"
 
-table(core_trainingcourse) {
-column ( `created_at` ): datetime(6
-column ( `updated_at` ): datetime(6)
-column ( `id` ): int(10)
-column ( `external_id` ): int(10)
-column ( `customer_id` ): int(11)
-column ( PRIMARY ): KEY
-column ( UNIQUE ): KEY
-column ( `customer_id`) ):
-column ( KEY ): `core_trainingcourse_customer_id_0137ae93_fk_core_customer_id`
-foreign_key ( CONSTRAINT ): `core_trainingcourse_customer_id_0137ae93_fk_core_customer_id`
+Table(core_training_course) {
+  column("id", "int10 unsigned", "NOT NULL", "PK", "", "")
+  column("customer_id", "int11", "NOT NULL", "", "", "UNIQUE")
+  column("external_id", "int10 unsigned", "NOT NULL", "", "", "UNIQUE")
+  column("created_at", "datetime6", "NOT NULL", "", "", "")
+  column("updated_at", "datetime6", "NOT NULL", "", "", "")
 }
+core_training_course "0..*" --> "1" core_customer : "id"
 
-table(core_trainingcourseskill) {
-column ( `id` ): int(11
-column ( `created_at` ): datetime(6)
-column ( `updated_at` ): datetime(6)
-column ( `relevance` ): double
-column ( `skill_id` ): int(10)
-column ( `training_course_id` ): int(10)
-column ( PRIMARY ): KEY
-column ( KEY ): `core_trainingcourseskill_skill_id_1d096250_fk_core_skill_id`
-column ( KEY ): `core_trainingcourses_training_course_id_56f0012b_fk_core_trai`
-foreign_key ( CONSTRAINT ): `core_trainingcourses_training_course_id_56f0012b_fk_core_trai`
-foreign_key ( CONSTRAINT ): `core_trainingcourseskill_skill_id_1d096250_fk_core_skill_id`
+Table(core_training_course_skill) {
+  column("id", "int11", "NOT NULL", "PK", "", "")
+  column("skill_id", "int10 unsigned", "NOT NULL", "", "", "")
+  column("training_course_id", "int10 unsigned", "NOT NULL", "", "", "")
+  column("created_at", "datetime6", "NOT NULL", "", "", "")
+  column("relevance", "double", "NOT NULL", "", "", "")
+  column("updated_at", "datetime6", "NOT NULL", "", "", "")
 }
+core_training_course_skill "0..*" --> "1" core_skill : "id"
+core_training_course_skill "0..*" --> "1" core_training_course : "id"
+
 @enduml

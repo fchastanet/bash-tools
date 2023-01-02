@@ -9,8 +9,6 @@
 ############################################################
 Assert::expectNonRootUser
 
-Framework::loadEnv
-
 declare DSN="$1"
 # shellcheck disable=SC2034
 declare LOG_FORMAT="$2"

@@ -33,6 +33,7 @@ mysqldump --skip-add-drop-table --skip-add-locks --skip-disable-keys --skip-set-
 ${__HELP_TITLE}List of available skins:${__HELP_NORMAL}
 ${skinList}
 
+.INCLUDE "${ORIGINAL_TEMPLATE_DIR}/_includes/author.tpl"
 EOF
 }
 
@@ -101,7 +102,7 @@ fi
 
 awkScript="$(
   cat <<'EOF'
-.INCLUDE "$(cd "$(dirname ${SRC_FILE_PATH})" && pwd -P)/mysql2puml.awk"
+.INCLUDE "$(cd "$(dirname ${SRC_ABSOLUTE_PATH})" && pwd -P)/mysql2puml.awk"
 EOF
 )"
 awk --source "${awkScript}" "${absSkinFile}" - <&3
