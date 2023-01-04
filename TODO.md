@@ -2,11 +2,7 @@
 
 - dbImportStream ability to import from dbAuthFile internally or from db
   parameters
-- migrate jekyll to <https://nextra.site/docs/guide/organize-files> ?
-
-  - copy jekyll conf
-  - check if all variable = are declared local
-
+- check if all variable = are declared local
 - Update libraries command
 
   - command that allows to update the libraries in the repo

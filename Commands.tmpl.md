@@ -1,8 +1,3 @@
----
-title: 'The commands'
-permalink: /commands
----
-
 # The commands
 
 - [1. Build tools](#1-build-tools)

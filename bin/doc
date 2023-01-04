@@ -467,7 +467,7 @@ if ((BASH_FRAMEWORK_LOG_LEVEL > __LEVEL_OFF)); then
 fi
 
 BASH_FRAMEWORK_ENV_FILEPATH=${HOME}/.bash-tools/.env
-DOC_DIR="${ROOT_DIR}/jekyll"
+DOC_DIR="${ROOT_DIR}/pages"
 
 if [[ "${IN_BASH_DOCKER:-}" != "You're in docker" ]]; then
   "${BIN_DIR}/runBuildContainer" "/bash/bin/doc" "$@"
