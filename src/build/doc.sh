@@ -3,7 +3,7 @@
 # ROOT_DIR_RELATIVE_TO_BIN_DIR=..
 
 .INCLUDE "${TEMPLATE_DIR}/_includes/_header.tpl"
-DOC_DIR="${ROOT_DIR}/jekyll"
+DOC_DIR="${ROOT_DIR}/pages"
 
 if [[ "${IN_BASH_DOCKER:-}" != "You're in docker" ]]; then
   "${BIN_DIR}/runBuildContainer" "/bash/bin/doc" "$@"

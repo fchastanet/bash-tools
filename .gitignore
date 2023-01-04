@@ -4,11 +4,14 @@
 /megalinter-reports
 /_site
 /vendor
-/jekyll/*.md
-/jekyll/_site
-/jekyll/bashDoc
-/jekyll/tests
 *.bak
+
+# docsify github pages
+/pages/*.md
+/pages/_site
+/pages/bashDoc
+/pages/tests
+!/**/_sidebar.md
 
 # bash-tools-framework binaries
 /bin/awkLint
