@@ -23,14 +23,14 @@ fi
 #-----------------------------
 # configure docker environment
 #-----------------------------
-mkdir -p ~/.bash-tools
+mkdir -p "${HOME}/.bash-tools"
 
 (
   cd "${ROOT_DIR}" || exit 1
-  cp -R conf/. ~/.bash-tools
+  cp -R conf/. "${HOME}/.bash-tools"
   sed -i \
     -e "s@^S3_BASE_URL=.*@S3_BASE_URL=s3://example.com/exports/@g" \
-    ~/.bash-tools/.env
+    "${HOME}/.bash-tools/.env"
   # fake docker command
   touch /tmp/docker
   chmod 755 /tmp/docker

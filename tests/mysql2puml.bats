@@ -1,17 +1,10 @@
 #!/usr/bin/env bash
 
-rootDir="$(cd "${BATS_TEST_DIRNAME}/.." && pwd)"
-binDir="${rootDir}/bin"
-vendorDir="${rootDir}/vendor"
-export FRAMEWORK_DIR="${vendorDir}/bash-tools-framework"
-
-load "${vendorDir}/bats-support/load.bash"
-load "${vendorDir}/bats-assert/load.bash"
+# shellcheck source=tests/batsHeaders.sh
+source "$(cd "${BATS_TEST_DIRNAME}" && pwd)/batsHeaders.sh"
 
 # shellcheck source=vendor/bash-tools-framework/src/Env/load.sh
-source "${vendorDir}/bash-tools-framework/src/Env/load.sh" || exit 1
-# shellcheck source=vendor/bash-tools-framework/src/Log/__all.sh
-source "${vendorDir}/bash-tools-framework/src/Log/__all.sh" || exit 1
+source "${FRAMEWORK_DIR}/src/Env/load.sh" || exit 1
 
 setup() {
   export BASH_FRAMEWORK_ENV_FILEPATH="${rootDir}/conf/.env"

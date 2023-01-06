@@ -75,7 +75,7 @@ repos:
     hooks:
       - id: build-doc-files
         name: build-doc-files
-        entry: bash -c 'SKIP_BUILD=1 ./bin/doc'
+        entry: bash -c './bin/doc'
         language: system
         always_run: true
         require_serial: true
@@ -86,7 +86,7 @@ repos:
     hooks:
       - id: run-unit-tests
         name: run-unit-tests
-        entry: bash -c 'SKIP_BUILD=1 ./bin/test -r tests -j 8'
+        entry: bash -c './bin/test -r tests -j 8'
         language: system
         always_run: true
         require_serial: true
