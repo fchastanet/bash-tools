@@ -148,8 +148,6 @@ jobs:
             --build-arg GROUP_ID="$(id -g)" \
             .docker
 
-          ./bin/installDevRequirements
-
           docker run \
             --rm -w /bash -v "$(pwd):/bash" \
             --user "$(id -u):$(id -g)" \

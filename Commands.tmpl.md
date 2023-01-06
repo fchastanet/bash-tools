@@ -1,56 +1,45 @@
 # The commands
 
 - [1. Build tools](#1-build-tools)
-  - [1.1. bin/test](#11-bintest)
+  - [1.1. bin/installRequirements](#11-bininstallrequirements)
   - [1.2. bin/waitForIt](#12-binwaitforit)
-  - [1.3. bin/installRequirements](#13-bininstallrequirements)
-  - [1.4. bin/installDevRequirements](#14-bininstalldevrequirements)
-  - [1.5. bin/runBuildContainer](#15-binrunbuildcontainer)
-  - [1.6. bin/buildPushDockerImages](#16-binbuildpushdockerimages)
-  - [1.7. bin/waitForIt](#17-binwaitforit)
-  - [1.8. bin/waitForMysql](#18-binwaitformysql)
-  - [1.9. bin/doc](#19-bindoc)
-- [2. Linters](#2-linters)
-  - [2.1. bin/dockerLint](#21-bindockerlint)
-  - [2.2. bin/shellcheckLint](#22-binshellchecklint)
-  - [2.3. bin/awkLint](#23-binawklint)
-  - [2.4. bin/generateShellDoc](#24-bingenerateshelldoc)
-- [3. Converter and Generator tools](#3-converter-and-generator-tools)
-  - [3.1. bin/generateShellDoc](#31-bingenerateshelldoc)
-  - [3.2. bin/mysql2puml](#32-binmysql2puml)
-    - [3.2.1. Help](#321-help)
-    - [3.2.2. Example](#322-example)
-- [4. Installers](#4-installers)
-  - [4.1. bin/Installers/installDockerInWsl](#41-bininstallersinstalldockerinwsl)
-- [5. Git tools](#5-git-tools)
-  - [5.1. bin/gitIsAncestorOf](#51-bingitisancestorof)
-  - [5.2. bin/gitIsBranch](#52-bingitisbranch)
-  - [5.3. bin/gitRenameBranch](#53-bingitrenamebranch)
-- [6. Dev tools](#6-dev-tools)
-  - [6.1. bin/cli](#61-bincli)
+  - [1.3. bin/waitForMysql](#13-binwaitformysql)
+  - [1.4. bin/doc](#14-bindoc)
+- [2. Converter and Generator tools](#2-converter-and-generator-tools)
+  - [2.1. bin/mysql2puml](#21-binmysql2puml)
+    - [2.1.1. Help](#211-help)
+    - [2.1.2. Example](#212-example)
+- [3. Installers](#3-installers)
+  - [3.1. bin/Installers/installDockerInWsl](#31-bininstallersinstalldockerinwsl)
+- [4. Git tools](#4-git-tools)
+  - [4.1. bin/gitIsAncestorOf](#41-bingitisancestorof)
+  - [4.2. bin/gitIsBranch](#42-bingitisbranch)
+  - [4.3. bin/gitRenameBranch](#43-bingitrenamebranch)
+- [5. Dev tools](#5-dev-tools)
+  - [5.1. bin/cli](#51-bincli)
+    - [5.1.1. Help](#511-help)
+    - [5.1.2. Example 1: open bash on a container named web](#512-example-1-open-bash-on-a-container-named-web)
+    - [5.1.3. Example 2: connect to mysql container with root user](#513-example-2-connect-to-mysql-container-with-root-user)
+    - [5.1.4. Example 3: connect to mysql server in order to execute a query](#514-example-3-connect-to-mysql-server-in-order-to-execute-a-query)
+    - [5.1.5. Example 4: pipe sql command to mysql container](#515-example-4-pipe-sql-command-to-mysql-container)
+- [6. Database tools](#6-database-tools)
+  - [6.1. bin/dbQueryAllDatabases](#61-bindbqueryalldatabases)
     - [6.1.1. Help](#611-help)
-    - [6.1.2. Example 1: open bash on a container named web](#612-example-1-open-bash-on-a-container-named-web)
-    - [6.1.3. Example 2: connect to mysql container with root user](#613-example-2-connect-to-mysql-container-with-root-user)
-    - [6.1.4. Example 3: connect to mysql server in order to execute a query](#614-example-3-connect-to-mysql-server-in-order-to-execute-a-query)
-    - [6.1.5. Example 4: pipe sql command to mysql container](#615-example-4-pipe-sql-command-to-mysql-container)
-- [7. Database tools](#7-database-tools)
-  - [7.1. bin/dbQueryAllDatabases](#71-bindbqueryalldatabases)
-    - [7.1.1. Help](#711-help)
-  - [7.2. bin/dbScriptAllDatabases](#72-bindbscriptalldatabases)
-    - [7.2.1. Help](#721-help)
-  - [7.3. bin/dbImport](#73-bindbimport)
-    - [7.3.1. Help](#731-help)
-  - [7.4. bin/dbImportProfile](#74-bindbimportprofile)
-    - [7.4.1. Help](#741-help)
-  - [7.5. bin/dbImportStream](#75-bindbimportstream)
-  - [7.6. bin/dbQueryOneDatabase](#76-bindbqueryonedatabase)
+  - [6.2. bin/dbScriptAllDatabases](#62-bindbscriptalldatabases)
+    - [6.2.1. Help](#621-help)
+  - [6.3. bin/dbImport](#63-bindbimport)
+    - [6.3.1. Help](#631-help)
+  - [6.4. bin/dbImportProfile](#64-bindbimportprofile)
+    - [6.4.1. Help](#641-help)
+  - [6.5. bin/dbImportStream](#65-bindbimportstream)
+  - [6.6. bin/dbQueryOneDatabase](#66-bindbqueryonedatabase)
 
 ## 1. Build tools
 
-### 1.1. bin/test
+### 1.1. bin/installRequirements
 
 ```text
-@@@test_help@@@
+@@@installRequirements_help@@@
 ```
 
 ### 1.2. bin/waitForIt
@@ -59,91 +48,29 @@
 @@@waitForIt_help@@@
 ```
 
-### 1.3. bin/installRequirements
-
-```text
-@@@installRequirements_help@@@
-```
-
-### 1.4. bin/installDevRequirements
-
-```text
-@@@installDevRequirements_help@@@
-```
-
-### 1.5. bin/runBuildContainer
-
-```text
-@@@runBuildContainer_help@@@
-```
-
-### 1.6. bin/buildPushDockerImages
-
-```text
-@@@buildPushDockerImages_help@@@
-```
-
-### 1.7. bin/waitForIt
-
-```text
-@@@waitForIt_help@@@
-```
-
-### 1.8. bin/waitForMysql
+### 1.3. bin/waitForMysql
 
 ```text
 @@@waitForMysql_help@@@
 ```
 
-### 1.9. bin/doc
+### 1.4. bin/doc
 
 ```text
 @@@doc_help@@@
 ```
 
-## 2. Linters
+## 2. Converter and Generator tools
 
-### 2.1. bin/dockerLint
+### 2.1. bin/mysql2puml
 
-```text
-@@@dockerLint_help@@@
-```
-
-### 2.2. bin/shellcheckLint
-
-```text
-@@@shellcheckLint_help@@@
-```
-
-### 2.3. bin/awkLint
-
-```text
-@@@awkLint_help@@@
-```
-
-### 2.4. bin/generateShellDoc
-
-```text
-@@@generateShellDoc_help@@@
-```
-
-## 3. Converter and Generator tools
-
-### 3.1. bin/generateShellDoc
-
-```text
-@@@generateShellDoc_help@@@
-```
-
-### 3.2. bin/mysql2puml
-
-#### 3.2.1. Help
+#### 2.1.1. Help
 
 ```text
 @@@mysql2puml_help@@@
 ```
 
-#### 3.2.2. Example
+#### 2.1.2. Example
 
 Mysql dump of some tables
 
@@ -173,45 +100,45 @@ using plantuml software, here an example of resulting diagram
 
 ![resulting database diagram](tests/data/mysql2puml-model.png)
 
-## 4. Installers
+## 3. Installers
 
-### 4.1. bin/Installers/installDockerInWsl
+### 3.1. bin/Installers/installDockerInWsl
 
 ```text
 @@@Installers_installDockerInWsl_help@@@
 ```
 
-## 5. Git tools
+## 4. Git tools
 
-### 5.1. bin/gitIsAncestorOf
+### 4.1. bin/gitIsAncestorOf
 
 ```text
 @@@gitIsAncestorOf_help@@@
 ```
 
-### 5.2. bin/gitIsBranch
+### 4.2. bin/gitIsBranch
 
 ```text
 @@@gitIsBranch_help@@@
 ```
 
-### 5.3. bin/gitRenameBranch
+### 4.3. bin/gitRenameBranch
 
 ```text
 @@@gitRenameBranch_help@@@
 ```
 
-## 6. Dev tools
+## 5. Dev tools
 
-### 6.1. bin/cli
+### 5.1. bin/cli
 
-#### 6.1.1. Help
+#### 5.1.1. Help
 
 ```text
 @@@cli_help@@@
 ```
 
-#### 6.1.2. Example 1: open bash on a container named web
+#### 5.1.2. Example 1: open bash on a container named web
 
 ```bash
 cli web
@@ -225,7 +152,7 @@ docker exec -it -e COLUMNS="$(tput cols)" -e LINES="$(tput lines)" --user=
 apache2 //bin/bash
 ```
 
-#### 6.1.3. Example 2: connect to mysql container with root user
+#### 5.1.3. Example 2: connect to mysql container with root user
 
 ```bash
 cli mysql root bash
@@ -239,7 +166,7 @@ docker exec -e COLUMNS="$(tput cols)" -e LINES="$(tput lines)" -it --user=root
 project-mysql bash
 ```
 
-#### 6.1.4. Example 3: connect to mysql server in order to execute a query
+#### 5.1.4. Example 3: connect to mysql server in order to execute a query
 
 will actually execute this command :
 
@@ -249,7 +176,7 @@ docker exec -it -e COLUMNS="$(tput cols)" -e LINES="$(tput lines)" --user=mysql
 project-mysql //bin/bash -c 'mysql -h127.0.0.1 -uroot -proot -P3306'
 ```
 
-#### 6.1.5. Example 4: pipe sql command to mysql container
+#### 5.1.5. Example 4: pipe sql command to mysql container
 
 ```bash
 echo 'SELECT
@@ -269,9 +196,9 @@ project-mysql //bin/bash -c 'mysql -h127.0.0.1 -uroot -proot -P3306'
 notice that as input is given to the command, tty option is not provided to
 docker exec
 
-## 7. Database tools
+## 6. Database tools
 
-### 7.1. bin/dbQueryAllDatabases
+### 6.1. bin/dbQueryAllDatabases
 
 Execute a query on multiple database in order to generate a report, query can be
 parallelized on multiple databases
@@ -280,13 +207,13 @@ parallelized on multiple databases
 bin/dbQueryAllDatabases -e localhost-root conf/dbQueries/databaseSize.sql
 ```
 
-#### 7.1.1. Help
+#### 6.1.1. Help
 
 ```text
 @@@dbQueryAllDatabases_help@@@
 ```
 
-### 7.2. bin/dbScriptAllDatabases
+### 6.2. bin/dbScriptAllDatabases
 
 Allow to execute a script on each database of specified mysql server
 
@@ -306,13 +233,13 @@ launch script in parallel on multiple db at once
 bin/dbScriptAllDatabases --jobs 10 -d localhost-root dbCheckStructOneDatabase
 ```
 
-#### 7.2.1. Help
+#### 6.2.1. Help
 
 ```text
 @@@dbScriptAllDatabases_help@@@
 ```
 
-### 7.3. bin/dbImport
+### 6.3. bin/dbImport
 
 Import default source dsn/db ExampleDbName into default target dsn/db
 ExampleDbName
@@ -344,13 +271,13 @@ dbImport --from-dsn default.remote --target-dsn default.local -p all \
   fromDb targetDB --tables tableA,tableB
 ```
 
-#### 7.3.1. Help
+#### 6.3.1. Help
 
 ```text
 @@@dbImport_help@@@
 ```
 
-### 7.4. bin/dbImportProfile
+### 6.4. bin/dbImportProfile
 
 Import remote db into local db
 
@@ -363,19 +290,19 @@ bigger than given ratio (based on biggest table size). Profile is automatically
 saved in ${HOME}/.bash-tools/dbImportProfiles with this format `auto*<dsn>*<db>`
 **eg:** auto_default.local_MY_DB
 
-#### 7.4.1. Help
+#### 6.4.1. Help
 
 ```text
 @@@dbImportProfile_help@@@
 ```
 
-### 7.5. bin/dbImportStream
+### 6.5. bin/dbImportStream
 
 ```text
 @@@dbImportStream_help@@@
 ```
 
-### 7.6. bin/dbQueryOneDatabase
+### 6.6. bin/dbQueryOneDatabase
 
 ```text
 @@@dbQueryOneDatabase_help@@@

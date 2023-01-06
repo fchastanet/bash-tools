@@ -5,62 +5,20 @@
 .INCLUDE "${TEMPLATE_DIR}/_includes/_header.tpl"
 DOC_DIR="${ROOT_DIR}/pages"
 
-if [[ "${IN_BASH_DOCKER:-}" != "You're in docker" ]]; then
-  "${BIN_DIR}/runBuildContainer" "/bash/bin/doc" "$@"
-  exit $?
-fi
-
 HELP="$(
   cat <<EOF
+${__HELP_TITLE}Description:${__HELP_NORMAL} generate markdown documentation
 ${__HELP_TITLE}Usage:${__HELP_NORMAL} ${SCRIPT_NAME}
-Generate Jekyll documentation
 
 .INCLUDE "${ORIGINAL_TEMPLATE_DIR}/_includes/author.tpl"
 EOF
 )"
 Args::defaultHelp "${HELP}" "$@"
 
-((TOKEN_NOT_FOUND_COUNT = 0)) || true
-
-replaceTokenByInput() {
-  local token="$1"
-  local targetFile="$2"
-
-  (
-    local tokenFile
-    tokenFile="$(Framework::createTempFile "replaceTokenByInput")"
-
-    cat - | Filters::escapeColorCodes >"${tokenFile}"
-
-    sed -E -i \
-      -e "/${token}/r ${tokenFile}" \
-      -e "/${token}/d" \
-      "${targetFile}"
-  )
-}
-
-generateMdFileFromTemplate() {
-  local templateFile="$1"
-  local targetFile="$2"
-  local fromDir="$3"
-
-  cp "${templateFile}" "${targetFile}"
-
-  while IFS= read -r relativeFile; do
-    local token="${relativeFile#./}"
-    token="${token////_}"
-    if grep -q "@@@${token}_help@@@" "${targetFile}"; then
-      Log::displayInfo "generate help for ${token}"
-      ( #
-        (cd "${fromDir}" && "${relativeFile}" --help) |
-          replaceTokenByInput "@@@${token}_help@@@" "${targetFile}"
-      ) || Log::displayError "$(realpath "${fromDir}/${relativeFile}" --relative-to="${ROOT_DIR}") --help error caught"
-    else
-      ((++TOKEN_NOT_FOUND_COUNT))
-      Log::displayWarning "token ${token} not found in ${targetFile}"
-    fi
-  done < <(cd "${fromDir}" && find . -type f -executable)
-}
+if [[ "${IN_BASH_DOCKER:-}" != "You're in docker" ]]; then
+  "${BIN_DIR}/runBuildContainer" "/bash/bin/doc" "$@"
+  exit $?
+fi
 
 #-----------------------------
 # configure docker environment
@@ -84,10 +42,12 @@ export PATH=/tmp:${PATH}
 #-----------------------------
 
 Log::displayInfo 'generate Commands.md'
-generateMdFileFromTemplate \
+((TOKEN_NOT_FOUND_COUNT = 0)) || true
+ShellDoc::generateMdFileFromTemplate \
   "${ROOT_DIR}/Commands.tmpl.md" \
   "${DOC_DIR}/Commands.md" \
-  "${BIN_DIR}"
+  "${BIN_DIR}" \
+  TOKEN_NOT_FOUND_COUNT
 
 # inject plantuml diagram source code into command
 sed -E -i \

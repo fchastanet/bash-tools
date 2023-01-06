@@ -121,19 +121,6 @@ Args::defaultHelp() {
   fi
 }
 
-Filters::escapeColorCodes() {
-  cat - | sed -E $'s/\e\\[[0-9;:]*[a-zA-Z]//g'
-}
-
-# Public: create a temp file using default TMPDIR variable
-# initialized in src/_includes/_header.tpl
-#
-# **Arguments**:
-# @param $1 {String} template (optional)
-Framework::createTempFile() {
-  mktemp -p "${TMPDIR:-/tmp}" -t "$1.XXXXXXXXXXXX"
-}
-
 # Public: log level off
 export __LEVEL_OFF=0
 # Public: log level error
@@ -154,13 +141,6 @@ export __LEVEL_INFO
 export __LEVEL_SUCCESS
 export __LEVEL_DEBUG
 
-# Display message using error color (red)
-# @param {String} $1 message
-Log::displayError() {
-  echo -e "${__ERROR_COLOR}ERROR   - ${1}${__RESET_COLOR}" >&2
-  Log::logError "$1"
-}
-
 # Display message using info color (bg light blue/fg white)
 # @param {String} $1 message
 Log::displayInfo() {
@@ -168,11 +148,54 @@ Log::displayInfo() {
   Log::logInfo "$1"
 }
 
-# Display message using warning color (yellow)
-# @param {String} $1 message
-Log::displayWarning() {
-  echo -e "${__WARNING_COLOR}WARN    - ${1}${__RESET_COLOR}" >&2
-  Log::logWarning "$1"
+# generate markdown file from template by replacing
+# @@@command_help@@@ by the help of the command
+# eg: @@@test_help@@@ will be replaced by the output
+# of the command `test --help` in the directory provided
+# @param {String} $1 templateFile the file to use as template
+# @param {String} $2 targetFile the target file
+# @param {String} $3 fromDir the directory from which commands will be searched
+# @param {int} $4 tokenNotFoundCount passed by reference, will return
+#    the number of tokens @@@command_help@@@ not found in the template file
+# @param {String} excludeFilesPattern $5 grep exclude pattern
+#   eg: '^(bash-tpl)$'
+ShellDoc::generateMdFileFromTemplate() {
+  local templateFile="$1"
+  local targetFile="$2"
+  local fromDir="$3"
+  local -n tokenNotFoundCount=$4
+  local excludeFilesPattern="${5:-}"
+
+  local -a grepExclude
+  local startTime endTime
+
+  if [[ -z "${excludeFilesPattern}" ]]; then
+    grepExclude=(cat)
+  else
+    grepExclude=(grep -E -v "${excludeFilesPattern}")
+  fi
+
+  cp "${templateFile}" "${targetFile}"
+
+  startTime=$(date +%s.%3N)
+  ((nbTokensGenerated = 0)) || true
+  while IFS= read -r relativeFile; do
+    local token="${relativeFile#./}"
+    token="${token////_}"
+    if grep -q "@@@${token}_help@@@" "${targetFile}"; then
+      Log::displayInfo "generate help for ${token}"
+      ( #
+        (cd "${fromDir}" && "${relativeFile}" --help) |
+          File::replaceTokenByInput "@@@${token}_help@@@" "${targetFile}"
+      ) || Log::displayError "$(realpath "${fromDir}/${relativeFile}" --relative-to="${ROOT_DIR}") --help error caught"
+    else
+      ((++tokenNotFoundCount))
+      Log::displayWarning "token ${token} not found in ${targetFile}"
+    fi
+    ((nbTokensGenerated++)) || true
+  done < <(cd "${fromDir}" && find . -type f -executable | "${grepExclude[@]}")
+  endTime=$(date +%s.%3N)
+  Log::displayInfo "${nbTokensGenerated} commands' help replaced in $(echo "scale=3; ${endTime} - ${startTime}" | bc)seconds"
 }
 
 Args::defaultHelpNoExit() {
@@ -295,11 +318,35 @@ Env::load() {
   set +o allexport
 }
 
+File::replaceTokenByInput() {
+  local token="$1"
+  local targetFile="$2"
+
+  (
+    local tokenFile
+    tokenFile="$(Framework::createTempFile "replaceTokenByInput")"
+
+    cat - | Filters::escapeColorCodes >"${tokenFile}"
+
+    sed -E -i \
+      -e "/${token}/r ${tokenFile}" \
+      -e "/${token}/d" \
+      "${targetFile}"
+  )
+}
+
 # Display message using debug color (grey)
 # @param {String} $1 message
 Log::displayDebug() {
   echo -e "${__DEBUG_COLOR}DEBUG   - ${1}${__RESET_COLOR}" >&2
   Log::logDebug "$1"
+}
+
+# Display message using error color (red)
+# @param {String} $1 message
+Log::displayError() {
+  echo -e "${__ERROR_COLOR}ERROR   - ${1}${__RESET_COLOR}" >&2
+  Log::logError "$1"
 }
 
 # Display message using info color (bg light blue/fg white)
@@ -321,6 +368,13 @@ Log::displaySkipped() {
 Log::displaySuccess() {
   echo -e "${__SUCCESS_COLOR}SUCCESS - ${1}${__RESET_COLOR}" >&2
   Log::logSuccess "$1"
+}
+
+# Display message using warning color (yellow)
+# @param {String} $1 message
+Log::displayWarning() {
+  echo -e "${__WARNING_COLOR}WARN    - ${1}${__RESET_COLOR}" >&2
+  Log::logWarning "$1"
 }
 
 # log message to file
@@ -383,6 +437,19 @@ Log::rotate() {
 Args::showHelp() {
   local helpArg="$1"
   echo -e "${helpArg}"
+}
+
+Filters::escapeColorCodes() {
+  cat - | sed -E $'s/\e\\[[0-9;:]*[a-zA-Z]//g'
+}
+
+# Public: create a temp file using default TMPDIR variable
+# initialized in src/_includes/_header.tpl
+#
+# **Arguments**:
+# @param $1 {String} template (optional)
+Framework::createTempFile() {
+  mktemp -p "${TMPDIR:-/tmp}" -t "$1.XXXXXXXXXXXX"
 }
 
 # Internal: common log message
@@ -469,15 +536,10 @@ fi
 BASH_FRAMEWORK_ENV_FILEPATH=${HOME}/.bash-tools/.env
 DOC_DIR="${ROOT_DIR}/pages"
 
-if [[ "${IN_BASH_DOCKER:-}" != "You're in docker" ]]; then
-  "${BIN_DIR}/runBuildContainer" "/bash/bin/doc" "$@"
-  exit $?
-fi
-
 HELP="$(
   cat <<EOF
+${__HELP_TITLE}Description:${__HELP_NORMAL} generate markdown documentation
 ${__HELP_TITLE}Usage:${__HELP_NORMAL} ${SCRIPT_NAME}
-Generate Jekyll documentation
 
 ${__HELP_TITLE}Author:${__HELP_NORMAL}
 [François Chastanet](https://github.com/fchastanet)
@@ -490,47 +552,10 @@ EOF
 )"
 Args::defaultHelp "${HELP}" "$@"
 
-((TOKEN_NOT_FOUND_COUNT = 0)) || true
-
-replaceTokenByInput() {
-  local token="$1"
-  local targetFile="$2"
-
-  (
-    local tokenFile
-    tokenFile="$(Framework::createTempFile "replaceTokenByInput")"
-
-    cat - | Filters::escapeColorCodes >"${tokenFile}"
-
-    sed -E -i \
-      -e "/${token}/r ${tokenFile}" \
-      -e "/${token}/d" \
-      "${targetFile}"
-  )
-}
-
-generateMdFileFromTemplate() {
-  local templateFile="$1"
-  local targetFile="$2"
-  local fromDir="$3"
-
-  cp "${templateFile}" "${targetFile}"
-
-  while IFS= read -r relativeFile; do
-    local token="${relativeFile#./}"
-    token="${token////_}"
-    if grep -q "@@@${token}_help@@@" "${targetFile}"; then
-      Log::displayInfo "generate help for ${token}"
-      ( #
-        (cd "${fromDir}" && "${relativeFile}" --help) |
-          replaceTokenByInput "@@@${token}_help@@@" "${targetFile}"
-      ) || Log::displayError "$(realpath "${fromDir}/${relativeFile}" --relative-to="${ROOT_DIR}") --help error caught"
-    else
-      ((++TOKEN_NOT_FOUND_COUNT))
-      Log::displayWarning "token ${token} not found in ${targetFile}"
-    fi
-  done < <(cd "${fromDir}" && find . -type f -executable)
-}
+if [[ "${IN_BASH_DOCKER:-}" != "You're in docker" ]]; then
+  "${BIN_DIR}/runBuildContainer" "/bash/bin/doc" "$@"
+  exit $?
+fi
 
 #-----------------------------
 # configure docker environment
@@ -554,10 +579,12 @@ export PATH=/tmp:${PATH}
 #-----------------------------
 
 Log::displayInfo 'generate Commands.md'
-generateMdFileFromTemplate \
+((TOKEN_NOT_FOUND_COUNT = 0)) || true
+ShellDoc::generateMdFileFromTemplate \
   "${ROOT_DIR}/Commands.tmpl.md" \
   "${DOC_DIR}/Commands.md" \
-  "${BIN_DIR}"
+  "${BIN_DIR}" \
+  TOKEN_NOT_FOUND_COUNT
 
 # inject plantuml diagram source code into command
 sed -E -i \

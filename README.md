@@ -46,7 +46,7 @@
 - [1. Excerpt](#1-excerpt)
 - [2. Installation/Configuration](#2-installationconfiguration)
 - [3. Development Environment](#3-development-environment)
-  - [3.1. Install build dependencies](#31-install-build-dependencies)
+  - [3.1. build dependencies](#31-build-dependencies)
   - [3.2. UT](#32-ut)
   - [3.3. auto generated bash doc](#33-auto-generated-bash-doc)
   - [3.4. github page](#34-github-page)
@@ -54,9 +54,10 @@
 
 ## 1. Excerpt
 
-This is a collection of several bash tools using a bash framework allowing to
-easily import bash script, log, display log messages, database manipulation,
-user interaction, version comparison, ...
+This is a collection of several bash tools using
+[bash tools framework](https://fchastanet.github.io/bash-tools-framework/)
+allowing to easily import bash script, log, display log messages, database
+manipulation, user interaction, version comparison, ...
 
 List of tools:
 
@@ -77,16 +78,17 @@ List of tools:
   is accessible
 - **waitForMysql** : useful in docker container to know if mysql server is ready
   to receive queries
+- ...
 
 ## 2. Installation/Configuration
 
 clone this repository and create configuration files in your home directory
-alternatively you can use the **install.sh** script
+alternatively you can use the **install** script
 
 ```bash
 git clone git@github.com:fchastanet/bash-tools.git
 cd bash-tools
-./install.sh
+./install
 ```
 
 The following structure will be created in your home directory
@@ -124,31 +126,35 @@ touch ~/.parallel/will-cite
 
 ## 3. Development Environment
 
-### 3.1. Install build dependencies
+### 3.1. build dependencies
 
-In order to generate bash documentation and to run unit tests, you have to
-launch this command to install dependent libraries.
+Dependencies are automatically installed when used.
 
-```bash
-git submodule init
-git submodule update
-```
+`bin/test` script will install the following libraries inside `vendor` folder:
 
-this script will install the following libraries inside `vendor` folder:
-
-- [fchastanet/tomdoc.sh](https://github.com/fchastanet/tomdoc.sh.git)
 - [bats-core/bats-core](https://github.com/bats-core/bats-core.git)
 - [bats-core/bats-support](https://github.com/bats-core/bats-support.git)
 - [bats-core/bats-assert](https://github.com/bats-core/bats-assert.git)
 - [Flamefire/bats-mock](https://github.com/Flamefire/bats-mock.git)
 
+`./bin/doc` script will install:
+
+- [fchastanet/tomdoc.sh](https://github.com/fchastanet/tomdoc.sh.git)
+
+To avoid checking for libraries update and have an impact on performance, a file
+is created in vendor dir.
+
+- `vendor/.tomdocInstalled`
+- `vendor/.batsInstalled` You can remove these files to force the update of the
+  libraries, or just wait 24 hours that the timeout expires.
+
 ### 3.2. UT
 
-All the methods of this framework are unit tested, you can run the unit tests
-using the following command
+All the commands are unit tested, you can run the unit tests using the following
+command
 
 ```bash
-./bin/test
+./bin/test -r tests
 ```
 
 Launch UT on different environments:
