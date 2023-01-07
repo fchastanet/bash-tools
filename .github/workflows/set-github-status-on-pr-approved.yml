@@ -1,6 +1,6 @@
 ---
 # set git commit status when PR is approved
-name: Ste PR approved git status
+name: Set PR approved git status
 on:
   pull_request_review:
     types: [submitted]

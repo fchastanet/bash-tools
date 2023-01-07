@@ -1,17 +1,10 @@
 #!/usr/bin/env bash
 
-rootDir="$(cd "${BATS_TEST_DIRNAME}/.." && pwd)"
-binDir="${rootDir}/bin"
-vendorDir="${rootDir}/vendor"
+# shellcheck source=tests/batsHeaders.sh
+source "$(cd "${BATS_TEST_DIRNAME}" && pwd)/batsHeaders.sh"
 
 # shellcheck source=vendor/bash-tools-framework/src/Env/load.sh
-source "${vendorDir}/bash-tools-framework/src/Env/load.sh" || exit 1
-# shellcheck source=vendor/bash-tools-framework/src/Log/__all.sh
-FRAMEWORK_DIR="${vendorDir}/bash-tools-framework" source "${vendorDir}/bash-tools-framework/src/Log/__all.sh" || exit 1
-
-load "${vendorDir}/bats-support/load.bash"
-load "${vendorDir}/bats-assert/load.bash"
-load "${vendorDir}/bats-mock-Flamefire/load.bash"
+source "${FRAMEWORK_DIR}/src/Env/load.sh" || exit 1
 
 setup() {
   BATS_TMP_DIR="$(mktemp -d -p "${TMPDIR:-/tmp}" -t bats-$$-XXXXXX)"
