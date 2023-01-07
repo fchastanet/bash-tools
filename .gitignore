@@ -12,6 +12,7 @@
 /pages/bashDoc
 /pages/tests
 !/**/_sidebar.md
+!/**/_navbar.md
 
 # bash-tools-framework binaries
 /bin/awkLint
