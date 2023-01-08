@@ -7,7 +7,7 @@
 
 <!-- endRemove -->
 
-> [!TIP|label:Checkout related projects of this suite]
+> **_TIP:_** Checkout related projects of this suite
 >
 > - [Bash Tools Framework](https://fchastanet.github.io/bash-tools-framework/)
 > - **[Bash Tools](https://fchastanet.github.io/bash-tools/)**
