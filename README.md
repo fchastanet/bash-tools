@@ -16,7 +16,11 @@
 <!-- prettier-ignore-start -->
 <!-- markdownlint-capture -->
 <!-- markdownlint-disable -->
-
+[![GitHubLicense](
+  https://img.shields.io/github/license/Naereen/StrapDown.js.svg
+)](
+  https://github.com/fchastanet/bash-tools/blob/master/LICENSE
+)
 [![CI/CD](
   https://github.com/fchastanet/bash-tools/actions/workflows/lint-test.yml/badge.svg
 )](
