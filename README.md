@@ -7,7 +7,7 @@
 
 <!-- endRemove -->
 
-> [!TIP|label:Checkout related projects of this suite]
+> **_TIP:_** Checkout related projects of this suite
 >
 > - [Bash Tools Framework](https://fchastanet.github.io/bash-tools-framework/)
 > - **[Bash Tools](https://fchastanet.github.io/bash-tools/)**
@@ -16,7 +16,11 @@
 <!-- prettier-ignore-start -->
 <!-- markdownlint-capture -->
 <!-- markdownlint-disable -->
-
+[![GitHubLicense](
+  https://img.shields.io/github/license/Naereen/StrapDown.js.svg
+)](
+  https://github.com/fchastanet/bash-tools/blob/master/LICENSE
+)
 [![CI/CD](
   https://github.com/fchastanet/bash-tools/actions/workflows/lint-test.yml/badge.svg
 )](

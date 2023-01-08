@@ -62,7 +62,8 @@ cp "${ROOT_DIR}/tests/data/mysql2puml-model.png" "${DOC_DIR}/tests/data"
 cp "${ROOT_DIR}/README.md" "${DOC_DIR}/README.md"
 sed -i -E \
   -e '/<!-- remove -->/,/<!-- endRemove -->/d' \
-  -e 's#https://fchastanet.github.io/bash-tools##' \
+  -e 's#https://fchastanet.github.io/bash-tools/#/#' \
+  -e 's#^> \*\*_TIP:_\*\* (.*)$#> [!TIP|label:\1]#' \
   "${DOC_DIR}/README.md"
 
 if ((TOKEN_NOT_FOUND_COUNT > 0)); then

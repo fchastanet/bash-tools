@@ -1,5 +1,6 @@
 # Todo
 
+- display supported matrix (bash version, linux version)
 - dbImportStream ability to import from dbAuthFile internally or from db
   parameters
 - check if all variable = are declared local
