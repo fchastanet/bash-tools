@@ -13,15 +13,15 @@ FROM_DB=""
 DEFAULT_FROM_DSN="default.remote"
 FROM_DSN="${DEFAULT_FROM_DSN}"
 RATIO=70
-# remove last slash
-PROFILES_DIR="$(cd "${CURRENT_DIR}/.." && pwd)/conf/dbImportProfiles"
+# jscpd:ignore-start
+PROFILES_DIR="$(cd "${CURRENT_DIR}/.." && pwd -P)/conf/dbImportProfiles"
 HOME_PROFILES_DIR="${HOME}/.bash-tools/dbImportProfiles"
 
 showHelp() {
   local profilesList=""
   local dsnList=""
-  dsnList="$(Profiles::getConfMergedList "dsn" "env")"
-  profilesList="$(Profiles::getConfMergedList "dbImportProfiles" "sh" || true)"
+  dsnList="$(Conf::getMergedList "dsn" "env")"
+  profilesList="$(Conf::getMergedList "dbImportProfiles" "sh" || true)"
 
   cat <<EOF
 ${__HELP_TITLE}Description:${__HELP_NORMAL} generate optimized profiles to be used by dbImport
@@ -48,6 +48,7 @@ ${dsnList}
 .INCLUDE "${ORIGINAL_TEMPLATE_DIR}/_includes/author.tpl"
 EOF
 }
+# jscpd:ignore-end
 
 # read command parameters
 # $@ is all command line parameters passed to the script.

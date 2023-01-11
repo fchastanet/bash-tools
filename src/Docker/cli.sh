@@ -14,9 +14,9 @@ showHelp() {
   local containers
   containers=$(docker ps --format '{{.Names}}' | sed -E 's/[^-]+-(.*)/\1/' | paste -sd "," -)
   local profilesList=""
-  Profiles::loadConf "cliProfiles" "default"
+  Conf::load "cliProfiles" "default"
 
-  profilesList="$(Profiles::getConfMergedList "cliProfiles" ".sh" || true)"
+  profilesList="$(Conf::getMergedList "cliProfiles" ".sh" || true)"
 
   cat <<EOF
 ${__HELP_TITLE}Description:${__HELP_NORMAL} easy connection to docker container
@@ -50,7 +50,7 @@ EOF
 loadDsn() {
   local dsn="$1"
   local dsnFile
-  dsnFile="$(Profiles::getAbsoluteConfFile "dsn" "${dsn}" "env")"
+  dsnFile="$(Conf::getAbsoluteFile "dsn" "${dsn}" "env")"
   Database::checkDsnFile "${dsnFile}"
   # shellcheck source=/conf/dsn/default.local.env
   # shellcheck disable=SC1091
@@ -100,10 +100,10 @@ fi
 Assert::commandExists docker "check https://docs.docker.com/engine/install/ubuntu/"
 
 # load default conf file
-Profiles::loadConf "cliProfiles" "default"
+Conf::load "cliProfiles" "default"
 # try to load config file associated to container if provided
 if [[ -n "${containerArg}" ]]; then
-  Profiles::loadConf "cliProfiles" "${containerArg}" || {
+  Conf::load "cliProfiles" "${containerArg}" || {
     # conf file not existing fallback to provided args or to default ones if not provided
     finalContainerArg="${containerArg}"
     finalUserArg=${userArg:-${finalUserArg}}

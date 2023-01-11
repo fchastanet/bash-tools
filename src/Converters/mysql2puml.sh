@@ -11,7 +11,7 @@ SKIN="default"
 # Usage info
 showHelp() {
   local skinList=""
-  skinList="$(Profiles::getConfMergedList "mysql2pumlSkins" ".puml")"
+  skinList="$(Conf::getMergedList "mysql2pumlSkins" ".puml")"
 
   cat <<EOF
 ${__HELP_TITLE}Description:${__HELP_NORMAL} convert mysql dump sql schema to plantuml format
@@ -86,7 +86,7 @@ if (($# > 0)); then
   Log::fatal "too much arguments provided"
 fi
 
-absSkinFile="$(Profiles::getAbsoluteConfFile "mysql2pumlSkins" "${SKIN}" "puml")" ||
+absSkinFile="$(Conf::getAbsoluteFile "mysql2pumlSkins" "${SKIN}" "puml")" ||
   Log::fatal "the skin ${SKIN} does not exist"
 
 if [[ -n "${sqlFile}" ]]; then

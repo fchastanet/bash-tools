@@ -1,9 +1,7 @@
 #!/usr/bin/env bash
 
-# shellcheck disable=SC2034
-
 #####################################
-# GENERATED FILE FROM https://github.com/fchastanet/bash-tools/tree/master/src/Git/gitIsBranch.sh
+# GENERATED FILE FROM https://github.com/fchastanet/bash-tools/tree/master/src/build/dockerLint.sh
 # DO NOT EDIT IT
 #####################################
 
@@ -115,42 +113,6 @@ export __HELP_EXAMPLE
 export __HELP_TITLE
 export __HELP_NORMAL
 
-Args::defaultHelp() {
-  local helpArg=$1
-  shift || true
-  if ! Args::defaultHelpNoExit "${helpArg}" "$@"; then
-    exit 0
-  fi
-}
-
-# Public: log level off
-export __LEVEL_OFF=0
-# Public: log level error
-export __LEVEL_ERROR=1
-# Public: log level warning
-export __LEVEL_WARNING=2
-# Public: log level info
-export __LEVEL_INFO=3
-# Public: log level success
-export __LEVEL_SUCCESS=3
-# Public: log level debug
-export __LEVEL_DEBUG=4
-
-export __LEVEL_OFF
-export __LEVEL_ERROR
-export __LEVEL_WARNING
-export __LEVEL_INFO
-export __LEVEL_SUCCESS
-export __LEVEL_DEBUG
-
-# Display message using error color (red) and exit immediately with error status 1
-# @param {String} $1 message
-Log::fatal() {
-  echo -e "${__ERROR_COLOR}FATAL   - ${1}${__RESET_COLOR}" >&2
-  Log::logFatal "$1"
-  exit 1
-}
-
 Args::defaultHelpNoExit() {
   local helpArg=$1
   shift || true
@@ -177,6 +139,279 @@ Args::defaultHelpNoExit() {
         ;;
     esac
   done
+}
+
+# upgrade given binary to latest github release using retry
+# @param {String}   targetFile target binary file (eg: /usr/local/bin/kind)
+# @param {String}   releaseUrl github release url (eg: https://github.com/kubernetes-sigs/kind/releases/download/@latestVersion@/kind-linux-amd64)
+#    the placeholder @latestVersion@ will be replaced by the latest release version
+# @param {Function} versionCallback function called to get software version (default: Version::getCommandVersionFromPlainText will call software with argument --version)
+# @param {Function} installCallback function called to install the file retrieved on github (default copy as is and set execution bit)
+# @output log messages about retry, install, upgrade
+Github::upgradeRelease() {
+  local targetFile="$1"
+  local releaseUrl="$2"
+  local argVersion="${3:---version}"
+  local versionCallback="${4:-Version::getCommandVersionFromPlainText}"
+  # shellcheck disable=SC2034
+  local installCallback="${5:-}"
+  local latestVersion
+  local repo
+
+  repo="$(Github::extractRepoFromGithubUrl "${releaseUrl}")"
+  Github::getLatestRelease "${repo}" latestVersion ||
+    Log::fatal "Repo ${repo} latest version not found"
+  Log::displayInfo "Repo ${repo} latest version found is ${latestVersion}"
+
+  local currentVersion="not existing"
+  if [[ -f "${targetFile}" ]]; then
+    currentVersion="$(${versionCallback} "${targetFile}" "${argVersion}" 2>&1 || true)"
+  fi
+  if [[ "${currentVersion}" = "${latestVersion}" ]]; then
+    Log::displayInfo "${targetFile} version ${latestVersion} already installed"
+  else
+    if [[ -z "${currentVersion}" ]]; then
+      Log::displayInfo "Installing ${targetFile} with version ${latestVersion}"
+    else
+      Log::displayInfo "Upgrading ${targetFile} from version ${currentVersion} to ${latestVersion}"
+    fi
+    local url
+    url="$(echo "${releaseUrl}" | sed -E "s/@latestVersion@/${latestVersion}/g")"
+    Log::displayInfo "Using url ${url}"
+    newSoftware=$(mktemp -p "${TMPDIR:-/tmp}" -t github.newSoftware.XXXX)
+    Retry::default curl \
+      -L \
+      -o "${newSoftware}" \
+      --fail \
+      "${url}"
+
+    Github::defaultInstall "${newSoftware}" "${targetFile}" "${latestVersion}" "${installCallback}"
+  fi
+}
+
+# Check that command version is greater than expected minimal version
+# display warning if command version greater than expected minimal version
+# display error if command version less than expected minimal version and exit 1
+# @param {String} $1 command path
+# @param {String} $2 command line parameters to launch to get command version
+# @param {String} $3 expected minimal command version
+# @param {String} $4 optional help message to display if command does not exist
+# @return 1 if command version less than expected minimal version, 0 otherwise
+# @return 2 if command does not exist
+Version::checkMinimal() {
+  local commandName="$1"
+  local argVersion="$2"
+  local minimalVersion="$3"
+  local parseVersionCallback=${4:-Version::parse}
+  local help="${4:-}"
+
+  Assert::commandExists "${commandName}" "${help}" || return 2
+
+  local version
+  version="$("${commandName}" "${argVersion}" 2>&1 | ${parseVersionCallback})"
+
+  Log::displayDebug "check ${commandName} version ${version} against minimal ${minimalVersion}"
+
+  Version::compare "${version}" "${minimalVersion}" || {
+    local result=$?
+    if [[ "${result}" = "1" ]]; then
+      Log::displayWarning "${commandName} version is ${version} greater than ${minimalVersion}, OK let's continue"
+    elif [[ "${result}" = "2" ]]; then
+      Log::displayError "${commandName} minimal version is ${minimalVersion}, your version is ${version}"
+      return 1
+    fi
+    return 0
+  }
+
+}
+
+Args::showHelp() {
+  local helpArg="$1"
+  echo -e "${helpArg}"
+}
+
+# Public: check if command specified exists or return 1
+# with error and message if not
+#
+# **Arguments**:
+# * $1 commandName on which existence must be checked
+# * $2 helpIfNotExists a help command to display if the command does not exist
+#
+# **Exit**: code 1 if the command specified does not exist
+Assert::commandExists() {
+  local commandName="$1"
+  local helpIfNotExists="$2"
+
+  "${BASH_FRAMEWORK_COMMAND:-command}" -v "${commandName}" >/dev/null 2>/dev/null || {
+    Log::displayError "${commandName} is not installed, please install it"
+    if [[ -n "${helpIfNotExists}" ]]; then
+      Log::displayInfo "${helpIfNotExists}"
+    fi
+    return 1
+  }
+  return 0
+}
+
+Github::defaultInstall() {
+  local newSoftware="$1"
+  local targetFile="$2"
+  local version="$3"
+  local installCallback=$4
+  # shellcheck disable=SC2086
+  mkdir -p "$(dirname "${targetFile}")"
+  if [[ "$(type -t "${installCallback}")" = "function" ]]; then
+    ${installCallback} "${newSoftware}" "${targetFile}" "${version}"
+  else
+    mv "${newSoftware}" "${targetFile}"
+  fi
+  chmod +x "${targetFile}"
+  hash -r
+  rm -f "${newSoftware}" || true
+}
+
+# github repository eg: kubernetes-sigs/kind
+# @param {String} githubUrl eg: https://github.com/kubernetes-sigs/kind/releases/download/@latestVersion@/kind-linux-amd64
+Github::extractRepoFromGithubUrl() {
+  local githubUrl="$1"
+  echo "${githubUrl}" | sed -E 's#^https://github.com/([^/]+)/([^/]+)/.*$#\1/\2#'
+}
+
+# Retrieve the latest version number of a github release using Github API using retry
+# @param {String} $1 repository in the format fchastanet/bash-tools
+#   that would match https://github.com/fchastanet/bash-tools
+# @param {String} $2 reference to a variable that will contain the result of the command
+# @output log messages about retry
+Github::getLatestRelease() {
+  local repo="$1"
+  # we need to pass the result through a reference instead of output directly
+  # because retry can output too
+  local -n resultRef=$2
+  resultRef=""
+  local resultFile
+  resultFile="$(mktemp -p "${TMPDIR:-/tmp}" -t githubLatestRelease.XXXX)"
+  # Get latest release from GitHub api
+  if Retry::default curl \
+    -o "${resultFile}" \
+    --fail \
+    --silent \
+    "https://api.github.com/repos/${repo}/releases/latest"; then
+    # shellcheck disable=SC2034
+    resultRef="$(Version::githubApiExtractVersion <"${resultFile}")"
+    return 0
+  fi
+  # display curl result in case of failure
+  cat >&2 "${resultFile}"
+  rm -f "${resultFile}"
+}
+
+# Public: log level off
+export __LEVEL_OFF=0
+# Public: log level error
+export __LEVEL_ERROR=1
+# Public: log level warning
+export __LEVEL_WARNING=2
+# Public: log level info
+export __LEVEL_INFO=3
+# Public: log level success
+export __LEVEL_SUCCESS=3
+# Public: log level debug
+export __LEVEL_DEBUG=4
+
+export __LEVEL_OFF
+export __LEVEL_ERROR
+export __LEVEL_WARNING
+export __LEVEL_INFO
+export __LEVEL_SUCCESS
+export __LEVEL_DEBUG
+
+# Display message using debug color (grey)
+# @param {String} $1 message
+Log::displayDebug() {
+  echo -e "${__DEBUG_COLOR}DEBUG   - ${1}${__RESET_COLOR}" >&2
+  Log::logDebug "$1"
+}
+
+# Display message using error color (red)
+# @param {String} $1 message
+Log::displayError() {
+  echo -e "${__ERROR_COLOR}ERROR   - ${1}${__RESET_COLOR}" >&2
+  Log::logError "$1"
+}
+
+# Display message using info color (bg light blue/fg white)
+# @param {String} $1 message
+Log::displayInfo() {
+  echo -e "${__INFO_COLOR}INFO    - ${1}${__RESET_COLOR}" >&2
+  Log::logInfo "$1"
+}
+
+# Display message using warning color (yellow)
+# @param {String} $1 message
+Log::displayWarning() {
+  echo -e "${__WARNING_COLOR}WARN    - ${1}${__RESET_COLOR}" >&2
+  Log::logWarning "$1"
+}
+
+# Display message using error color (red) and exit immediately with error status 1
+# @param {String} $1 message
+Log::fatal() {
+  echo -e "${__ERROR_COLOR}FATAL   - ${1}${__RESET_COLOR}" >&2
+  Log::logFatal "$1"
+  exit 1
+}
+
+# Retry a command 5 times with a delay of 15 seconds between each attempt
+# @param          $@ the command to run
+# @return 0 on success, 1 if max retries count reached
+Retry::default() {
+  Retry::parameterized 5 15 "" "$@"
+}
+
+# @param $1 version 1
+# @param $2 version 2
+# @return
+#   0 if equal
+#   1 if version1 > version2
+#   2 else
+Version::compare() {
+  if [[ "$1" = "$2" ]]; then
+    return 0
+  fi
+  local IFS=.
+  # shellcheck disable=2206
+  local i ver1=($1) ver2=($2)
+  # fill empty fields in ver1 with zeros
+  for ((i = ${#ver1[@]}; i < ${#ver2[@]}; i++)); do
+    ver1[i]=0
+  done
+  for ((i = 0; i < ${#ver1[@]}; i++)); do
+    if [[ -z "${ver2[i]+unset}" ]] || [[ -z ${ver2[i]} ]]; then
+      # fill empty fields in ver2 with zeros
+      ver2[i]=0
+    fi
+    if ((10#${ver1[i]} > 10#${ver2[i]})); then
+      return 1
+    fi
+    if ((10#${ver1[i]} < 10#${ver2[i]})); then
+      return 2
+    fi
+  done
+  return 0
+}
+
+# extract software version number
+# @param $1 the command that will be called with --version parameter
+Version::getCommandVersionFromPlainText() {
+  local command="$1"
+  local argVersion="${2:---version}"
+  "${command}" "${argVersion}" 2>&1 |
+    Version::parse # keep only version numbers
+}
+
+# filter to keep only version number from a string
+# @stdin the string to parse
+Version::parse() {
+  sed -En 's/[^0-9]*(([0-9]+\.)*[0-9]+).*/\1/p' | head -n1
 }
 
 # lazy initialization
@@ -275,32 +510,11 @@ Env::load() {
   set +o allexport
 }
 
-# Display message using debug color (grey)
-# @param {String} $1 message
-Log::displayDebug() {
-  echo -e "${__DEBUG_COLOR}DEBUG   - ${1}${__RESET_COLOR}" >&2
-  Log::logDebug "$1"
-}
-
-# Display message using error color (red)
-# @param {String} $1 message
-Log::displayError() {
-  echo -e "${__ERROR_COLOR}ERROR   - ${1}${__RESET_COLOR}" >&2
-  Log::logError "$1"
-}
-
 # Display message using info color (bg light blue/fg white)
 # @param {String} $1 message
 Log::displayHelp() {
   echo -e "${__HELP_COLOR}HELP    - ${1}${__RESET_COLOR}" >&2
   Log::logHelp "$1"
-}
-
-# Display message using info color (bg light blue/fg white)
-# @param {String} $1 message
-Log::displayInfo() {
-  echo -e "${__INFO_COLOR}INFO    - ${1}${__RESET_COLOR}" >&2
-  Log::logInfo "$1"
 }
 
 # Display message using skip color (yellow)
@@ -315,13 +529,6 @@ Log::displaySkipped() {
 Log::displaySuccess() {
   echo -e "${__SUCCESS_COLOR}SUCCESS - ${1}${__RESET_COLOR}" >&2
   Log::logSuccess "$1"
-}
-
-# Display message using warning color (yellow)
-# @param {String} $1 message
-Log::displayWarning() {
-  echo -e "${__WARNING_COLOR}WARN    - ${1}${__RESET_COLOR}" >&2
-  Log::logWarning "$1"
 }
 
 # log message to file
@@ -387,9 +594,47 @@ Log::rotate() {
   fi
 }
 
-Args::showHelp() {
-  local helpArg="$1"
-  echo -e "${helpArg}"
+# Retry a command several times depending on parameters
+# @param {int}    $1 max retries
+# @param {int}    $2 delay between attempt
+# @param {String} $3 message to display to describe the attempt
+# @param ...      $@ rest of parameters, the command to run
+# @return 0 on success
+# @return 1 if max retries count reached
+# @return 2 if maxRetries invalid value
+Retry::parameterized() {
+  local maxRetries=$1
+  shift || true
+  local delayBetweenTries=$1
+  shift || true
+  local message="$1"
+  shift || true
+  local retriesCount=1
+  if [[ "${maxRetries}" -lt 1 ]]; then
+    Log::displayError "invalid maxRetry value"
+    return 2
+  fi
+
+  while true; do
+    Log::displayInfo "Attempt ${retriesCount}/${maxRetries}: ${message}"
+    if "$@"; then
+      break
+    elif [[ "${retriesCount}" -lt "${maxRetries}" ]]; then
+      Log::displayWarning "Command failed. Wait for ${delayBetweenTries} seconds"
+      ((retriesCount++))
+      sleep "${delayBetweenTries}"
+    else
+      Log::displayError "The command has failed after ${retriesCount} attempts."
+      return 1
+    fi
+  done
+  return 0
+}
+
+# extract version number from github api
+# @stdin json result of github API
+Version::githubApiExtractVersion() {
+  jq -r ".tag_name" | Version::parse
 }
 
 # Internal: common log message
@@ -473,24 +718,22 @@ if ((BASH_FRAMEWORK_LOG_LEVEL > __LEVEL_OFF)); then
   fi
 fi
 
-BASH_FRAMEWORK_ENV_FILEPATH=${HOME}/.bash-tools/.env
-if [[ -d "${ROOT_DIR}/vendor/bash-tools-framework" ]]; then
-  FRAMEWORK_DIR="$(cd "${ROOT_DIR}/vendor/bash-tools-framework" && pwd -P)"
-else
-  FRAMEWORK_DIR="${ROOT_DIR}/vendor/bash-tools-framework"
-fi
-export FRAMEWORK_DIR
-
+DEFAULT_ARGS=(-f checkstyle)
+MIN_HADOLINT_VERSION="2.12.0"
 HELP="$(
   cat <<EOF
-${__HELP_TITLE}Usage:${__HELP_NORMAL} ${SCRIPT_NAME} <branchName>
-show an error if branchName is not a known branch
+${__HELP_TITLE}Description:${__HELP_NORMAL} hadolint wrapper
+- installs new hadolint version(>${MIN_HADOLINT_VERSION}) automatically
+- lint this project files using default files filter
+- use the default options '${DEFAULT_ARGS[*]}' if no parameter specified
+
+${__HELP_TITLE}Usage:${__HELP_NORMAL} ${SCRIPT_NAME} <hadolint options>
 
 ${__HELP_TITLE}Author:${__HELP_NORMAL}
 [François Chastanet](https://github.com/fchastanet)
 
 ${__HELP_TITLE}Source file:${__HELP_NORMAL}
-https://github.com/fchastanet/bash-tools/tree/master/src/Git/gitIsBranch.sh
+https://github.com/fchastanet/bash-tools/tree/master/src/build/dockerLint.sh
 
 ${__HELP_TITLE}License:${__HELP_NORMAL}
 MIT License
@@ -498,14 +741,19 @@ MIT License
 Copyright (c) 2022 François Chastanet
 EOF
 )"
-Args::defaultHelp "${HELP}" "$@"
+Args::defaultHelpNoExit "${HELP}" "$@" || true
 
-if [[ "$#" != "1" ]]; then
-  Log::fatal "$0: invalid arguments"
+# check if command in PATH is already the minimal version needed
+if ! Version::checkMinimal "hadolint" "--version" "${MIN_HADOLINT_VERSION}" >/dev/null 2>&1; then
+  Github::upgradeRelease \
+    "${VENDOR_BIN_DIR}/hadolint" \
+    "https://github.com/hadolint/hadolint/releases/download/v@latestVersion@/hadolint-Linux-x86_64"
 fi
-branch="$1"
 
-# check various branch hierarchies, adjust as needed
-git show-ref --verify refs/heads/"${branch}" ||
-  git show-ref --verify refs/remotes/"${branch}" ||
-  Log::fatal "not a branch name: ${branch}"
+if (($# == 0)); then
+  set -- "${DEFAULT_ARGS[@]}"
+fi
+while IFS='' read -r file; do
+  hadolint "$@" "${file}"
+  echo
+done < <(git ls-files --exclude-standard | grep -E '/Dockerfile.*' || true)

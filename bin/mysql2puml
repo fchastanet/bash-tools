@@ -115,38 +115,6 @@ export __HELP_EXAMPLE
 export __HELP_TITLE
 export __HELP_NORMAL
 
-# Public: log level off
-export __LEVEL_OFF=0
-# Public: log level error
-export __LEVEL_ERROR=1
-# Public: log level warning
-export __LEVEL_WARNING=2
-# Public: log level info
-export __LEVEL_INFO=3
-# Public: log level success
-export __LEVEL_SUCCESS=3
-# Public: log level debug
-export __LEVEL_DEBUG=4
-
-export __LEVEL_OFF
-export __LEVEL_ERROR
-export __LEVEL_WARNING
-export __LEVEL_INFO
-export __LEVEL_SUCCESS
-export __LEVEL_DEBUG
-
-# Display message using error color (red) and exit immediately with error status 1
-# @param {String} $1 message
-Log::fatal() {
-  echo -e "${__ERROR_COLOR}FATAL   - ${1}${__RESET_COLOR}" >&2
-  Log::logFatal "$1"
-  exit 1
-}
-
-# shellcheck disable=SC2034
-declare -Ag allDepsResultSeen=()
-declare -ag allDepsResult=()
-
 # Public: get absolute conf file from specified conf folder deduced using these rules
 #   * from absolute file (ignores <confFolder> and <extension>)
 #   * relative to where script is executed (ignores <confFolder> and <extension>)
@@ -159,7 +127,7 @@ declare -ag allDepsResult=()
 # * $3 the extension (sh by default)
 #
 # Returns absolute conf filename
-Profiles::getAbsoluteConfFile() {
+Conf::getAbsoluteFile() {
   local confFolder="$1"
   local conf="$2"
   local extension="${3-.sh}"
@@ -220,7 +188,7 @@ Profiles::getAbsoluteConfFile() {
 #       - default.local
 #       - default.remote
 #       - localhost-root
-Profiles::getConfMergedList() {
+Conf::getMergedList() {
   local confFolder="$1"
   local extension="${2:-sh}"
   local indentStr="${3:-       - }"
@@ -230,12 +198,77 @@ Profiles::getConfMergedList() {
 
   (
     if [[ -d "${DEFAULT_CONF_DIR}" ]]; then
-      Profiles::list "${DEFAULT_CONF_DIR}" "" "${extension}" "-type f" "${indentStr}"
+      Conf::list "${DEFAULT_CONF_DIR}" "" "${extension}" "-type f" "${indentStr}"
     fi
     if [[ -d "${HOME_CONF_DIR}" ]]; then
-      Profiles::list "${HOME_CONF_DIR}" "" "${extension}" "-type f" "${indentStr}"
+      Conf::list "${HOME_CONF_DIR}" "" "${extension}" "-type f" "${indentStr}"
     fi
   ) | sort | uniq
+}
+
+# Public: log level off
+export __LEVEL_OFF=0
+# Public: log level error
+export __LEVEL_ERROR=1
+# Public: log level warning
+export __LEVEL_WARNING=2
+# Public: log level info
+export __LEVEL_INFO=3
+# Public: log level success
+export __LEVEL_SUCCESS=3
+# Public: log level debug
+export __LEVEL_DEBUG=4
+
+export __LEVEL_OFF
+export __LEVEL_ERROR
+export __LEVEL_WARNING
+export __LEVEL_INFO
+export __LEVEL_SUCCESS
+export __LEVEL_DEBUG
+
+# Display message using error color (red) and exit immediately with error status 1
+# @param {String} $1 message
+Log::fatal() {
+  echo -e "${__ERROR_COLOR}FATAL   - ${1}${__RESET_COLOR}" >&2
+  Log::logFatal "$1"
+  exit 1
+}
+
+# Public: list files of dir with given extension and display it as a list one by line
+#
+# @param {String} dir $1 the directory to list
+# @param {String} prefix $2 the profile file prefix (default: "")
+# @param {String} ext $3 the extension
+# @param {String} findOptions $4 find options, eg: -type d
+# @paramDefault {String} findOptions $4 '-type f'
+# @param {String} indentStr $5 the indentation can be any string compatible with sed not containing any /
+# @paramDefault {String} indentStr $5 '       - '
+# @output list of files without extension/directory
+# eg:
+#       - default.local
+#       - default.remote
+#       - localhost-root
+# @return 1 if directory does not exists
+Conf::list() {
+  local dir="$1"
+  local prefix="${2:-}"
+  local ext="${3}"
+  local findOptions="${4--type f}"
+  local indentStr="${5-       - }"
+
+  if [[ ! -d "${dir}" ]]; then
+    Log::displayError "Directory ${dir} does not exist"
+  fi
+  if [[ -n "${ext}" && "${ext:0:1}" != "." ]]; then
+    ext=".${ext}"
+  fi
+  (
+    # shellcheck disable=SC2086
+    cd "${dir}" &&
+      find . -maxdepth 1 ${findOptions} -name "${prefix}*${ext}" |
+      sed -E "s#^\./${prefix}##g" |
+        sed -E "s#${ext}\$##g" | sort | sed -E "s#^#${indentStr}#"
+  )
 }
 
 # lazy initialization
@@ -454,43 +487,6 @@ Log::rotate() {
   fi
 }
 
-# Public: list files of dir with given extension and display it as a list one by line
-#
-# @param {String} dir $1 the directory to list
-# @param {String} prefix $2 the profile file prefix (default: "")
-# @param {String} ext $3 the extension
-# @param {String} findOptions $4 find options, eg: -type d
-# @paramDefault {String} findOptions $4 '-type f'
-# @param {String} indentStr $5 the indentation can be any string compatible with sed not containing any /
-# @paramDefault {String} indentStr $5 '       - '
-# @output list of files without extension/directory
-# eg:
-#       - default.local
-#       - default.remote
-#       - localhost-root
-# @return 1 if directory does not exists
-Profiles::list() {
-  local dir="$1"
-  local prefix="${2:-}"
-  local ext="${3}"
-  local findOptions="${4--type f}"
-  local indentStr="${5-       - }"
-
-  if [[ ! -d "${dir}" ]]; then
-    Log::displayError "Directory ${dir} does not exist"
-  fi
-  if [[ -n "${ext}" && "${ext:0:1}" != "." ]]; then
-    ext=".${ext}"
-  fi
-  (
-    # shellcheck disable=SC2086
-    cd "${dir}" &&
-      find . -maxdepth 1 ${findOptions} -name "${prefix}*${ext}" |
-      sed -E "s#^\./${prefix}##g" |
-        sed -E "s#${ext}\$##g" | sort | sed -E "s#^#${indentStr}#"
-  )
-}
-
 # Internal: common log message
 #
 # **Arguments**:
@@ -573,6 +569,12 @@ if ((BASH_FRAMEWORK_LOG_LEVEL > __LEVEL_OFF)); then
 fi
 
 BASH_FRAMEWORK_ENV_FILEPATH=${HOME}/.bash-tools/.env
+if [[ -d "${ROOT_DIR}/vendor/bash-tools-framework" ]]; then
+  FRAMEWORK_DIR="$(cd "${ROOT_DIR}/vendor/bash-tools-framework" && pwd -P)"
+else
+  FRAMEWORK_DIR="${ROOT_DIR}/vendor/bash-tools-framework"
+fi
+export FRAMEWORK_DIR
 
 #default values
 SCRIPT_VERSION="0.1"
@@ -581,7 +583,7 @@ SKIN="default"
 # Usage info
 showHelp() {
   local skinList=""
-  skinList="$(Profiles::getConfMergedList "mysql2pumlSkins" ".puml")"
+  skinList="$(Conf::getMergedList "mysql2pumlSkins" ".puml")"
 
   cat <<EOF
 ${__HELP_TITLE}Description:${__HELP_NORMAL} convert mysql dump sql schema to plantuml format
@@ -605,6 +607,9 @@ ${skinList}
 
 ${__HELP_TITLE}Author:${__HELP_NORMAL}
 [François Chastanet](https://github.com/fchastanet)
+
+${__HELP_TITLE}Source file:${__HELP_NORMAL}
+https://github.com/fchastanet/bash-tools/tree/master/src/Converters/mysql2puml.sh
 
 ${__HELP_TITLE}License:${__HELP_NORMAL}
 MIT License
@@ -662,7 +667,7 @@ if (($# > 0)); then
   Log::fatal "too much arguments provided"
 fi
 
-absSkinFile="$(Profiles::getAbsoluteConfFile "mysql2pumlSkins" "${SKIN}" "puml")" ||
+absSkinFile="$(Conf::getAbsoluteFile "mysql2pumlSkins" "${SKIN}" "puml")" ||
   Log::fatal "the skin ${SKIN} does not exist"
 
 if [[ -n "${sqlFile}" ]]; then

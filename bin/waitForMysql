@@ -116,13 +116,15 @@ export __HELP_TITLE
 export __HELP_NORMAL
 
 Args::defaultHelp() {
-  if ! Args::defaultHelpNoExit "$@"; then
+  local helpArg=$1
+  shift || true
+  if ! Args::defaultHelpNoExit "${helpArg}" "$@"; then
     exit 0
   fi
 }
 
 Args::defaultHelpNoExit() {
-  local helpArg="$1"
+  local helpArg=$1
   shift || true
   # shellcheck disable=SC2034
   local args
@@ -132,7 +134,11 @@ Args::defaultHelpNoExit() {
   while true; do
     case $1 in
       -h | --help)
-        Args::showHelp "${helpArg}"
+        if [[ "$(type -t "${helpArg}")" = "function" ]]; then
+          "${helpArg}" "$@"
+        else
+          Args::showHelp "${helpArg}"
+        fi
         return 1
         ;;
       --)
@@ -153,6 +159,12 @@ Args::showHelp() {
 # FUNCTIONS
 
 BASH_FRAMEWORK_ENV_FILEPATH=${HOME}/.bash-tools/.env
+if [[ -d "${ROOT_DIR}/vendor/bash-tools-framework" ]]; then
+  FRAMEWORK_DIR="$(cd "${ROOT_DIR}/vendor/bash-tools-framework" && pwd -P)"
+else
+  FRAMEWORK_DIR="${ROOT_DIR}/vendor/bash-tools-framework"
+fi
+export FRAMEWORK_DIR
 
 HELP="$(
   cat <<EOF
@@ -162,6 +174,9 @@ ${__HELP_TITLE}Usage:${__HELP_NORMAL} ${SCRIPT_NAME} <host> <port> <user> <pass>
 
 ${__HELP_TITLE}Author:${__HELP_NORMAL}
 [François Chastanet](https://github.com/fchastanet)
+
+${__HELP_TITLE}Source file:${__HELP_NORMAL}
+https://github.com/fchastanet/bash-tools/tree/master/src/Utils/waitForMysql.sh
 
 ${__HELP_TITLE}License:${__HELP_NORMAL}
 MIT License

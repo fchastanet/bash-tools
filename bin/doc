@@ -116,7 +116,9 @@ export __HELP_TITLE
 export __HELP_NORMAL
 
 Args::defaultHelp() {
-  if ! Args::defaultHelpNoExit "$@"; then
+  local helpArg=$1
+  shift || true
+  if ! Args::defaultHelpNoExit "${helpArg}" "$@"; then
     exit 0
   fi
 }
@@ -199,7 +201,7 @@ ShellDoc::generateMdFileFromTemplate() {
 }
 
 Args::defaultHelpNoExit() {
-  local helpArg="$1"
+  local helpArg=$1
   shift || true
   # shellcheck disable=SC2034
   local args
@@ -209,7 +211,11 @@ Args::defaultHelpNoExit() {
   while true; do
     case $1 in
       -h | --help)
-        Args::showHelp "${helpArg}"
+        if [[ "$(type -t "${helpArg}")" = "function" ]]; then
+          "${helpArg}" "$@"
+        else
+          Args::showHelp "${helpArg}"
+        fi
         return 1
         ;;
       --)
@@ -534,6 +540,12 @@ if ((BASH_FRAMEWORK_LOG_LEVEL > __LEVEL_OFF)); then
 fi
 
 BASH_FRAMEWORK_ENV_FILEPATH=${HOME}/.bash-tools/.env
+if [[ -d "${ROOT_DIR}/vendor/bash-tools-framework" ]]; then
+  FRAMEWORK_DIR="$(cd "${ROOT_DIR}/vendor/bash-tools-framework" && pwd -P)"
+else
+  FRAMEWORK_DIR="${ROOT_DIR}/vendor/bash-tools-framework"
+fi
+export FRAMEWORK_DIR
 DOC_DIR="${ROOT_DIR}/pages"
 
 HELP="$(
@@ -543,6 +555,9 @@ ${__HELP_TITLE}Usage:${__HELP_NORMAL} ${SCRIPT_NAME}
 
 ${__HELP_TITLE}Author:${__HELP_NORMAL}
 [François Chastanet](https://github.com/fchastanet)
+
+${__HELP_TITLE}Source file:${__HELP_NORMAL}
+https://github.com/fchastanet/bash-tools/tree/master/src/build/doc.sh
 
 ${__HELP_TITLE}License:${__HELP_NORMAL}
 MIT License

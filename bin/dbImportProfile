@@ -146,6 +146,36 @@ Assert::expectNonRootUser() {
   fi
 }
 
+# Public: list the conf files list available in bash-tools/conf/<conf> folder
+# and those overridden in ${HOME}/.bash-tools/<conf> folder
+# **Arguments**:
+# * $1 confFolder the directory name (not the path) to list
+# * $2 the extension (sh by default)
+# * $3 the indentation ('       - ' by default) can be any string compatible with sed not containing any /
+#
+# **Output**: list of files without extension/directory
+# eg:
+#       - default.local
+#       - default.remote
+#       - localhost-root
+Conf::getMergedList() {
+  local confFolder="$1"
+  local extension="${2:-sh}"
+  local indentStr="${3:-       - }"
+
+  local DEFAULT_CONF_DIR="${ROOT_DIR}/conf/${confFolder}"
+  local HOME_CONF_DIR="${HOME}/.bash-tools/${confFolder}"
+
+  (
+    if [[ -d "${DEFAULT_CONF_DIR}" ]]; then
+      Conf::list "${DEFAULT_CONF_DIR}" "" "${extension}" "-type f" "${indentStr}"
+    fi
+    if [[ -d "${HOME_CONF_DIR}" ]]; then
+      Conf::list "${HOME_CONF_DIR}" "" "${extension}" "-type f" "${indentStr}"
+    fi
+  ) | sort | uniq
+}
+
 # Public: check if given database exists
 #
 # **Arguments**:
@@ -172,7 +202,7 @@ Database::ifDbExists() {
 # **Arguments**:
 # * $1 - (passed by reference) database instance to create
 # * $2 - dsn profile - load the dsn.env profile
-#     absolute file is deduced using rules defined in Profiles::getAbsoluteConfFile
+#     absolute file is deduced using rules defined in Conf::getAbsoluteFile
 #
 # **Example:**
 # ```shell
@@ -195,7 +225,7 @@ Database::newInstance() {
   instanceNewInstance['DSN_FILE']=""
 
   # check dsn file
-  DSN_FILE="$(Profiles::getAbsoluteConfFile "dsn" "${dsn}" "env")" || return 1
+  DSN_FILE="$(Conf::getAbsoluteFile "dsn" "${dsn}" "env")" || return 1
   Database::checkDsnFile "${DSN_FILE}" || return 1
   instanceNewInstance['DSN_FILE']="${DSN_FILE}"
 
@@ -315,38 +345,102 @@ Log::fatal() {
   exit 1
 }
 
-# shellcheck disable=SC2034
-declare -Ag allDepsResultSeen=()
-declare -ag allDepsResult=()
-
-# Public: list the conf files list available in bash-tools/conf/<conf> folder
-# and those overridden in ${HOME}/.bash-tools/<conf> folder
+# Public: get absolute conf file from specified conf folder deduced using these rules
+#   * from absolute file (ignores <confFolder> and <extension>)
+#   * relative to where script is executed (ignores <confFolder> and <extension>)
+#   * from home/.bash-tools/<confFolder>
+#   * from framework conf/<confFolder>
+#
 # **Arguments**:
 # * $1 confFolder the directory name (not the path) to list
-# * $2 the extension (sh by default)
-# * $3 the indentation ('       - ' by default) can be any string compatible with sed not containing any /
+# * $2 conf file to use without extension
+# * $3 the extension (sh by default)
 #
-# **Output**: list of files without extension/directory
+# Returns absolute conf filename
+Conf::getAbsoluteFile() {
+  local confFolder="$1"
+  local conf="$2"
+  local extension="${3-.sh}"
+  if [[ -n "${extension}" && "${extension:0:1}" != "." ]]; then
+    extension=".${extension}"
+  fi
+
+  testAbs() {
+    local result
+    result="$(realpath -e "$1" 2>/dev/null)"
+    # shellcheck disable=SC2181
+    if [[ "$?" = "0" && -f "${result}" ]]; then
+      echo "${result}"
+      return 0
+    fi
+    return 1
+  }
+
+  # conf is absolute file (including extension)
+  testAbs "${confFolder}${extension}" && return 0
+  # conf is absolute file
+  testAbs "${confFolder}" && return 0
+  # conf is absolute file (including extension)
+  testAbs "${conf}${extension}" && return 0
+  # conf is absolute file
+  testAbs "${conf}" && return 0
+
+  # relative to where script is executed (including extension)
+  if [[ -n "${CURRENT_DIR+xxx}" ]]; then
+    testAbs "$(File::concatenatePath "${CURRENT_DIR}" "${confFolder}")/${conf}${extension}" && return 0
+  fi
+  # from home/.bash-tools/<confFolder>
+  testAbs "$(File::concatenatePath "${HOME}/.bash-tools" "${confFolder}")/${conf}${extension}" && return 0
+
+  if [[ -n "${ROOT_DIR+xxx}" ]]; then
+    # from framework conf/<confFolder> (including extension)
+    testAbs "$(File::concatenatePath "${ROOT_DIR}/conf" "${confFolder}")/${conf}${extension}" && return 0
+
+    # from framework conf/<confFolder>
+    testAbs "$(File::concatenatePath "${ROOT_DIR}/conf" "${confFolder}")/${conf}" && return 0
+  fi
+
+  # file not found
+  Log::displayError "conf file '${conf}' not found"
+
+  return 1
+}
+
+# Public: list files of dir with given extension and display it as a list one by line
+#
+# @param {String} dir $1 the directory to list
+# @param {String} prefix $2 the profile file prefix (default: "")
+# @param {String} ext $3 the extension
+# @param {String} findOptions $4 find options, eg: -type d
+# @paramDefault {String} findOptions $4 '-type f'
+# @param {String} indentStr $5 the indentation can be any string compatible with sed not containing any /
+# @paramDefault {String} indentStr $5 '       - '
+# @output list of files without extension/directory
 # eg:
 #       - default.local
 #       - default.remote
 #       - localhost-root
-Profiles::getConfMergedList() {
-  local confFolder="$1"
-  local extension="${2:-sh}"
-  local indentStr="${3:-       - }"
+# @return 1 if directory does not exists
+Conf::list() {
+  local dir="$1"
+  local prefix="${2:-}"
+  local ext="${3}"
+  local findOptions="${4--type f}"
+  local indentStr="${5-       - }"
 
-  local DEFAULT_CONF_DIR="${ROOT_DIR}/conf/${confFolder}"
-  local HOME_CONF_DIR="${HOME}/.bash-tools/${confFolder}"
-
+  if [[ ! -d "${dir}" ]]; then
+    Log::displayError "Directory ${dir} does not exist"
+  fi
+  if [[ -n "${ext}" && "${ext:0:1}" != "." ]]; then
+    ext=".${ext}"
+  fi
   (
-    if [[ -d "${DEFAULT_CONF_DIR}" ]]; then
-      Profiles::list "${DEFAULT_CONF_DIR}" "" "${extension}" "-type f" "${indentStr}"
-    fi
-    if [[ -d "${HOME_CONF_DIR}" ]]; then
-      Profiles::list "${HOME_CONF_DIR}" "" "${extension}" "-type f" "${indentStr}"
-    fi
-  ) | sort | uniq
+    # shellcheck disable=SC2086
+    cd "${dir}" &&
+      find . -maxdepth 1 ${findOptions} -name "${prefix}*${ext}" |
+      sed -E "s#^\./${prefix}##g" |
+        sed -E "s#${ext}\$##g" | sort | sed -E "s#^#${indentStr}#"
+  )
 }
 
 # Internal: check if dsn file has all the mandatory variables set
@@ -597,104 +691,6 @@ Log::rotate() {
   fi
 }
 
-# Public: get absolute conf file from specified conf folder deduced using these rules
-#   * from absolute file (ignores <confFolder> and <extension>)
-#   * relative to where script is executed (ignores <confFolder> and <extension>)
-#   * from home/.bash-tools/<confFolder>
-#   * from framework conf/<confFolder>
-#
-# **Arguments**:
-# * $1 confFolder the directory name (not the path) to list
-# * $2 conf file to use without extension
-# * $3 the extension (sh by default)
-#
-# Returns absolute conf filename
-Profiles::getAbsoluteConfFile() {
-  local confFolder="$1"
-  local conf="$2"
-  local extension="${3-.sh}"
-  if [[ -n "${extension}" && "${extension:0:1}" != "." ]]; then
-    extension=".${extension}"
-  fi
-
-  testAbs() {
-    local result
-    result="$(realpath -e "$1" 2>/dev/null)"
-    # shellcheck disable=SC2181
-    if [[ "$?" = "0" && -f "${result}" ]]; then
-      echo "${result}"
-      return 0
-    fi
-    return 1
-  }
-
-  # conf is absolute file (including extension)
-  testAbs "${confFolder}${extension}" && return 0
-  # conf is absolute file
-  testAbs "${confFolder}" && return 0
-  # conf is absolute file (including extension)
-  testAbs "${conf}${extension}" && return 0
-  # conf is absolute file
-  testAbs "${conf}" && return 0
-
-  # relative to where script is executed (including extension)
-  if [[ -n "${CURRENT_DIR+xxx}" ]]; then
-    testAbs "$(File::concatenatePath "${CURRENT_DIR}" "${confFolder}")/${conf}${extension}" && return 0
-  fi
-  # from home/.bash-tools/<confFolder>
-  testAbs "$(File::concatenatePath "${HOME}/.bash-tools" "${confFolder}")/${conf}${extension}" && return 0
-
-  if [[ -n "${ROOT_DIR+xxx}" ]]; then
-    # from framework conf/<confFolder> (including extension)
-    testAbs "$(File::concatenatePath "${ROOT_DIR}/conf" "${confFolder}")/${conf}${extension}" && return 0
-
-    # from framework conf/<confFolder>
-    testAbs "$(File::concatenatePath "${ROOT_DIR}/conf" "${confFolder}")/${conf}" && return 0
-  fi
-
-  # file not found
-  Log::displayError "conf file '${conf}' not found"
-
-  return 1
-}
-
-# Public: list files of dir with given extension and display it as a list one by line
-#
-# @param {String} dir $1 the directory to list
-# @param {String} prefix $2 the profile file prefix (default: "")
-# @param {String} ext $3 the extension
-# @param {String} findOptions $4 find options, eg: -type d
-# @paramDefault {String} findOptions $4 '-type f'
-# @param {String} indentStr $5 the indentation can be any string compatible with sed not containing any /
-# @paramDefault {String} indentStr $5 '       - '
-# @output list of files without extension/directory
-# eg:
-#       - default.local
-#       - default.remote
-#       - localhost-root
-# @return 1 if directory does not exists
-Profiles::list() {
-  local dir="$1"
-  local prefix="${2:-}"
-  local ext="${3}"
-  local findOptions="${4--type f}"
-  local indentStr="${5-       - }"
-
-  if [[ ! -d "${dir}" ]]; then
-    Log::displayError "Directory ${dir} does not exist"
-  fi
-  if [[ -n "${ext}" && "${ext:0:1}" != "." ]]; then
-    ext=".${ext}"
-  fi
-  (
-    # shellcheck disable=SC2086
-    cd "${dir}" &&
-      find . -maxdepth 1 ${findOptions} -name "${prefix}*${ext}" |
-      sed -E "s#^\./${prefix}##g" |
-        sed -E "s#${ext}\$##g" | sort | sed -E "s#^#${indentStr}#"
-  )
-}
-
 File::concatenatePath() {
   local basePath="${1}"
   local subPath=${2}
@@ -785,6 +781,12 @@ if ((BASH_FRAMEWORK_LOG_LEVEL > __LEVEL_OFF)); then
 fi
 
 BASH_FRAMEWORK_ENV_FILEPATH=${HOME}/.bash-tools/.env
+if [[ -d "${ROOT_DIR}/vendor/bash-tools-framework" ]]; then
+  FRAMEWORK_DIR="$(cd "${ROOT_DIR}/vendor/bash-tools-framework" && pwd -P)"
+else
+  FRAMEWORK_DIR="${ROOT_DIR}/vendor/bash-tools-framework"
+fi
+export FRAMEWORK_DIR
 
 Assert::expectNonRootUser
 
@@ -795,15 +797,15 @@ FROM_DB=""
 DEFAULT_FROM_DSN="default.remote"
 FROM_DSN="${DEFAULT_FROM_DSN}"
 RATIO=70
-# remove last slash
-PROFILES_DIR="$(cd "${CURRENT_DIR}/.." && pwd)/conf/dbImportProfiles"
+# jscpd:ignore-start
+PROFILES_DIR="$(cd "${CURRENT_DIR}/.." && pwd -P)/conf/dbImportProfiles"
 HOME_PROFILES_DIR="${HOME}/.bash-tools/dbImportProfiles"
 
 showHelp() {
   local profilesList=""
   local dsnList=""
-  dsnList="$(Profiles::getConfMergedList "dsn" "env")"
-  profilesList="$(Profiles::getConfMergedList "dbImportProfiles" "sh" || true)"
+  dsnList="$(Conf::getMergedList "dsn" "env")"
+  profilesList="$(Conf::getMergedList "dbImportProfiles" "sh" || true)"
 
   cat <<EOF
 ${__HELP_TITLE}Description:${__HELP_NORMAL} generate optimized profiles to be used by dbImport
@@ -830,12 +832,16 @@ ${dsnList}
 ${__HELP_TITLE}Author:${__HELP_NORMAL}
 [François Chastanet](https://github.com/fchastanet)
 
+${__HELP_TITLE}Source file:${__HELP_NORMAL}
+https://github.com/fchastanet/bash-tools/tree/master/src/DbImport/dbImportProfile.sh
+
 ${__HELP_TITLE}License:${__HELP_NORMAL}
 MIT License
 
 Copyright (c) 2022 François Chastanet
 EOF
 }
+# jscpd:ignore-end
 
 # read command parameters
 # $@ is all command line parameters passed to the script.

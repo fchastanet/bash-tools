@@ -19,8 +19,8 @@ VERBOSE=0
 # Usage info
 showHelp() {
   local dsnList scriptsList
-  dsnList="$(Profiles::getConfMergedList "dsn" "env")"
-  scriptsList="$(Profiles::getConfMergedList "dbScripts" "sh")"
+  dsnList="$(Conf::getMergedList "dsn" "env")"
+  scriptsList="$(Conf::getMergedList "dbScripts" "sh")"
 
   cat <<EOF
 ${__HELP_TITLE}Description:${__HELP_NORMAL} Allows to execute a script on each database of specified mysql server
@@ -146,7 +146,7 @@ fi
 [[ ${JOBS_NUMBER} -lt 1 ]] && Log::fatal "number of jobs must be greater than 0"
 
 # try script inside script folder
-SCRIPT="$(Profiles::getAbsoluteConfFile "dbScripts" "${SCRIPT}" "sh")" || exit 1
+SCRIPT="$(Conf::getAbsoluteFile "dbScripts" "${SCRIPT}" "sh")" || exit 1
 [[ "${VERBOSE}" = "1" ]] && Log::displayInfo "Using script ${SCRIPT}"
 # create db instance
 declare -Agx dbInstance

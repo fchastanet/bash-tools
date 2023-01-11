@@ -3,7 +3,7 @@
 # shellcheck source=tests/batsHeaders.sh
 source "$(cd "${BATS_TEST_DIRNAME}" && pwd)/batsHeaders.sh"
 
-load "${FRAMEWORK_DIR}/src/Bats/assert_lines_count.sh"
+load "${FRAMEWORK_DIR}/src/_standalones/Bats/assert_lines_count.sh"
 
 # shellcheck source=vendor/bash-tools-framework/src/Env/load.sh
 source "${FRAMEWORK_DIR}/src/Env/load.sh" || exit 1

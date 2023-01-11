@@ -116,7 +116,9 @@ export __HELP_TITLE
 export __HELP_NORMAL
 
 Args::defaultHelp() {
-  if ! Args::defaultHelpNoExit "$@"; then
+  local helpArg=$1
+  shift || true
+  if ! Args::defaultHelpNoExit "${helpArg}" "$@"; then
     exit 0
   fi
 }
@@ -130,12 +132,73 @@ Assert::expectNonRootUser() {
   fi
 }
 
+# Public: get absolute conf file from specified conf folder deduced using these rules
+#   * from absolute file (ignores <confFolder> and <extension>)
+#   * relative to where script is executed (ignores <confFolder> and <extension>)
+#   * from home/.bash-tools/<confFolder>
+#   * from framework conf/<confFolder>
+#
+# **Arguments**:
+# * $1 confFolder the directory name (not the path) to list
+# * $2 conf file to use without extension
+# * $3 the extension (sh by default)
+#
+# Returns absolute conf filename
+Conf::getAbsoluteFile() {
+  local confFolder="$1"
+  local conf="$2"
+  local extension="${3-.sh}"
+  if [[ -n "${extension}" && "${extension:0:1}" != "." ]]; then
+    extension=".${extension}"
+  fi
+
+  testAbs() {
+    local result
+    result="$(realpath -e "$1" 2>/dev/null)"
+    # shellcheck disable=SC2181
+    if [[ "$?" = "0" && -f "${result}" ]]; then
+      echo "${result}"
+      return 0
+    fi
+    return 1
+  }
+
+  # conf is absolute file (including extension)
+  testAbs "${confFolder}${extension}" && return 0
+  # conf is absolute file
+  testAbs "${confFolder}" && return 0
+  # conf is absolute file (including extension)
+  testAbs "${conf}${extension}" && return 0
+  # conf is absolute file
+  testAbs "${conf}" && return 0
+
+  # relative to where script is executed (including extension)
+  if [[ -n "${CURRENT_DIR+xxx}" ]]; then
+    testAbs "$(File::concatenatePath "${CURRENT_DIR}" "${confFolder}")/${conf}${extension}" && return 0
+  fi
+  # from home/.bash-tools/<confFolder>
+  testAbs "$(File::concatenatePath "${HOME}/.bash-tools" "${confFolder}")/${conf}${extension}" && return 0
+
+  if [[ -n "${ROOT_DIR+xxx}" ]]; then
+    # from framework conf/<confFolder> (including extension)
+    testAbs "$(File::concatenatePath "${ROOT_DIR}/conf" "${confFolder}")/${conf}${extension}" && return 0
+
+    # from framework conf/<confFolder>
+    testAbs "$(File::concatenatePath "${ROOT_DIR}/conf" "${confFolder}")/${conf}" && return 0
+  fi
+
+  # file not found
+  Log::displayError "conf file '${conf}' not found"
+
+  return 1
+}
+
 # Public: create a new db instance
 #
 # **Arguments**:
 # * $1 - (passed by reference) database instance to create
 # * $2 - dsn profile - load the dsn.env profile
-#     absolute file is deduced using rules defined in Profiles::getAbsoluteConfFile
+#     absolute file is deduced using rules defined in Conf::getAbsoluteFile
 #
 # **Example:**
 # ```shell
@@ -158,7 +221,7 @@ Database::newInstance() {
   instanceNewInstance['DSN_FILE']=""
 
   # check dsn file
-  DSN_FILE="$(Profiles::getAbsoluteConfFile "dsn" "${dsn}" "env")" || return 1
+  DSN_FILE="$(Conf::getAbsoluteFile "dsn" "${dsn}" "env")" || return 1
   Database::checkDsnFile "${DSN_FILE}" || return 1
   instanceNewInstance['DSN_FILE']="${DSN_FILE}"
 
@@ -291,73 +354,8 @@ Log::fatal() {
   exit 1
 }
 
-# shellcheck disable=SC2034
-declare -Ag allDepsResultSeen=()
-declare -ag allDepsResult=()
-
-# Public: get absolute conf file from specified conf folder deduced using these rules
-#   * from absolute file (ignores <confFolder> and <extension>)
-#   * relative to where script is executed (ignores <confFolder> and <extension>)
-#   * from home/.bash-tools/<confFolder>
-#   * from framework conf/<confFolder>
-#
-# **Arguments**:
-# * $1 confFolder the directory name (not the path) to list
-# * $2 conf file to use without extension
-# * $3 the extension (sh by default)
-#
-# Returns absolute conf filename
-Profiles::getAbsoluteConfFile() {
-  local confFolder="$1"
-  local conf="$2"
-  local extension="${3-.sh}"
-  if [[ -n "${extension}" && "${extension:0:1}" != "." ]]; then
-    extension=".${extension}"
-  fi
-
-  testAbs() {
-    local result
-    result="$(realpath -e "$1" 2>/dev/null)"
-    # shellcheck disable=SC2181
-    if [[ "$?" = "0" && -f "${result}" ]]; then
-      echo "${result}"
-      return 0
-    fi
-    return 1
-  }
-
-  # conf is absolute file (including extension)
-  testAbs "${confFolder}${extension}" && return 0
-  # conf is absolute file
-  testAbs "${confFolder}" && return 0
-  # conf is absolute file (including extension)
-  testAbs "${conf}${extension}" && return 0
-  # conf is absolute file
-  testAbs "${conf}" && return 0
-
-  # relative to where script is executed (including extension)
-  if [[ -n "${CURRENT_DIR+xxx}" ]]; then
-    testAbs "$(File::concatenatePath "${CURRENT_DIR}" "${confFolder}")/${conf}${extension}" && return 0
-  fi
-  # from home/.bash-tools/<confFolder>
-  testAbs "$(File::concatenatePath "${HOME}/.bash-tools" "${confFolder}")/${conf}${extension}" && return 0
-
-  if [[ -n "${ROOT_DIR+xxx}" ]]; then
-    # from framework conf/<confFolder> (including extension)
-    testAbs "$(File::concatenatePath "${ROOT_DIR}/conf" "${confFolder}")/${conf}${extension}" && return 0
-
-    # from framework conf/<confFolder>
-    testAbs "$(File::concatenatePath "${ROOT_DIR}/conf" "${confFolder}")/${conf}" && return 0
-  fi
-
-  # file not found
-  Log::displayError "conf file '${conf}' not found"
-
-  return 1
-}
-
 Args::defaultHelpNoExit() {
-  local helpArg="$1"
+  local helpArg=$1
   shift || true
   # shellcheck disable=SC2034
   local args
@@ -367,7 +365,11 @@ Args::defaultHelpNoExit() {
   while true; do
     case $1 in
       -h | --help)
-        Args::showHelp "${helpArg}"
+        if [[ "$(type -t "${helpArg}")" = "function" ]]; then
+          "${helpArg}" "$@"
+        else
+          Args::showHelp "${helpArg}"
+        fi
         return 1
         ;;
       --)
@@ -723,6 +725,12 @@ if ((BASH_FRAMEWORK_LOG_LEVEL > __LEVEL_OFF)); then
 fi
 
 BASH_FRAMEWORK_ENV_FILEPATH=${HOME}/.bash-tools/.env
+if [[ -d "${ROOT_DIR}/vendor/bash-tools-framework" ]]; then
+  FRAMEWORK_DIR="$(cd "${ROOT_DIR}/vendor/bash-tools-framework" && pwd -P)"
+else
+  FRAMEWORK_DIR="${ROOT_DIR}/vendor/bash-tools-framework"
+fi
+export FRAMEWORK_DIR
 
 ############################################################
 # INTERNAL USE ONLY
@@ -762,6 +770,9 @@ be used by bin/dbScriptAllDatabases
 ${__HELP_TITLE}Author:${__HELP_NORMAL}
 [François Chastanet](https://github.com/fchastanet)
 
+${__HELP_TITLE}Source file:${__HELP_NORMAL}
+https://github.com/fchastanet/bash-tools/tree/master/src/DbScriptAllDatabases/extractData.sh
+
 ${__HELP_TITLE}License:${__HELP_NORMAL}
 MIT License
 
@@ -779,7 +790,7 @@ fi
 declare query="${scriptParameters[0]}"
 declare queryName="customQuery"
 declare queryFile="${query}"
-queryFile="$(Profiles::getAbsoluteConfFile "dbQueries" "${queryFile}" "sql" 2>/dev/null || echo "")"
+queryFile="$(Conf::getAbsoluteFile "dbQueries" "${queryFile}" "sql" 2>/dev/null || echo "")"
 if [[ -n "${queryFile}" ]]; then
   queryName="$(basename "${queryFile%.*}")"
   query="$(cat "${queryFile}")"

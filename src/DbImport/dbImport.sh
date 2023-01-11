@@ -20,16 +20,16 @@ FROM_DSN=""
 DEFAULT_FROM_DSN="default.remote"
 TARGET_DSN="default.local"
 TIMEFORMAT='time spent : %3R'
-# remove last slash
+# jscpd:ignore-start
 DB_IMPORT_DUMP_DIR=${DB_IMPORT_DUMP_DIR%/}
-PROFILES_DIR="$(cd "${CURRENT_DIR}/.." && pwd)/conf/dbImportProfiles"
+PROFILES_DIR="$(cd "${CURRENT_DIR}/.." && pwd -P)/conf/dbImportProfiles"
 HOME_PROFILES_DIR="${HOME}/.bash-tools/dbImportProfiles"
 
 showHelp() {
   local profilesList=""
   local dsnList=""
-  dsnList="$(Profiles::getConfMergedList "dsn" "env")"
-  profilesList="$(Profiles::getConfMergedList "dbImportProfiles" "sh" || true)"
+  dsnList="$(Conf::getMergedList "dsn" "env")"
+  profilesList="$(Conf::getMergedList "dbImportProfiles" "sh" || true)"
 
   cat <<EOF
 ${__HELP_TITLE}Description:${__HELP_NORMAL} Import source db into target db
@@ -75,6 +75,7 @@ ${dsnList}
 .INCLUDE "${ORIGINAL_TEMPLATE_DIR}/_includes/author.tpl"
 EOF
 }
+# jscpd:ignore-end
 
 # read command parameters
 # $@ is all command line parameters passed to the script.
@@ -193,7 +194,7 @@ fi
   Log::fatal "you cannot use table and profile options at the same time"
 
 # Profile selection
-PROFILE_COMMAND="$(Profiles::getAbsoluteConfFile "dbImportProfiles" "${PROFILE}" "sh")" || exit 1
+PROFILE_COMMAND="$(Conf::getAbsoluteFile "dbImportProfiles" "${PROFILE}" "sh")" || exit 1
 PROFILE_MSG_INFO="Using profile ${PROFILE_COMMAND}"
 if [[ -n "${TABLES}" ]]; then
   [[ ${TABLES} =~ ^[A-Za-z0-9_]+(,[A-Za-z0-9_]+)*$ ]] || {

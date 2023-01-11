@@ -2,23 +2,22 @@
 !/logs/.gitkeep
 /.history
 /megalinter-reports
-/_site
 /vendor
 *.bak
 
 # docsify github pages
 /pages/*.md
-/pages/_site
 /pages/bashDoc
 /pages/tests
 !/**/_sidebar.md
 !/**/_navbar.md
 
-# bash-tools-framework binaries
 /bin/awkLint
-/bin/buildPushDockerImages
-/bin/dockerLint
+/bin/buildBinFiles
 /bin/generateShellDoc
+/bin/megalinter
 /bin/runBuildContainer
 /bin/shellcheckLint
 /bin/test
+/bin/findShebangFiles
+/bin/buildPushDockerImages

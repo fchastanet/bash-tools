@@ -19,8 +19,8 @@ declare -a PARALLEL_OPTIONS
 # Usage info
 showHelp() {
   local dsnList queriesList
-  dsnList="$(Profiles::getConfMergedList "dsn" "env")"
-  queriesList="$(Profiles::getConfMergedList "dbQueries" "sql" || true)"
+  dsnList="$(Conf::getMergedList "dsn" "env")"
+  queriesList="$(Conf::getMergedList "dbQueries" "sql" || true)"
 
   cat <<EOF
 ${__HELP_TITLE}Description:${__HELP_NORMAL} Execute a query on multiple databases in order to generate a report with tsv format, query can be parallelized on multiple databases
@@ -114,7 +114,7 @@ fi
 declare query="${queryFile}"
 if [[ "${QUERY}" = "0" ]]; then
   declare queryAbsoluteFile
-  queryAbsoluteFile="$(Profiles::getAbsoluteConfFile "dbQueries" "${queryFile}" "sql")" ||
+  queryAbsoluteFile="$(Conf::getAbsoluteFile "dbQueries" "${queryFile}" "sql")" ||
     Log::fatal "the file ${queryFile} does not exist"
   query="$(cat "${queryAbsoluteFile}")"
   Log::displayInfo "Using query file ${queryAbsoluteFile}"

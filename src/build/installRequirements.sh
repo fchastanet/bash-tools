@@ -20,18 +20,16 @@ Git::cloneOrPullIfNoChanges \
   "${ROOT_DIR}/vendor/bash-tools-framework" \
   "https://github.com/fchastanet/bash-tools-framework.git"
 
+Log::displayInfo "Copying useful binaries from bash-tools-framework"
 declare -a externalBinaries=(
-  awkLint
-  buildPushDockerImages
-  dockerLint
-  generateShellDoc
-  runBuildContainer
-  shellcheckLint
-  "test"
+  "${FRAMEWORK_DIR}/bin/awkLint"
+  "${FRAMEWORK_DIR}/bin/buildBinFiles"
+  "${FRAMEWORK_DIR}/bin/findShebangFiles"
+  "${FRAMEWORK_DIR}/bin/generateShellDoc"
+  "${FRAMEWORK_DIR}/bin/megalinter"
+  "${FRAMEWORK_DIR}/bin/runBuildContainer"
+  "${FRAMEWORK_DIR}/bin/shellcheckLint"
+  "${FRAMEWORK_DIR}/bin/test"
+  "${FRAMEWORK_DIR}/bin/buildPushDockerImages"
 )
-
-declare bin
-for bin in "${externalBinaries[@]}"; do
-  Log::displayInfo "Creating symlink to bash-tools-framework/bin/${bin} in bin directory"
-  ln -srf "${VENDOR_DIR}/bash-tools-framework/bin/${bin}" "${ROOT_DIR}/bin/${bin}"
-done
+cp -v "${externalBinaries[@]}" "${ROOT_DIR}/bin"
