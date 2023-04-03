@@ -49,7 +49,7 @@ repos:
       - id: git-check
 
   - repo: https://github.com/pre-commit/mirrors-prettier
-    rev: v3.0.0-alpha.4
+    rev: v3.0.0-alpha.6
     hooks:
       - id: prettier
 
@@ -88,7 +88,7 @@ repos:
 
   ## Python, Polyglot, Git, pre-commit
   - repo: https://github.com/ScribeMD/pre-commit-hooks
-    rev: 0.15.1
+    rev: 0.15.6
     hooks:
       - id: megalinter-incremental
         args: [--flavor, terraform, --release, v6.16.0]
