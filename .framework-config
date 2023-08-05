@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+# shellcheck disable=SC2034
+
+# shellcheck source=vendor/bash-tools-framework/.framework-config
+source "$(cd "$(readlink -e "${BASH_SOURCE[0]%/*}")" && pwd -P)/vendor/bash-tools-framework/.framework-config"
+
+export REPOSITORY_URL="https://github.com/fchastanet/bash-tools"

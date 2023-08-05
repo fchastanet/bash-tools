@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-.INCLUDE "${TEMPLATE_DIR}/_includes/_header.tpl"
+.INCLUDE "$(dynamicTemplateDir _header.tpl)"
 
 ############################################################
 # INTERNAL USE ONLY

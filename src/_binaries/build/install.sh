@@ -2,7 +2,7 @@
 # BIN_FILE=${ROOT_DIR}/install
 # ROOT_DIR_RELATIVE_TO_BIN_DIR=
 
-.INCLUDE "${TEMPLATE_DIR}/_includes/_header.tpl"
+.INCLUDE "$(dynamicTemplateDir _header.tpl)"
 
 .INCLUDE "${ORIGINAL_TEMPLATE_DIR}/_includes/executedAsUser.sh"
 

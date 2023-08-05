@@ -2,7 +2,7 @@
 # BIN_FILE=${ROOT_DIR}/bin/dbImportStream
 # ROOT_DIR_RELATIVE_TO_BIN_DIR=..
 
-.INCLUDE "${TEMPLATE_DIR}/_includes/_header.tpl"
+.INCLUDE "$(dynamicTemplateDir _header.tpl)"
 
 HELP="$(
   cat <<EOF
@@ -30,7 +30,7 @@ fi
 
 awkScript="$(
   cat <<'EOF'
-.INCLUDE "${TEMPLATE_DIR}/DbImport/dbImportStream.awk"
+.INCLUDE "$(dynamicSrcFile "DbImport/dbImportStream.awk")"
 EOF
 )"
 # shellcheck disable=2086

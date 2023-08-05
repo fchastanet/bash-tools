@@ -5,7 +5,7 @@
 #   Use this script to test if a given TCP host/port are available
 #  https://github.com/vishnubob/wait-for-it
 
-.INCLUDE "${TEMPLATE_DIR}/_includes/_header.tpl"
+.INCLUDE "$(dynamicTemplateDir _header.tpl)"
 
 showHelp() {
   cat <<USAGE

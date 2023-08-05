@@ -2,7 +2,7 @@
 # BIN_FILE=${ROOT_DIR}/conf/dbScripts/extractData
 # ROOT_DIR_RELATIVE_TO_BIN_DIR=../..
 
-.INCLUDE "${TEMPLATE_DIR}/_includes/dbScriptOneDatabase.sh"
+.INCLUDE "$(dynamicSrcFile _includes/dbScriptOneDatabase.sh)"
 
 HELP="$(
   cat <<EOF

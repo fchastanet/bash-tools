@@ -2,7 +2,7 @@
 # BIN_FILE=${ROOT_DIR}/bin/dbQueryAllDatabases
 # ROOT_DIR_RELATIVE_TO_BIN_DIR=..
 
-.INCLUDE "${TEMPLATE_DIR}/_includes/_header.tpl"
+.INCLUDE "$(dynamicTemplateDir _header.tpl)"
 
 Assert::expectNonRootUser
 
@@ -137,7 +137,7 @@ PARALLEL_OPTIONS+=("--linebuffer" "-j" "${JOBS_NUMBER}")
 export query
 awkScript="$(
   cat <<'EOF'
-.INCLUDE "${TEMPLATE_DIR}/DbQueryAllDatabases/dbQueryAllDatabases.awk"
+.INCLUDE "$(dynamicSrcFile "DbQueryAllDatabases/dbQueryAllDatabases.awk")"
 EOF
 )"
 

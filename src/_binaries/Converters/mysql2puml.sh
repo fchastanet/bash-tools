@@ -2,7 +2,7 @@
 # BIN_FILE=${ROOT_DIR}/bin/mysql2puml
 # ROOT_DIR_RELATIVE_TO_BIN_DIR=..
 
-.INCLUDE "${TEMPLATE_DIR}/_includes/_header.tpl"
+.INCLUDE "$(dynamicTemplateDir _header.tpl)"
 
 #default values
 SCRIPT_VERSION="0.1"
