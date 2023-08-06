@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 # BIN_FILE=${ROOT_DIR}/bin/installRequirements
-# ROOT_DIR_RELATIVE_TO_BIN_DIR=..
 
-.INCLUDE "$(dynamicTemplateDir _header.tpl)"
+.INCLUDE "$(dynamicTemplateDir _includes/_headerNoRootDir.tpl)"
+ROOT_DIR="$(cd "${CURRENT_DIR}/.." && pwd -P)"
+FRAMEWORK_DIR="${ROOT_DIR}/vendor/bash-tools-framework"
 
 .INCLUDE "${ORIGINAL_TEMPLATE_DIR}/_includes/executedAsUser.sh"
 
