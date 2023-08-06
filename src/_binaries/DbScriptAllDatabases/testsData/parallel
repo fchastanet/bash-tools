@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+
+# shellcheck disable=SC2124
+command="${@:-2:1}"
+# shellcheck disable=SC2124
+param=${@:-1:1}
+
+while IFS=$'\n' read -r db; do
+  "${command}" "${param}" "${db}"
+done

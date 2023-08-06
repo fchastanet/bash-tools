@@ -14,7 +14,6 @@ OUTPUT_DIR="${HOME}/.bash-tools/output"
 DSN="default.local"
 LOG_FORMAT="none"
 DB_NAME=""
-VERBOSE=0
 
 # Usage info
 showHelp() {
@@ -87,9 +86,6 @@ while true; do
       shift || true
       OUTPUT_DIR="$1"
       ;;
-    --verbose | -v)
-      VERBOSE=1
-      ;;
     --dsn | -d)
       shift || true
       DSN=${1:-:-default.local}
@@ -147,27 +143,27 @@ fi
 
 # try script inside script folder
 SCRIPT="$(Conf::getAbsoluteFile "dbScripts" "${SCRIPT}" "sh")" || exit 1
-[[ "${VERBOSE}" = "1" ]] && Log::displayInfo "Using script ${SCRIPT}"
+[[ "${ARGS_VERBOSE}" = "1" ]] && Log::displayInfo "Using script ${SCRIPT}"
 # create db instance
 declare -Agx dbInstance
 
 Database::newInstance dbInstance "${DSN}"
 Database::setQueryOptions dbInstance "${dbInstance['QUERY_OPTIONS']} --connect-timeout=5"
-[[ "${VERBOSE}" = "1" ]] && Log::displayInfo "Using dsn ${dbInstance['DSN_FILE']}"
+[[ "${ARGS_VERBOSE}" = "1" ]] && Log::displayInfo "Using dsn ${dbInstance['DSN_FILE']}"
 
 # list of all databases
-[[ "${VERBOSE}" = "1" ]] && Log::displayInfo "get the list of all databases"
+[[ "${ARGS_VERBOSE}" = "1" ]] && Log::displayInfo "get the list of all databases"
 if [[ -z "${DB_NAME}" ]]; then
   allDbs="$(Database::getUserDbList dbInstance)"
 else
   allDbs="${DB_NAME}"
 fi
 
-[[ "${VERBOSE}" = "1" ]] && Log::displayInfo "processing $(echo "${allDbs}" | wc -l) databases using ${JOBS_NUMBER} jobs"
+[[ "${ARGS_VERBOSE}" = "1" ]] && Log::displayInfo "processing $(echo "${allDbs}" | wc -l) databases using ${JOBS_NUMBER} jobs"
 
 export selectedQueryFile
 export MYSQL_OPTIONS
 
 echo "${allDbs}" | parallel --eta --progress --tag --jobs="${JOBS_NUMBER}" \
-  "${SCRIPT}" "${DSN}" "${LOG_FORMAT}" "${VERBOSE}" \
+  "${SCRIPT}" "${DSN}" "${LOG_FORMAT}" "${ARGS_VERBOSE}" \
   "${OUTPUT_DIR}" "${PWD}" "$@"

@@ -17,7 +17,7 @@ showHelp() {
 ${__HELP_TITLE}Description:${__HELP_NORMAL} convert mysql dump sql schema to plantuml format
 
 ${__HELP_TITLE}Usage:${__HELP_NORMAL} ${SCRIPT_NAME} [-h|--help] prints this help and exits
-${__HELP_TITLE}Usage:${__HELP_NORMAL} ${SCRIPT_NAME} [-v|--version] prints the version and exits
+${__HELP_TITLE}Usage:${__HELP_NORMAL} ${SCRIPT_NAME} [--version] prints the version and exits
 ${__HELP_TITLE}Usage:${__HELP_NORMAL} ${SCRIPT_NAME} [-s|--skin skin] inputSqlFile
 
   --help,-h      : prints this help and exits
@@ -46,7 +46,7 @@ showVersion() {
 # -o is for short options like -h
 # -l is for long options with double dash like --help
 # the comma separates different long options
-options=$(getopt -l help,version,skin: -o hvs: -- "$@" 2>/dev/null) || {
+options=$(getopt -l help,version,skin: -o hs: -- "$@" 2>/dev/null) || {
   showHelp
   Log::fatal "invalid options specified"
 }
@@ -58,7 +58,7 @@ while true; do
       showHelp
       exit 0
       ;;
-    --version | -v)
+    --version)
       showVersion
       exit 0
       ;;
@@ -102,7 +102,7 @@ fi
 
 awkScript="$(
   cat <<'EOF'
-.INCLUDE "$(cd "$(dirname ${SRC_ABSOLUTE_PATH})" && pwd -P)/mysql2puml.awk"
+.INCLUDE "$(dynamicSrcFile _binaries/Converters/mysql2puml.awk)"
 EOF
 )"
-awk --source "${awkScript}" "${absSkinFile}" - <&3
+awk --source "${awkScript}" "${absSkinFile}" - <&3 | Filters::trimEmptyLines

@@ -12,7 +12,7 @@
     "conf/localAppData/Packages/Microsoft.WindowsTerminal_8wekyb3d8bbwe/LocalState/originalSettings.json",
     "vendor/bash-tools-framework/**",
     "vendor/bash-tools-framework/.cspell/*",
-    "tests/data/**",
+    "testsData/**",
     "vendor/bats*/**",
     "pages/README.md",
     "pages/Commands.md",
@@ -22,6 +22,7 @@
     "**/.github/**",
     "**/.idea/**",
     "**/report/**",
-    "**/*.svg"
+    "**/*.svg",
+    "**/testsData/**"
   ]
 }

@@ -186,7 +186,9 @@ mysqldump --skip-add-drop-table --skip-add-locks \
 Transform mysql dump to plant uml format
 
 ```bash
-mysql2puml tests/tools/data/mysql2puml.dump.sql -s default > tests/tools/data/mysql2puml.puml
+mysql2puml \
+  src/_binaries/Converters/testsData/mysql2puml.dump.sql \
+  -s default > src/_binaries/Converters/testsData/mysql2puml.dump.puml
 ```
 
 Plantuml diagram generated
@@ -197,7 +199,7 @@ Plantuml diagram generated
 
 using plantuml software, here an example of resulting diagram
 
-![resulting database diagram](tests/data/mysql2puml-model.png)
+![resulting database diagram](src/_binaries/Converters/testsData/mysql2puml-model.png)
 
 ## 3. Installers
 
@@ -349,7 +351,7 @@ dbImport ExampleDbName
 
 Ability to import db from dump stored on aws the dump file should have this name
 `<fromDbName>.tar.gz` and stored on AWS location defined by S3_BASE_URL env
-variable (see tests/data/.env file)
+variable (see src/\_binaries/DbImport/testsData/.env file)
 
 ```bash
 dbImport --from-aws ExampleDbName.tar.gz

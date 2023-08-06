@@ -137,7 +137,8 @@ PARALLEL_OPTIONS+=("--linebuffer" "-j" "${JOBS_NUMBER}")
 export query
 awkScript="$(
   cat <<'EOF'
-.INCLUDE "$(dynamicSrcFile "DbQueryAllDatabases/dbQueryAllDatabases.awk")"
+.INCLUDE "$(dynamicSrcFile "_binaries/DbQueryAllDatabases/dbQueryAllDatabases.awk")"
+
 EOF
 )"
 

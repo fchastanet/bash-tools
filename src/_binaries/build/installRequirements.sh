@@ -16,6 +16,7 @@ EOF
 )"
 Args::defaultHelp "${HELP}" "$@"
 
+mkdir -p "${ROOT_DIR}/vendor" || true
 Git::cloneOrPullIfNoChanges \
   "${ROOT_DIR}/vendor/bash-tools-framework" \
   "https://github.com/fchastanet/bash-tools-framework.git"
@@ -24,6 +25,7 @@ Log::displayInfo "Copying useful binaries from bash-tools-framework"
 declare -a externalBinaries=(
   "${FRAMEWORK_DIR}/bin/awkLint"
   "${FRAMEWORK_DIR}/bin/buildBinFiles"
+  "${FRAMEWORK_DIR}/bin/frameworkLint"
   "${FRAMEWORK_DIR}/bin/findShebangFiles"
   "${FRAMEWORK_DIR}/bin/generateShellDoc"
   "${FRAMEWORK_DIR}/bin/megalinter"

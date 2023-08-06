@@ -30,8 +30,12 @@ jobs:
       - name: Linting - Shellcheck
         run: |
           set -exo pipefail
-          ./bin/shellcheckLint -f checkstyle | \
-            tee logs/shellcheck-checkstyle.xml
+          ./bin/shellcheckLint -f checkstyle | tee logs/shellcheck-checkstyle.xml
+
+      - name: Linting - Framework
+        run: |
+          set -exo pipefail
+          ./bin/frameworkLint -f checkstyle | tee logs/framework-checkstyle.xml
 
       - name: Linting - Awk
         run: |
@@ -112,7 +116,7 @@ jobs:
           BASH_IMAGE="${{ matrix.bashImage }}" \
           SKIP_BUILD=0 \
           SKIP_USER=1 \
-          ./bin/test ${{matrix.options}} --report-formatter junit -o logs -r tests
+          ./bin/test ${{matrix.options}} --report-formatter junit -o logs -r src
 
       - name: Publish Unit Test Results
         uses: EnricoMi/publish-unit-test-result-action@v1

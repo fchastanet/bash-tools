@@ -172,15 +172,19 @@ if [[ -z "${TARGET_DB}" ]]; then
 fi
 
 # check s3 parameter
-[[ "${FROM_AWS}" = "1" ]] &&
-  Assert::commandExists aws "missing aws, please check https://docs.aws.amazon.com/fr_fr/cli/latest/userguide/install-cliv2.html"
-[[ "${FROM_AWS}" = "1" && -n "${FROM_DSN}" ]] &&
-  Log::fatal "you cannot use from-dsn and from-aws at the same time"
-[[ "${FROM_AWS}" = "1" && -z "${S3_BASE_URL}" ]] &&
-  Log::fatal "missing S3_BASE_URL, please provide a value in .env file"
+if [[ "${FROM_AWS}" = "1" ]]; then
+  Assert::commandExists aws \
+    "missing aws, please check https://docs.aws.amazon.com/fr_fr/cli/latest/userguide/install-cliv2.html" || exit 1
 
-# default value for FROM_DSN if from-aws not set
-if [[ "${FROM_AWS}" = "0" && -z "${FROM_DSN}" ]]; then
+  if [[ -n "${FROM_DSN}" ]]; then
+    Log::fatal "you cannot use from-dsn and from-aws at the same time"
+  fi
+
+  if [[ -z "${S3_BASE_URL}" ]]; then
+    Log::fatal "missing S3_BASE_URL, please provide a value in .env file"
+  fi
+elif [[ -z "${FROM_DSN}" ]]; then
+  # default value for FROM_DSN if from-aws not set
   FROM_DSN="${DEFAULT_FROM_DSN}"
 fi
 

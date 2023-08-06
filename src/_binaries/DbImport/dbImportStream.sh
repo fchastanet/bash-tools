@@ -30,7 +30,7 @@ fi
 
 awkScript="$(
   cat <<'EOF'
-.INCLUDE "$(dynamicSrcFile "DbImport/dbImportStream.awk")"
+.INCLUDE "$(dynamicSrcFile "_binaries/DbImport/dbImportStream.awk")"
 EOF
 )"
 # shellcheck disable=2086
