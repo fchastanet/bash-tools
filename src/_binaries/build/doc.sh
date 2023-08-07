@@ -66,6 +66,9 @@ sed -i -E \
   -e 's#^> \*\*_TIP:_\*\* (.*)$#> [!TIP|label:\1]#' \
   "${DOC_DIR}/README.md"
 
+ShellDoc::fixMarkdownToc "${DOC_DIR}/README.md"
+ShellDoc::fixMarkdownToc "${DOC_DIR}/Commands.md"
+
 if ((TOKEN_NOT_FOUND_COUNT > 0)); then
   exit 1
 fi
