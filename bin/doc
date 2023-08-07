@@ -355,7 +355,8 @@ ShellDoc::fixMarkdownToc() {
   local file="$1"
   local fixMarkdownToc
 
-fixMarkdownToc="$(cat <<'EOF'
+  fixMarkdownToc="$(
+    cat <<'EOF'
 {
   line=$0
   if (match(line, /^(\s*- \[([0-9]+\.)+ [^]]+\]\(#)([^)]+)\)/, arr)) {
@@ -370,7 +371,7 @@ function rewrite(str)
     return str
 }
 EOF
-)"
+  )"
 
   awk -i inplace "${fixMarkdownToc}" "${file}"
 }

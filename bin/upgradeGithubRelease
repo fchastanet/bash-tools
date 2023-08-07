@@ -1,0 +1,1026 @@
+#!/usr/bin/env bash
+
+# shellcheck disable=SC2034
+
+#####################################
+# GENERATED FILE FROM https://github.com/fchastanet/bash-tools/tree/master/src/_binaries/Git/upgradeGithubRelease.sh
+# DO NOT EDIT IT
+#####################################
+
+# ensure that no user aliases could interfere with
+# commands used in this script
+unalias -a || true
+
+# shellcheck disable=SC2034
+SCRIPT_NAME=${0##*/}
+REAL_SCRIPT_FILE="$(readlink -e "$(realpath "${BASH_SOURCE[0]}")")"
+# shellcheck disable=SC2034
+CURRENT_DIR="$(cd "$(readlink -e "${REAL_SCRIPT_FILE%/*}")" && pwd -P)"
+BIN_DIR="${CURRENT_DIR}"
+
+if [[ -t 1 || -t 2 ]]; then
+  # check colors applicable https://misc.flogisoft.com/bash/tip_colors_and_formatting
+  export __ERROR_COLOR='\e[31m'      # Red
+  export __INFO_COLOR='\e[44m'       # white on lightBlue
+  export __SUCCESS_COLOR='\e[32m'    # Green
+  export __WARNING_COLOR='\e[33m'    # Yellow
+  export __TEST_COLOR='\e[100m'      # Light magenta
+  export __TEST_ERROR_COLOR='\e[41m' # white on red
+  export __SKIPPED_COLOR='\e[33m'    # Yellow
+  export __HELP_COLOR='\e[7;49;33m'  # Black on Gold
+  export __DEBUG_COLOR='\e[37m'      # Grey
+  # Internal: reset color
+  export __RESET_COLOR='\e[0m' # Reset Color
+  # shellcheck disable=SC2155,SC2034
+  export __HELP_EXAMPLE="$(echo -e "\e[1;30m")"
+  # shellcheck disable=SC2155,SC2034
+  export __HELP_TITLE="$(echo -e "\e[1;37m")"
+  # shellcheck disable=SC2155,SC2034
+  export __HELP_NORMAL="$(echo -e "\033[0m")"
+else
+  # check colors applicable https://misc.flogisoft.com/bash/tip_colors_and_formatting
+  export __ERROR_COLOR=''
+  export __INFO_COLOR=''
+  export __SUCCESS_COLOR=''
+  export __WARNING_COLOR=''
+  export __SKIPPED_COLOR=''
+  export __HELP_COLOR=''
+  export __TEST_COLOR=''
+  export __TEST_ERROR_COLOR=''
+  export __DEBUG_COLOR=''
+  # Internal: reset color
+  export __RESET_COLOR=''
+  export __HELP_EXAMPLE=''
+  export __HELP_TITLE=''
+  export __HELP_NORMAL=''
+fi
+
+################################################
+# Temp dir management
+################################################
+
+KEEP_TEMP_FILES="${KEEP_TEMP_FILES:-0}"
+export KEEP_TEMP_FILES
+
+# PERSISTENT_TMPDIR is not deleted by traps
+PERSISTENT_TMPDIR="${TMPDIR:-/tmp}/bash-framework"
+export PERSISTENT_TMPDIR
+mkdir -p "${PERSISTENT_TMPDIR}"
+
+# shellcheck disable=SC2034
+TMPDIR="$(mktemp -d -p "${PERSISTENT_TMPDIR:-/tmp}" -t bash-framework-$$-XXXXXX)"
+export TMPDIR
+
+# temp dir cleaning
+cleanOnExit() {
+  if [[ "${KEEP_TEMP_FILES:-0}" = "1" ]]; then
+    Log::displayInfo "KEEP_TEMP_FILES=1 temp files kept here '${TMPDIR}'"
+  elif [[ -n "${TMPDIR+xxx}" ]]; then
+    Log::displayDebug "KEEP_TEMP_FILES=0 removing temp files '${TMPDIR}'"
+    rm -Rf "${TMPDIR:-/tmp/fake}" >/dev/null 2>&1
+  fi
+}
+trap cleanOnExit EXIT HUP QUIT ABRT TERM
+
+# @see https://unix.stackexchange.com/a/386856
+interruptManagement() {
+  # restore SIGINT handler
+  trap - INT
+  # ensure that Ctrl-C is trapped by this script and not by sub process
+  # report to the parent that we have indeed been interrupted
+  kill -s INT "$$"
+}
+trap interruptManagement INT
+
+# shellcheck disable=SC2034
+((failures = 0)) || true
+
+shopt -s expand_aliases
+
+# Bash will remember & return the highest exit code in a chain of pipes.
+# This way you can catch the error inside pipes, e.g. mysqldump | gzip
+set -o pipefail
+set -o errexit
+
+# a log is generated when a command fails
+set -o errtrace
+
+# use nullglob so that (file*.php) will return an empty array if no file matches the wildcard
+shopt -s nullglob
+
+# ensure regexp are interpreted without accentuated characters
+export LC_ALL=POSIX
+
+export TERM=xterm-256color
+
+#avoid interactive install
+export DEBIAN_FRONTEND=noninteractive
+export DEBCONF_NONINTERACTIVE_SEEN=true
+
+# change display level to level argument
+# if --verbose|-v option is parsed in arguments
+Args::parseVerbose() {
+  local verboseDisplayLevel="$1"
+  declare -gx ARGS_VERBOSE=0
+  shift || true
+  local status=1
+  while true; do
+    if [[ "$1" = "--verbose" || "$1" = "-v" ]]; then
+      status=0
+      ARGS_VERBOSE=1
+      break
+    fi
+    shift || break
+  done
+  if [[ "${status}" = "0" ]]; then
+    export BASH_FRAMEWORK_DISPLAY_LEVEL=${verboseDisplayLevel}
+  fi
+  return "${status}"
+}
+
+# Checks if file can be created in folder
+# The file does not need to exist
+Assert::fileWritable() {
+  local file="$1"
+  local dir
+
+  dir="$(dirname "${file}")"
+
+  Assert::validPath "${file}" && [[ -w "${dir}" ]]
+}
+
+# Public: check if argument is a valid linux path
+#
+# @param {string} path $1 path that needs to be checked
+# @return 1 if path is invalid
+# invalid path are those with:
+# - invalid characters
+# - component beginning by a - (because option)
+# - not beginning with a slash
+# - relative
+Assert::validPath() {
+  local path="$1"
+
+  # https://regex101.com/r/afLrmM/2
+  [[ "${path}" =~ ^\/$|^(\/[.a-zA-Z_0-9][.a-zA-Z_0-9-]*)+$ ]] &&
+    [[ ! "${path}" =~ (\/\.\.)|(\.\.\/)|^\.$|^\.\.$ ]] # avoid relative
+}
+
+# lazy initialization
+declare -g BASH_FRAMEWORK_CACHED_ENV_FILE
+declare -g BASH_FRAMEWORK_DEFAULT_ENV_FILE
+
+# load variables in order(from less specific to more specific) from :
+# - ${ROOT_DIR}/src/Env/testsData/.env file
+# - ${ROOT_DIR}/conf/.env file if exists
+# - ~/.env file if exists
+# - ~/.bash-tools/.env file if exists
+# - BASH_FRAMEWORK_ENV_FILEPATH=<fullPathToEnvFile or empty if no file to be loaded>
+Env::load() {
+  if [[ "${BASH_FRAMEWORK_INITIALIZED:-0}" = "1" ]]; then
+    return 0
+  fi
+  BASH_FRAMEWORK_CACHED_ENV_FILE="$(mktemp -p "${TMPDIR:-/tmp}" -t "env_vars.XXXXXXX")"
+  BASH_FRAMEWORK_DEFAULT_ENV_FILE="$(mktemp -p "${TMPDIR:-/tmp}" -t "default_env_file.XXXXXXX")"
+  # shellcheck source=src/Env/testsData/.env
+  (
+    echo "BASH_FRAMEWORK_LOG_LEVEL=${BASH_FRAMEWORK_LOG_LEVEL:-0}"
+    echo "BASH_FRAMEWORK_DISPLAY_LEVEL=${BASH_FRAMEWORK_DISPLAY_LEVEL:-3}"
+    echo "BASH_FRAMEWORK_LOG_FILE=${BASH_FRAMEWORK_LOG_FILE:-${ROOT_DIR}/logs/${SCRIPT_NAME}.log}"
+    echo "BASH_FRAMEWORK_LOG_FILE_MAX_ROTATION=${BASH_FRAMEWORK_LOG_FILE_MAX_ROTATION:-5}"
+  ) >"${BASH_FRAMEWORK_DEFAULT_ENV_FILE}"
+
+  (
+    # reset temp file
+    echo >"${BASH_FRAMEWORK_CACHED_ENV_FILE}"
+
+    # list .env files that need to be loaded
+    local -a files=()
+    if [[ -f "${BASH_FRAMEWORK_DEFAULT_ENV_FILE}" ]]; then
+      files+=("${BASH_FRAMEWORK_DEFAULT_ENV_FILE}")
+    fi
+    if [[ -f "${ROOT_DIR}/conf/.env" && -r "${ROOT_DIR}/conf/.env" ]]; then
+      files+=("${ROOT_DIR}/conf/.env")
+    fi
+    if [[ -f "${HOME}/.env" && -r "${HOME}/.env" ]]; then
+      files+=("${HOME}/.env")
+    fi
+    local file
+    for file in "$@"; do
+      if [[ -f "${file}" && -r "${file}" ]]; then
+        files+=("${file}")
+      fi
+    done
+    # import custom .env file
+    if [[ -n "${BASH_FRAMEWORK_ENV_FILEPATH+xxx}" ]]; then
+      # load BASH_FRAMEWORK_ENV_FILEPATH
+      if [[ -f "${BASH_FRAMEWORK_ENV_FILEPATH}" && -r "${BASH_FRAMEWORK_ENV_FILEPATH}" ]]; then
+        files+=("${BASH_FRAMEWORK_ENV_FILEPATH}")
+      else
+        Log::displayWarning "env file not not found - ${BASH_FRAMEWORK_ENV_FILEPATH}"
+      fi
+    fi
+
+    # add all files added as parameters
+    files+=("$@")
+
+    # source each file in order
+    local file
+    for file in "${files[@]}"; do
+      # shellcheck source=src/Env/testsData/.env
+      source "${file}" || {
+        Log::displayWarning "Cannot load '${file}'"
+      }
+    done
+
+    # copy only the variables to the tmp file
+    local varName overrideVarName
+    while IFS=$'\n' read -r varName; do
+      overrideVarName="OVERRIDE_${varName}"
+      if [[ -z ${!overrideVarName+xxx} ]]; then
+        echo "${varName}='${!varName}'" >>"${BASH_FRAMEWORK_CACHED_ENV_FILE}"
+      else
+        # variable is overridden
+        echo "${varName}='${!overrideVarName}'" >>"${BASH_FRAMEWORK_CACHED_ENV_FILE}"
+      fi
+
+      # using awk deduce all variables that need to be copied in tmp file
+      #   from less specific file to the most
+    done < <(awk -F= '!a[$1]++' "${files[@]}" | grep -v '^$\|^\s*\#' | cut -d= -f1)
+  ) || exit 1
+
+  # ensure all sourced variables will be exported
+  set -o allexport
+
+  # Finally load the temp file to make the variables available in current script
+  # shellcheck source=src/Env/testsData/.env
+  source "${BASH_FRAMEWORK_CACHED_ENV_FILE}"
+
+  set +o allexport
+  BASH_FRAMEWORK_INITIALIZED=1
+}
+
+Env::pathPrepend() {
+  local arg
+  for arg in "$@"; do
+    if [[ -d "${arg}" && ":${PATH}:" != *":${arg}:"* ]]; then
+      PATH="$(realpath "${arg}"):${PATH}"
+    fi
+  done
+}
+
+Github::defaultInstall() {
+  local newSoftware="$1"
+  local targetFile="$2"
+  local version="$3"
+  local installCallback=$4
+  # shellcheck disable=SC2086
+  mkdir -p "$(dirname "${targetFile}")"
+  if [[ "$(type -t "${installCallback}")" = "function" ]]; then
+    ${installCallback} "${newSoftware}" "${targetFile}" "${version}"
+  else
+    mv "${newSoftware}" "${targetFile}"
+  fi
+  chmod +x "${targetFile}"
+  hash -r
+  rm -f "${newSoftware}" || true
+}
+
+# download specified release software version from github
+# @param {String} releaseUrl $1 eg: https://github.com/kubernetes-sigs/kind/releases/download/v1.0.0/kind-linux-amd64
+# @return 1 on failure
+# @output the path to the downloaded release
+Github::downloadReleaseVersion() {
+  local releaseUrl="$1"
+  local newSoftwarePath
+
+  # download specified version
+  newSoftwarePath=$(mktemp -p "${TMPDIR:-/tmp}" -t github.newSoftware.XXXX)
+  Retry::default curl \
+    -L \
+    -o "${newSoftwarePath}" \
+    --fail \
+    "${releaseUrl}" || return 1
+  echo "${newSoftwarePath}"
+}
+
+# Retrieve the latest version number for given github url
+# @param {String} $1 github url from which repository will be extracted
+# @error log messages about retry
+# @output the version number retrieved
+Github::getLatestVersionFromUrl() {
+  local releaseUrl="$1"
+  local repo
+  local latestVersion
+  # extract repo from github url
+  repo="$(Github::extractRepoFromGithubUrl "${releaseUrl}")" || return 1
+
+  # get latest release version
+  if ! Github::getLatestRelease "${repo}" latestVersion; then
+    Log::displayError "Repository ${repo} latest version not found"
+    return 1
+  fi
+  Log::displayInfo "Repo ${repo} latest version found is ${latestVersion}"
+  echo "${latestVersion}"
+}
+
+# Public: log level off
+export __LEVEL_OFF=0
+# Public: log level error
+export __LEVEL_ERROR=1
+# Public: log level warning
+export __LEVEL_WARNING=2
+# Public: log level info
+export __LEVEL_INFO=3
+# Public: log level success
+export __LEVEL_SUCCESS=3
+# Public: log level debug
+export __LEVEL_DEBUG=4
+
+export __LEVEL_OFF
+export __LEVEL_ERROR
+export __LEVEL_WARNING
+export __LEVEL_INFO
+export __LEVEL_SUCCESS
+export __LEVEL_DEBUG
+
+# Display message using debug color (grey)
+# @param {String} $1 message
+Log::displayDebug() {
+  echo -e "${__DEBUG_COLOR}DEBUG   - ${1}${__RESET_COLOR}" >&2
+  Log::logDebug "$1"
+}
+
+# Display message using error color (red)
+# @param {String} $1 message
+Log::displayError() {
+  echo -e "${__ERROR_COLOR}ERROR   - ${1}${__RESET_COLOR}" >&2
+  Log::logError "$1"
+}
+
+# Display message using info color (bg light blue/fg white)
+# @param {String} $1 message
+Log::displayInfo() {
+  local type="${2:-INFO}"
+  echo -e "${__INFO_COLOR}${type}    - ${1}${__RESET_COLOR}" >&2
+  Log::logInfo "$1" "${type}"
+}
+
+# Display message using info color (blue) but warning level
+# @param {String} $1 message
+Log::displayStatus() {
+  local type="${2:-STATUS}"
+  echo -e "${__INFO_COLOR}${type}  - ${1}${__RESET_COLOR}" >&2
+  Log::logStatus "$1" "${type}"
+}
+
+# Display message using warning color (yellow)
+# @param {String} $1 message
+Log::displayWarning() {
+  echo -e "${__WARNING_COLOR}WARN    - ${1}${__RESET_COLOR}" >&2
+  Log::logWarning "$1"
+}
+
+# Display message using error color (red) and exit immediately with error status 1
+# @param {String} $1 message
+Log::fatal() {
+  echo -e "${__ERROR_COLOR}FATAL   - ${1}${__RESET_COLOR}" >&2
+  Log::logFatal "$1"
+  exit 1
+}
+
+# shellcheck disable=SC2317
+
+Log::load() {
+  # disable display methods following display level
+  if ((BASH_FRAMEWORK_DISPLAY_LEVEL < __LEVEL_DEBUG)); then
+    Log::displayDebug() { :; }
+  fi
+  if ((BASH_FRAMEWORK_DISPLAY_LEVEL < __LEVEL_INFO)); then
+    Log::displayHelp() { :; }
+    Log::displayInfo() { :; }
+    Log::displaySkipped() { :; }
+    Log::displaySuccess() { :; }
+  fi
+  if ((BASH_FRAMEWORK_DISPLAY_LEVEL < __LEVEL_WARNING)); then
+    Log::displayWarning() { :; }
+    Log::displayStatus() { :; }
+  fi
+  if ((BASH_FRAMEWORK_DISPLAY_LEVEL < __LEVEL_ERROR)); then
+    Log::displayError() { :; }
+  fi
+  # disable log methods following log level
+  if ((BASH_FRAMEWORK_LOG_LEVEL < __LEVEL_DEBUG)); then
+    Log::logDebug() { :; }
+  fi
+  if ((BASH_FRAMEWORK_LOG_LEVEL < __LEVEL_INFO)); then
+    Log::logHelp() { :; }
+    Log::logInfo() { :; }
+    Log::logSkipped() { :; }
+    Log::logSuccess() { :; }
+  fi
+  if ((BASH_FRAMEWORK_LOG_LEVEL < __LEVEL_WARNING)); then
+    Log::logWarning() { :; }
+    Log::logStatus() { :; }
+  fi
+  if ((BASH_FRAMEWORK_LOG_LEVEL < __LEVEL_ERROR)); then
+    Log::logError() { :; }
+  fi
+
+  if ((BASH_FRAMEWORK_LOG_LEVEL > __LEVEL_OFF)); then
+    if [[ -z "${BASH_FRAMEWORK_LOG_FILE}" ]]; then
+      BASH_FRAMEWORK_LOG_LEVEL=${__LEVEL_OFF}
+      export BASH_FRAMEWORK_LOG_LEVEL
+    elif [[ ! -f "${BASH_FRAMEWORK_LOG_FILE}" ]]; then
+      if ! mkdir -p "$(dirname "${BASH_FRAMEWORK_LOG_FILE}")" 2>/dev/null; then
+        BASH_FRAMEWORK_LOG_LEVEL=__LEVEL_OFF
+        Log::displayWarning "Log dir cannot be created $(dirname "${BASH_FRAMEWORK_LOG_FILE}")"
+      fi
+      if ! touch --no-create "${BASH_FRAMEWORK_LOG_FILE}" 2>/dev/null; then
+        BASH_FRAMEWORK_LOG_LEVEL=__LEVEL_OFF
+        Log::displayWarning "Log file '${BASH_FRAMEWORK_LOG_FILE}' cannot be created"
+      fi
+    fi
+    Log::displayInfo "Logging to file ${BASH_FRAMEWORK_LOG_FILE}"
+    if ((BASH_FRAMEWORK_LOG_FILE_MAX_ROTATION > 0)); then
+      Log::rotate "${BASH_FRAMEWORK_LOG_FILE}" "${BASH_FRAMEWORK_LOG_FILE_MAX_ROTATION}"
+    fi
+  fi
+}
+
+# Check that command version is greater than expected minimal version
+# display warning if command version greater than expected minimal version
+# display error if command version less than expected minimal version and exit 1
+# @param {String} $1 command path
+# @param {String} $2 command line parameters to launch to get command version
+# @param {String} $3 expected minimal command version
+# @param {String} $4 optional help message to display if command does not exist
+# @return 1 if command version less than expected minimal version, 0 otherwise
+# @return 2 if command does not exist
+Version::checkMinimal() {
+  local commandName="$1"
+  local argVersion="$2"
+  local minimalVersion="$3"
+  local parseVersionCallback=${4:-Version::parse}
+  local help="${4:-}"
+
+  Assert::commandExists "${commandName}" "${help}" || return 2
+
+  local version
+  version="$("${commandName}" "${argVersion}" 2>&1 | ${parseVersionCallback})"
+
+  Log::displayDebug "check ${commandName} version ${version} against minimal ${minimalVersion}"
+
+  Version::compare "${version}" "${minimalVersion}" || {
+    local result=$?
+    if [[ "${result}" = "1" ]]; then
+      Log::displayWarning "${commandName} version is ${version} greater than ${minimalVersion}, OK let's continue"
+    elif [[ "${result}" = "2" ]]; then
+      Log::displayError "${commandName} minimal version is ${minimalVersion}, your version is ${version}"
+      return 1
+    fi
+    return 0
+  }
+
+}
+
+# @param $1 version 1
+# @param $2 version 2
+# @return
+#   0 if equal
+#   1 if version1 > version2
+#   2 else
+Version::compare() {
+  if [[ "$1" = "$2" ]]; then
+    return 0
+  fi
+  local IFS=.
+  # shellcheck disable=2206
+  local i ver1=($1) ver2=($2)
+  # fill empty fields in ver1 with zeros
+  for ((i = ${#ver1[@]}; i < ${#ver2[@]}; i++)); do
+    ver1[i]=0
+  done
+  for ((i = 0; i < ${#ver1[@]}; i++)); do
+    if [[ -z "${ver2[i]+unset}" ]] || [[ -z ${ver2[i]} ]]; then
+      # fill empty fields in ver2 with zeros
+      ver2[i]=0
+    fi
+    if ((10#${ver1[i]} > 10#${ver2[i]})); then
+      return 1
+    fi
+    if ((10#${ver1[i]} < 10#${ver2[i]})); then
+      return 2
+    fi
+  done
+  return 0
+}
+
+# filter to keep only version number from a string
+# @stdin the string to parse
+Version::parse() {
+  sed -En 's/[^0-9]*(([0-9]+\.)*[0-9]+).*/\1/p' | head -n1
+}
+
+# Public: check if command specified exists or return 1
+# with error and message if not
+#
+# **Arguments**:
+# * $1 commandName on which existence must be checked
+# * $2 helpIfNotExists a help command to display if the command does not exist
+#
+# **Exit**: code 1 if the command specified does not exist
+Assert::commandExists() {
+  local commandName="$1"
+  local helpIfNotExists="$2"
+
+  "${BASH_FRAMEWORK_COMMAND:-command}" -v "${commandName}" >/dev/null 2>/dev/null || {
+    Log::displayError "${commandName} is not installed, please install it"
+    if [[ -n "${helpIfNotExists}" ]]; then
+      Log::displayInfo "${helpIfNotExists}"
+    fi
+    return 1
+  }
+  return 0
+}
+
+# github repository eg: kubernetes-sigs/kind
+# @param {String} githubUrl eg: https://github.com/kubernetes-sigs/kind/releases/download/@latestVersion@/kind-linux-amd64
+# @return 1 if no matching repo found in provided url, 0 otherwise
+# @output the repo in the form owner/repo
+Github::extractRepoFromGithubUrl() {
+  local githubUrl="$1"
+  local result
+  result="$(sed -n -E 's#^https://github.com/([^/]+/[^/]+)/.*$#\1#p' <<<"${githubUrl}")"
+  if [[ -z "${result}" ]]; then
+    return 1
+  fi
+  echo "${result}"
+}
+
+# Retrieve the latest version number of a github release using Github API using retry
+# @param {String} $1 repository in the format fchastanet/bash-tools
+#   that would match https://github.com/fchastanet/bash-tools
+# @param {String} $2 reference to a variable that will contain the result of the command
+# @output log messages about retry
+Github::getLatestRelease() {
+  local repo="$1"
+  # we need to pass the result through a reference instead of output directly
+  # because retry can output too
+  local -n resultRef=$2
+  resultRef=""
+  local resultFile
+  resultFile="$(mktemp -p "${TMPDIR:-/tmp}" -t githubLatestRelease.XXXX)"
+  # Get latest release from GitHub api
+  if Retry::default curl \
+    -o "${resultFile}" \
+    --fail \
+    --silent \
+    "https://api.github.com/repos/${repo}/releases/latest"; then
+    # shellcheck disable=SC2034
+    resultRef="$(Version::githubApiExtractVersion <"${resultFile}")"
+    return 0
+  fi
+  # display curl result in case of failure
+  cat >&2 "${resultFile}"
+  rm -f "${resultFile}"
+}
+
+# Display message using info color (bg light blue/fg white)
+# @param {String} $1 message
+Log::displayHelp() {
+  local type="${2:-HELP}"
+  echo -e "${__HELP_COLOR}${type}    - ${1}${__RESET_COLOR}" >&2
+  Log::logHelp "$1" "${type}"
+}
+
+# Display message using skip color (yellow)
+# @param {String} $1 message
+Log::displaySkipped() {
+  echo -e "${__SKIPPED_COLOR}SKIPPED - ${1}${__RESET_COLOR}" >&2
+  Log::logSkipped "$1"
+}
+
+# Display message using success color (bg green/fg white)
+# @param {String} $1 message
+Log::displaySuccess() {
+  echo -e "${__SUCCESS_COLOR}SUCCESS - ${1}${__RESET_COLOR}" >&2
+  Log::logSuccess "$1"
+}
+
+# log message to file
+# @param {String} $1 message
+Log::logDebug() {
+  Log::logMessage "${2:-DEBUG}" "$@"
+}
+
+# log message to file
+# @param {String} $1 message
+Log::logError() {
+  Log::logMessage "${2:-ERROR}" "$@"
+}
+
+# log message to file
+# @param {String} $1 message
+Log::logFatal() {
+  Log::logMessage "${2:-FATAL}" "$@"
+}
+
+# log message to file
+# @param {String} $1 message
+Log::logHelp() {
+  Log::logMessage "${2:-HELP}" "$1"
+}
+
+# log message to file
+# @param {String} $1 message
+Log::logInfo() {
+  Log::logMessage "${2:-INFO}" "$1"
+}
+
+# log message to file
+# @param {String} $1 message
+Log::logSkipped() {
+  Log::logMessage "${2:-SKIPPED}" "$@"
+}
+
+# log message to file
+# @param {String} $1 message
+Log::logStatus() {
+  Log::logMessage "${2:-STATUS}" "$@"
+}
+
+# log message to file
+# @param {String} $1 message
+Log::logSuccess() {
+  Log::logMessage "${2:-SUCCESS}" "$@"
+}
+
+# log message to file
+# @param {String} $1 message
+Log::logWarning() {
+  Log::logMessage "${2:-WARNING}" "$@"
+}
+
+# To be called before logging in the log file
+# @param {string} file $1 log file name
+# @param {int} maxLogFilesCount $2 maximum number of log files
+Log::rotate() {
+  local file="$1"
+  local maxLogFilesCount="${2:-5}"
+
+  if [[ ! -f "${file}" ]]; then
+    Log::displaySkipped "Log file ${file} doesn't exist yet"
+    return 0
+  fi
+  for i in $(seq $((maxLogFilesCount - 1)) -1 1); do
+    Log::displayInfo "Log rotation ${file}.${i} to ${file}.$((i + 1))"
+    mv "${file}."{"${i}","$((i + 1))"} &>/dev/null || true
+  done
+  if cp "${file}" "${file}.1" &>/dev/null; then
+    echo >"${file}" # reset log file
+    Log::displayInfo "Log rotation ${file} to ${file}.1"
+  fi
+}
+
+# Retry a command 5 times with a delay of 15 seconds between each attempt
+# @param          $@ the command to run
+# @return 0 on success, 1 if max retries count reached
+Retry::default() {
+  Retry::parameterized 5 15 "" "$@"
+}
+
+# Internal: common log message
+#
+# **Arguments**:
+# * $1 - message's level description
+# * $2 - message
+# **Output**:
+# [date]|[levelMsg]|message
+#
+# **Examples**:
+# <pre>
+# 2020-01-19 19:20:21|ERROR  |log error
+# 2020-01-19 19:20:21|SKIPPED|log skipped
+# </pre>
+Log::logMessage() {
+  local levelMsg="$1"
+  local msg="$2"
+  local date
+
+  if [[ -z "${BASH_FRAMEWORK_LOG_FILE}" ]]; then
+    return 0
+  fi
+  if ((BASH_FRAMEWORK_LOG_LEVEL > __LEVEL_OFF)) || [[ "${levelMsg}" = "FATAL" ]]; then
+    mkdir -p "$(dirname "${BASH_FRAMEWORK_LOG_FILE}")" || true
+    if Assert::fileWritable "${BASH_FRAMEWORK_LOG_FILE}"; then
+      date="$(date '+%Y-%m-%d %H:%M:%S')"
+      touch "${BASH_FRAMEWORK_LOG_FILE}"
+      printf "%s|%7s|%s\n" "${date}" "${levelMsg}" "${msg}" >>"${BASH_FRAMEWORK_LOG_FILE}"
+    else
+      echo -e "${__ERROR_COLOR}ERROR   - File ${BASH_FRAMEWORK_LOG_FILE} is not writable${__RESET_COLOR}" >&2
+    fi
+  fi
+}
+
+# Retry a command several times depending on parameters
+# @param {int}    $1 max retries
+# @param {int}    $2 delay between attempt
+# @param {String} $3 message to display to describe the attempt
+# @param ...      $@ rest of parameters, the command to run
+# @return 0 on success
+# @return 1 if max retries count reached
+# @return 2 if maxRetries invalid value
+Retry::parameterized() {
+  local maxRetries=$1
+  shift || true
+  local delayBetweenTries=$1
+  shift || true
+  local message="$1"
+  shift || true
+  local retriesCount=1
+  if [[ "${maxRetries}" -lt 1 ]]; then
+    Log::displayError "invalid maxRetry value"
+    return 2
+  fi
+
+  while true; do
+    Log::displayInfo "Attempt ${retriesCount}/${maxRetries}: ${message}"
+    if "$@"; then
+      break
+    elif [[ "${retriesCount}" -lt "${maxRetries}" ]]; then
+      Log::displayWarning "Command failed. Wait for ${delayBetweenTries} seconds"
+      ((retriesCount++))
+      sleep "${delayBetweenTries}"
+    else
+      Log::displayError "The command has failed after ${retriesCount} attempts."
+      return 1
+    fi
+  done
+  return 0
+}
+
+# extract version number from github api
+# @stdin json result of github API
+Version::githubApiExtractVersion() {
+  jq -r ".tag_name" | Version::parse
+}
+
+# FUNCTIONS
+
+Env::load
+export BASH_FRAMEWORK_DISPLAY_LEVEL="${__LEVEL_WARNING}"
+Args::parseVerbose "${__LEVEL_INFO}" "$@" || true
+# shellcheck disable=SC2034
+longArg="--verbose" shortArg="-v"
+
+# remove verbose param
+declare -a newParams=()
+for param; do
+  # shellcheck disable=SC2154
+  [[ "${param}" == "${longArg}" || "${param}" == "${shortArg}" ]] || newParams+=("${param}")
+done
+set -- "${newParams[@]}"
+Log::load
+
+Env::pathPrepend "${BIN_DIR}"
+
+# prepare bin directory for eventual bin files generated by Embed::embed
+mkdir -p "${TMPDIR:-/tmp}/bin"
+Env::pathPrepend "${TMPDIR:-/tmp}/bin"
+
+if [[ -t 1 || -t 2 ]]; then
+  # check colors applicable https://misc.flogisoft.com/bash/tip_colors_and_formatting
+  export __ERROR_COLOR='\e[31m'      # Red
+  export __INFO_COLOR='\e[44m'       # white on lightBlue
+  export __SUCCESS_COLOR='\e[32m'    # Green
+  export __WARNING_COLOR='\e[33m'    # Yellow
+  export __TEST_COLOR='\e[100m'      # Light magenta
+  export __TEST_ERROR_COLOR='\e[41m' # white on red
+  export __SKIPPED_COLOR='\e[33m'    # Yellow
+  export __HELP_COLOR='\e[7;49;33m'  # Black on Gold
+  export __DEBUG_COLOR='\e[37m'      # Grey
+  # Internal: reset color
+  export __RESET_COLOR='\e[0m' # Reset Color
+  # shellcheck disable=SC2155,SC2034
+  export __HELP_EXAMPLE="$(echo -e "\e[1;30m")"
+  # shellcheck disable=SC2155,SC2034
+  export __HELP_TITLE="$(echo -e "\e[1;37m")"
+  # shellcheck disable=SC2155,SC2034
+  export __HELP_NORMAL="$(echo -e "\033[0m")"
+else
+  # check colors applicable https://misc.flogisoft.com/bash/tip_colors_and_formatting
+  export __ERROR_COLOR=''
+  export __INFO_COLOR=''
+  export __SUCCESS_COLOR=''
+  export __WARNING_COLOR=''
+  export __SKIPPED_COLOR=''
+  export __HELP_COLOR=''
+  export __TEST_COLOR=''
+  export __TEST_ERROR_COLOR=''
+  export __DEBUG_COLOR=''
+  # Internal: reset color
+  export __RESET_COLOR=''
+  export __HELP_EXAMPLE=''
+  export __HELP_TITLE=''
+  export __HELP_NORMAL=''
+fi
+
+#default values
+TARGET_FILE=""
+VERSION_ARG="--version"
+MIN_VERSION=""
+CURRENT_VERSION=""
+EXACT_VERSION=""
+GITHUB_URL_PATTERN=""
+
+# Usage info
+showHelp() {
+  cat <<EOF
+${__HELP_TITLE}Description:${__HELP_NORMAL} retrieve latest binary release from github and install it
+
+${__HELP_TITLE}Usage:${__HELP_NORMAL} ${SCRIPT_NAME} [-h|--help] prints this help and exits
+${__HELP_TITLE}Usage:${__HELP_NORMAL} ${SCRIPT_NAME} <targetFile> <githubUrlPattern>
+    [--version-arg <versionArg>]
+    [--minimal-version|-m <minimalVersion>]
+    [--current-version|-c <currentVersion>]
+    [--exact-version|-e <exactVersion>]
+
+    --help,-h prints this help and exits
+
+    --version-arg <versionArg>: The argument that will be provided to the currently installed binary
+      to check the version of the software. This parameter is needed if --minimal-version
+      argument is used and is different than default value (--version).
+
+    --current-version|-c <currentVersion>: sometimes the command to retrieve the version is complicated
+      some command needs you to parse json or other commands provides multiple sub command versions.
+      In this case you can provide the version you currently have, see examples below.
+
+    --minimal-version|-m <minimalVersion>: if provided, if currently installed binary is below
+      this minimalVersion, a new version of the binary will be installed. If this argument is not
+      provided, the latest binary is unconditionally downloaded from github.
+
+    --current-version|-c and --version-arg are mutually exclusive, you cannot use both argument at the
+      same time.
+
+    --exact-version|-e and --minimal-version|-m are mutually exclusive, you cannot use both argument at
+      the same time.
+
+    <targetFile> the binary downloaded will e written to this file path. Ensure the path is writable.
+    <githubUrlPattern> the url pattern to use to download the binary, see examples below.
+      @version@ is template variable that will be replaced by the latest version tag found on
+      github.
+
+${__HELP_TITLE}Github template urls examples:${__HELP_NORMAL}
+
+Simple ones(Sometimes @version@ template variable has to be specified twice):
+"https://github.com/hadolint/hadolint/releases/download/v@version@/hadolint-Linux-x86_64"
+"https://github.com/koalaman/shellcheck/releases/download/v@version@/shellcheck-v@version@.linux.x86_64.tar.xz"
+"https://github.com/sharkdp/fd/releases/download/v@version@/fd_@version@_amd64.deb"
+"https://github.com/sharkdp/bat/releases/download/v@version@/bat_@version@_amd64.deb"
+'https://github.com/kubernetes-sigs/kind/releases/download/v@version@/kind-linux-amd64'
+"https://github.com/kubernetes/minikube/releases/download/v@version@/minikube-linux-amd64"
+"https://github.com/plantuml/plantuml/releases/download/v@version@/plantuml-@version@.jar"
+"https://github.com/Versent/saml2aws/releases/download/v@version@/saml2aws_@version@_linux_amd64.tar.gz"
+
+If you want to add condition on architecture(linux, windows, x86, 64/32 bits):
+"https://github.com/docker/compose/releases/download/v@version@/docker-compose-$(uname -s | tr '[:upper:]' '[:lower:]')-$(uname -m)"
+"https://github.com/docker/docker-credential-helpers/releases/download/v@version@/docker-credential-wincred-v@version@.windows-$(dpkg --print-architecture).exe"
+"https://github.com/Blacksmoke16/oq/releases/download/v@version@/oq-v@version@-$(uname -s)-$(uname -m)"
+
+${__HELP_TITLE}Command examples:${__HELP_NORMAL}
+upgradeGithubRelease
+
+${__HELP_TITLE}Author:${__HELP_NORMAL}
+[François Chastanet](https://github.com/fchastanet)
+
+${__HELP_TITLE}Source file:${__HELP_NORMAL}
+https://github.com/fchastanet/bash-tools/tree/master/src/_binaries/Git/upgradeGithubRelease.sh
+
+${__HELP_TITLE}License:${__HELP_NORMAL}
+MIT License
+
+Copyright (c) 2022 François Chastanet
+EOF
+}
+
+# read command parameters
+# $@ is all command line parameters passed to the script.
+# -o is for short options like -h
+# -l is for long options with double dash like --help
+# the comma separates different long options
+options=$(getopt \
+  -l help,version-arg:,minimal-version:,current-version:,exact-version: \
+  -o hm:c:e: -- "$@" 2>/dev/null) || {
+  showHelp
+  Log::fatal "invalid options specified"
+}
+
+eval set -- "${options}"
+while true; do
+  case $1 in
+    -h | --help)
+      showHelp
+      exit 0
+      ;;
+    --version-arg)
+      shift || true
+      VERSION_ARG="$1"
+      ;;
+    --minimal-version | -m)
+      shift || true
+      MIN_VERSION="$1"
+      ;;
+    --current-version | -c)
+      shift || true
+      CURRENT_VERSION="$1"
+      ;;
+    --exact-version | -e)
+      shift || true
+      EXACT_VERSION="$1"
+      ;;
+    --)
+      shift || true
+      break
+      ;;
+    *)
+      Log::fatal "invalid argument $1"
+      ;;
+  esac
+  shift || true
+done
+shift $((OPTIND - 1)) || true
+
+if [[ -n "${EXACT_VERSION}" && -n "${MIN_VERSION}" ]]; then
+  Log::fatal "--exact-version|-e and --minimal-version|-m are mutually exclusive, you cannot use both argument at the same time."
+fi
+if (($# != 2)); then
+  Log::fatal "Exactly 2 fixed arguments are required"
+fi
+TARGET_FILE="$1"
+GITHUB_URL_PATTERN="$2"
+
+if [[ ! "${GITHUB_URL_PATTERN}" =~ ^https://github.com/ ]]; then
+  Log::fatal "Invalid githubUrlPattern ${GITHUB_URL_PATTERN} provided, it should begin with https://github.com/"
+fi
+
+if [[ "${TARGET_FILE:0:1}" != "/" ]]; then
+  TARGET_FILE="$(pwd)/${TARGET_FILE}"
+fi
+if ! Assert::validPath "${TARGET_FILE}"; then
+  Log::fatal "File ${TARGET_FILE} is not a valid path"
+fi
+if ! Assert::fileWritable "${TARGET_FILE}"; then
+  Log::fatal "File ${TARGET_FILE} is not writable"
+fi
+
+# if minVersion arg provided, we have to compute current bin version
+TRY_DOWNLOAD_NEW_VERSION=1
+if [[ -f "${TARGET_FILE}" ]]; then
+  if [[ -n "${MIN_VERSION}" ]]; then
+    if [[ -z "${CURRENT_VERSION}" && -n "${VERSION_ARG}" ]]; then
+      if Version::checkMinimal "${TARGET_FILE}" "${VERSION_ARG}" "${MIN_VERSION}"; then
+        TRY_DOWNLOAD_NEW_VERSION=0
+      fi
+    elif [[ -n "${CURRENT_VERSION}" ]]; then
+      versionCompare=0
+      Version::compare "${CURRENT_VERSION}" "${MIN_VERSION}" || versionCompare=$?
+      # do not try to down version if current version is greater or equal to min version
+      if [[ "${versionCompare}" = "1" ]]; then
+        # current version > min version
+        TRY_DOWNLOAD_NEW_VERSION=0
+        Log::displayWarning "${TARGET_FILE} version is ${CURRENT_VERSION} greater than ${MIN_VERSION}"
+      elif [[ "${versionCompare}" = "2" ]]; then
+        # current version < min version
+        Log::displayError "${TARGET_FILE} minimal version is ${MIN_VERSION}, your version is ${CURRENT_VERSION}"
+      else
+        TRY_DOWNLOAD_NEW_VERSION=0
+        Log::displayStatus "${TARGET_FILE} version is the required minimal version ${MIN_VERSION}"
+      fi
+    fi
+  elif [[ -n "${EXACT_VERSION}" ]]; then
+    if [[ -z "${CURRENT_VERSION}" && -n "${VERSION_ARG}" ]]; then
+      CURRENT_VERSION="$("${TARGET_FILE}" "${VERSION_ARG}" 2>&1 | Version::parse)"
+    fi
+    if Version::compare "${CURRENT_VERSION}" "${EXACT_VERSION}"; then
+      TRY_DOWNLOAD_NEW_VERSION=0
+      Log::displayStatus "${TARGET_FILE} version is the exact required version ${EXACT_VERSION}"
+    else
+      Log::displayWarning "${TARGET_FILE} version ${CURRENT_VERSION} is different than required version ${EXACT_VERSION}"
+    fi
+  fi
+fi
+
+if [[ "${TRY_DOWNLOAD_NEW_VERSION}" = "0" ]]; then
+  exit 0
+fi
+
+if [[ -z "${EXACT_VERSION}" ]]; then
+  EXACT_VERSION="$(Github::getLatestVersionFromUrl "${GITHUB_URL_PATTERN}")"
+fi
+GITHUB_URL="$(echo "${GITHUB_URL_PATTERN}" | sed -E "s/@version@/${EXACT_VERSION}/g")"
+Log::displayInfo "Using url ${GITHUB_URL}"
+
+newSoftware=$(Github::downloadReleaseVersion "${GITHUB_URL}")
+Github::defaultInstall "${newSoftware}" "${TARGET_FILE}"
+Log::displayStatus "Version ${EXACT_VERSION} installed in ${TARGET_FILE}"
