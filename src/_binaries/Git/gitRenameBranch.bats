@@ -3,10 +3,10 @@
 # shellcheck source=src/batsHeaders.sh
 source "$(cd "${BATS_TEST_DIRNAME}/../.." && pwd)/batsHeaders.sh"
 
-load "${FRAMEWORK_DIR}/src/_standalone/Bats/assert_lines_count.sh"
+load "${FRAMEWORK_ROOT_DIR}/src/_standalone/Bats/assert_lines_count.sh"
 
 # shellcheck source=vendor/bash-tools-framework/src/Env/load.sh
-source "${FRAMEWORK_DIR}/src/Env/load.sh" || exit 1
+source "${FRAMEWORK_ROOT_DIR}/src/Env/load.sh" || exit 1
 
 setup() {
   export TMPDIR="${BATS_TEST_TMPDIR}"

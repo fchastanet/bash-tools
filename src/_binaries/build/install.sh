@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-# BIN_FILE=${ROOT_DIR}/install
-# ROOT_DIR_RELATIVE_TO_BIN_DIR=
+# BIN_FILE=${FRAMEWORK_ROOT_DIR}/install
 
-.INCLUDE "$(dynamicTemplateDir _header.tpl)"
+.INCLUDE "$(dynamicTemplateDir _includes/_header.tpl)"
+.INCLUDE "$(dynamicTemplateDir _includes/_load.tpl)"
 
 .INCLUDE "${ORIGINAL_TEMPLATE_DIR}/_includes/executedAsUser.sh"
 
@@ -33,7 +33,7 @@ fi
 
 if [[ -d "${HOME}/.bash-tools" ]]; then
   # update
-  cp -R --no-clobber "${ROOT_DIR}/conf/." "${HOME}/.bash-tools"
+  cp -R --no-clobber "${BASH_TOOLS_ROOT_DIR}/conf/." "${HOME}/.bash-tools"
   [[ "${BASE_DIR}/conf/.env" -nt "${HOME}/.bash-tools/.env" ]] && {
     Log::displayWarning "${BASE_DIR}/conf/.env is newer than ${HOME}/.bash-tools/.env, compare the files to check if some updates need to be applied"
   }

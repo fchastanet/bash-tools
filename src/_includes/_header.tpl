@@ -1,12 +1,16 @@
 #!/usr/bin/env bash
 
-# shellcheck disable=SC2034
 .INCLUDE "${ORIGINAL_TEMPLATE_DIR}/_includes/_header.tpl"
 
-BASH_FRAMEWORK_ENV_FILEPATH=${HOME}/.bash-tools/.env
-if [[ -d "${ROOT_DIR}/vendor/bash-tools-framework" ]]; then
-  FRAMEWORK_DIR="$(cd "${ROOT_DIR}/vendor/bash-tools-framework" && pwd -P)"
+BASH_TOOLS_ROOT_DIR="$(cd "${CURRENT_DIR}/.." && pwd -P)"
+if [[ -d "${BASH_TOOLS_ROOT_DIR}/vendor/bash-tools-framework/" ]]; then
+  FRAMEWORK_ROOT_DIR="$(cd "${BASH_TOOLS_ROOT_DIR}/vendor/bash-tools-framework" && pwd -P)"
 else
-  FRAMEWORK_DIR="${ROOT_DIR}/vendor/bash-tools-framework"
+  # if the directory does not exist yet, give a value to FRAMEWORK_ROOT_DIR
+  FRAMEWORK_ROOT_DIR="${BASH_TOOLS_ROOT_DIR}/vendor/bash-tools-framework"
 fi
-export FRAMEWORK_DIR
+export BASH_TOOLS_ROOT_DIR FRAMEWORK_ROOT_DIR
+
+if [[ -f "${HOME}/.bash-tools/.env" ]]; then
+  export BASH_FRAMEWORK_ENV_FILEPATH="${HOME}/.bash-tools/.env"
+fi

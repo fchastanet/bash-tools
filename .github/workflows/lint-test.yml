@@ -45,9 +45,7 @@ jobs:
       - name: build bin files + check md5
         run: |
           set -exo pipefail
-          (./bin/buildBinFiles 2>&1 | tee logs/buidBinFiles.log) || true
-          cat bin/cli
-          exit 1
+          ./bin/buildBinFiles 2>&1 | tee logs/buidBinFiles.log
 
       - name: Checkstyle aggregation
         uses: jwgmeligmeyling/checkstyle-github-action@master

@@ -1,22 +1,23 @@
 #!/usr/bin/env bash
-# BIN_FILE=${ROOT_DIR}/bin/doc
+# BIN_FILE=${FRAMEWORK_ROOT_DIR}/bin/doc
 
-.INCLUDE "$(dynamicTemplateDir _includes/_headerNoRootDir.tpl)"
-ROOT_DIR="$(cd "${CURRENT_DIR}/.." && pwd -P)"
-DOC_DIR="${ROOT_DIR}/pages"
-HELP="$(
+.INCLUDE "$(dynamicTemplateDir _includes/_header.tpl)"
+BASH_TOOLS_ROOT_DIR="$(cd "${CURRENT_DIR}/.." && pwd -P)"
+.INCLUDE "$(dynamicTemplateDir _includes/_load.tpl)"
+DOC_DIR="${BASH_TOOLS_ROOT_DIR}/pages"
+showHelp() {
   cat <<EOF
 ${__HELP_TITLE}Description:${__HELP_NORMAL} generate markdown documentation
 ${__HELP_TITLE}Usage:${__HELP_NORMAL} ${SCRIPT_NAME}
 
 .INCLUDE "${ORIGINAL_TEMPLATE_DIR}/_includes/author.tpl"
 EOF
-)"
-Args::defaultHelp "${HELP}" "$@"
+}
+Args::defaultHelp showHelp "$@"
 
 if [[ "${IN_BASH_DOCKER:-}" != "You're in docker" ]]; then
   DOCKER_RUN_OPTIONS=$"-e ORIGINAL_DOC_DIR=${DOC_DIR}" \
-    "${BIN_DIR}/runBuildContainer" "/bash/bin/doc" "$@"
+    "${COMMAND_BIN_DIR}/runBuildContainer" "/bash/bin/doc" "$@"
   exit $?
 fi
 
@@ -26,7 +27,7 @@ fi
 mkdir -p "${HOME}/.bash-tools"
 
 (
-  cd "${ROOT_DIR}" || exit 1
+  cd "${BASH_TOOLS_ROOT_DIR}" || exit 1
   cp -R conf/. "${HOME}/.bash-tools"
   sed -i \
     -e "s@^S3_BASE_URL=.*@S3_BASE_URL=s3://example.com/exports/@g" \
@@ -44,22 +45,23 @@ export PATH=/tmp:${PATH}
 Log::displayInfo 'generate Commands.md'
 ((TOKEN_NOT_FOUND_COUNT = 0)) || true
 ShellDoc::generateMdFileFromTemplate \
-  "${ROOT_DIR}/Commands.tmpl.md" \
+  "${BASH_TOOLS_ROOT_DIR}/Commands.tmpl.md" \
   "${DOC_DIR}/Commands.md" \
-  "${BIN_DIR}" \
-  TOKEN_NOT_FOUND_COUNT
+  "${FRAMEWORK_BIN_DIR}" \
+  TOKEN_NOT_FOUND_COUNT \
+  '(bash-tpl|plantuml|definitionLint|compile)$'
 
 # inject plantuml diagram source code into command
 sed -E -i \
-  -e "/@@@mysql2puml_plantuml_diagram@@@/r ${ROOT_DIR}/src/_binaries/Converters/testsData/mysql2puml.puml" \
+  -e "/@@@mysql2puml_plantuml_diagram@@@/r ${BASH_TOOLS_ROOT_DIR}/src/_binaries/Converters/testsData/mysql2puml.puml" \
   -e "/@@@mysql2puml_plantuml_diagram@@@/d" \
   "${DOC_DIR}/Commands.md"
 
 mkdir -p "${DOC_DIR}/src/_binaries/Converters/testsData" || true
-cp "${ROOT_DIR}/src/_binaries/Converters/testsData/mysql2puml-model.png" "${DOC_DIR}/src/_binaries/Converters/testsData"
+cp "${BASH_TOOLS_ROOT_DIR}/src/_binaries/Converters/testsData/mysql2puml-model.png" "${DOC_DIR}/src/_binaries/Converters/testsData"
 
 # copy other files
-cp "${ROOT_DIR}/README.md" "${DOC_DIR}/README.md"
+cp "${BASH_TOOLS_ROOT_DIR}/README.md" "${DOC_DIR}/README.md"
 sed -i -E \
   -e '/<!-- remove -->/,/<!-- endRemove -->/d' \
   -e 's#https://fchastanet.github.io/bash-tools/#/#' \

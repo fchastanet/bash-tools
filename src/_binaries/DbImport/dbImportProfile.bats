@@ -4,7 +4,7 @@
 source "$(cd "${BATS_TEST_DIRNAME}/../.." && pwd)/batsHeaders.sh"
 
 # shellcheck source=vendor/bash-tools-framework/src/Log/_.sh
-source "${FRAMEWORK_DIR}/src/Log/_.sh" || exit 1
+source "${FRAMEWORK_ROOT_DIR}/src/Log/_.sh" || exit 1
 
 setup() {
   export TMPDIR="${BATS_TEST_TMPDIR}"

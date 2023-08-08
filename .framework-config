@@ -11,8 +11,8 @@ BATS_FILE_NOT_NEEDED_REGEXP="(^bin/|.framework-config|^install$|.bats$|/testsDat
 FRAMEWORK_FILES_FUNCTION_MATCHING_IGNORE_REGEXP="^conf/|^bin/|^\.framework-config$|^build.sh$|\.tpl$|testsData/binaryFile$"
 # Source directories
 FRAMEWORK_SRC_DIRS=(
-  "${ROOT_DIR}/src"
-  "${ROOT_DIR}/vendor/bash-tools-framework/src"
+  "${BASH_TOOLS_ROOT_DIR}/src"
+  "${FRAMEWORK_ROOT_DIR}/vendor/bash-tools-framework/src"
 )
 
 export REPOSITORY_URL="https://github.com/fchastanet/bash-tools"

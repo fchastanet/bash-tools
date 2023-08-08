@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
-# BIN_FILE=${ROOT_DIR}/bin/waitForIt
-# ROOT_DIR_RELATIVE_TO_BIN_DIR=..
+# BIN_FILE=${FRAMEWORK_ROOT_DIR}/bin/waitForIt
 
 #   Use this script to test if a given TCP host/port are available
 #  https://github.com/vishnubob/wait-for-it
 
-.INCLUDE "$(dynamicTemplateDir _header.tpl)"
+.INCLUDE "$(dynamicTemplateDir _includes/_header.tpl)"
+.INCLUDE "$(dynamicTemplateDir _includes/_load.tpl)"
 
 showHelp() {
   cat <<USAGE

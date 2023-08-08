@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
-# BIN_FILE=${ROOT_DIR}/conf/dbScripts/extractData
-# ROOT_DIR_RELATIVE_TO_BIN_DIR=../..
+# BIN_FILE=${FRAMEWORK_ROOT_DIR}/conf/dbScripts/extractData
 
 .INCLUDE "$(dynamicSrcFile _includes/dbScriptOneDatabase.sh)"
 

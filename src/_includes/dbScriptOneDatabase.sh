@@ -1,12 +1,14 @@
 #!/usr/bin/env bash
 
-.INCLUDE "$(dynamicTemplateDir _header.tpl)"
-
 ############################################################
 # INTERNAL USE ONLY
 # USED BY bin/dbScriptAllDatabases sub scripts
 # eg: src/DbScriptAllDatabases/extractData.sh
 ############################################################
+
+.INCLUDE "$(dynamicTemplateDir _includes/_header.tpl)"
+.INCLUDE "$(dynamicTemplateDir _includes/_load.tpl)"
+
 Assert::expectNonRootUser
 
 declare DSN="$1"

@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
-# BIN_FILE=${ROOT_DIR}/bin/upgradeGithubRelease
+# BIN_FILE=${FRAMEWORK_ROOT_DIR}/bin/upgradeGithubRelease
 
-.INCLUDE "$(dynamicTemplateDir _headerNoFrameworkDependency.tpl)"
+.INCLUDE "$(dynamicTemplateDir _includes/_header.tpl)"
+.INCLUDE "$(dynamicTemplateDir _includes/_load.tpl)"
 
 #default values
 TARGET_FILE=""
@@ -61,9 +62,9 @@ Simple ones(Sometimes @version@ template variable has to be specified twice):
 "https://github.com/Versent/saml2aws/releases/download/v@version@/saml2aws_@version@_linux_amd64.tar.gz"
 
 If you want to add condition on architecture(linux, windows, x86, 64/32 bits):
-"https://github.com/docker/compose/releases/download/v@version@/docker-compose-$(uname -s | tr '[:upper:]' '[:lower:]')-$(uname -m)"
-"https://github.com/docker/docker-credential-helpers/releases/download/v@version@/docker-credential-wincred-v@version@.windows-$(dpkg --print-architecture).exe"
-"https://github.com/Blacksmoke16/oq/releases/download/v@version@/oq-v@version@-$(uname -s)-$(uname -m)"
+"https://github.com/docker/compose/releases/download/v@version@/docker-compose-\$(uname -s | tr '[:upper:]' '[:lower:]')-\$(uname -m)"
+"https://github.com/docker/docker-credential-helpers/releases/download/v@version@/docker-credential-wincred-v@version@.windows-\$(dpkg --print-architecture).exe"
+"https://github.com/Blacksmoke16/oq/releases/download/v@version@/oq-v@version@-\$(uname -s)-\$(uname -m)"
 
 ${__HELP_TITLE}Command examples:${__HELP_NORMAL}
 upgradeGithubRelease

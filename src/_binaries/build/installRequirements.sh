@@ -1,9 +1,8 @@
 #!/usr/bin/env bash
-# BIN_FILE=${ROOT_DIR}/bin/installRequirements
+# BIN_FILE=${FRAMEWORK_ROOT_DIR}/bin/installRequirements
 
-.INCLUDE "$(dynamicTemplateDir _includes/_headerNoRootDir.tpl)"
-ROOT_DIR="$(cd "${CURRENT_DIR}/.." && pwd -P)"
-FRAMEWORK_DIR="${ROOT_DIR}/vendor/bash-tools-framework"
+.INCLUDE "$(dynamicTemplateDir _includes/_header.tpl)"
+.INCLUDE "$(dynamicTemplateDir _includes/_load.tpl)"
 
 .INCLUDE "${ORIGINAL_TEMPLATE_DIR}/_includes/executedAsUser.sh"
 
@@ -17,22 +16,22 @@ EOF
 )"
 Args::defaultHelp "${HELP}" "$@"
 
-mkdir -p "${ROOT_DIR}/vendor" || true
+mkdir -p "${BASH_TOOLS_ROOT_DIR}/vendor" || true
 Git::cloneOrPullIfNoChanges \
-  "${ROOT_DIR}/vendor/bash-tools-framework" \
+  "${BASH_TOOLS_ROOT_DIR}/vendor/bash-tools-framework" \
   "https://github.com/fchastanet/bash-tools-framework.git"
 
 Log::displayInfo "Copying useful binaries from bash-tools-framework"
 declare -a externalBinaries=(
-  "${FRAMEWORK_DIR}/bin/awkLint"
-  "${FRAMEWORK_DIR}/bin/buildBinFiles"
-  "${FRAMEWORK_DIR}/bin/frameworkLint"
-  "${FRAMEWORK_DIR}/bin/findShebangFiles"
-  "${FRAMEWORK_DIR}/bin/generateShellDoc"
-  "${FRAMEWORK_DIR}/bin/megalinter"
-  "${FRAMEWORK_DIR}/bin/runBuildContainer"
-  "${FRAMEWORK_DIR}/bin/shellcheckLint"
-  "${FRAMEWORK_DIR}/bin/test"
-  "${FRAMEWORK_DIR}/bin/buildPushDockerImages"
+  "${BASH_TOOLS_ROOT_DIR}/vendor/bash-tools-framework/bin/awkLint"
+  "${BASH_TOOLS_ROOT_DIR}/vendor/bash-tools-framework/bin/buildBinFiles"
+  "${BASH_TOOLS_ROOT_DIR}/vendor/bash-tools-framework/bin/frameworkLint"
+  "${BASH_TOOLS_ROOT_DIR}/vendor/bash-tools-framework/bin/findShebangFiles"
+  "${BASH_TOOLS_ROOT_DIR}/vendor/bash-tools-framework/bin/generateShellDoc"
+  "${BASH_TOOLS_ROOT_DIR}/vendor/bash-tools-framework/bin/megalinter"
+  "${BASH_TOOLS_ROOT_DIR}/vendor/bash-tools-framework/bin/runBuildContainer"
+  "${BASH_TOOLS_ROOT_DIR}/vendor/bash-tools-framework/bin/shellcheckLint"
+  "${BASH_TOOLS_ROOT_DIR}/vendor/bash-tools-framework/bin/test"
+  "${BASH_TOOLS_ROOT_DIR}/vendor/bash-tools-framework/bin/buildPushDockerImages"
 )
-cp -v "${externalBinaries[@]}" "${ROOT_DIR}/bin"
+cp -v "${externalBinaries[@]}" "${BASH_TOOLS_ROOT_DIR}/bin"

@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-# BIN_FILE=${ROOT_DIR}/bin/dbQueryOneDatabase
-# ROOT_DIR_RELATIVE_TO_BIN_DIR=..
+# BIN_FILE=${FRAMEWORK_ROOT_DIR}/bin/dbQueryOneDatabase
 
-.INCLUDE "$(dynamicTemplateDir _header.tpl)"
+.INCLUDE "$(dynamicTemplateDir _includes/_header.tpl)"
+.INCLUDE "$(dynamicTemplateDir _includes/_load.tpl)"
 
 ############################################################
 # INTERNAL USE ONLY

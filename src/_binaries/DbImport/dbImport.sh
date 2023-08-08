@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-# BIN_FILE=${ROOT_DIR}/bin/dbImport
-# ROOT_DIR_RELATIVE_TO_BIN_DIR=..
+# BIN_FILE=${FRAMEWORK_ROOT_DIR}/bin/dbImport
 
-.INCLUDE "$(dynamicTemplateDir _header.tpl)"
+.INCLUDE "$(dynamicTemplateDir _includes/_header.tpl)"
+.INCLUDE "$(dynamicTemplateDir _includes/_load.tpl)"
 
 Assert::expectNonRootUser
 
@@ -22,7 +22,7 @@ TARGET_DSN="default.local"
 TIMEFORMAT='time spent : %3R'
 # jscpd:ignore-start
 DB_IMPORT_DUMP_DIR=${DB_IMPORT_DUMP_DIR%/}
-PROFILES_DIR="$(cd "${CURRENT_DIR}/.." && pwd -P)/conf/dbImportProfiles"
+PROFILES_DIR="${BASH_TOOLS_ROOT_DIR}/conf/dbImportProfiles"
 HOME_PROFILES_DIR="${HOME}/.bash-tools/dbImportProfiles"
 
 showHelp() {

@@ -3,10 +3,10 @@
 # shellcheck source=src/batsHeaders.sh
 source "$(cd "${BATS_TEST_DIRNAME}/../.." && pwd)/batsHeaders.sh"
 
-load "${FRAMEWORK_DIR}/src/_standalone/Bats/assert_lines_count.sh"
+load "${FRAMEWORK_ROOT_DIR}/src/_standalone/Bats/assert_lines_count.sh"
 
 # shellcheck source=vendor/bash-tools-framework/src/Env/load.sh
-source "${FRAMEWORK_DIR}/src/Env/load.sh" || exit 1
+source "${FRAMEWORK_ROOT_DIR}/src/Env/load.sh" || exit 1
 
 setup() {
   export TMPDIR="${BATS_TEST_TMPDIR}"
@@ -21,7 +21,7 @@ teardown() {
 function Git::upgradeGithubRelease::display_help { #@test
   run "${binDir}/upgradeGithubRelease" --help 2>&1
   assert_success
-  assert_line --index 0 "${__HELP_TITLE}Description:${__HELP_NORMAL} retrieve latest binary release from github and install it"
+  assert_line --index 0 --partial "retrieve latest binary release from github and install it"
 }
 
 function Git::upgradeGithubRelease::noArg { #@test
