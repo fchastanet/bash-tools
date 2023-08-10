@@ -6,7 +6,7 @@ BASH_TOOLS_ROOT_DIR="$(cd "${CURRENT_DIR}/.." && pwd -P)"
 .INCLUDE "$(dynamicTemplateDir _includes/_load.tpl)"
 DOC_DIR="${BASH_TOOLS_ROOT_DIR}/pages"
 showHelp() {
-  cat <<EOF
+cat <<EOF
 ${__HELP_TITLE}Description:${__HELP_NORMAL} generate markdown documentation
 ${__HELP_TITLE}Usage:${__HELP_NORMAL} ${SCRIPT_NAME}
 

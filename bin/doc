@@ -101,6 +101,9 @@ shopt -s expand_aliases
 set -o pipefail
 set -o errexit
 
+# Command Substitution can inherit errexit option since bash v4.4
+(shopt -p inherit_errexit &>/dev/null) && shopt -s inherit_errexit
+
 # a log is generated when a command fails
 set -o errtrace
 
@@ -726,7 +729,7 @@ mkdir -p "${TMPDIR:-/tmp}/bin"
 Env::pathPrepend "${TMPDIR:-/tmp}/bin"
 DOC_DIR="${BASH_TOOLS_ROOT_DIR}/pages"
 showHelp() {
-  cat <<EOF
+cat <<EOF
 ${__HELP_TITLE}Description:${__HELP_NORMAL} generate markdown documentation
 ${__HELP_TITLE}Usage:${__HELP_NORMAL} ${SCRIPT_NAME}
 
