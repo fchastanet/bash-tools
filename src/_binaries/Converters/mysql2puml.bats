@@ -3,9 +3,6 @@
 # shellcheck source=src/batsHeaders.sh
 source "$(cd "${BATS_TEST_DIRNAME}/../.." && pwd)/batsHeaders.sh"
 
-# shellcheck source=vendor/bash-tools-framework/src/Env/load.sh
-source "${FRAMEWORK_ROOT_DIR}/src/Env/load.sh" || exit 1
-
 setup() {
   export TMPDIR="${BATS_TEST_TMPDIR}"
 
@@ -22,25 +19,25 @@ function Converters::mysql2puml::display_help { #@test
   # shellcheck disable=SC2154
   run "${binDir}/mysql2puml" --help 2>&1
   assert_success
-  assert_line --index 0 "Description: convert mysql dump sql schema to plantuml format"
+  assert_line --index 0 "DESCRIPTION: convert mysql dump sql schema to plantuml format"
 }
 
 function Converters::mysql2puml::display_version { #@test
   run "${binDir}/mysql2puml" --version 2>&1
   assert_success
-  assert_line --index 0 "mysql2puml Version: 0.1"
+  assert_line --index 0 "mysql2puml version 1.0"
 }
 
 function Converters::mysql2puml::bad_skin_file { #@test
   run "${binDir}/mysql2puml" --skin badSkin 2>&1
   assert_failure
-  assert_line --index 0 --partial "ERROR   - conf file 'badSkin' not found"
+  assert_line --index 0 --partial "ERROR   - mysql2puml - invalid skin 'badSkin' provided"
 }
 
 function Converters::mysql2puml::input_file_not_found { #@test
   run "${binDir}/mysql2puml" --skin default notFound.sql 2>&1
   assert_failure
-  assert_line --index 0 --partial "FATAL   - file notFound.sql does not exist"
+  assert_line --index 0 --partial "ERROR   - mysql2puml - File 'notFound.sql' does not exists"
 }
 
 function Converters::mysql2puml::parse_file { #@test

@@ -1,29 +1,39 @@
 #!/usr/bin/env bash
 # BIN_FILE=${FRAMEWORK_ROOT_DIR}/bin/waitForMysql
+# VAR_RELATIVE_FRAMEWORK_DIR_TO_CURRENT_DIR=..
+# FACADE
+# shellcheck disable=SC2154
+# shellcheck disable=SC2317
 
-.INCLUDE "$(dynamicTemplateDir _includes/_header.tpl)"
-.INCLUDE "$(dynamicTemplateDir _includes/_load.tpl)"
+.INCLUDE "$(dynamicTemplateDir _binaries/Utils/waitForMysql.options.tpl)"
 
-HELP="$(
-  cat <<EOF
-${__HELP_TITLE}Description:${__HELP_NORMAL} wait for mysql to be ready
+waitForMysqlCommand parse "${BASH_FRAMEWORK_ARGV[@]}"
 
-${__HELP_TITLE}Usage:${__HELP_NORMAL} ${SCRIPT_NAME} <host> <port> <user> <pass>
-
-.INCLUDE "${ORIGINAL_TEMPLATE_DIR}/_includes/author.tpl"
-EOF
-)"
-Args::defaultHelp "${HELP}" "$@"
-
-declare mysqlHost="$1"
-declare mysqlPort="$2"
-declare mysqlUser="$3"
-declare mysqlPass="$4"
-
-(echo >&2 "Waiting for mysql")
-until (echo "select 1" | mysql -h"${mysqlHost}" -P"${mysqlPort}" -u"${mysqlUser}" -p"${mysqlPass}" &>/dev/null); do
+run() {
+  Assert::commandExists "mysql"
+  Log::displayInfo "Waiting for mysql"
+  local -i start_ts=${SECONDS}
   (printf >&2 ".")
-  sleep 1
-done
+  until (echo "select 1" | mysql \
+    -h"${mysqlHostArg}" \
+    -P"${mysqlPortArg}" \
+    -u"${mysqlUserArg}" \
+    -p"${mysqlPasswordArg}" &>/dev/null); do
+    (printf >&2 ".")
+    if (( optionTimeout!=0 && SECONDS - start_ts >= optionTimeout)); then
+      (echo >&2 "")
+      Log::displayError "${SCRIPT_NAME} - timeout for ${mysqlHostArg}:${mysqlPortArg} occurred after $((SECONDS - start_ts)) seconds"
+      return 2
+    fi
+    sleep 1
+  done
 
-(echo >&2 -e "\nmysql ready")
+  (echo >&2 "")
+  Log::displayInfo "mysql ready"
+}
+
+if [[ "${BASH_FRAMEWORK_QUIET_MODE:-0}" = "1" ]]; then
+  run &>/dev/null
+else
+  run
+fi

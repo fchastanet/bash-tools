@@ -21,4 +21,5 @@
 /bin/test
 /bin/findShebangFiles
 /bin/buildPushDockerImages
+/bin/buildPushDockerImage
 /bin/frameworkLint

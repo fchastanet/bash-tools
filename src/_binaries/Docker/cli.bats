@@ -30,7 +30,7 @@ function Docker::cli::display_help { #@test
   # shellcheck disable=SC2154
   run "${binDir}/cli" --help 2>&1
   assert_success
-  assert_line --index 0 "Description: easy connection to docker container"
+  assert_line --index 0 "DESCRIPTION: easy connection to docker container"
 }
 
 function Docker::cli::without_any_parameter_connects_to_default_container { #@test

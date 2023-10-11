@@ -1,178 +1,167 @@
 #!/usr/bin/env bash
 # BIN_FILE=${FRAMEWORK_ROOT_DIR}/bin/waitForIt
+# VAR_RELATIVE_FRAMEWORK_DIR_TO_CURRENT_DIR=..
+# FACADE
+# shellcheck disable=SC2154
+# shellcheck disable=SC2317
 
-#   Use this script to test if a given TCP host/port are available
-#  https://github.com/vishnubob/wait-for-it
+.INCLUDE "$(dynamicTemplateDir _binaries/Utils/waitForIt.options.tpl)"
 
-.INCLUDE "$(dynamicTemplateDir _includes/_header.tpl)"
-.INCLUDE "$(dynamicTemplateDir _includes/_load.tpl)"
+# Use this script to test if a given TCP host/port are available
+# https://github.com/vishnubob/wait-for-it
+waitForItCommand parse "${BASH_FRAMEWORK_ARGV[@]}"
 
-showHelp() {
-  cat <<USAGE
-${__HELP_TITLE}Usage:${__HELP_NORMAL} ${SCRIPT_NAME} host:port [-s] [-t timeout] [-- command args]
-    -h HOST | --host=HOST       Host or IP under test
-    -p PORT | --port=PORT       TCP port under test
-                                Alternatively, you specify the host and port as host:port
-    -s | --strict               Only execute sub-command if the test succeeds
-    -q | --quiet                Don't output any status messages
-    -t TIMEOUT | --timeout=TIMEOUT
-                                Timeout in seconds, zero for no timeout
-    -- COMMAND ARGS             Execute command with args after the test finishes
-
-.INCLUDE "${ORIGINAL_TEMPLATE_DIR}/_includes/author.tpl"
-USAGE
-}
-
-waitFor() {
-  local result=0
-  if ((TIMEOUT > 0)); then
-    Log::displayInfo "${SCRIPT_NAME}: waiting ${TIMEOUT} seconds for ${HOST}:${PORT}"
-  else
-    Log::displayInfo "${SCRIPT_NAME}: waiting for ${HOST}:${PORT} without a timeout"
-  fi
-  local start_ts=${SECONDS}
-  while true; do
-    result=0
-    if [[ "${ISBUSY}" = "1" ]]; then
-      (nc -z "${HOST}" "${PORT}") >/dev/null 2>&1 || result=$? || true
+run() {
+  usingTcp() {
+    # couldn't find another way to mock this part
+    if [[ -n "${WAIT_FOR_IT_MOCKED_TCP:-}" ]]; then
+      "${WAIT_FOR_IT_MOCKED_TCP}" "/dev/tcp/${optionHostOrIp}/${optionPort}" 2>&1
     else
-      (echo >"/dev/tcp/${HOST}/${PORT}") >/dev/null 2>&1 || result=$? || true
+      echo >"/dev/tcp/${optionHostOrIp}/${optionPort}" 2>&1
     fi
-    if [[ "${result}" = "0" ]]; then
-      local end_ts=${SECONDS}
-      Log::displayInfo "${SCRIPT_NAME}: ${HOST}:${PORT} is available after $((end_ts - start_ts)) seconds"
-      break
+  }
+
+  usingNc() {
+    nc -z "${optionHostOrIp}" "${optionPort}" -w 1 2>&1
+  }
+
+  whileLoop() {
+    local commandToUse="$1"
+    local reportTimeout="${2:-0}"
+    if ! Array::contains "${commandToUse}" "usingTcp" "usingNc"; then
+      Log::fatal "${SCRIPT_NAME} - can't call command ${commandToUse} in child mode"
     fi
-    sleep 1
-  done
-  return "${result}"
-}
 
-waitForWrapper() {
-  local result
-  # In order to support SIGINT during timeout: http://unix.stackexchange.com/a/57692
-  local -a ARGS=(--child "--host=${HOST}" "--port=${PORT}" "--timeout=${TIMEOUT}")
-  if [[ "${QUIET}" = "1" ]]; then
-    ARGS+=(--quiet)
-  fi
-  timeout "${BUSYTIMEFLAG}" "${TIMEOUT}" "$0" "${ARGS[@]}" &
+    local -i start_ts=${SECONDS}
+    while true; do
+      if "${commandToUse}"; then
+        Log::displayInfo "${SCRIPT_NAME} - ${optionHostOrIp}:${optionPort} is available after $((SECONDS - start_ts)) seconds"
+        break
+      fi
+      if (( optionTimeout!=0 && SECONDS - start_ts >= optionTimeout)); then
+        if [[ "${reportTimeout}" = "1" ]]; then
+          Log::displayError "${SCRIPT_NAME} - timeout for ${optionHostOrIp}:${optionPort} occurred after $((SECONDS - start_ts)) seconds"
+        fi
+        return 2
+      fi
+      sleep 1
+    done
+    return 0
+  }
 
-  local pid=$!
-  # shellcheck disable=2064
-  trap "kill -INT -${pid}" INT
-  wait "${pid}"
-  result=$?
-  if [[ "${result}" != "0" ]]; then
-    Log::displayError "${SCRIPT_NAME}: timeout occurred after waiting ${TIMEOUT} seconds for ${HOST}:${PORT}"
-  fi
-  return "${result}"
-}
+  timeoutCommand() {
+    local timeoutVersion="$1"
+    local commandToUse="$2"
+    local result
+    local -i start_ts=${SECONDS}
 
-# process arguments
-while [[ $# -gt 0 ]]; do
-  case "$1" in
-    *:*)
-      # shellcheck disable=2206
-      hostPort=(${1//:/ })
-      HOST=${hostPort[0]}
-      PORT=${hostPort[1]}
-      shift 1 || true
-      ;;
-    --child)
-      CHILD=1
-      shift 1 || true
-      ;;
-    -q | --quiet)
-      QUIET=1
-      shift 1 || true
-      ;;
-    -s | --strict)
-      STRICT=1
-      shift 1 || true
-      ;;
-    -h)
-      HOST="$2"
-      if [[ "${HOST}" = "" ]]; then break; fi
-      shift 2 || true
-      ;;
-    --host=*)
-      HOST="${1#*=}"
-      shift 1 || true
-      ;;
-    -p)
-      PORT="$2"
-      if [[ "${PORT}" = "" ]]; then break; fi
-      shift 2 || true
-      ;;
-    --port=*)
-      PORT="${1#*=}"
-      shift 1 || true
-      ;;
-    -t)
-      TIMEOUT="$2"
-      if [[ "${TIMEOUT}" = "" ]]; then break; fi
-      shift 2 || true
-      ;;
-    --timeout=*)
-      TIMEOUT="${1#*=}"
-      shift 1 || true
-      ;;
-    --)
-      shift || true
-      CLI=("$@")
-      break
-      ;;
-    --help)
-      showHelp
-      exit 0
-      ;;
-    *)
-      showHelp
-      Log::fatal "Unknown argument: $1"
-      ;;
-  esac
-done
+    if ! Array::contains "${commandToUse}" "usingTcp" "usingNc"; then
+      Log::fatal "${SCRIPT_NAME} - can't call command ${commandToUse} in timeout mode"
+    fi
 
-if [[ "${HOST}" = "" || "${PORT}" = "" ]]; then
-  showHelp
-  Log::fatal "Error: you need to provide a host and port to test."
-fi
+    # compute timeout command
+    local -a timeoutCmd=(timeout)
+    if  [[ "${timeoutVersion}" = "v1" ]]; then
+      # In order to support SIGINT during timeout: http://unix.stackexchange.com/a/57692
+      timeoutCmd+=("-t")
+    fi
+    timeoutCmd+=(
+      "${optionTimeout}"
+      "$0"
+      "${ORIGINAL_BASH_FRAMEWORK_ARGV[@]}"
+    )
+    WAIT_FOR_IT_TIMEOUT_CHILD_ALGO="${commandToUse}" "${timeoutCmd[@]}" &
 
-TIMEOUT=${TIMEOUT:-15}
-STRICT=${STRICT:-0}
-CHILD=${CHILD:-0}
-QUIET=${QUIET:-0}
+    local pid=$!
+    # shellcheck disable=2064
+    trap "kill -INT -${pid}" INT
+    wait "${pid}"
+    result=$?
+    if [[ "${result}" != "0" ]]; then
+      Log::displayError "${SCRIPT_NAME} - timeout for ${optionHostOrIp}:${optionPort} occurred after $((SECONDS - start_ts)) seconds"
+    fi
+    return "${result}"
+  }
 
-# check to see if timeout is from busybox?
-# check to see if timeout is from busybox?
-TIMEOUT_PATH=$(dirname "$(command -v timeout)")
-if [[ ${TIMEOUT_PATH} =~ "busybox" ]]; then
-  ISBUSY=1
-  BUSYTIMEFLAG="-t"
-else
-  ISBUSY=0
-  BUSYTIMEFLAG=""
-fi
+  # --------------------------------------
+  # ALGORITHMS
+  timeoutV1WithNc() {
+    timeoutCommand "v1" "usingNc"
+  }
+  timeoutV2WithNc() {
+    timeoutCommand "v2" "usingNc"
+  }
+  whileLoopWithNc() {
+    whileLoop "usingNc" "1"
+  }
+  timeoutV1WithTcp() {
+    timeoutCommand "v1" "usingTcp"
+  }
+  timeoutV2WithTcp() {
+    timeoutCommand "v2" "usingTcp"
+  }
+  whileLoopWithTcp() {
+    whileLoop "usingTcp" "1"
+  }
+  # --------------------------------------
 
-if [[ ${CHILD} -gt 0 ]]; then
-  waitFor
-  RESULT=$?
-  exit "${RESULT}"
-else
-  if [[ ${TIMEOUT} -gt 0 ]]; then
-    waitForWrapper
-    RESULT=$?
+  algorithmAutomaticSelection() {
+    if Array::contains "${optionAlgo}" "${availableAlgos[@]}"; then
+      echo "${optionAlgo}"
+      return 0
+    fi
+
+    local command="WithTcp"
+    if Assert::commandExists nc &>/dev/null; then
+      # nc has the -w option allowing for timeout
+      command="WithNc"
+    fi
+
+    if (( optionTimeout > 0 )); then
+      if Assert::commandExists timeout &>/dev/null; then
+        if  timeout --help 2>&1 | grep -q -E -e '--timeout '; then
+          echo "timeoutV1${command}"
+        else
+          echo "timeoutV2${command}"
+        fi
+      fi
+      return 0
+    fi
+    echo "whileLoop${command}"
+  }
+
+  local result="0"
+  if [[ -n "${WAIT_FOR_IT_TIMEOUT_CHILD_ALGO:-}" ]]; then
+    # parent process is executing timeout with current child process
+    # call algo nc or tcp inside whileLoop
+    whileLoop "${WAIT_FOR_IT_TIMEOUT_CHILD_ALGO}" "0" || result=$?
   else
-    waitFor
-    RESULT=$?
+    local algo="${optionAlgo}"
+    if [[ -z "${algo}" ]]; then
+      algo=$(algorithmAutomaticSelection)
+    fi
+    Log::displayInfo "${SCRIPT_NAME} - using algorithm ${algo}"
+    if ((optionTimeout > 0)); then
+      Log::displayInfo "${SCRIPT_NAME} - waiting ${optionTimeout} seconds for ${optionHostOrIp}:${optionPort}"
+    else
+      Log::displayInfo "${SCRIPT_NAME} - waiting for ${optionHostOrIp}:${optionPort} without a timeout"
+    fi
+    "${algo}" || result=$?
+    # when timed out, call command if any
+    if [[ -n "${commandArgs+x}" && "${commandArgs[*]}" != "" ]]; then
+      if [[ "${result}" != "0" && "${optionStrict}" = "1" ]]; then
+        Log::displayError "${SCRIPT_NAME} - failed to connect - strict mode - command not executed"
+        exit "${result}"
+      fi
+      exec "${commandArgs[@]}"
+    fi
   fi
-fi
-if [[ -n "${CLI+x}" && "${CLI[*]}" != "" ]]; then
-  if [[ "${RESULT}" != "0" && "${STRICT}" = "1" ]]; then
-    Log::displayError "${SCRIPT_NAME}: strict mode, refusing to execute sub-process"
-    exit "${RESULT}"
-  fi
-  exec "${CLI[@]}"
+
+  exit "${result}"
+}
+
+if [[ "${BASH_FRAMEWORK_QUIET_MODE:-0}" = "1" ]]; then
+  run &>/dev/null
 else
-  exit "${RESULT}"
+  run
 fi

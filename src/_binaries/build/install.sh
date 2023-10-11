@@ -1,43 +1,45 @@
 #!/usr/bin/env bash
 # BIN_FILE=${FRAMEWORK_ROOT_DIR}/install
+# VAR_RELATIVE_FRAMEWORK_DIR_TO_CURRENT_DIR=.
+# FACADE
 
-.INCLUDE "$(dynamicTemplateDir _includes/_header.tpl)"
-.INCLUDE "$(dynamicTemplateDir _includes/_load.tpl)"
+.INCLUDE "$(dynamicTemplateDir _binaries/build/install.options.tpl)"
 
-.INCLUDE "${ORIGINAL_TEMPLATE_DIR}/_includes/executedAsUser.sh"
+installCommand parse "${BASH_FRAMEWORK_ARGV[@]}"
 
-HELP="$(
-  cat <<EOF
-${__HELP_TITLE}Description:${__HELP_NORMAL}
-Install dependent softwares (GNU parallel)
-Install configuration files
-
-${__HELP_TITLE}Usage:${__HELP_NORMAL} ${SCRIPT_NAME}
-
-.INCLUDE "${ORIGINAL_TEMPLATE_DIR}/_includes/author.tpl"
-EOF
-)"
-Args::defaultHelp "${HELP}" "$@"
-
-if ! command -v parallel 2>/dev/null; then
-  Log::displayInfo "We will install GNU parallel software, please enter you sudo password"
-  sudo apt update || true
-  if sudo apt install -y parallel; then
-    # remove parallel nagware
-    mkdir -p ~/.parallel
-    touch ~/.parallel/will-cite
+# @require Linux::requireExecutedAsUser
+run() {
+  if ! command -v parallel &>/dev/null; then
+    Log::displayInfo "We will install GNU parallel software, please enter you sudo password"
+    sudo apt update || true
+    if sudo apt install -y parallel; then
+      # remove parallel nagware
+      mkdir -p ~/.parallel
+      touch ~/.parallel/will-cite
+    else
+      Log::displayWarning "Impossible to install GNU parallel, please install it manually"
+    fi
   else
-    Log::displayWarning "Impossible to install GNU parallel, please install it manually"
+    Log::displaySkipped "parallel is already installed"
   fi
-fi
 
-if [[ -d "${HOME}/.bash-tools" ]]; then
-  # update
-  cp -R --no-clobber "${BASH_TOOLS_ROOT_DIR}/conf/." "${HOME}/.bash-tools"
-  [[ "${BASE_DIR}/conf/.env" -nt "${HOME}/.bash-tools/.env" ]] && {
-    Log::displayWarning "${BASE_DIR}/conf/.env is newer than ${HOME}/.bash-tools/.env, compare the files to check if some updates need to be applied"
-  }
+  if [[ -d "${HOME}/.bash-tools" ]]; then
+    Log::displayInfo "Updating configuration"
+    cp -R --no-clobber "${BASH_TOOLS_ROOT_DIR}/conf/." "${HOME}/.bash-tools"
+    if [[ "${BASE_DIR}/conf/.env" -nt "${HOME}/.bash-tools/.env" ]]; then
+      Log::displayWarning "${BASE_DIR}/conf/.env is newer than ${HOME}/.bash-tools/.env, compare the files to check if some updates need to be applied"
+    else
+      Log::displaySkipped "${HOME}/.bash-tools/.env is up to date"
+    fi
+  else
+    Log::displayInfo "Installing configuration in ~/.bash-tools"
+    mkdir -p ~/.bash-tools
+    cp -R conf/. ~/.bash-tools
+  fi
+}
+
+if [[ "${BASH_FRAMEWORK_QUIET_MODE:-0}" = "1" ]]; then
+  run &>/dev/null
 else
-  mkdir -p ~/.bash-tools
-  cp -R conf/. ~/.bash-tools
+  run
 fi

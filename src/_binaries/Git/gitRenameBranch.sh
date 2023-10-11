@@ -1,121 +1,81 @@
 #!/usr/bin/env bash
 # BIN_FILE=${FRAMEWORK_ROOT_DIR}/bin/gitRenameBranch
+# VAR_RELATIVE_FRAMEWORK_DIR_TO_CURRENT_DIR=..
+# FACADE
+# shellcheck disable=SC2154
 
-.INCLUDE "$(dynamicTemplateDir _includes/_header.tpl)"
-.INCLUDE "$(dynamicTemplateDir _includes/_load.tpl)"
+.INCLUDE "$(dynamicTemplateDir _binaries/Git/gitRenameBranch.options.tpl)"
 
-#default values
-PUSH="0"
-DELETE="0"
-INTERACTIVE="1"
+gitRenameBranchCommand parse "${BASH_FRAMEWORK_ARGV[@]}"
 
-# Usage info
-showHelp() {
-  cat <<EOF
-${__HELP_TITLE}Description:${__HELP_NORMAL} rename git local branch, use options to push new branch and delete old branch
+# @require Linux::requireExecutedAsUser
+run() {
+  local -a cmd=()
+  if ! git rev-parse --git-dir >/dev/null 2>&1; then
+    Log::displayError "not a git repository (or any of the parent directories)"
+    exit 1
+  fi
 
-${__HELP_TITLE}Usage:${__HELP_NORMAL} ${SCRIPT_NAME} [-h|--help] prints this help and exits
-${__HELP_TITLE}Usage:${__HELP_NORMAL} ${SCRIPT_NAME} <newBranchName> [<oldBranchName>] [--push|-p] [--delete|-d] [--assume-yes|-yes|-y]
-    --help,-h prints this help and exits
-    -y, --yes, --assume-yes do not ask for confirmation (use with caution)
-        Automatic yes to prompts; assume "y" as answer to all prompts
-        and run non-interactively.
-    --push,-p push new branch
-    --delete,-d delete old remote branch
-    <newBranchName> the new branch name to give to current branch
-    <oldBranchName> (optional) the name of the old branch if not current one
+  if [[ -z "${oldBranchNameArg}" ]]; then
+    oldBranchNameArg="$(git branch --show-current)"
+    if [[ -z "${oldBranchNameArg}" ]]; then
+      Log::displayError "Impossible to compute current branch name"
+      exit 2
+    fi
+  fi
 
-.INCLUDE "${ORIGINAL_TEMPLATE_DIR}/_includes/author.tpl"
-EOF
+  if [[ "${oldBranchNameArg}" =~ ^(master|main)$ || "${newBranchNameArg}" =~ ^(master|main)$ ]]; then
+    Log::displayError "master/main branch not supported by this command, please do it manually"
+    exit 3
+  fi
+
+  if [[ -z "${newBranchNameArg}" ]]; then
+    Log::displayError "new branch name not provided"
+    exit 4
+  fi
+
+  if [[ "${oldBranchNameArg}" = "${newBranchNameArg}" ]]; then
+    Log::displayError "New and old branch names are the same"
+    exit 5
+  fi
+
+  Log::displayInfo "Renaming branch locally from ${oldBranchNameArg} to ${newBranchNameArg}"
+  declare -a cmd=()
+  cmd=(git branch -m "${oldBranchNameArg}" "${newBranchNameArg}")
+  Log::displayDebug "Running '${cmd[*]}'"
+  if ! "${cmd[@]}"; then
+    Log::displayError "Failed to rename local branch ${oldBranchNameArg} to ${newBranchNameArg}"
+    exit 7
+  fi
+
+  if [[ "${optionDelete}" = "1" ]]; then
+    if [[ "${optionAssumeYes}" = "1" ]] || UI::askYesNo "Remove eventual old remote branch ${oldBranchNameArg}"; then
+      Log::displayInfo "Removing eventual old remote branch ${oldBranchNameArg}"
+      cmd=(git push origin ":${oldBranchNameArg}")
+      Log::displayDebug "Running '${cmd[*]}'"
+      if ! "${cmd[@]}"; then
+        Log::displayError "Failed to delete remote branch ${oldBranchNameArg}"
+        exit 8
+      fi
+    fi
+  fi
+
+  if [[ "${optionPush}" = "1" ]]; then
+    if [[ "${optionAssumeYes}" = "1" ]] || UI::askYesNo "Push new branch name ${newBranchNameArg}"; then
+      Log::displayInfo "Pushing new branch name ${newBranchNameArg}"
+      cmd=(git push --set-upstream origin "${newBranchNameArg}")
+      Log::displayDebug "Running '${cmd[*]}'"
+      if ! "${cmd[@]}"; then
+        Log::displayError "Failed to push the new branch ${newBranchNameArg}"
+        exit 9
+      fi
+    fi
+  fi
 }
 
-# read command parameters
-# $@ is all command line parameters passed to the script.
-# -o is for short options like -h
-# -l is for long options with double dash like --help
-# the comma separates different long options
-options=$(getopt -l help,push,delete,yes,assume-yes -o hpdy -- "$@" 2>/dev/null) || {
-  showHelp
-  Log::fatal "invalid options specified"
-}
-
-eval set -- "${options}"
-while true; do
-  case $1 in
-    -h | --help)
-      showHelp
-      exit 0
-      ;;
-    --push | -p)
-      PUSH="1"
-      ;;
-    --delete | -d)
-      DELETE="1"
-      ;;
-    --assume-yes | -yes | -y)
-      INTERACTIVE="0"
-      ;;
-    --)
-      shift || true
-      break
-      ;;
-    *)
-      showHelp
-      Log::fatal "invalid argument $1"
-      ;;
-  esac
-  shift || true
-done
-shift $((OPTIND - 1)) || true
-
-newName="$1"
-shift || true
-oldName="${1:-}"
-shift || true
-if [[ $# -gt 0 ]]; then
-  Log::fatal "too much arguments provided"
+if [[ "${BASH_FRAMEWORK_QUIET_MODE:-0}" = "1" ]]; then
+  run &>/dev/null
+else
+  run
 fi
 
-if ! git rev-parse --git-dir >/dev/null 2>&1; then
-  Log::fatal "not a git repository (or any of the parent directories)"
-fi
-
-if [[ -z "${oldName}" ]]; then
-  oldName="$(git branch --show-current)"
-  [[ -z "${oldName}" ]] && Log::fatal "Impossible to calculate current branch name"
-fi
-[[ "${oldName}" =~ ^(master|main)$ ]] &&
-  Log::fatal "master/main branch not supported by this command, please do it manually"
-[[ "${newName}" =~ ^(master|main)$ ]] &&
-  Log::fatal "master/main branch not supported by this command, please do it manually"
-[[ -z "${newName}" ]] && Log::fatal "new branch name not provided"
-[[ "${oldName}" = "${newName}" ]] && Log::fatal "Branch name has not changed"
-
-Log::displayInfo "Renaming branch locally from ${oldName} to ${newName}"
-declare -a CMD=()
-CMD=(git branch -m "${oldName}" "${newName}")
-Log::displayDebug "Running '${CMD[*]}'"
-"${CMD[@]}"
-
-if [[ "${DELETE}" = "1" ]]; then
-  deleteBranch() {
-    Log::displayInfo "Removing eventual old remote branch ${oldName}"
-    CMD=(git push origin ":${oldName}")
-    Log::displayDebug "Running '${CMD[*]}'"
-    "${CMD[@]}" || true
-  }
-  if [[ "${INTERACTIVE}" = "0" ]] || UI::askYesNo "remove eventual old remote branch ${oldName}"; then
-    deleteBranch
-  fi
-fi
-if [[ "${PUSH}" = "1" ]]; then
-  push() {
-    Log::displayInfo "Pushing new branch name ${newName}"
-    CMD=(git push --set-upstream origin "${newName}")
-    Log::displayDebug "Running '${CMD[*]}'"
-    "${CMD[@]}" || true
-  }
-  if [[ "${INTERACTIVE}" = "0" ]] || UI::askYesNo "Push new branch name ${newName}"; then
-    push
-  fi
-fi

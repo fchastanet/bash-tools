@@ -16,3 +16,5 @@ FRAMEWORK_SRC_DIRS=(
 )
 
 export REPOSITORY_URL="https://github.com/fchastanet/bash-tools"
+
+export BASH_FRAMEWORK_DISPLAY_LEVEL="3"

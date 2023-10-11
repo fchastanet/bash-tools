@@ -1,166 +1,79 @@
 #!/usr/bin/env bash
 # BIN_FILE=${FRAMEWORK_ROOT_DIR}/bin/dbImportProfile
+# VAR_RELATIVE_FRAMEWORK_DIR_TO_CURRENT_DIR=..
+# FACADE
 
-.INCLUDE "$(dynamicTemplateDir _includes/_header.tpl)"
-.INCLUDE "$(dynamicTemplateDir _includes/_load.tpl)"
+.INCLUDE "$(dynamicTemplateDir _binaries/DbImport/dbImportProfile.options.tpl)"
 
-Assert::expectNonRootUser
-
-# default values
-SCRIPT_NAME=${0##*/}
-PROFILE=""
-FROM_DB=""
-DEFAULT_FROM_DSN="default.remote"
-FROM_DSN="${DEFAULT_FROM_DSN}"
-RATIO=70
-# jscpd:ignore-start
-PROFILES_DIR="${BASH_TOOLS_ROOT_DIR}/conf/dbImportProfiles"
-HOME_PROFILES_DIR="${HOME}/.bash-tools/dbImportProfiles"
-
-showHelp() {
-  local profilesList=""
-  local dsnList=""
-  dsnList="$(Conf::getMergedList "dsn" "env")"
-  profilesList="$(Conf::getMergedList "dbImportProfiles" "sh" || true)"
-
-  cat <<EOF
-${__HELP_TITLE}Description:${__HELP_NORMAL} generate optimized profiles to be used by dbImport
-
-${__HELP_TITLE}Usage:${__HELP_NORMAL} ${SCRIPT_NAME} --help prints this help and exits
-${__HELP_TITLE}Usage:${__HELP_NORMAL} ${SCRIPT_NAME} <fromDbName>
-                        [-p|--profile profileName]
-                        [-f|--from-dsn dsn]
-
-    <fromDbName>                the name of the source/remote database
-    -p|--profile profileName    the name of the profile to write in ${HOME_PROFILES_DIR} directory
-        if not provided, the file name pattern will be 'auto_<dsn>_<fromDbName>.sh'
-    -f|--from-dsn dsn           dsn to use for source database (Default: ${DEFAULT_FROM_DSN})
-    -r|--ratio ratio            define the ratio to use (0 to 100% - default 70)
-        0 means profile will filter out all the tables
-        100 means profile will keep all the tables
-        eg: 70 means that table size (table+index) > 70%*max table size will be excluded
-
-${__HELP_TITLE}List of available profiles (default profiles dir ${PROFILES_DIR} can be overridden in home profiles ${HOME_PROFILES_DIR}):${__HELP_NORMAL}
-${profilesList}
-${__HELP_TITLE}List of available dsn:${__HELP_NORMAL}
-${dsnList}
-
-.INCLUDE "${ORIGINAL_TEMPLATE_DIR}/_includes/author.tpl"
-EOF
-}
-# jscpd:ignore-end
-
-# read command parameters
-# $@ is all command line parameters passed to the script.
-# -o is for short options like -h
-# -l is for long options with double dash like --help
-# the comma separates different long options
-options=$(getopt -l help,profile:,from-dsn:,ratio: -o hf:p:r: -- "$@" 2>/dev/null) || {
-  showHelp
-  Log::fatal "invalid options specified"
-}
-
-eval set -- "${options}"
-while true; do
-  case $1 in
-    -h | --help)
-      showHelp
-      exit 0
-      ;;
-    -f | --from-dsn)
-      shift || true
-      FROM_DSN="${1:-${DEFAULT_FROM_DSN}}"
-      ;;
-    -p | --profile)
-      shift || true
-      PROFILE="$1"
-      ;;
-    -r | --ratio)
-      shift || true
-      RATIO="$1"
-      ;;
-    --)
-      shift || true
-      break
-      ;;
-    *)
-      showHelp
-      Log::fatal "invalid argument $1"
-      ;;
-  esac
-  shift || true
-done
-
-# check dependencies
-Assert::commandExists mysql "sudo apt-get install -y mysql-client"
-Assert::commandExists mysqlshow "sudo apt-get install -y mysql-client"
-# additional arguments
-shift $((OPTIND - 1)) || true
-FROM_DB="$1"
-shift || true
-if (($# > 0)); then
-  Log::fatal "too much arguments provided"
-fi
-
-if [[ -z "${FROM_DB}" ]]; then
-  Log::fatal "you must provide fromDbName"
-fi
-
-if [[ -z "${PROFILE}" ]]; then
-  PROFILE="auto_${FROM_DSN}_${FROM_DB}.sh"
-fi
-
-if ! [[ "${RATIO}" =~ ^-?[0-9]+$ ]]; then
-  Log::fatal "Ratio value should be a number"
-fi
-
-if ((RATIO < 0 || RATIO > 100)); then
-  Log::fatal "Ratio value should be between 0 and 100"
-fi
-
-# create db instance
-declare -Agx dbFromInstance
-
-Database::newInstance dbFromInstance "${FROM_DSN}"
-Database::setQueryOptions dbFromInstance "${dbFromInstance[QUERY_OPTIONS]} --connect-timeout=5"
-Log::displayInfo "Using from dsn ${dbFromInstance['DSN_FILE']}"
-
-# check if from db exists
-Database::ifDbExists dbFromInstance "${FROM_DB}" || {
-  Log::fatal "From Database ${FROM_DB} does not exist !"
-}
+# shellcheck disable=SC2154
 read -r -d '' QUERY <<EOM2 || true
 SELECT
   TABLE_NAME AS tableName,
   ROUND((DATA_LENGTH + INDEX_LENGTH) / 1024 / 1024) as maxSize
 FROM information_schema.TABLES
 WHERE
-  TABLE_SCHEMA = '${FROM_DB}'
+  TABLE_SCHEMA = '@DB@'
   AND TABLE_TYPE NOT IN('VIEW')
 ORDER BY maxSize DESC
 EOM2
-TABLE_LIST="$(Database::query dbFromInstance "${QUERY}" "information_schema")"
-# first table is the biggest one
-MAX_TABLE_SIZE="$(echo "${TABLE_LIST}" | head -1 | awk -F ' ' '{print $2}')"
-(
-  echo "#!/usr/bin/env bash"
-  echo
-  echo "# cat represents the whole list of tables"
-  echo "cat |"
-  ((excludedTablesCount = 0)) || true
-  while IFS="" read -r line || [[ -n "${line}" ]]; do
-    TABLE_SIZE="$(echo "${line}" | awk -F ' ' '{print $2}')"
-    TABLE_NAME="$(echo "${line}" | awk -F ' ' '{print $1}')"
-    if ((TABLE_SIZE < MAX_TABLE_SIZE * RATIO / 100)); then
-      echo -n '#'
-    else
-      excludedTablesCount=$((excludedTablesCount + 1))
-    fi
-    echo "   grep -v '^${TABLE_NAME}$' | # table size ${TABLE_SIZE}MB"
-  done < <(echo "${TABLE_LIST}")
-  echo "cat"
-  tablesCount="$(echo "${TABLE_LIST}" | wc -l)"
-  Log::displayInfo "Profile generated - ${excludedTablesCount}/${tablesCount} tables bigger than ${RATIO}% of max table size (${MAX_TABLE_SIZE}MB) automatically excluded"
-) >"${HOME_PROFILES_DIR}/${PROFILE}"
 
-Log::displayInfo "File saved in '${HOME_PROFILES_DIR}/${PROFILE}'"
+dbImportProfileCommand parse "${BASH_FRAMEWORK_ARGV[@]}"
+
+# @require Linux::requireExecutedAsUser
+run() {
+
+  # check dependencies
+  Assert::commandExists mysql "sudo apt-get install -y mysql-client"
+  Assert::commandExists mysqlshow "sudo apt-get install -y mysql-client"
+
+  # create db instance
+  declare -Agx dbFromInstance
+
+  # shellcheck disable=SC2154
+  Database::newInstance dbFromInstance "${optionFromDsn}"
+  Database::setQueryOptions dbFromInstance "${dbFromInstance[QUERY_OPTIONS]} --connect-timeout=5"
+  Log::displayInfo "Using from dsn ${dbFromInstance['DSN_FILE']}"
+
+  # check if from db exists
+  # shellcheck disable=SC2154
+  Database::ifDbExists dbFromInstance "${fromDbName}" || {
+    Log::fatal "From Database ${fromDbName} does not exist !"
+  }
+  local tableList
+  tableList="$(Database::query dbFromInstance "${QUERY//@DB@/${fromDbName}}" "information_schema")"
+  # first table is the biggest one
+  local maxTableSize
+  maxTableSize="$(echo "${tableList}" | head -1 | awk -F ' ' '{print $2}')"
+  (
+    echo "#!/usr/bin/env bash"
+    echo
+    echo "# cat represents the whole list of tables"
+    echo "cat |"
+    local -i excludedTablesCount
+    ((excludedTablesCount = 0)) || true
+    local tableSize
+    local tableName
+    while IFS="" read -r line || [[ -n "${line}" ]]; do
+      tableSize="$(echo "${line}" | awk -F ' ' '{print $2}')"
+      tableName="$(echo "${line}" | awk -F ' ' '{print $1}')"
+      # shellcheck disable=SC2154
+      if ((tableSize < maxTableSize * optionRatio / 100)); then
+        echo -n '#'
+      else
+        excludedTablesCount=$((excludedTablesCount + 1))
+      fi
+      echo "   grep -v '^${tableName}$' | # table size ${tableSize}MB"
+    done < <(echo "${tableList}")
+    echo "cat"
+    tablesCount="$(echo "${tableList}" | wc -l)"
+    Log::displayInfo "Profile generated - ${excludedTablesCount}/${tablesCount} tables bigger than ${optionRatio}% of max table size (${maxTableSize}MB) automatically excluded"
+  ) >"${HOME_PROFILES_DIR}/${optionProfile}"
+
+  Log::displayInfo "File saved in '${HOME_PROFILES_DIR}/${optionProfile}'"
+}
+
+if [[ "${BASH_FRAMEWORK_QUIET_MODE:-0}" = "1" ]]; then
+  run &>/dev/null
+else
+  run
+fi

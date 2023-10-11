@@ -42,7 +42,6 @@
   - [5.4. bin/dbImportProfile](#54-bindbimportprofile)
     - [5.4.1. Help](#541-help)
   - [5.5. bin/dbImportStream](#55-bindbimportstream)
-  - [5.6. bin/dbQueryOneDatabase](#56-bindbqueryonedatabase)
 
 ## 1. Build tools
 
@@ -398,10 +397,4 @@ saved in ${HOME}/.bash-tools/dbImportProfiles with this format `auto*<dsn>*<db>`
 
 ```text
 @@@dbImportStream_help@@@
-```
-
-### 5.6. bin/dbQueryOneDatabase
-
-```text
-@@@dbQueryOneDatabase_help@@@
 ```

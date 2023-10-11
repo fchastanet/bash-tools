@@ -5,9 +5,6 @@ source "$(cd "${BATS_TEST_DIRNAME}/../.." && pwd)/batsHeaders.sh"
 
 load "${FRAMEWORK_ROOT_DIR}/src/_standalone/Bats/assert_lines_count.sh"
 
-# shellcheck source=vendor/bash-tools-framework/src/Env/load.sh
-source "${FRAMEWORK_ROOT_DIR}/src/Env/load.sh" || exit 1
-
 setup() {
   export TMPDIR="${BATS_TEST_TMPDIR}"
 
@@ -28,6 +25,7 @@ setup() {
   git checkout -b oldBranch master
 
   export BASH_FRAMEWORK_ENV_FILEPATH="${BATS_TEST_DIRNAME}/testsData/.env"
+  export INTERACTIVE=1
 }
 
 teardown() {
@@ -36,79 +34,63 @@ teardown() {
 }
 
 function Git::gitRenameBranch::display_help { #@test
+  export INTERACTIVE=0
   run "${binDir}/gitRenameBranch" --help 2>&1
   assert_success
-  assert_line --index 0 "Description: rename git local branch, use options to push new branch and delete old branch"
+  assert_line --index 0 "DESCRIPTION: rename git local branch, push new branch and delete old branch"
 }
 
 function Git::gitRenameBranch::not_a_git_repository { #@test
   cd "${BATS_TEST_TMPDIR}/gitRepoFake" || exit 1
   run "${binDir}/gitRenameBranch" "test" --verbose 2>&1
-  assert_failure
+  assert_failure 1
+
   # shellcheck disable=SC2154
-  assert_output "FATAL   - not a git repository (or any of the parent directories)"
+  assert_output --partial "ERROR   - not a git repository (or any of the parent directories)"
 }
 
 function Git::gitRenameBranch::master_branch_not_supported { #@test
   git checkout master
-  run "${binDir}/gitRenameBranch" --verbose 2>&1
-  assert_failure
-  assert_output "FATAL   - master/main branch not supported by this command, please do it manually"
+  run "${binDir}/gitRenameBranch" --verbose master 2>&1
+  assert_failure 3
+  assert_output --partial "ERROR   - master/main branch not supported by this command, please do it manually"
 }
 
 function Git::gitRenameBranch::main_branch_not_supported { #@test
   git checkout main
-  run "${binDir}/gitRenameBranch" --verbose 2>&1
-  assert_failure
-  assert_output "FATAL   - master/main branch not supported by this command, please do it manually"
+  run "${binDir}/gitRenameBranch" --verbose main 2>&1
+  assert_failure 3
+  assert_output --partial "ERROR   - master/main branch not supported by this command, please do it manually"
 }
 
 function Git::gitRenameBranch::master_branch_not_supported_as_argument { #@test
   run "${binDir}/gitRenameBranch" master --verbose 2>&1
-  assert_failure
-  assert_output "FATAL   - master/main branch not supported by this command, please do it manually"
+  assert_failure 3
+  assert_output --partial "ERROR   - master/main branch not supported by this command, please do it manually"
 }
 
 function Git::gitRenameBranch::main_branch_not_supported_as_argument { #@test
   run "${binDir}/gitRenameBranch" main --verbose 2>&1
-  assert_failure
-  assert_output "FATAL   - master/main branch not supported by this command, please do it manually"
+  assert_failure 3
+  assert_output --partial "ERROR   - master/main branch not supported by this command, please do it manually"
 }
 
 function Git::gitRenameBranch::new_branch_name_not_provided { #@test
   run "${binDir}/gitRenameBranch" --verbose 2>&1
-  assert_failure
-  assert_output "FATAL   - new branch name not provided"
-}
-
-function Git::gitRenameBranch::branch_not_provided { #@test
-  run "${binDir}/gitRenameBranch" --verbose 2>&1
-  assert_failure
-  assert_output "FATAL   - new branch name not provided"
-}
-
-function Git::gitRenameBranch::branch_master_provided { #@test
-  run "${binDir}/gitRenameBranch" master --verbose 2>&1
-  assert_failure
-  assert_output "FATAL   - master/main branch not supported by this command, please do it manually"
-}
-
-function Git::gitRenameBranch::branch_main_provided { #@test
-  run "${binDir}/gitRenameBranch" main --verbose 2>&1
-  assert_failure
-  assert_output "FATAL   - master/main branch not supported by this command, please do it manually"
+  assert_failure 1
+  assert_output --partial "ERROR   - Command gitRenameBranch - Argument 'newBranchName' should be provided at least 1 time(s)"
 }
 
 function Git::gitRenameBranch::branch_master_provided_as_oldBranch { #@test
   run "${binDir}/gitRenameBranch" newBranch master --verbose 2>&1
-  assert_failure
-  assert_output "FATAL   - master/main branch not supported by this command, please do it manually"
+  assert_failure 3
+  assert_output --partial "ERROR   - master/main branch not supported by this command, please do it manually"
 }
 
 function Git::gitRenameBranch::too_much_parameters { #@test
-  run "${binDir}/gitRenameBranch" newBranch oldBranch tooMuch --verbose 2>&1
+  run "${binDir}/gitRenameBranch" newBranch oldBranch tooMuch 2>&1
   assert_failure
-  assert_output "FATAL   - too much arguments provided"
+  assert_output --partial "ERROR   - Command gitRenameBranch - Argument - too much arguments provided: tooMuch"
 }
 
 function Git::gitRenameBranch::rename_local_and_push_branch { #@test
@@ -118,11 +100,7 @@ function Git::gitRenameBranch::rename_local_and_push_branch { #@test
     'branch -m oldName newBranch : exit 0' \
     'push --set-upstream origin newBranch : exit 0'
 
-  testRename5() {
-    # shellcheck disable=SC2317
-    echo -n 'y' | "${binDir}/gitRenameBranch" newBranch --push --verbose 2>&1
-  }
-  run testRename5
+  run "${binDir}/gitRenameBranch" newBranch --push --verbose 2>&1 <<< 'y'
 
   assert_success
   assert_line -n 0 --partial "INFO    - Renaming branch locally from oldName to newBranch"
@@ -138,11 +116,7 @@ function Git::gitRenameBranch::rename_local_push_delete_remote_branch { #@test
     'push origin :oldName : exit 0' \
     'push --set-upstream origin newBranch : exit 0'
 
-  testRename() {
-    # shellcheck disable=SC2317
-    echo -n 'yy' | "${binDir}/gitRenameBranch" newBranch --push --delete --verbose 2>&1
-  }
-  run testRename
+  run "${binDir}/gitRenameBranch" newBranch --push --delete --verbose 2>&1 <<< 'yy'
   assert_success
   assert_line -n 0 --partial "INFO    - Renaming branch locally from oldName to newBranch"
   assert_line -n 1 --partial "INFO    - Removing eventual old remote branch oldName"
@@ -156,12 +130,7 @@ function Git::gitRenameBranch::rename_local_and_delete_remote_branch { #@test
     'branch -m oldName newBranch : exit 0' \
     'push origin :oldName : exit 0'
 
-  testRename4() {
-    # shellcheck disable=SC2317
-    echo -n 'y' | "${binDir}/gitRenameBranch" newBranch oldName --delete --verbose 2>&1
-  }
-
-  run testRename4
+  run "${binDir}/gitRenameBranch" newBranch oldName --delete --verbose 2>&1 <<< 'y'
   assert_success
 
   assert_line -n 0 --partial "INFO    - Renaming branch locally from oldName to newBranch"
@@ -176,11 +145,7 @@ function Git::gitRenameBranch::rename_local_and_delete_remote_branch_without_old
     'branch -m oldName newBranch : exit 0' \
     'push origin :oldName : exit 0'
 
-  testRename6() {
-    # shellcheck disable=SC2317
-    echo -n 'y' | "${binDir}/gitRenameBranch" newBranch --delete --verbose 2>&1
-  }
-  run testRename6
+  run "${binDir}/gitRenameBranch" newBranch --delete --verbose 2>&1 <<< 'y'
 
   assert_success
   assert_line -n 0 --partial "INFO    - Renaming branch locally from oldName to newBranch"
@@ -195,11 +160,7 @@ function Git::gitRenameBranch::rename_local_and_push_branch_assume_yes { #@test
     'branch -m oldName newBranch : exit 0' \
     'push --set-upstream origin newBranch : exit 0'
 
-  testRename7() {
-    # shellcheck disable=SC2317
-    "${binDir}/gitRenameBranch" newBranch --push --assume-yes --verbose 2>&1
-  }
-  run testRename7
+  run "${binDir}/gitRenameBranch" newBranch --push --assume-yes --verbose 2>&1
 
   assert_success
   assert_line -n 0 --partial "INFO    - Renaming branch locally from oldName to newBranch"
@@ -215,11 +176,7 @@ function Git::gitRenameBranch::rename_local_push_delete_remote_branch_assume_yes
     'push origin :oldName : exit 0' \
     'push --set-upstream origin newBranch : exit 0'
 
-  testRename8() {
-    # shellcheck disable=SC2317
-    echo -n 'yy' | "${binDir}/gitRenameBranch" newBranch --push --delete --assume-yes --verbose 2>&1
-  }
-  run testRename8
+  run "${binDir}/gitRenameBranch" newBranch --push --delete --assume-yes --verbose 2>&1 <<< 'yy'
 
   assert_success
   assert_line -n 0 --partial "INFO    - Renaming branch locally from oldName to newBranch"
@@ -234,11 +191,7 @@ function Git::gitRenameBranch::rename_local_and_delete_remote_branch_assume_yes 
     'branch -m oldName newBranch : echo "git branch -m oldName newBranch"' \
     'push origin :oldName : echo "git push origin :oldName"'
 
-  runRename3() {
-    # shellcheck disable=SC2317
-    echo -n 'y' | "${binDir}/gitRenameBranch" newBranch oldName --delete --assume-yes --verbose 2>&1
-  }
-  run runRename3
+  run "${binDir}/gitRenameBranch" newBranch oldName --delete --assume-yes --verbose 2>&1 <<< 'y'
 
   assert_success
   assert_lines_count 4
@@ -253,11 +206,7 @@ function Git::gitRenameBranch::rename_local_and_delete_remote_branch_without_old
     'branch -m oldName newBranch : echo "git branch -m oldName newBranch"' \
     'push origin :oldName : echo "git push origin :oldName"'
 
-  runRename2() {
-    # shellcheck disable=SC2317
-    echo -n 'y' | "${binDir}/gitRenameBranch" newBranch --delete --assume-yes --verbose 2>&1
-  }
-  run runRename2
+  run "${binDir}/gitRenameBranch" newBranch --delete --assume-yes --verbose 2>&1 <<< 'y'
 
   assert_success
   assert_lines_count 4

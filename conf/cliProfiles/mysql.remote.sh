@@ -10,9 +10,9 @@ finalUserArg="${userArg:-mysql}"
 
 # shellcheck disable=SC2034
 # shellcheck disable=SC2154
-finalCommandArg=("${commandArg}")
+finalCommandArg=("${commandArg[@]}")
 
-if [[ -z "${commandArg}" ]]; then
+if [[ -z "${commandArg[*]}" ]]; then
   loadDsn "default.remote"
   finalCommandArg=(//bin/bash -c "mysql -h${HOSTNAME} -u${USER} -p${PASSWORD} -P${PORT}")
 fi

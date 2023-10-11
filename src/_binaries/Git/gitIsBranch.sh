@@ -1,25 +1,23 @@
 #!/usr/bin/env bash
 # BIN_FILE=${FRAMEWORK_ROOT_DIR}/bin/gitIsBranch
+# VAR_RELATIVE_FRAMEWORK_DIR_TO_CURRENT_DIR=..
+# FACADE
 
-.INCLUDE "$(dynamicTemplateDir _includes/_header.tpl)"
-.INCLUDE "$(dynamicTemplateDir _includes/_load.tpl)"
+.INCLUDE "$(dynamicTemplateDir _binaries/Git/gitIsBranch.options.tpl)"
 
-HELP="$(
-  cat <<EOF
-${__HELP_TITLE}Usage:${__HELP_NORMAL} ${SCRIPT_NAME} <branchName>
-show an error if branchName is not a known branch
+gitIsBranchCommand parse "${BASH_FRAMEWORK_ARGV[@]}"
 
-.INCLUDE "${ORIGINAL_TEMPLATE_DIR}/_includes/author.tpl"
-EOF
-)"
-Args::defaultHelp "${HELP}" "$@"
+# @require Linux::requireExecutedAsUser
+run() {
+  # check various branch hierarchies, adjust as needed
+  # shellcheck disable=SC2154
+  git show-ref --verify refs/heads/"${branchNameArg}" ||
+    git show-ref --verify refs/remotes/"${branchNameArg}" ||
+    Log::fatal "not a branch name: ${branchNameArg}"
+}
 
-if [[ "$#" != "1" ]]; then
-  Log::fatal "$0: invalid arguments"
+if [[ "${BASH_FRAMEWORK_QUIET_MODE:-0}" = "1" ]]; then
+  run &>/dev/null
+else
+  run
 fi
-branch="$1"
-
-# check various branch hierarchies, adjust as needed
-git show-ref --verify refs/heads/"${branch}" ||
-  git show-ref --verify refs/remotes/"${branch}" ||
-  Log::fatal "not a branch name: ${branch}"

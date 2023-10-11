@@ -1,0 +1,376 @@
++ facade_main_665f5dabe75f418ea1c10f53fac6da5e localhost 3306 mysql mysql
++ Env::requireLoad
++ local configFilesStr
+++ Env::getOrderedConfFiles
+++ configFiles=()
+++ local -a configFiles
+++ [[ -n '' ]]
+++ local defaultEnvFile
++++ Env::createDefaultEnvFile
++++ local envFile
+++++ Framework::createTempFile createDefaultEnvFileEnvFile
+++++ mktemp -p /tmp/bash-framework/bash-framework-1781863-ah8kM7 -t createDefaultEnvFileEnvFile.XXXXXXXXXXXX
++++ envFile=/tmp/bash-framework/bash-framework-1781863-ah8kM7/createDefaultEnvFileEnvFile.lyQQz9jGy7RO
++++ echo BASH_FRAMEWORK_THEME=default
++++ echo BASH_FRAMEWORK_LOG_LEVEL=0
++++ echo BASH_FRAMEWORK_DISPLAY_LEVEL=2
++++ echo 'BASH_FRAMEWORK_LOG_FILE="${BASH_FRAMEWORK_LOG_FILE:-"${FRAMEWORK_ROOT_DIR}/logs/${SCRIPT_NAME}.log"}"'
++++ echo BASH_FRAMEWORK_LOG_FILE_MAX_ROTATION=5
++++ echo /tmp/bash-framework/bash-framework-1781863-ah8kM7/createDefaultEnvFileEnvFile.lyQQz9jGy7RO
+++ defaultEnvFile=/tmp/bash-framework/bash-framework-1781863-ah8kM7/createDefaultEnvFileEnvFile.lyQQz9jGy7RO
+++ configFiles+=("${defaultEnvFile}")
+++ local file
+++ for file in "${configFiles[@]}"
+++ [[ ! -f /tmp/bash-framework/bash-framework-1781863-ah8kM7/createDefaultEnvFileEnvFile.lyQQz9jGy7RO ]]
+++ [[ ! -r /tmp/bash-framework/bash-framework-1781863-ah8kM7/createDefaultEnvFileEnvFile.lyQQz9jGy7RO ]]
+++ echo /tmp/bash-framework/bash-framework-1781863-ah8kM7/createDefaultEnvFileEnvFile.lyQQz9jGy7RO
++ configFilesStr=/tmp/bash-framework/bash-framework-1781863-ah8kM7/createDefaultEnvFileEnvFile.lyQQz9jGy7RO
++ local -a configFiles
++ readarray -t configFiles
++ (( 1 == 0 ))
++ [[ -z /tmp/bash-framework/bash-framework-1781863-ah8kM7/createDefaultEnvFileEnvFile.lyQQz9jGy7RO ]]
++ Env::mergeConfFiles /tmp/bash-framework/bash-framework-1781863-ah8kM7/createDefaultEnvFileEnvFile.lyQQz9jGy7RO
++ configFileList=("$@")
++ local -a configFileList
++ (( 1 == 0 ))
++ local combinedConfigFile
+++ Framework::createTempFile mergeConfFiles
+++ mktemp -p /tmp/bash-framework/bash-framework-1781863-ah8kM7 -t mergeConfFiles.XXXXXXXXXXXX
++ combinedConfigFile=/tmp/bash-framework/bash-framework-1781863-ah8kM7/mergeConfFiles.vhNqn9bXvxy0
++ sed -E -e 's/\s*$// ; /^$/d ; /^#.*$/d ; s/=([^"'\''].*)$/="\1"/' /tmp/bash-framework/bash-framework-1781863-ah8kM7/createDefaultEnvFileEnvFile.lyQQz9jGy7RO
++ Filters::commentLines
++ grep -vxE '[[:blank:]]*(#.*)?'
++ awk -F= '!line[$1]++'
++ set -o allexport
++ source /tmp/bash-framework/bash-framework-1781863-ah8kM7/mergeConfFiles.vhNqn9bXvxy0
+++ BASH_FRAMEWORK_THEME=default
+++ BASH_FRAMEWORK_LOG_LEVEL=0
+++ BASH_FRAMEWORK_DISPLAY_LEVEL=2
+++ BASH_FRAMEWORK_LOG_FILE=/logs/waitForMysql.log
+++ BASH_FRAMEWORK_LOG_FILE_MAX_ROTATION=5
++ source /tmp/bash-framework/bash-framework-1781863-ah8kM7/mergeConfFiles.vhNqn9bXvxy0
+++ BASH_FRAMEWORK_THEME=default
+++ BASH_FRAMEWORK_LOG_LEVEL=0
+++ BASH_FRAMEWORK_DISPLAY_LEVEL=2
+++ BASH_FRAMEWORK_LOG_FILE=/logs/waitForMysql.log
+++ BASH_FRAMEWORK_LOG_FILE_MAX_ROTATION=5
++ set +o allexport
++ UI::requireTheme
++ UI::theme default
++ local theme=default
++ [[ ! default =~ -force$ ]]
++ Assert::tty
++ [[ 0 = \1 ]]
++ [[ 0 = \1 ]]
++ [[ -t 1 ]]
++ [[ -t 2 ]]
++ theme=noColor
++ case "${theme}" in
++ [[ noColor = \d\e\f\a\u\l\t ]]
++ export BASH_FRAMEWORK_THEME=noColor
++ BASH_FRAMEWORK_THEME=noColor
++ export __ERROR_COLOR=
++ __ERROR_COLOR=
++ export __INFO_COLOR=
++ __INFO_COLOR=
++ export __SUCCESS_COLOR=
++ __SUCCESS_COLOR=
++ export __WARNING_COLOR=
++ __WARNING_COLOR=
++ export __SKIPPED_COLOR=
++ __SKIPPED_COLOR=
++ export __DEBUG_COLOR=
++ __DEBUG_COLOR=
++ export __HELP_COLOR=
++ __HELP_COLOR=
++ export __TEST_COLOR=
++ __TEST_COLOR=
++ export __TEST_ERROR_COLOR=
++ __TEST_ERROR_COLOR=
++ export __HELP_TITLE_COLOR=
++ __HELP_TITLE_COLOR=
++ export __HELP_OPTION_COLOR=
++ __HELP_OPTION_COLOR=
++ export __RESET_COLOR=
++ __RESET_COLOR=
++ export __HELP_EXAMPLE=
++ __HELP_EXAMPLE=
++ export __HELP_TITLE=
++ __HELP_TITLE=
++ export __HELP_NORMAL=
++ __HELP_NORMAL=
++ Log::requireLoad
++ [[ -z /logs/waitForMysql.log ]]
++ (( BASH_FRAMEWORK_LOG_LEVEL > __LEVEL_OFF ))
++ (( BASH_FRAMEWORK_LOG_LEVEL > __LEVEL_OFF ))
++ Compiler::Facade::requireCommandBinDir
++ COMMAND_BIN_DIR=/home/wsl/fchastanet/bash-tools/bin
++ Env::pathPrepend /home/wsl/fchastanet/bash-tools/bin
++ local arg
++ for arg in "$@"
++ [[ -d /home/wsl/fchastanet/bash-tools/bin ]]
++ [[ :/home/wsl/.virtualenv/python3.9/bin:/home/wsl/.bin:/home/wsl/.local/bin:/home/wsl/fchastanet/bash-tools/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/usr/lib/wsl/lib:/c/Python311/Scripts/:/c/Python311/:/c/Program Files/Common Files/Oracle/Java/javapath:/c/Program Files (x86)/Common Files/Oracle/Java/javapath:/c/PROGRA~1/AdoptOpenJDK/jdk-13.0.2.8-hotspot/bin:/c/Windows/system32:/c/Windows:/c/Windows/System32/Wbem:/c/Windows/System32/WindowsPowerShell/v1.0/:/c/Windows/System32/OpenSSH/:/c/PROGRA~1/WindowsPowerShell/Scripts:/c/PROGRA~1/IcedTeaWeb/WebStart/bin:/c/PROGRA~1/dotnet/:/c/PROGRA~2/WI3CF2~1/10/WINDOW~1:/c/PROGRA~2/Meld/:/c/WINDOWS/system32:/c/WINDOWS:/c/WINDOWS/System32/Wbem:/c/WINDOWS/System32/WindowsPowerShell/v1.0/:/c/WINDOWS/System32/OpenSSH/:/c/PROGRA~1/Git/cmd:/c/Program Files/dotnet/:/c/ProgramData/chocolatey/bin:/c/Program Files/PowerShell/7/:/c/Users/fchastanet/AppData/Local/Microsoft/WindowsApps:/c/PROGRA~1/JetBrains/PHPSTO~1.2/bin:/c/Users/fchastanet/AppData/Local/Programs/MICROS~1/bin:/c/Users/fchastanet/AppData/Local/JetBrains/Toolbox/scripts:/c/Users/fchastanet/.dotnet/tools:/c/Users/fchastanet/AppData/Local/Microsoft/WindowsApps:/c/Users/fchastanet/AppData/Local/Programs/Microsoft VS Code/bin:/c/WINDOWS/system32:/mnt/c/Windows:/c/Users/fchastanet/AppData/Local/Microsoft/WindowsApps:/mnt/c/WINDOWS/System32/WindowsPowerShell/v1.0/:/c/Users/fchastanet/AppData/Local/Programs/MICROS~1/bin:/usr/local/.composer/vendor/bin:/home/wsl/go/bin:/home/wsl/n/bin:/opt/kubectx:/home/wsl/.fzf/bin: != *\:\/\h\o\m\e\/\w\s\l\/\f\c\h\a\s\t\a\n\e\t\/\b\a\s\h\-\t\o\o\l\s\/\b\i\n\:* ]]
++ BASH_FRAMEWORK_ARGV_FILTERED=()
++ declare -a BASH_FRAMEWORK_ARGV_FILTERED
++ declare copyrightBeginYear=2020
++ declare optionTimeout=15
++ waitForMysqlCommand parse localhost 3306 mysql mysql
++ local options_parse_cmd=parse
++ shift
++ [[ parse = \p\a\r\s\e ]]
++ optionTimeout=15
++ local -i options_parse_optionParsedCountOptionTimeout
++ (( options_parse_optionParsedCountOptionTimeout = 0 ))
++ true
++ local -i options_parse_optionParsedCountOptionBashFrameworkConfig
++ (( options_parse_optionParsedCountOptionBashFrameworkConfig = 0 ))
++ true
++ optionConfig=0
++ local -i options_parse_optionParsedCountOptionConfig
++ (( options_parse_optionParsedCountOptionConfig = 0 ))
++ true
++ optionInfoVerbose=0
++ local -i options_parse_optionParsedCountOptionInfoVerbose
++ (( options_parse_optionParsedCountOptionInfoVerbose = 0 ))
++ true
++ optionDebugVerbose=0
++ local -i options_parse_optionParsedCountOptionDebugVerbose
++ (( options_parse_optionParsedCountOptionDebugVerbose = 0 ))
++ true
++ optionTraceVerbose=0
++ local -i options_parse_optionParsedCountOptionTraceVerbose
++ (( options_parse_optionParsedCountOptionTraceVerbose = 0 ))
++ true
++ optionNoColor=0
++ local -i options_parse_optionParsedCountOptionNoColor
++ (( options_parse_optionParsedCountOptionNoColor = 0 ))
++ true
++ local -i options_parse_optionParsedCountOptionTheme
++ (( options_parse_optionParsedCountOptionTheme = 0 ))
++ true
++ optionHelp=0
++ local -i options_parse_optionParsedCountOptionHelp
++ (( options_parse_optionParsedCountOptionHelp = 0 ))
++ true
++ optionVersion=0
++ local -i options_parse_optionParsedCountOptionVersion
++ (( options_parse_optionParsedCountOptionVersion = 0 ))
++ true
++ optionQuiet=0
++ local -i options_parse_optionParsedCountOptionQuiet
++ (( options_parse_optionParsedCountOptionQuiet = 0 ))
++ true
++ local -i options_parse_optionParsedCountOptionLogLevel
++ (( options_parse_optionParsedCountOptionLogLevel = 0 ))
++ true
++ local -i options_parse_optionParsedCountOptionLogFile
++ (( options_parse_optionParsedCountOptionLogFile = 0 ))
++ true
++ local -i options_parse_optionParsedCountOptionDisplayLevel
++ (( options_parse_optionParsedCountOptionDisplayLevel = 0 ))
++ true
++ local -i options_parse_argParsedCountMysqlHostArg
++ (( options_parse_argParsedCountMysqlHostArg = 0 ))
++ true
++ local -i options_parse_argParsedCountMysqlPortArg
++ (( options_parse_argParsedCountMysqlPortArg = 0 ))
++ true
++ local -i options_parse_argParsedCountMysqlUserArg
++ (( options_parse_argParsedCountMysqlUserArg = 0 ))
++ true
++ local -i options_parse_argParsedCountMysqlPasswordArg
++ (( options_parse_argParsedCountMysqlPasswordArg = 0 ))
++ true
++ local -i options_parse_parsedArgIndex=0
++ (( 4 > 0 ))
++ local options_parse_arg=localhost
++ local argOptDefaultBehavior=0
++ case "${options_parse_arg}" in
++ (( 0 ))
++ (( options_parse_parsedArgIndex >= 0 && options_parse_parsedArgIndex < 1 ))
++ (( options_parse_argParsedCountMysqlHostArg >= 1 ))
++ (( ++options_parse_argParsedCountMysqlHostArg ))
++ mysqlHostArg=localhost
++ (( ++options_parse_parsedArgIndex ))
++ shift
++ (( 3 > 0 ))
++ local options_parse_arg=3306
++ local argOptDefaultBehavior=0
++ case "${options_parse_arg}" in
++ (( 0 ))
++ (( options_parse_parsedArgIndex >= 0 && options_parse_parsedArgIndex < 1 ))
++ (( options_parse_parsedArgIndex >= 1 && options_parse_parsedArgIndex < 2 ))
++ (( options_parse_argParsedCountMysqlPortArg >= 1 ))
++ (( ++options_parse_argParsedCountMysqlPortArg ))
++ mysqlPortArg=3306
++ mysqlPortArgCallback 3306 -- mysql mysql
++ [[ ! 3306 =~ ^[0-9]+$ ]]
++ ((  mysqlPortArg == 0  ))
++ (( ++options_parse_parsedArgIndex ))
++ shift
++ (( 2 > 0 ))
++ local options_parse_arg=mysql
++ local argOptDefaultBehavior=0
++ case "${options_parse_arg}" in
++ (( 0 ))
++ (( options_parse_parsedArgIndex >= 0 && options_parse_parsedArgIndex < 1 ))
++ (( options_parse_parsedArgIndex >= 1 && options_parse_parsedArgIndex < 2 ))
++ (( options_parse_parsedArgIndex >= 2 && options_parse_parsedArgIndex < 3 ))
++ (( options_parse_argParsedCountMysqlUserArg >= 1 ))
++ (( ++options_parse_argParsedCountMysqlUserArg ))
++ mysqlUserArg=mysql
++ (( ++options_parse_parsedArgIndex ))
++ shift
++ (( 1 > 0 ))
++ local options_parse_arg=mysql
++ local argOptDefaultBehavior=0
++ case "${options_parse_arg}" in
++ (( 0 ))
++ (( options_parse_parsedArgIndex >= 0 && options_parse_parsedArgIndex < 1 ))
++ (( options_parse_parsedArgIndex >= 1 && options_parse_parsedArgIndex < 2 ))
++ (( options_parse_parsedArgIndex >= 2 && options_parse_parsedArgIndex < 3 ))
++ (( options_parse_parsedArgIndex >= 3 && options_parse_parsedArgIndex < 4 ))
++ (( options_parse_argParsedCountMysqlPasswordArg >= 1 ))
++ (( ++options_parse_argParsedCountMysqlPasswordArg ))
++ mysqlPasswordArg=mysql
++ (( ++options_parse_parsedArgIndex ))
++ shift
++ (( 0 > 0 ))
++ (( options_parse_argParsedCountMysqlHostArg < 1 ))
++ (( options_parse_argParsedCountMysqlPortArg < 1 ))
++ (( options_parse_argParsedCountMysqlUserArg < 1 ))
++ (( options_parse_argParsedCountMysqlPasswordArg < 1 ))
++ commandOptionParseFinished
++ [[ -z '' ]]
++ BASH_FRAMEWORK_ENV_FILES=()
++ BASH_FRAMEWORK_ENV_FILES+=("${optionEnvFiles[@]}")
++ export BASH_FRAMEWORK_ENV_FILES
++ Env::requireLoad
++ local configFilesStr
+++ Env::getOrderedConfFiles
+++ configFiles=()
+++ local -a configFiles
+++ [[ -n '' ]]
+++ local defaultEnvFile
++++ Env::createDefaultEnvFile
++++ local envFile
+++++ Framework::createTempFile createDefaultEnvFileEnvFile
+++++ mktemp -p /tmp/bash-framework/bash-framework-1781863-ah8kM7 -t createDefaultEnvFileEnvFile.XXXXXXXXXXXX
++++ envFile=/tmp/bash-framework/bash-framework-1781863-ah8kM7/createDefaultEnvFileEnvFile.KYLUQ53jhaou
++++ echo BASH_FRAMEWORK_THEME=noColor
++++ echo BASH_FRAMEWORK_LOG_LEVEL=0
++++ echo BASH_FRAMEWORK_DISPLAY_LEVEL=2
++++ echo 'BASH_FRAMEWORK_LOG_FILE="${BASH_FRAMEWORK_LOG_FILE:-"${FRAMEWORK_ROOT_DIR}/logs/${SCRIPT_NAME}.log"}"'
++++ echo BASH_FRAMEWORK_LOG_FILE_MAX_ROTATION=5
++++ echo /tmp/bash-framework/bash-framework-1781863-ah8kM7/createDefaultEnvFileEnvFile.KYLUQ53jhaou
+++ defaultEnvFile=/tmp/bash-framework/bash-framework-1781863-ah8kM7/createDefaultEnvFileEnvFile.KYLUQ53jhaou
+++ configFiles+=("${defaultEnvFile}")
+++ local file
+++ for file in "${configFiles[@]}"
+++ [[ ! -f /tmp/bash-framework/bash-framework-1781863-ah8kM7/createDefaultEnvFileEnvFile.KYLUQ53jhaou ]]
+++ [[ ! -r /tmp/bash-framework/bash-framework-1781863-ah8kM7/createDefaultEnvFileEnvFile.KYLUQ53jhaou ]]
+++ echo /tmp/bash-framework/bash-framework-1781863-ah8kM7/createDefaultEnvFileEnvFile.KYLUQ53jhaou
++ configFilesStr=/tmp/bash-framework/bash-framework-1781863-ah8kM7/createDefaultEnvFileEnvFile.KYLUQ53jhaou
++ local -a configFiles
++ readarray -t configFiles
++ (( 1 == 0 ))
++ [[ -z /tmp/bash-framework/bash-framework-1781863-ah8kM7/createDefaultEnvFileEnvFile.KYLUQ53jhaou ]]
++ Env::mergeConfFiles /tmp/bash-framework/bash-framework-1781863-ah8kM7/createDefaultEnvFileEnvFile.KYLUQ53jhaou
++ configFileList=("$@")
++ local -a configFileList
++ (( 1 == 0 ))
++ local combinedConfigFile
+++ Framework::createTempFile mergeConfFiles
+++ mktemp -p /tmp/bash-framework/bash-framework-1781863-ah8kM7 -t mergeConfFiles.XXXXXXXXXXXX
++ combinedConfigFile=/tmp/bash-framework/bash-framework-1781863-ah8kM7/mergeConfFiles.JFHr71G8P6lK
++ sed -E -e 's/\s*$// ; /^$/d ; /^#.*$/d ; s/=([^"'\''].*)$/="\1"/' /tmp/bash-framework/bash-framework-1781863-ah8kM7/createDefaultEnvFileEnvFile.KYLUQ53jhaou
++ Filters::commentLines
++ grep -vxE '[[:blank:]]*(#.*)?'
++ awk -F= '!line[$1]++'
++ set -o allexport
++ source /tmp/bash-framework/bash-framework-1781863-ah8kM7/mergeConfFiles.JFHr71G8P6lK
+++ BASH_FRAMEWORK_THEME=noColor
+++ BASH_FRAMEWORK_LOG_LEVEL=0
+++ BASH_FRAMEWORK_DISPLAY_LEVEL=2
+++ BASH_FRAMEWORK_LOG_FILE=/logs/waitForMysql.log
+++ BASH_FRAMEWORK_LOG_FILE_MAX_ROTATION=5
++ source /tmp/bash-framework/bash-framework-1781863-ah8kM7/mergeConfFiles.JFHr71G8P6lK
+++ BASH_FRAMEWORK_THEME=noColor
+++ BASH_FRAMEWORK_LOG_LEVEL=0
+++ BASH_FRAMEWORK_DISPLAY_LEVEL=2
+++ BASH_FRAMEWORK_LOG_FILE=/logs/waitForMysql.log
+++ BASH_FRAMEWORK_LOG_FILE_MAX_ROTATION=5
++ set +o allexport
++ Log::requireLoad
++ [[ -z /logs/waitForMysql.log ]]
++ (( BASH_FRAMEWORK_LOG_LEVEL > __LEVEL_OFF ))
++ (( BASH_FRAMEWORK_LOG_LEVEL > __LEVEL_OFF ))
++ [[ -n '' ]]
++ BASH_FRAMEWORK_CONFIG_FILE=
++ Framework::loadConfig BASH_FRAMEWORK_CONFIG_FILE ''
++ local -n loadConfig_loadedConfigFile=BASH_FRAMEWORK_CONFIG_FILE
++ shift
++ Conf::loadNearestFile .framework-config loadConfig_loadedConfigFile ''
++ local configFileName=.framework-config
++ local -n loadedFile=loadConfig_loadedConfigFile
++ shift 2
++ srcDirs=("$@")
++ local -a srcDirs
++ for srcDir in "${srcDirs[@]}"
+++ File::upFind '' .framework-config
+++ local fromPath=
+++ shift
+++ local fileName=.framework-config
+++ shift
+++ local untilInclusivePath=/
+++ shift
+++ true
+++ [[ -f '' ]]
+++ true
+++ [[ -f /.framework-config ]]
+++ Array::contains '' / /
+++ local element
+++ for element in "${@:2}"
+++ [[ / = '' ]]
+++ for element in "${@:2}"
+++ [[ / = '' ]]
+++ return 1
++++ readlink -f /..
+++ fromPath=/
+++ true
+++ [[ -f //.framework-config ]]
+++ Array::contains / / /
+++ local element
+++ for element in "${@:2}"
+++ [[ / = \/ ]]
+++ return 0
+++ return 1
+++ true
++ configFile=
++ [[ -n '' ]]
++ Log::displayWarning 'Config file '\''.framework-config'\'' not found in any source directories provided'
++ (( BASH_FRAMEWORK_DISPLAY_LEVEL >= __LEVEL_WARNING ))
++ echo -e 'WARN    - Config file '\''.framework-config'\'' not found in any source directories provided'
+WARN    - Config file '.framework-config' not found in any source directories provided
++ Log::logWarning 'Config file '\''.framework-config'\'' not found in any source directories provided'
++ (( BASH_FRAMEWORK_LOG_LEVEL >= __LEVEL_WARNING ))
++ return 1
++ Log::fatal 'Command waitForMysql - error while loading .framework-config file'
++ echo -e 'FATAL   - Command waitForMysql - error while loading .framework-config file'
+FATAL   - Command waitForMysql - error while loading .framework-config file
++ Log::logFatal 'Command waitForMysql - error while loading .framework-config file'
++ Log::logMessage FATAL 'Command waitForMysql - error while loading .framework-config file'
++ local levelMsg=FATAL
++ local 'msg=Command waitForMysql - error while loading .framework-config file'
++ local date
++ [[ -n /logs/waitForMysql.log ]]
++ (( BASH_FRAMEWORK_LOG_LEVEL > __LEVEL_OFF ))
++ exit 1
++ cleanOnExit
++ [[ 0 = \1 ]]
++ [[ -n xxx ]]
++ Log::displayDebug 'KEEP_TEMP_FILES=0 removing temp files '\''/tmp/bash-framework/bash-framework-1781863-ah8kM7'\'''
++ (( BASH_FRAMEWORK_DISPLAY_LEVEL >= __LEVEL_DEBUG ))
++ Log::logDebug 'KEEP_TEMP_FILES=0 removing temp files '\''/tmp/bash-framework/bash-framework-1781863-ah8kM7'\'''
++ (( BASH_FRAMEWORK_LOG_LEVEL >= __LEVEL_DEBUG ))
++ rm -Rf /tmp/bash-framework/bash-framework-1781863-ah8kM7

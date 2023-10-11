@@ -3,13 +3,10 @@
 # shellcheck source=src/batsHeaders.sh
 source "$(cd "${BATS_TEST_DIRNAME}/../.." && pwd)/batsHeaders.sh"
 
-# shellcheck source=vendor/bash-tools-framework/src/Env/load.sh
-source "${FRAMEWORK_ROOT_DIR}/src/Env/load.sh" || exit 1
-
 setup() {
   export TMPDIR="${BATS_TEST_TMPDIR}"
-
   export HOME="${BATS_TEST_TMPDIR}/home"
+
   mkdir -p "${HOME}"
   mkdir -p \
     "${HOME}/bin" \
@@ -38,45 +35,64 @@ teardown() {
 function Database::dbImport::display_help { #@test
   # shellcheck disable=SC2154
   run "${binDir}/dbImport" --help 2>&1
-  assert_line --index 0 "Description: Import source db into target db"
+  assert_success
+  assert_line --index 0 "DESCRIPTION: Import source db into target db using eventual table filter"
 }
 
 function Database::dbImport::remoteDbName_not_provided { #@test
   # shellcheck disable=SC2154
   run "${binDir}/dbImport" 2>&1
-  assert_output --partial "FATAL   - you must provide remoteDbName"
+  assert_failure 1
+  assert_lines_count 1
+  assert_output --partial "ERROR   - Command dbImport - Argument 'fromDbName' should be provided at least 1 time(s)"
 }
 
 function Database::dbImport::from_aws_and_aws_not_installed { #@test
-  run "${binDir}/dbImport" --from-aws fromDb >"${BATS_TEST_TMPDIR}/output"
+  run "${binDir}/dbImport" --from-aws fromAws fromDb
+  assert_failure 1
   # if it fails, check you are running it from docker so aws command is not available
-  assert_output --partial "ERROR   - aws is not installed, please install it"
+  assert_lines_count 3
+  assert_line --index 0 --partial "INFO    - Using profile /tmp"
+  assert_line --index 1 --partial "ERROR   - aws is not installed, please install it"
+  assert_line --index 2 --partial "INFO    - Command dbImport - missing aws, please check https://docs.aws.amazon.com/fr_fr/cli/latest/userguide/install-cliv2.html"
 }
 
 function Database::dbImport::from_aws_and_from_dsn_are_incompatible { #@test
   stub aws
-  run "${binDir}/dbImport" --from-dsn default --from-aws fromDb 2>&1
-  assert_output --partial "FATAL   - you cannot use from-dsn and from-aws at the same time"
+  run "${binDir}/dbImport" --from-dsn default --from-aws fromAws fromDb 2>&1
+  assert_failure 1
+  assert_lines_count 2
+  assert_line --index 0 --partial "INFO    - Using profile /tmp"
+  assert_line --index 1 --partial "FATAL   - Command dbImport - you cannot use from-dsn and from-aws at the same time"
 }
 
 function Database::dbImport::from_aws_missing_S3_BASE_URL { #@test
   stub aws
   sed -i -E 's#^S3_BASE_URL=.*$##g' "${HOME}/.bash-tools/.env"
-  run "${binDir}/dbImport" --from-aws fromDb 2>&1
-  assert_output --partial "FATAL   - missing S3_BASE_URL, please provide a value in .env file"
+  run "${binDir}/dbImport" --from-aws fromAws fromDb 2>&1
+  assert_failure 1
+  assert_lines_count 2
+  assert_line --index 0 --partial "INFO    - Using profile /tmp"
+  assert_line --index 1 --partial "FATAL   - Command dbImport - missing S3_BASE_URL, please provide a value in .env file"
 }
 
 function Database::dbImport::a_and_f_are_incompatible { #@test
   stub aws
-  run "${binDir}/dbImport" -f default -a fromDb 2>&1
-  assert_output --partial "FATAL   - you cannot use from-dsn and from-aws at the same time"
+  run "${binDir}/dbImport" -f default -a fromAws fromDb 2>&1
+  assert_failure 1
+  assert_lines_count 2
+  assert_line --index 0 --partial "INFO    - Using profile /tmp"
+  assert_line --index 1 --partial "FATAL   - Command dbImport - you cannot use from-dsn and from-aws at the same time"
 }
 
 function Database::dbImport::missing_aws { #@test
   # missing argument
-  run "${binDir}/dbImport" -a fromDb --verbose 2>&1
-  assert_output --partial "ERROR   - aws is not installed, please install it"
-  assert_output --partial "INFO    - missing aws, please check"
+  run "${binDir}/dbImport" -a fromAws fromDb --verbose 2>&1
+  assert_failure 1
+  assert_lines_count 3
+  assert_line --index 0 --partial "INFO    - Using profile /tmp"
+  assert_line --index 1 --partial "ERROR   - aws is not installed, please install it"
+  assert_line --index 2 --partial "INFO    - Command dbImport - missing aws, please check"
 }
 
 function Database::dbImport::tables_invalid { #@test
@@ -85,34 +101,40 @@ function Database::dbImport::tables_invalid { #@test
   export BASH_FRAMEWORK_ENV_FILEPATH="${BATS_TEST_DIRNAME}/testsData/.env"
 
   # missing argument
-  run "${binDir}/dbImport" -a fromDb --tables 2>&1
-  assert_output --partial "FATAL   - invalid options specified"
+  run "${binDir}/dbImport" -a fromAws fromDb --tables 2>&1
+  assert_failure 1
+  assert_output --partial "ERROR   - Command dbImport - Option --tables - a value needs to be specified"
 
   # invalid argument
-  run "${binDir}/dbImport" -a fromDb --tables ddd@ 2>&1
-  assert_output --partial "FATAL   - Table list is not valid : ddd@"
+  run "${binDir}/dbImport" -a fromAws fromDb --tables ddd@ 2>&1
+  assert_failure 1
+  assert_output --partial "FATAL   - Command dbImport - Table list is not valid : ddd@"
 
   # invalid argument
-  run "${binDir}/dbImport" -a fromDb --tables ddd, 2>&1
-  assert_output --partial "FATAL   - Table list is not valid : ddd,"
+  run "${binDir}/dbImport" -a fromAws fromDb --tables ddd, 2>&1
+  assert_failure 1
+  assert_output --partial "FATAL   - Command dbImport - Table list is not valid : ddd,"
 
   # invalid argument
-  run "${binDir}/dbImport" -a fromDb --tables ddd,dd, 2>&1
-  assert_output --partial "FATAL   - Table list is not valid : ddd,dd,"
+  run "${binDir}/dbImport" -a fromAws fromDb --tables ddd,dd, 2>&1
+  assert_failure 1
+  assert_output --partial "FATAL   - Command dbImport - Table list is not valid : ddd,dd,"
 
   # invalid argument
-  run "${binDir}/dbImport" -a fromDb --tables ddd- 2>&1
-  assert_output --partial "FATAL   - Table list is not valid : ddd-"
+  run "${binDir}/dbImport" -a fromAws fromDb --tables ddd- 2>&1
+  assert_failure 1
+  assert_output --partial "FATAL   - Command dbImport - Table list is not valid : ddd-"
 }
 
 function Database::dbImport::aws_file_not_found { #@test
   stub aws \
-    "s3 ls --human-readable s3://s3server/exports/fromDb : exit 1"
+    "s3 ls --human-readable s3://s3server/exports/fromAws.tar.gz : exit 1"
 
   export BASH_FRAMEWORK_ENV_FILEPATH="${BATS_TEST_DIRNAME}/testsData/.env"
 
-  run "${binDir}/dbImport" -a fromDb 2>&1
-  assert_output --partial "FATAL   - unable to get information on S3 object : s3://s3server/exports/fromDb"
+  run "${binDir}/dbImport" -a fromAws.tar.gz fromDb 2>&1
+  assert_failure 1
+  assert_output --partial "FATAL   - Command dbImport - unable to get information on S3 object : s3://s3server/exports/fromAws.tar.gz"
 }
 
 function Database::dbImport::dsn_file_not_found { #@test
@@ -165,7 +187,7 @@ function Database::dbImport::remote_db_fully_functional_from_mysql { #@test
   [[ "$(zcat "${HOME}/.bash-tools/dbImportDumps/fromDb_default_structure.sql.gz" | grep '####structure####')" = "####structure####" ]]
 }
 
-function Database::dbImport::remote_db_dump_already_present { #@test
+function Database::dbImport::remote_db_dump_already_present_from_db { #@test
   # change modification date 32 days in the past
   touch -d@$(($(date +%s) - 32 * 86400)) "${HOME}/.bash-tools/dbImportDumps/oldDump.sql.gz"
   # change modification date 1 day in the future
@@ -181,7 +203,7 @@ function Database::dbImport::remote_db_dump_already_present { #@test
   stub mysql \
     $'* --batch --raw --default-character-set=utf8 --connect-timeout=5 -s --skip-column-names -e \'CREATE DATABASE IF NOT EXISTS `toDb` CHARACTER SET "utf8" COLLATE "utf8_general_ci"\' : echo "db created"' \
     "\* --connect-timeout=5 --batch --raw --default-character-set=utf8 -s --skip-column-names toDb : echo 'import structure dump'" \
-    $'* --connect-timeout=5 --batch --raw --default-character-set=utf8  toDb : i=0 ; while read line; do ((i=i+1)); echo "line $i"; done < /dev/stdin'
+    $'* --connect-timeout=5 --batch --raw --default-character-set=utf8 toDb : i=0 ; while read line; do ((i=i+1)); echo "line $i"; done < /dev/stdin'
 
   export BASH_FRAMEWORK_ENV_FILEPATH="${BATS_TEST_DIRNAME}/testsData/.env"
 
@@ -205,7 +227,7 @@ function Database::dbImport::remote_db_fully_functional_from_aws { #@test
 
   stub aws \
     's3 ls --human-readable s3://s3server/exports/fromDb.tar.gz : exit 0' \
-    "s3 cp s3://s3server/exports/fromDb.tar.gz '${HOME}/.bash-tools/dbImportDumps/fromDb.tar.gz' : exit 0"
+    "s3 cp s3://s3server/exports/fromDb.tar.gz '${HOME}/.bash-tools/dbImportDumps/fromDb.tar.gz' : touch '${HOME}/.bash-tools/dbImportDumps/fromDb.tar.gz'; exit 0"
   stub tar \
     "xOfz '${HOME}/.bash-tools/dbImportDumps/fromDb.tar.gz' : cat '${BATS_TEST_DIRNAME}/testsData/dump.sql'"
 

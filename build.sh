@@ -21,7 +21,7 @@ declare -a params=(
   --template-dir "${BASH_TOOLS_SRC_DIR}"
 )
 if [[ "${ARGS_VERBOSE}" = "1" ]]; then
-  params+=("--verbose")
+  params+=("-vvv")
 fi
 
 (

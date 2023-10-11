@@ -13,8 +13,8 @@ load "${FRAMEWORK_ROOT_DIR}/vendor/bats-mock-Flamefire/load.bash"
 
 # shellcheck source=vendor/bash-tools-framework/src/_standalone/Bats/assert_lines_count.sh
 source "${FRAMEWORK_ROOT_DIR}/src/_standalone/Bats/assert_lines_count.sh"
-# shellcheck source=vendor/bash-tools-framework/src/Env/load.sh
-source "${FRAMEWORK_ROOT_DIR}/src/Env/load.sh"
+# shellcheck source=vendor/bash-tools-framework/src/Env/__all.sh
+source "${FRAMEWORK_ROOT_DIR}/src/Env/__all.sh"
 # shellcheck source=vendor/bash-tools-framework/src/Log/_.sh
 source "${FRAMEWORK_ROOT_DIR}/src/Log/_.sh"
 # shellcheck source=vendor/bash-tools-framework/src/Log/displayDebug.sh
@@ -53,10 +53,10 @@ source "${FRAMEWORK_ROOT_DIR}/src/Log/logSuccess.sh"
 source "${FRAMEWORK_ROOT_DIR}/src/Log/logWarning.sh"
 # shellcheck source=vendor/bash-tools-framework/src/Log/rotate.sh
 source "${FRAMEWORK_ROOT_DIR}/src/Log/rotate.sh"
-# shellcheck source=vendor/bash-tools-framework/src/Log/load.sh
-source "${FRAMEWORK_ROOT_DIR}/src/Log/load.sh"
+# shellcheck source=vendor/bash-tools-framework/src/Log/requireLoad.sh
+source "${FRAMEWORK_ROOT_DIR}/src/Log/requireLoad.sh"
 
 export BASH_FRAMEWORK_LOG_FILE="${BATS_TEST_TMPDIR}/logFile"
 export BASH_FRAMEWORK_DISPLAY_LEVEL="${__LEVEL_INFO}"
-Env::load
-Log::load
+Env::requireLoad
+Log::requireLoad

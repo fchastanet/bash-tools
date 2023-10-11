@@ -1,5 +1,9 @@
 # Todo
 
+- report megalinter changes yml + github from framework to this repo
+- get rid of install command
+  - each command should call a similar function before running
+  - could include installRequirements too
 - display supported matrix (bash version, linux version)
 - dbImportStream ability to import from dbAuthFile internally or from db
   parameters
@@ -13,7 +17,5 @@
 - src/build/install.sh use backupDir
 - <https://github.com/adoyle-h/lobash>
 - <https://github.com/elibs/ebash>
-- <https://pre-commit.ci/> I don't understand where the code is executed if not
-  using lite version
 - add code coverage <https://github.com/SimonKagstrom/kcov>
   - upload code coverage to deepsource using github action

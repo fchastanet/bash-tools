@@ -12,6 +12,7 @@
     "exiasr.hadolint",
     "shd101wyy.markdown-preview-enhanced",
     "monosans.djlint",
-    "foxundermoon.shell-format"
+    "foxundermoon.shell-format",
+    "rogalmic.bash-debug"
   ]
 }

@@ -32,15 +32,15 @@ teardown() {
 function Database::dbImportProfile::display_help { #@test
   # shellcheck disable=SC2154
   run "${binDir}/dbImportProfile" --help 2>&1
-  assert_line --index 0 "Description: generate optimized profiles to be used by dbImport"
+  assert_line --index 0 "DESCRIPTION: generate optimized profiles to be used by dbImport"
   run "${binDir}/dbImportProfile" -h 2>&1
-  assert_line --index 0 "Description: generate optimized profiles to be used by dbImport"
+  assert_line --index 0 "DESCRIPTION: generate optimized profiles to be used by dbImport"
 }
 
 function Database::dbImportProfile::fromDbName_not_provided { #@test
   # shellcheck disable=SC2154
   run "${binDir}/dbImportProfile" 2>&1
-  assert_output --partial "FATAL   - you must provide fromDbName"
+  assert_output --partial "ERROR   - Command dbImportProfile - Argument 'fromDbName' should be provided at least 1 time(s)"
   assert_failure
 }
 
@@ -92,7 +92,7 @@ function Database::dbImportProfile::remote_db_not_found { #@test
   assert_output --partial "FATAL   - From Database dbNotFound does not exist !"
 }
 
-function Database::dbImportProfile::remote_db_fully_functional { #@test
+function Database::dbImportProfile::remote_db_fully_functional_default_ratio { #@test
   stub mysqlshow \
     '* * fromDb : echo "Database: fromDb"'
   stub mysql \
@@ -103,7 +103,7 @@ function Database::dbImportProfile::remote_db_fully_functional { #@test
 
   [[ -f "${HOME}/tableSizeQuery.sql" ]]
   assert_output --partial "Profile generated - 1/3 tables bigger than 70% of max table size (29MB) automatically excluded"
-  [[ "$(md5sum "${HOME}/tableSizeQuery.sql" | awk '{ print $1 }')" == "$(md5sum "${BATS_TEST_DIRNAME}/testsData/expectedDbImportProfileTableListQuery.sql" | awk '{ print $1 }')" ]]
+  diff >&3 "${HOME}/tableSizeQuery.sql" "${BATS_TEST_DIRNAME}/testsData/expectedDbImportProfileTableListQuery.sql"
   [[ -f "${HOME}/.bash-tools/dbImportProfiles/auto_default.local_fromDb.sh" ]]
   [[ "$(md5sum "${HOME}/.bash-tools/dbImportProfiles/auto_default.local_fromDb.sh" | awk '{ print $1 }')" == "$(md5sum "${BATS_TEST_DIRNAME}/testsData/auto_default.local_fromDb_70.sh" | awk '{ print $1 }')" ]]
 }

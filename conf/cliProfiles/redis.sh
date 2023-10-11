@@ -10,4 +10,4 @@ finalUserArg="${userArg:-redis}"
 
 # shellcheck disable=SC2034
 # shellcheck disable=SC2154
-finalCommandArg=("${commandArg:-redis-cli}")
+finalCommandArg=("${commandArg[@]:-redis-cli}")

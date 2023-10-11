@@ -38,17 +38,17 @@ function Database::dbQueryAllDatabases::display_help { #@test
   cp "${BATS_TEST_DIRNAME}/testsData/parallel" "${HOME}/bin"
   # shellcheck disable=SC2154
   run "${binDir}/dbQueryAllDatabases" --help
-  assert_line --index 2 "Usage: dbQueryAllDatabases <query|queryFile> [-d|--dsn <dsn>] [-q|--query] [--jobs|-j <jobsCount>] [--bar|-b]"
+  assert_line --index 0 --partial "DESCRIPTION: Execute a query on multiple databases in order to generate a report"
 }
 
 function Database::dbQueryAllDatabases::query_file_not_provided { #@test
   cp "${BATS_TEST_DIRNAME}/testsData/parallel" "${HOME}/bin"
   # shellcheck disable=SC2154
   run "${binDir}/dbQueryAllDatabases" 2>&1
-  assert_output --partial "FATAL   - You must provide the sql file to be executed"
+  assert_output --partial "ERROR   - Command dbQueryAllDatabases - Argument 'argQuery' should be provided at least 1 time(s)"
 }
 
-function Database::dbQueryAllDatabases::providing_env_file_change_db_connection_parameters_and_retrieve_db_size { #@test
+function Database::dbQueryAllDatabases::providingEnvFileChangeDbConnectionParametersAndRetrieveDbSize { #@test
   cp "${BATS_TEST_DIRNAME}/testsData/parallelDbQueryAllDatabases" "${HOME}/bin/parallel"
   # shellcheck disable=SC2016,SC2086
   stub mysql \
@@ -59,11 +59,44 @@ function Database::dbQueryAllDatabases::providing_env_file_change_db_connection_
   f() {
     # shellcheck disable=SC2317
     "${binDir}/dbQueryAllDatabases" \
-      -d "${BATS_TEST_DIRNAME}/testsData/databaseSize.envProvided.sh" \
+      -f "${BATS_TEST_DIRNAME}/testsData/databaseSize.envProvided.sh" \
       "${rootDir}/conf/dbQueries/databaseSize.sql" 2>/dev/null
   }
   run f
 
+  assert_output "$(cat "${BATS_TEST_DIRNAME}/testsData/dbQueryAllDatabases.result")"
+  [[ -f "${HOME}/query1" ]]
+  cat "${HOME}/query1"
+  [[ "$(cat "${HOME}/query1")" == "$(cat "${BATS_TEST_DIRNAME}/testsData/getUserDbList.query")" ]]
+  [[ -f "${HOME}/query2" ]]
+  echo >>"${HOME}/query2" # add a new line as megalinter add a newline at end of file
+  [[ "$(md5sum <"${HOME}/query2")" = "$(md5sum <"${rootDir}/conf/dbQueries/databaseSize.sql")" ]]
+  echo >>"${HOME}/query3" # add a new line as megalinter add a newline at end of file
+  [[ -f "${HOME}/query3" ]]
+  [[ "$(md5sum <"${HOME}/query3")" = "$(md5sum <"${rootDir}/conf/dbQueries/databaseSize.sql")" ]]
+}
+
+function Database::dbQueryAllDatabases::multipleJobs { #@test
+  cp "${BATS_TEST_DIRNAME}/testsData/parallelDbQueryAllDatabases" "${HOME}/bin/parallel"
+  export BATS_TEST_DIRNAME
+  export HOME
+  # shellcheck disable=SC2016,SC2086
+  stub mysql \
+    $'* --batch --raw --default-character-set=utf8 --connect-timeout=5 -s --skip-column-names -e * : echo "$9" >"${HOME}/query1" ; cat "${BATS_TEST_DIRNAME}/testsData/getUserDbList.result"' \
+    $'* --batch --raw --default-character-set=utf8 --connect-timeout=5 db1 -e * : echo -n "${8}" >"${HOME}/query2" ; cat "${BATS_TEST_DIRNAME}/testsData/databaseSize.result_db1"' \
+    $'* --batch --raw --default-character-set=utf8 --connect-timeout=5 db2 -e * : echo -n "${8}" >"${HOME}/query3" ; cat "${BATS_TEST_DIRNAME}/testsData/databaseSize.result_db2"'
+
+  stub parallel \
+    '--eta --progress --linebuffer -j 8 * : while IFS= read -r db; do "$6" "${db}"; done'
+
+  f() {
+    # shellcheck disable=SC2317
+    "${binDir}/dbQueryAllDatabases" \
+      -f "${BATS_TEST_DIRNAME}/testsData/databaseSize.envProvided.sh" \
+      -j 8 \
+      "${rootDir}/conf/dbQueries/databaseSize.sql" 2>/dev/null
+  }
+  run f
   assert_output "$(cat "${BATS_TEST_DIRNAME}/testsData/dbQueryAllDatabases.result")"
   [[ -f "${HOME}/query1" ]]
   cat "${HOME}/query1"

@@ -10,7 +10,7 @@ finalUserArg="${userArg:-mysql}"
 
 # shellcheck disable=SC2034
 # shellcheck disable=SC2154
-finalCommandArg="${commandArg}"
+finalCommandArg=("${commandArg[@]}")
 
 if [[ -z "${commandArg}" ]]; then
   loadDsn "default.local"
