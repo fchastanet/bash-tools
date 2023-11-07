@@ -101,7 +101,8 @@ function Database::dbImportProfile::remote_db_fully_functional_default_ratio { #
   assert_output --partial "Profile generated - 1/3 tables bigger than 70% of max table size (29MB) automatically excluded"
   diff >&3 "${HOME}/tableSizeQuery.sql" "${BATS_TEST_DIRNAME}/testsData/expectedDbImportProfileTableListQuery.sql"
   [[ -f "${HOME}/.bash-tools/dbImportProfiles/auto_default.local_fromDb.sh" ]]
-  [[ "$(md5sum "${HOME}/.bash-tools/dbImportProfiles/auto_default.local_fromDb.sh" | awk '{ print $1 }')" == "$(md5sum "${BATS_TEST_DIRNAME}/testsData/auto_default.local_fromDb_70.sh" | awk '{ print $1 }')" ]]
+  diff -u "${HOME}/.bash-tools/dbImportProfiles/auto_default.local_fromDb.sh" \
+    "${BATS_TEST_DIRNAME}/testsData/auto_default.local_fromDb_70.sh"
 }
 
 function Database::dbImportProfile::remote_db_fully_functional_ratio_20 { #@test
@@ -114,10 +115,14 @@ function Database::dbImportProfile::remote_db_fully_functional_ratio_20 { #@test
   run "${binDir}/dbImportProfile" --verbose -f default.local -r 20 fromDb 2>&1
 
   [[ -f "${HOME}/tableSizeQuery.sql" ]]
-  assert_output --partial "Profile generated - 2/3 tables bigger than 20% of max table size (29MB) automatically excluded"
+  assert_lines_count 3
+  assert_line --index 0 --partial "INFO    - Using from dsn"
+  assert_line --index 1 --partial "Profile generated - 2/3 tables bigger than 20% of max table size (29MB) automatically excluded"
+  assert_line --index 2 --partial "INFO    - File saved in"
 
   [[ "$(md5sum "${HOME}/tableSizeQuery.sql" | awk '{ print $1 }')" == "$(md5sum "${BATS_TEST_DIRNAME}/testsData/expectedDbImportProfileTableListQuery.sql" | awk '{ print $1 }')" ]]
 
   [[ -f "${HOME}/.bash-tools/dbImportProfiles/auto_default.local_fromDb.sh" ]]
-  [[ "$(md5sum "${HOME}/.bash-tools/dbImportProfiles/auto_default.local_fromDb.sh" | awk '{ print $1 }')" == "$(md5sum "${BATS_TEST_DIRNAME}/testsData/auto_default.local_fromDb_20.sh" | awk '{ print $1 }')" ]]
+  diff -u "${HOME}/.bash-tools/dbImportProfiles/auto_default.local_fromDb.sh" \
+    "${BATS_TEST_DIRNAME}/testsData/auto_default.local_fromDb_20.sh"
 }

@@ -1,12 +1,12 @@
 [1;37mDESCRIPTION:[0m wait for host:port to be available
 
 [1;37mUSAGE:[0m waitForIt [OPTIONS] [ARGUMENTS]
-[1;37mUSAGE:[0m waitForIt --host|-i <hostOrIp> --port|-p <port>
+[1;37mUSAGE:[0m waitForIt [--timeout|-t <timeout>] --host|-i <hostOrIp> --port|-p <port>
   [--algorithm|--algo <algorithm>] [--exec-command-on-success-only|--strict|-s]
-  [--timeout|-t <timeout>] [--bash-framework-config <String>] [--config]
-  [--verbose|-v] [-vv] [-vvv] [--env-file <String>] [--no-color]
-  [--theme <String>] [--help|-h] [--version] [--quiet|-q] [--log-level <String>]
-  [--log-file <String>] [--display-level <String>]
+  [--bash-framework-config <String>] [--config] [--verbose|-v] [-vv] [-vvv]
+  [--env-file <String>] [--no-color] [--theme <String>] [--help|-h] [--version]
+  [--quiet|-q] [--log-level <String>] [--log-file <String>]
+  [--display-level <String>]
 
 [1;37mARGUMENTS:[0m
   [[1;34mcommandArgs[0m {list} (optional)]
@@ -14,6 +14,9 @@
     f no command provided.
 
 [1;37mOPTIONS:[0m
+  [1;34m--timeout[0m, [1;34m-t <timeout>[0m {single}
+    Timeout in seconds, zero for no timeout.
+    Default value: 15
   [1;34m--host[0m, [1;34m-i <hostOrIp>[0m {single} (mandatory)
     Host or IP under test.
   [1;34m--port[0m, [1;34m-p <port>[0m {single} (mandatory)
@@ -23,9 +26,6 @@
     n based on commands availability and timeout option value).
   [1;34m--exec-command-on-success-only[0m, [1;34m--strict[0m, [1;34m-s[0m {single}
     Only execute sub-command if the test succeeds.
-  [1;34m--timeout[0m, [1;34m-t <timeout>[0m {single}
-    Timeout in seconds, zero for no timeout.
-    Default value: 15
 
 [1;37mGLOBAL OPTIONS:[0m
   [1;34m--bash-framework-config <String>[0m {single}
