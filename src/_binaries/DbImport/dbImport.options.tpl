@@ -25,12 +25,12 @@ ${__HELP_EXAMPLE}TODO${__HELP_NORMAL}
 
 ${__HELP_TITLE}Example 2: import from S3${__HELP_NORMAL}
 ${__HELP_EXAMPLE}TODO${__HELP_NORMAL}'''
+# shellcheck disable=SC2116
+declare defaultFromDsnHelp=$'dsn to use for source database\n\
+  this option is incompatible with -a|--from-aws option'
+
 %
 
-defaultFromDsnHelp="$(echo \
-  "dsn to use for source database" $'\n' \
-  "this option is incompatible with -a|--from-aws option" \
-)"
 .INCLUDE "$(dynamicTemplateDir _binaries/options/options.base.tpl)"
 .INCLUDE "$(dynamicTemplateDir _binaries/options/options.dsn.tpl)"
 .INCLUDE "$(dynamicTemplateDir _binaries/options/options.profile.tpl)"
@@ -94,20 +94,6 @@ options+=(
 Options::generateCommand "${options[@]}"
 %
 
-# default values
-declare optionFromAws=""
-declare optionSkipSchema="0"
-declare targetDbName=""
-declare fromDbName=""
-
-# other configuration
-declare copyrightBeginYear="2020"
-declare TIMEFORMAT='time spent : %3R'
-declare DB_IMPORT_DUMP_DIR=${DB_IMPORT_DUMP_DIR%/}
-declare PROFILES_DIR="${BASH_TOOLS_ROOT_DIR}/conf/dbImportProfiles"
-declare HOME_PROFILES_DIR="${HOME}/.bash-tools/dbImportProfiles"
-declare DOWNLOAD_DUMP=0
-
 optionHelpCallback() {
   local profilesList=""
   local dsnList=""
@@ -148,3 +134,5 @@ dbImportCommandCallback() {
       Log::fatal "Command ${SCRIPT_NAME} -impossible to create directory ${DB_IMPORT_DUMP_DIR} specified by DB_IMPORT_DUMP_DIR env variable"
   fi
 }
+
+<% ${commandFunctionName} %> parse "${BASH_FRAMEWORK_ARGV[@]}"

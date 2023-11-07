@@ -1,5 +1,15 @@
 # Todo
 
+- pre-commit migration using bash-tools framework hooks
+- fix last 2 failing tests
+- try to use longDescription using something like '"${longDescription}"'
+  - so declare all variables in .sh file instead of options file
+- bash-tools-framework
+
+  - migrate the same way scripts
+  - use same help bats script
+  - replace bash-tpl
+
 - report megalinter changes yml + github from framework to this repo
 - get rid of install command
   - each command should call a similar function before running

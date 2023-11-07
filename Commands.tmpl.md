@@ -14,7 +14,7 @@
   - [1.11. .github/workflows/buildBinFiles](#111-githubworkflowsbuildbinfiles)
   - [1.12. bin/test](#112-bintest)
   - [1.13. bin/runBuildContainer](#113-binrunbuildcontainer)
-  - [1.14. bin/buildPushDockerImages](#114-binbuildpushdockerimages)
+  - [1.14. bin/buildPushDockerImage](#114-binbuildpushdockerimage)
 - [2. Converter and Generator tools](#2-converter-and-generator-tools)
   - [2.1. bin/generateShellDoc](#21-bingenerateshelldoc)
   - [2.2. bin/mysql2puml](#22-binmysql2puml)
@@ -141,12 +141,12 @@ imported from bash-tools-framework
 @@@runBuildContainer_help@@@
 ```
 
-### 1.14. bin/buildPushDockerImages
+### 1.14. bin/buildPushDockerImage
 
 imported from bash-tools-framework
 
 ```text
-@@@buildPushDockerImages_help@@@
+@@@buildPushDockerImage_help@@@
 ```
 
 ## 2. Converter and Generator tools

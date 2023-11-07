@@ -32,11 +32,7 @@ teardown() {
 }
 
 function Database::dbScriptAllDatabases::display_help { #@test
-  cp "${BATS_TEST_DIRNAME}/testsData/parallel" "${HOME}/bin"
-  # shellcheck disable=SC2154
-  run "${binDir}/dbScriptAllDatabases" --help
-  assert_success
-  assert_line --index 2 --partial "Usage: dbScriptAllDatabases [-j|--jobs <numberOfJobs>] [-o|--output <outputDirectory>] [-d|--dsn <dsn>] [-v|--verbose] [-l|--log-format <logFormat>] [--database <dbName>] <scriptToExecute> [optional parameters to pass to the script]"
+  testCommand "${binDir}/dbScriptAllDatabases" dbScriptAllDatabases.help.txt
 }
 
 function Database::dbScriptAllDatabases::script_file_not_provided { #@test
@@ -48,12 +44,10 @@ function Database::dbScriptAllDatabases::script_file_not_provided { #@test
   }
   run f
   assert_failure 1
-  assert_output --partial "FATAL   - You must provide the script file to be executed"
+  assert_output --partial "ERROR   - Command dbScriptAllDatabases - Argument 'scriptToExecute' should be provided at least 1 time(s)"
 }
 
 function Database::dbScriptAllDatabases::extractData { #@test
-  cp "${BATS_TEST_DIRNAME}/testsData/parallelDbScriptAllDatabases" "${HOME}/bin/parallel"
-  chmod +x "${HOME}/bin/parallel"
   export BATS_TEST_DIRNAME
   export HOME
   # shellcheck disable=SC2016
@@ -62,8 +56,12 @@ function Database::dbScriptAllDatabases::extractData { #@test
     '* --batch --raw --default-character-set=utf8 --connect-timeout=5 db1 -e * : echo "$8" > "${HOME}/query1" ; cat "${BATS_TEST_DIRNAME}/testsData/databaseSize.result_db1"' \
     '* --batch --raw --default-character-set=utf8 --connect-timeout=5 db2 -e * : echo "$8" > "${HOME}/query2" ; cat "${BATS_TEST_DIRNAME}/testsData/databaseSize.result_db2"'
 
+  # shellcheck disable=SC2016
+  stub parallel \
+    '--eta --progress --tag --jobs=1 * * * * * * * * : while IFS= read -r db; do "${@:5}" "${db}"; done'
+
   run "${binDir}/dbScriptAllDatabases" \
-    -d "${BATS_TEST_DIRNAME}/testsData/databaseSize.envProvided.sh" \
+    -f "${BATS_TEST_DIRNAME}/testsData/databaseSize.envProvided.sh" \
     "${rootDir}/conf/dbScripts/extractData" \
     "${rootDir}/conf/dbQueries/databaseSize.sql"
 

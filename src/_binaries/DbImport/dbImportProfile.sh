@@ -2,10 +2,21 @@
 # BIN_FILE=${FRAMEWORK_ROOT_DIR}/bin/dbImportProfile
 # VAR_RELATIVE_FRAMEWORK_DIR_TO_CURRENT_DIR=..
 # FACADE
+# shellcheck disable=SC2034
+
+# default values
+declare optionProfile=""
+declare fromDbName=""
+declare optionFromDsn="default.remote"
+declare optionRatio=70
+
+# other configuration
+declare copyrightBeginYear="2020"
+declare PROFILES_DIR="${BASH_TOOLS_ROOT_DIR}/conf/dbImportProfiles"
+declare HOME_PROFILES_DIR="${HOME}/.bash-tools/dbImportProfiles"
 
 .INCLUDE "$(dynamicTemplateDir _binaries/DbImport/dbImportProfile.options.tpl)"
 
-# shellcheck disable=SC2154
 read -r -d '' QUERY <<EOM2 || true
 SELECT
   TABLE_NAME AS tableName,
@@ -17,8 +28,6 @@ WHERE
 ORDER BY maxSize DESC
 EOM2
 
-dbImportProfileCommand parse "${BASH_FRAMEWORK_ARGV[@]}"
-
 # @require Linux::requireExecutedAsUser
 run() {
 
@@ -29,13 +38,11 @@ run() {
   # create db instance
   declare -Agx dbFromInstance
 
-  # shellcheck disable=SC2154
   Database::newInstance dbFromInstance "${optionFromDsn}"
   Database::setQueryOptions dbFromInstance "${dbFromInstance[QUERY_OPTIONS]} --connect-timeout=5"
   Log::displayInfo "Using from dsn ${dbFromInstance['DSN_FILE']}"
 
   # check if from db exists
-  # shellcheck disable=SC2154
   Database::ifDbExists dbFromInstance "${fromDbName}" || {
     Log::fatal "From Database ${fromDbName} does not exist !"
   }
@@ -56,7 +63,6 @@ run() {
     while IFS="" read -r line || [[ -n "${line}" ]]; do
       tableSize="$(echo "${line}" | awk -F ' ' '{print $2}')"
       tableName="$(echo "${line}" | awk -F ' ' '{print $1}')"
-      # shellcheck disable=SC2154
       if ((tableSize < maxTableSize * optionRatio / 100)); then
         echo -n '#'
       else

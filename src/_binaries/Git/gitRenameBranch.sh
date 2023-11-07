@@ -2,11 +2,19 @@
 # BIN_FILE=${FRAMEWORK_ROOT_DIR}/bin/gitRenameBranch
 # VAR_RELATIVE_FRAMEWORK_DIR_TO_CURRENT_DIR=..
 # FACADE
-# shellcheck disable=SC2154
+# shellcheck disable=SC2034
+
+# variables values
+declare optionPush="0"
+declare optionDelete="0"
+declare optionAssumeYes="0"
+declare newBranchNameArg=""
+declare oldBranchNameArg=""
+
+# other values
+declare copyrightBeginYear="2020"
 
 .INCLUDE "$(dynamicTemplateDir _binaries/Git/gitRenameBranch.options.tpl)"
-
-gitRenameBranchCommand parse "${BASH_FRAMEWORK_ARGV[@]}"
 
 # @require Linux::requireExecutedAsUser
 run() {
@@ -78,4 +86,3 @@ if [[ "${BASH_FRAMEWORK_QUIET_MODE:-0}" = "1" ]]; then
 else
   run
 fi
-

@@ -9,7 +9,7 @@ declare help="show an error if branchName is not a known branch"
 %
 # shellcheck source=/dev/null
 source <(
- containerArgHelpCallback() { :; }
+  containerArgHelpCallback() { :; }
   Options::generateArg \
     --help "the branch name to check" \
     --min 1 \
@@ -24,5 +24,3 @@ options+=(
 )
 Options::generateCommand "${options[@]}"
 %
-declare copyrightBeginYear="2020"
-declare branchNameArg=""

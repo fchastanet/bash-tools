@@ -2,10 +2,12 @@
 # BIN_FILE=${FRAMEWORK_ROOT_DIR}/bin/gitIsBranch
 # VAR_RELATIVE_FRAMEWORK_DIR_TO_CURRENT_DIR=..
 # FACADE
+# shellcheck disable=SC2034
+
+declare copyrightBeginYear="2020"
+declare branchNameArg=""
 
 .INCLUDE "$(dynamicTemplateDir _binaries/Git/gitIsBranch.options.tpl)"
-
-gitIsBranchCommand parse "${BASH_FRAMEWORK_ARGV[@]}"
 
 # @require Linux::requireExecutedAsUser
 run() {

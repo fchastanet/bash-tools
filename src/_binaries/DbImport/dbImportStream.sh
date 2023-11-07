@@ -2,17 +2,30 @@
 # BIN_FILE=${FRAMEWORK_ROOT_DIR}/bin/dbImportStream
 # VAR_RELATIVE_FRAMEWORK_DIR_TO_CURRENT_DIR=..
 # FACADE
-# shellcheck disable=SC2154
+# shellcheck disable=SC2034
+
+# default values
+declare optionProfile=""
+declare argTargetDbName=""
+declare argDumpFile=""
+declare optionTargetDsn=""
+declare optionCharacterSet=""
+declare defaultTargetCharacterSet=""
+declare profileCommandFile=""
+
+# other configuration
+declare copyrightBeginYear="2020"
+declare PROFILES_DIR="${BASH_TOOLS_ROOT_DIR}/conf/dbImportProfiles"
+declare HOME_PROFILES_DIR="${HOME}/.bash-tools/dbImportProfiles"
 
 .INCLUDE "$(dynamicTemplateDir _binaries/DbImport/dbImportStream.options.tpl)"
 
+declare awkScript
 awkScript="$(
   cat <<'EOF'
 .INCLUDE "$(dynamicSrcFile "_binaries/DbImport/dbImportStream.awk")"
 EOF
 )"
-
-dbImportStreamCommand parse "${BASH_FRAMEWORK_ARGV[@]}"
 
 # @require Linux::requireExecutedAsUser
 run() {
@@ -26,15 +39,13 @@ run() {
   # create db instances
   declare -Agx dbTargetInstance
 
-  # shellcheck disable=SC2154
   Database::newInstance dbTargetInstance "${optionTargetDsn}"
-  Database::setQueryOptions dbTargetInstance "${dbTargetDatabase[QUERY_OPTIONS]} --connect-timeout=5"
+  Database::setQueryOptions dbTargetInstance "${dbTargetInstance[QUERY_OPTIONS]} --connect-timeout=5"
   Log::displayInfo "Using target dsn ${dbTargetInstance['DSN_FILE']}"
 
   initializeDefaultTargetMysqlOptions dbTargetInstance "${argTargetDbName}"
 
   # TODO character set should be retrieved from dump files if possible
-  # shellcheck disable=SC2154
   declare remoteCharacterSet="${optionCharacterSet:-${defaultRemoteCharacterSet}}"
 
   # shellcheck disable=2086
@@ -50,13 +61,13 @@ run() {
     if [[ "${status}" -eq "141" ]]; then true; else exit "${status}"; fi
   ) |
     awk \
-      -v PROFILE_COMMAND="${profileCommand}" \
+      -v PROFILE_COMMAND="${profileCommandFile}" \
       -v CHARACTER_SET="${remoteCharacterSet}" \
       --source "${awkScript}" \
       - | mysql \
-        "--defaults-extra-file=${dbTargetInstance['AUTH_FILE']}" \
-        ${dbTargetInstance['DB_IMPORT_OPTIONS']} \
-        "${argTargetDbName}" || exit $?
+    "--defaults-extra-file=${dbTargetInstance['AUTH_FILE']}" \
+    ${dbTargetInstance['DB_IMPORT_OPTIONS']} \
+    "${argTargetDbName}" || exit $?
 }
 
 if [[ "${BASH_FRAMEWORK_QUIET_MODE:-0}" = "1" ]]; then

@@ -2,14 +2,25 @@
 # BIN_FILE=${FRAMEWORK_ROOT_DIR}/bin/cli
 # VAR_RELATIVE_FRAMEWORK_DIR_TO_CURRENT_DIR=..
 # FACADE
+# shellcheck disable=SC2034
+
+# constants
+declare defaultUserArg="root"
+declare -a defaultCommandArg=("//bin/sh")
+declare PROFILES_DIR="${BASH_TOOLS_ROOT_DIR}/conf/cliProfiles"
+declare HOME_PROFILES_DIR="${HOME}/.bash-tools/cliProfiles"
+
+# option values
+declare containerArg="default"
+declare finalUserArg="${defaultUserArg}"
+declare finalCommandArg=("${defaultCommandArg[@]}")
+
+# other values
+declare copyrightBeginYear="2020"
 
 .INCLUDE "$(dynamicTemplateDir _binaries/Docker/cli.options.tpl)"
 
-cliCommand parse "${BASH_FRAMEWORK_ARGV[@]}"
-
 run() {
-
-
   # Internal function that can be used in conf profiles to load the dsn file
   loadDsn() {
     local dsn="$1"

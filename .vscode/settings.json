@@ -18,6 +18,9 @@
   "files.exclude": {
     "**/.git": true
   },
+  "workbench.editorAssociations": {
+    "*.md": "default"
+  },
   "explorer.autoReveal": false,
   "markdown.extension.toc.omittedFromToc": {
     "*.md": ["# %%"]

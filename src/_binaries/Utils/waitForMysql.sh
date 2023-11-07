@@ -2,12 +2,20 @@
 # BIN_FILE=${FRAMEWORK_ROOT_DIR}/bin/waitForMysql
 # VAR_RELATIVE_FRAMEWORK_DIR_TO_CURRENT_DIR=..
 # FACADE
-# shellcheck disable=SC2154
-# shellcheck disable=SC2317
+# shellcheck disable=SC2034
+
+# default values
+declare defaultTimeout="15"
+# option values
+declare optionTimeout="${defaultTimeout}"
+declare mysqlHostArg=""
+declare mysqlPortArg=""
+declare mysqlUserArg=""
+declare mysqlPasswordArg=""
+# default values
+declare copyrightBeginYear="2020"
 
 .INCLUDE "$(dynamicTemplateDir _binaries/Utils/waitForMysql.options.tpl)"
-
-waitForMysqlCommand parse "${BASH_FRAMEWORK_ARGV[@]}"
 
 run() {
   Assert::commandExists "mysql"
@@ -20,7 +28,7 @@ run() {
     -u"${mysqlUserArg}" \
     -p"${mysqlPasswordArg}" &>/dev/null); do
     (printf >&2 ".")
-    if (( optionTimeout!=0 && SECONDS - start_ts >= optionTimeout)); then
+    if ((optionTimeout != 0 && SECONDS - start_ts >= optionTimeout)); then
       (echo >&2 "")
       Log::displayError "${SCRIPT_NAME} - timeout for ${mysqlHostArg}:${mysqlPortArg} occurred after $((SECONDS - start_ts)) seconds"
       return 2

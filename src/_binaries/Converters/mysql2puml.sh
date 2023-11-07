@@ -2,11 +2,13 @@
 # BIN_FILE=${FRAMEWORK_ROOT_DIR}/bin/mysql2puml
 # VAR_RELATIVE_FRAMEWORK_DIR_TO_CURRENT_DIR=..
 # FACADE
+# shellcheck disable=SC2034
+
+declare copyrightBeginYear="2020"
+declare optionBashFrameworkConfig="${BASH_TOOLS_ROOT_DIR}/.framework-config"
+declare optionSkin="default"
 
 .INCLUDE "$(dynamicTemplateDir _binaries/Converters/mysql2puml.options.tpl)"
-
-mysql2pumlCommand parse "${BASH_FRAMEWORK_ARGV[@]}"
-
 declare awkScript
 awkScript="$(
   cat <<'EOF'
@@ -15,7 +17,6 @@ EOF
 )"
 
 run() {
-  # shellcheck disable=SC2154
   absSkinFile="$(Conf::getAbsoluteFile "mysql2pumlSkins" "${optionSkin}" "puml")" ||
     Log::fatal "the skin ${optionSkin} does not exist"
 

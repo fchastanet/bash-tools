@@ -30,11 +30,7 @@ teardown() {
 }
 
 function Database::dbImportProfile::display_help { #@test
-  # shellcheck disable=SC2154
-  run "${binDir}/dbImportProfile" --help 2>&1
-  assert_line --index 0 "DESCRIPTION: generate optimized profiles to be used by dbImport"
-  run "${binDir}/dbImportProfile" -h 2>&1
-  assert_line --index 0 "DESCRIPTION: generate optimized profiles to be used by dbImport"
+  testCommand "${binDir}/dbImportProfile" dbImportProfile.help.txt
 }
 
 function Database::dbImportProfile::fromDbName_not_provided { #@test

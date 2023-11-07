@@ -2,11 +2,23 @@
 # BIN_FILE=${FRAMEWORK_ROOT_DIR}/bin/upgradeGithubRelease
 # VAR_RELATIVE_FRAMEWORK_DIR_TO_CURRENT_DIR=..
 # FACADE
-# shellcheck disable=SC2154
+# shellcheck disable=SC2034
+
+# default
+declare defaultVersionArg="--version"
+
+# option values
+declare targetFileArg=""
+declare githubUrlPatternArg=""
+declare optionVersionArg="${defaultVersionArg}"
+declare optionCurrentVersion=""
+declare optionMinimalVersion=""
+declare optionExactVersion=""
+
+# other values
+declare copyrightBeginYear="2020"
 
 .INCLUDE "$(dynamicTemplateDir _binaries/Git/upgradeGithubRelease.options.tpl)"
-
-upgradeGithubReleaseCommand parse "${BASH_FRAMEWORK_ARGV[@]}"
 
 run() {
   computeCurrentCommandVersion() {

@@ -23,5 +23,5 @@ source <(
   )
 %
 
-declare optionCollationName="" # old COLLATION_NAME
+declare optionCollationName=""
 declare defaultTargetCollationName="<% ${defaultTargetCollationName} %>"

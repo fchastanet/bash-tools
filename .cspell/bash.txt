@@ -112,3 +112,7 @@ Chastanet
 Scrasnups
 datetime
 gensub
+hlocalhost
+uuser
+ppassword
+DELIMS

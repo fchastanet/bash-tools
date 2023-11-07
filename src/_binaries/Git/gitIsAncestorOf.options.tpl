@@ -14,7 +14,7 @@ ${__HELP_OPTION_COLOR}2${__HELP_NORMAL}: if commit is not included in given bran
 %
 # shellcheck source=/dev/null
 source <(
- containerArgHelpCallback() { :; }
+  containerArgHelpCallback() { :; }
   Options::generateArg \
     --help "the branch in which the commit will be searched" \
     --min 1 \
@@ -38,6 +38,5 @@ options+=(
 )
 Options::generateCommand "${options[@]}"
 %
-declare copyrightBeginYear="2020"
-declare claimedBranchArg=""
-declare commitArg=""
+
+<% ${commandFunctionName} %> parse "${BASH_FRAMEWORK_ARGV[@]}"

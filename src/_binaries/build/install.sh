@@ -2,10 +2,12 @@
 # BIN_FILE=${FRAMEWORK_ROOT_DIR}/install
 # VAR_RELATIVE_FRAMEWORK_DIR_TO_CURRENT_DIR=.
 # FACADE
+# shellcheck disable=SC2034
+
+declare copyrightBeginYear="2020"
+declare optionBashFrameworkConfig="${BASH_TOOLS_ROOT_DIR}/.framework-config"
 
 .INCLUDE "$(dynamicTemplateDir _binaries/build/install.options.tpl)"
-
-installCommand parse "${BASH_FRAMEWORK_ARGV[@]}"
 
 # @require Linux::requireExecutedAsUser
 run() {

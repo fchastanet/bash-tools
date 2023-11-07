@@ -34,10 +34,7 @@ teardown() {
 }
 
 function Git::gitRenameBranch::display_help { #@test
-  export INTERACTIVE=0
-  run "${binDir}/gitRenameBranch" --help 2>&1
-  assert_success
-  assert_line --index 0 "DESCRIPTION: rename git local branch, push new branch and delete old branch"
+  testCommand "${binDir}/gitRenameBranch" gitRenameBranch.help.txt
 }
 
 function Git::gitRenameBranch::not_a_git_repository { #@test
@@ -100,7 +97,7 @@ function Git::gitRenameBranch::rename_local_and_push_branch { #@test
     'branch -m oldName newBranch : exit 0' \
     'push --set-upstream origin newBranch : exit 0'
 
-  run "${binDir}/gitRenameBranch" newBranch --push --verbose 2>&1 <<< 'y'
+  run "${binDir}/gitRenameBranch" newBranch --push --verbose 2>&1 <<<'y'
 
   assert_success
   assert_line -n 0 --partial "INFO    - Renaming branch locally from oldName to newBranch"
@@ -116,7 +113,7 @@ function Git::gitRenameBranch::rename_local_push_delete_remote_branch { #@test
     'push origin :oldName : exit 0' \
     'push --set-upstream origin newBranch : exit 0'
 
-  run "${binDir}/gitRenameBranch" newBranch --push --delete --verbose 2>&1 <<< 'yy'
+  run "${binDir}/gitRenameBranch" newBranch --push --delete --verbose 2>&1 <<<'yy'
   assert_success
   assert_line -n 0 --partial "INFO    - Renaming branch locally from oldName to newBranch"
   assert_line -n 1 --partial "INFO    - Removing eventual old remote branch oldName"
@@ -130,7 +127,7 @@ function Git::gitRenameBranch::rename_local_and_delete_remote_branch { #@test
     'branch -m oldName newBranch : exit 0' \
     'push origin :oldName : exit 0'
 
-  run "${binDir}/gitRenameBranch" newBranch oldName --delete --verbose 2>&1 <<< 'y'
+  run "${binDir}/gitRenameBranch" newBranch oldName --delete --verbose 2>&1 <<<'y'
   assert_success
 
   assert_line -n 0 --partial "INFO    - Renaming branch locally from oldName to newBranch"
@@ -145,7 +142,7 @@ function Git::gitRenameBranch::rename_local_and_delete_remote_branch_without_old
     'branch -m oldName newBranch : exit 0' \
     'push origin :oldName : exit 0'
 
-  run "${binDir}/gitRenameBranch" newBranch --delete --verbose 2>&1 <<< 'y'
+  run "${binDir}/gitRenameBranch" newBranch --delete --verbose 2>&1 <<<'y'
 
   assert_success
   assert_line -n 0 --partial "INFO    - Renaming branch locally from oldName to newBranch"
@@ -176,7 +173,7 @@ function Git::gitRenameBranch::rename_local_push_delete_remote_branch_assume_yes
     'push origin :oldName : exit 0' \
     'push --set-upstream origin newBranch : exit 0'
 
-  run "${binDir}/gitRenameBranch" newBranch --push --delete --assume-yes --verbose 2>&1 <<< 'yy'
+  run "${binDir}/gitRenameBranch" newBranch --push --delete --assume-yes --verbose 2>&1 <<<'yy'
 
   assert_success
   assert_line -n 0 --partial "INFO    - Renaming branch locally from oldName to newBranch"
@@ -191,7 +188,7 @@ function Git::gitRenameBranch::rename_local_and_delete_remote_branch_assume_yes 
     'branch -m oldName newBranch : echo "git branch -m oldName newBranch"' \
     'push origin :oldName : echo "git push origin :oldName"'
 
-  run "${binDir}/gitRenameBranch" newBranch oldName --delete --assume-yes --verbose 2>&1 <<< 'y'
+  run "${binDir}/gitRenameBranch" newBranch oldName --delete --assume-yes --verbose 2>&1 <<<'y'
 
   assert_success
   assert_lines_count 4
@@ -206,7 +203,7 @@ function Git::gitRenameBranch::rename_local_and_delete_remote_branch_without_old
     'branch -m oldName newBranch : echo "git branch -m oldName newBranch"' \
     'push origin :oldName : echo "git push origin :oldName"'
 
-  run "${binDir}/gitRenameBranch" newBranch --delete --assume-yes --verbose 2>&1 <<< 'y'
+  run "${binDir}/gitRenameBranch" newBranch --delete --assume-yes --verbose 2>&1 <<<'y'
 
   assert_success
   assert_lines_count 4

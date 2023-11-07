@@ -1,0 +1,71 @@
+[1;37mDESCRIPTION:[0m wait for mysql to be ready
+
+[1;37mUSAGE:[0m waitForMysql [OPTIONS] [ARGUMENTS]
+[1;37mUSAGE:[0m waitForMysql [--timeout|-t <timeout>] [--bash-framework-config <String>]
+  [--config] [--verbose|-v] [-vv] [-vvv] [--env-file <String>] [--no-color]
+  [--theme <String>] [--help|-h] [--version] [--quiet|-q] [--log-level <String>]
+  [--log-file <String>] [--display-level <String>]
+
+[1;37mARGUMENTS:[0m
+  [1;34mmysqlHost[0m {single} (mandatory)
+    Mysql host name
+  [1;34mmysqlPort[0m {single} (mandatory)
+    Mysql port
+  [1;34mmysqlUserArg[0m {single} (mandatory)
+    Mysql user name
+  [1;34mmysqlPasswordArg[0m {single} (mandatory)
+    Mysql password
+
+[1;37mOPTIONS:[0m
+  [1;34m--timeout[0m, [1;34m-t <timeout>[0m {single}
+    Timeout in seconds, zero for no timeout.
+    Default value: 15
+
+[1;37mGLOBAL OPTIONS:[0m
+  [1;34m--bash-framework-config <String>[0m {single}
+    use alternate bash framework configuration.
+  [1;34m--config[0m {single}
+    Display configuration
+  [1;34m--verbose[0m, [1;34m-v[0m {single}
+    info level verbose mode (alias of --display-level INFO)
+  [1;34m-vv[0m {single}
+    debug level verbose mode (alias of --display-level DEBUG)
+  [1;34m-vvv[0m {single}
+    trace level verbose mode (alias of --display-level TRACE)
+  [1;34m--env-file <String>[0m {list} (optional)
+    Load the specified env file
+  [1;34m--no-color[0m {single}
+    Produce monochrome output. alias of --theme noColor.
+  [1;34m--theme <String>[0m {single}
+    choose color theme (default, default-force or noColor) - default-force means
+     colors will be produced even if command is piped
+  [1;34m--help[0m, [1;34m-h[0m {single}
+    Display this command help
+  [1;34m--version[0m {single}
+    Print version information and quit
+  [1;34m--quiet[0m, [1;34m-q[0m {single}
+    quiet mode, doesn't display any output
+  [1;34m--log-level <String>[0m {single}
+    Set log level (one of OFF, ERROR, WARNING, INFO, DEBUG, TRACE value)
+  [1;34m--log-file <String>[0m {single}
+    Set log file
+  [1;34m--display-level <String>[0m {single}
+    set display level (one of OFF, ERROR, WARNING, INFO, DEBUG, TRACE value)
+
+[1;37mEXIT STATUS CODES:[0m
+[1;34m0[0m: mysql is available
+[1;34m1[0m: indicates mysql is not available or argument error
+[1;34m2[0m: timeout reached
+
+[1;37mVERSION: [0m2.0
+
+[1;37mAUTHOR:[0m
+[François Chastanet](https://github.com/fchastanet)
+
+[1;37mSOURCE FILE:[0m
+https://github.com/fchastanet/bash-tools/tree/master/src/_binaries/Utils/waitForMysql.sh
+
+[1;37mLICENSE:[0m
+MIT License
+
+Copyright (c) 2020-now François Chastanet

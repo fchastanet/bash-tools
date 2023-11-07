@@ -2,12 +2,12 @@
 # BIN_FILE=${FRAMEWORK_ROOT_DIR}/bin/installRequirements
 # VAR_RELATIVE_FRAMEWORK_DIR_TO_CURRENT_DIR=..
 # FACADE
+# shellcheck disable=SC2034,SC2154
+
+declare copyrightBeginYear="2020"
+declare optionBashFrameworkConfig="${BASH_TOOLS_ROOT_DIR}/.framework-config"
 
 .INCLUDE "$(dynamicTemplateDir _binaries/build/installRequirements.options.tpl)"
-
-installRequirementsCommand parse "${BASH_FRAMEWORK_ARGV[@]}"
-
-.INCLUDE "${ORIGINAL_TEMPLATE_DIR}/_includes/executedAsUser.sh"
 
 # @require Linux::requireExecutedAsUser
 run() {
@@ -18,7 +18,6 @@ run() {
 
   Log::displayInfo "Copying useful binaries from bash-tools-framework"
   local externalBinary
-  # shellcheck disable=SC2154
   for externalBinary in "${externalBinaries[@]}"; do
     cp -v "${BASH_TOOLS_ROOT_DIR}/vendor/bash-tools-framework/${externalBinary}" \
       "${BASH_TOOLS_ROOT_DIR}/bin"

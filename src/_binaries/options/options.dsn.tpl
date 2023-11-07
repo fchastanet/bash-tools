@@ -1,7 +1,7 @@
 %
 # shellcheck source=/dev/null
 source <(
-    # shellcheck disable=SC2116
+  # shellcheck disable=SC2116
   Options::generateOption \
     --help "${defaultFromDsnHelp:-target mysql server}" \
     --variable-type "String" \

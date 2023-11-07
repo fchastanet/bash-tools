@@ -41,6 +41,7 @@ ${__HELP_EXAMPLE}upgradeGithubRelease /usr/local/bin/oq --exact-version 1.3.4 ${
 Download oq specific version correctly retrieving the oq version and not the jq one
 ${__HELP_EXAMPLE}upgradeGithubRelease /usr/local/bin/oq --exact-version 1.3.4 --version-arg '-V | grep oq:' ${example3}${__HELP_NORMAL}
 """
+# TODO find a way to not duplicate this info
 declare defaultVersionArg="--version"
 %
 
@@ -150,14 +151,6 @@ options+=(
 )
 Options::generateCommand "${options[@]}"
 %
-declare copyrightBeginYear="2020"
-# default values
-declare targetFileArg=""
-declare githubUrlPatternArg=""
-declare optionVersionArg="<% ${defaultVersionArg} %>"
-declare optionCurrentVersion=""
-declare optionMinimalVersion=""
-declare optionExactVersion=""
 
 upgradeGithubReleaseCommandCallback() {
   if [[ -n "${optionExactVersion}" && -n "${optionMinimalVersion}" ]]; then
@@ -182,3 +175,5 @@ targetFileArgCallback() {
     Log::fatal "File ${targetFileArg} is not writable"
   fi
 }
+
+<% ${commandFunctionName} %> parse "${BASH_FRAMEWORK_ARGV[@]}"

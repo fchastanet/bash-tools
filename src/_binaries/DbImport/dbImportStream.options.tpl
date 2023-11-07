@@ -52,16 +52,6 @@ options+=(
 Options::generateCommand "${options[@]}"
 %
 
-# default values
-declare optionProfile=""
-declare argTargetDbName=""
-
-# other configuration
-declare copyrightBeginYear="2020"
-declare PROFILES_DIR="${BASH_TOOLS_ROOT_DIR}/conf/dbImportProfiles"
-declare HOME_PROFILES_DIR="${HOME}/.bash-tools/dbImportProfiles"
-
-
 optionHelpCallback() {
   local profilesList=""
   local dsnList=""
@@ -80,3 +70,5 @@ dbImportStreamCommandCallback() {
     Log::fatal "invalid argDumpFile provided - file does not exist"
   fi
 }
+
+<% ${commandFunctionName} %> parse "${BASH_FRAMEWORK_ARGV[@]}"

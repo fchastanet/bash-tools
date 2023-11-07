@@ -72,14 +72,6 @@ options+=(
 )
 Options::generateCommand "${options[@]}"
 %
-declare copyrightBeginYear="2020"
-
-#default values
-declare optionPush="0"
-declare optionDelete="0"
-declare optionAssumeYes="0"
-declare newBranchNameArg=""
-declare oldBranchNameArg=""
 
 assumeYesHelpCallback() {
   echo "do not ask for confirmation (use with caution)" $'\n'
@@ -93,3 +85,5 @@ commandCallback() {
     exit 6
   fi
 }
+
+<% ${commandFunctionName} %> parse "${BASH_FRAMEWORK_ARGV[@]}"

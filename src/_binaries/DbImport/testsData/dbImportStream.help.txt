@@ -1,0 +1,88 @@
+[1;37mDESCRIPTION:[0m stream tar.gz file or gz file through mysql
+
+[1;37mUSAGE:[0m dbImportStream [OPTIONS] [ARGUMENTS]
+[1;37mUSAGE:[0m dbImportStream [--profile|-p <String>]
+  [--tables <tablesSeparatedByComma>] [--target-dsn|-t <targetDsn>]
+  [--character-set|-c <String>] [--bash-framework-config <String>] [--config]
+  [--verbose|-v] [-vv] [-vvv] [--env-file <String>] [--no-color]
+  [--theme <String>] [--help|-h] [--version] [--quiet|-q] [--log-level <String>]
+  [--log-file <String>] [--display-level <String>]
+
+[1;37mARGUMENTS:[0m
+  [1;34margDumpFile[0m {single} (mandatory)
+    the of the file that will be streamed through mysql
+  [1;34margTargetDbName[0m {single} (mandatory)
+    the name of the mysql target database
+
+[1;37mPROFILE OPTIONS:[0m
+  [1;34m--profile[0m, [1;34m-p <String>[0m {single}
+    the name of the profile to use in order to include or exclude tables (if not
+     specified in default.sh from 'User profiles directory' if exists or 'De
+    fault profiles directory')
+  [1;34m--tables <tablesSeparatedByComma>[0m {single}
+    import only table specified in the list.  If aws mode, ignore profile option
+
+[1;37mTARGET OPTIONS:[0m
+  [1;34m--target-dsn[0m, [1;34m-t <targetDsn>[0m {single}
+    dsn to use for target database (Default: default.local)
+  [1;34m--character-set[0m, [1;34m-c <String>[0m {single}
+    change the character set used during database creation (default value: utf8)
+
+[1;37mGLOBAL OPTIONS:[0m
+  [1;34m--bash-framework-config <String>[0m {single}
+    use alternate bash framework configuration.
+  [1;34m--config[0m {single}
+    Display configuration
+  [1;34m--verbose[0m, [1;34m-v[0m {single}
+    info level verbose mode (alias of --display-level INFO)
+  [1;34m-vv[0m {single}
+    debug level verbose mode (alias of --display-level DEBUG)
+  [1;34m-vvv[0m {single}
+    trace level verbose mode (alias of --display-level TRACE)
+  [1;34m--env-file <String>[0m {list} (optional)
+    Load the specified env file
+  [1;34m--no-color[0m {single}
+    Produce monochrome output. alias of --theme noColor.
+  [1;34m--theme <String>[0m {single}
+    choose color theme (default, default-force or noColor) - default-force means
+     colors will be produced even if command is piped
+  [1;34m--help[0m, [1;34m-h[0m {single}
+    Display this command help
+  [1;34m--version[0m {single}
+    Print version information and quit
+  [1;34m--quiet[0m, [1;34m-q[0m {single}
+    quiet mode, doesn't display any output
+  [1;34m--log-level <String>[0m {single}
+    Set log level (one of OFF, ERROR, WARNING, INFO, DEBUG, TRACE value)
+  [1;34m--log-file <String>[0m {single}
+    Set log file
+  [1;34m--display-level <String>[0m {single}
+    set display level (one of OFF, ERROR, WARNING, INFO, DEBUG, TRACE value)
+
+[1;37mDefault profiles directory:[0m
+/bash/conf/dbImportProfiles
+
+[1;37mUser profiles directory:[0m
+home/.bash-tools/dbImportProfiles
+Allows to override profiles defined in Default profiles directory
+
+[1;37mList of available profiles:[0m
+
+
+[1;37mList of available dsn:[0m
+       - default.local
+       - default.remote
+       - localhost-root
+
+[1;37mVERSION: [0m2.0
+
+[1;37mAUTHOR:[0m
+[François Chastanet](https://github.com/fchastanet)
+
+[1;37mSOURCE FILE:[0m
+https://github.com/fchastanet/bash-tools/tree/master/src/_binaries/DbImport/dbImportStream.sh
+
+[1;37mLICENSE:[0m
+MIT License
+
+Copyright (c) 2020-now François Chastanet

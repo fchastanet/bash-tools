@@ -16,9 +16,7 @@ teardown() {
 }
 
 function Git::upgradeGithubRelease::display_help { #@test
-  run "${binDir}/upgradeGithubRelease" --help 2>&1
-  assert_success
-  assert_line --index 0 --partial "retrieve latest binary release from github and install it"
+  testCommand "${binDir}/upgradeGithubRelease" upgradeGithubRelease.help.txt
 }
 
 function Git::upgradeGithubRelease::noArg { #@test
@@ -45,7 +43,7 @@ function Git::upgradeGithubRelease::filePathInvalid { #@test
   run "${binDir}/upgradeGithubRelease" François https://github.com/ 2>&1
   assert_failure
   assert_lines_count 1
-  assert_line --index 0 --partial "FATAL   - File "$(pwd)/François" is not a valid path"
+  assert_line --index 0 --partial "FATAL   - File $(pwd)/François is not a valid path"
 }
 
 function Git::upgradeGithubRelease::filePathNotWritable { #@test
@@ -54,10 +52,11 @@ function Git::upgradeGithubRelease::filePathNotWritable { #@test
   run "${binDir}/upgradeGithubRelease" "${BATS_TEST_TMPDIR}/dir/targetFile" https://github.com/ 2>&1
   assert_failure
   assert_lines_count 1
-  assert_line --index 0 --partial "FATAL   - File "${BATS_TEST_TMPDIR}/dir/targetFile" is not writable"
+  assert_line --index 0 --partial "FATAL   - File ${BATS_TEST_TMPDIR}/dir/targetFile is not writable"
 }
 
 function Git::upgradeGithubRelease::filePathNotExistsExactVersionShortArg { #@test
+  # shellcheck disable=SC2016
   stub curl \
     '-L -o /dev/null --silent --head --fail https://github.com/hadolint/hadolint/releases/download/v1.0.0/hadolint-Linux-x86_64 : exit 0' \
     '-L -o * --fail https://github.com/hadolint/hadolint/releases/download/v1.0.0/hadolint-Linux-x86_64 : echo "success" > "$3"'
@@ -77,6 +76,7 @@ function Git::upgradeGithubRelease::filePathNotExistsExactVersionShortArg { #@te
 }
 
 function Git::upgradeGithubRelease::filePathNotExistsExactVersionLongArg { #@test
+  # shellcheck disable=SC2016
   stub curl \
     '-L -o /dev/null --silent --head --fail https://github.com/hadolint/hadolint/releases/download/v1.0.0/hadolint-Linux-x86_64 : exit 0' \
     '-L -o * --fail https://github.com/hadolint/hadolint/releases/download/v1.0.0/hadolint-Linux-x86_64 : echo "success" > "$3"'
@@ -96,6 +96,7 @@ function Git::upgradeGithubRelease::filePathNotExistsExactVersionLongArg { #@tes
 }
 
 function Git::upgradeGithubRelease::filePathNotExistsLatestVersionNotFound { #@test
+  # shellcheck disable=SC2016
   stub curl \
     '-L -o * --fail --silent https://api.github.com/repos/hadolint/hadolint/releases/latest : echo "{}" > "$3"'
 
@@ -113,6 +114,7 @@ function Git::upgradeGithubRelease::filePathNotExistsLatestVersionNotFound { #@t
 }
 
 function Git::upgradeGithubRelease::filePathNotExistsLatestVersionFound { #@test
+  # shellcheck disable=SC2016
   stub curl \
     '-L -o * --fail --silent https://api.github.com/repos/hadolint/hadolint/releases/latest : echo "{\"tag_name\": \"1.0.0\"}" > "$3"' \
     '-L -o * --fail https://github.com/hadolint/hadolint/releases/download/v1.0.0/hadolint-Linux-x86_64 : echo "success" > "$3"'
@@ -135,6 +137,7 @@ function Git::upgradeGithubRelease::filePathNotExistsLatestVersionFound { #@test
 
 function Git::upgradeGithubRelease::filePathExistsMinVersion { #@test
   cp "${BATS_TEST_DIRNAME}/testsData/upgradeGithubRelease_bin" "${BATS_TEST_TMPDIR}"
+  # shellcheck disable=SC2016
   stub curl \
     '-L -o /dev/null --silent --head --fail https://github.com/hadolint/hadolint/releases/download/v1.1.0/hadolint-Linux-x86_64 : exit 0' \
     '-L -o * --fail --silent https://api.github.com/repos/hadolint/hadolint/releases/latest : echo "{\"tag_name\": \"1.1.0\"}" > "$3"' \
@@ -161,6 +164,7 @@ function Git::upgradeGithubRelease::filePathExistsMinVersion { #@test
 
 function Git::upgradeGithubRelease::filePathExistsCurrentVersionLessThanMinVersion { #@test
   cp "${BATS_TEST_DIRNAME}/testsData/upgradeGithubRelease_bin" "${BATS_TEST_TMPDIR}"
+  # shellcheck disable=SC2016
   stub curl \
     '-L -o /dev/null --silent --head --fail https://github.com/hadolint/hadolint/releases/download/v1.1.0/hadolint-Linux-x86_64 : exit 0' \
     '-L -o * --fail --silent https://api.github.com/repos/hadolint/hadolint/releases/latest : echo "{\"tag_name\": \"1.1.0\"}" > "$3"' \
@@ -188,6 +192,7 @@ function Git::upgradeGithubRelease::filePathExistsCurrentVersionLessThanMinVersi
 
 function Git::upgradeGithubRelease::filePathExistsCurrentVersionEqualsMinVersion { #@test
   cp "${BATS_TEST_DIRNAME}/testsData/upgradeGithubRelease_bin" "${BATS_TEST_TMPDIR}"
+  # shellcheck disable=SC2016
   stub curl \
     '-L -o /dev/null --silent --head --fail https://github.com/hadolint/hadolint/releases/download/v1.0.0/hadolint-Linux-x86_64 : exit 0' \
     '-L -o * --fail --silent https://api.github.com/repos/hadolint/hadolint/releases/latest : echo "{\"tag_name\": \"1.0.0\"}" > "$3"'
@@ -211,6 +216,7 @@ function Git::upgradeGithubRelease::filePathExistsCurrentVersionEqualsMinVersion
 
 function Git::upgradeGithubRelease::filePathExistsCurrentVersionGreaterThanMinVersion { #@test
   cp "${BATS_TEST_DIRNAME}/testsData/upgradeGithubRelease_bin" "${BATS_TEST_TMPDIR}"
+  # shellcheck disable=SC2016
   stub curl \
     '-L -o /dev/null --silent --head --fail https://github.com/hadolint/hadolint/releases/download/v1.0.0/hadolint-Linux-x86_64 : exit 0' \
     '-L -o * --fail --silent https://api.github.com/repos/hadolint/hadolint/releases/latest : echo "{\"tag_name\": \"1.0.0\"}" > "$3"'
@@ -232,6 +238,7 @@ function Git::upgradeGithubRelease::filePathExistsCurrentVersionGreaterThanMinVe
 
 function Git::upgradeGithubRelease::filePathExistsExactVersionUpgradeNeeded { #@test
   cp "${BATS_TEST_DIRNAME}/testsData/upgradeGithubRelease_bin" "${BATS_TEST_TMPDIR}"
+  # shellcheck disable=SC2016
   stub curl \
     '-L -o /dev/null --silent --head --fail https://github.com/hadolint/hadolint/releases/download/v1.1.0/hadolint-Linux-x86_64 : exit 0' \
     '-L -o * --fail https://github.com/hadolint/hadolint/releases/download/v1.1.0/hadolint-Linux-x86_64 : echo "success" > "$3"'

@@ -10,8 +10,7 @@ declare help="generate markdown documentation"
 %
 Options::generateCommand "${options[@]}"
 %
-declare copyrightBeginYear="2020"
-declare -a RUN_CONTAINER_ARGV_FILTERED=()
+
 updateOptionSkipDockerBuildCallback() {
   if [[ "${IN_BASH_DOCKER:-}" != "You're in docker" ]]; then
     BASH_FRAMEWORK_ARGV_FILTERED+=("$1")

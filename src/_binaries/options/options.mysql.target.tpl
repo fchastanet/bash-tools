@@ -38,8 +38,8 @@ options+=(
 )
 %
 
-declare optionTargetDsn="<% ${defaultTargetDsn} %>" # old TARGET_DSN
-declare optionCharacterSet="" # old CHARACTER_SET
+declare optionTargetDsn="<% ${defaultTargetDsn} %>"
+declare optionCharacterSet=""
 declare defaultTargetCharacterSet="<% ${defaultTargetCharacterSet} %>"
 
 

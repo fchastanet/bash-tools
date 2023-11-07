@@ -11,5 +11,3 @@ declare help="Install dependent softwares and configuration needed to use bash-t
 %
 Options::generateCommand "${options[@]}"
 %
-declare copyrightBeginYear="2020"
-declare optionBashFrameworkConfig="${BASH_TOOLS_ROOT_DIR}/.framework-config"

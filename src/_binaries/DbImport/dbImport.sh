@@ -2,6 +2,27 @@
 # BIN_FILE=${FRAMEWORK_ROOT_DIR}/bin/dbImport
 # VAR_RELATIVE_FRAMEWORK_DIR_TO_CURRENT_DIR=..
 # FACADE
+# shellcheck disable=SC2034
+
+# default values
+declare optionFromAws=""
+declare optionSkipSchema="0"
+declare targetDbName=""
+declare fromDbName=""
+declare optionProfile="default"
+declare optionTables=""
+declare profileCommandFile=""
+declare optionTargetDsn=""
+declare optionCharacterSet=""
+declare defaultTargetCharacterSet=""
+
+# other configuration
+declare copyrightBeginYear="2020"
+declare TIMEFORMAT='time spent : %3R'
+declare DB_IMPORT_DUMP_DIR=${DB_IMPORT_DUMP_DIR%/}
+declare PROFILES_DIR="${BASH_TOOLS_ROOT_DIR}/conf/dbImportProfiles"
+declare HOME_PROFILES_DIR="${HOME}/.bash-tools/dbImportProfiles"
+declare DOWNLOAD_DUMP=0
 
 .INCLUDE "$(dynamicTemplateDir _binaries/DbImport/dbImport.options.tpl)"
 
@@ -26,11 +47,8 @@ DUMP_SIZE_QUERY="$(
 EOF
 )"
 
-dbImportCommand parse "${BASH_FRAMEWORK_ARGV[@]}"
-
 # @require Linux::requireExecutedAsUser
 run() {
-
 
   # check dependencies
   Assert::commandExists mysql "sudo apt-get install -y mysql-client"
@@ -46,6 +64,7 @@ run() {
 
   # shellcheck disable=SC2154
   Database::newInstance dbTargetDatabase "${optionTargetDsn}"
+  # shellcheck disable=SC2154
   Database::setQueryOptions dbTargetDatabase "${dbTargetDatabase[QUERY_OPTIONS]} --connect-timeout=5"
   Log::displayInfo "Using target dsn ${dbTargetDatabase['DSN_FILE']}"
   if [[ -z "${optionFromAws}" ]]; then
@@ -79,7 +98,7 @@ run() {
     Log::displayInfo "local dump ${remoteDbDumpTempFile} already exists, avoid download"
   fi
 
-  Log::displayInfo "tables list will calculated using profile ${optionProfile} => ${profileCommand}"
+  Log::displayInfo "tables list will calculated using profile ${optionProfile} => ${profileCommandFile}"
   SECONDS=0
   if [[ "${downloadDump}" = "1" ]]; then
     Log::displayInfo "Download dump"
@@ -109,7 +128,7 @@ run() {
       local listTables
       local listTablesDumpSize
       local listTablesDump
-      listTables="$(Database::query dbFromInstance "show tables" "${fromDbName}" | ${profileCommand} | sort)"
+      listTables="$(Database::query dbFromInstance "show tables" "${fromDbName}" | ${profileCommandFile} | sort)"
       # shellcheck disable=SC2034 # used by DUMP_SIZE_QUERY
       listTablesDumpSize="$(echo "${listTables}" | awk -v d="," -v q="'" '{s=(NR==1?s:s d)q $0 q}END{print s }')"
       listTablesDump=$(echo "${listTables}" | awk -v d=" " -v q="" '{s=(NR==1?s:s d)q $0 q}END{print s }')
@@ -155,13 +174,13 @@ run() {
   # shellcheck disable=SC2154
   local targetCollationName="${optionCollationName:-${defaultTargetCollationName}}"
   # shellcheck disable=SC2154
-  local taregtCharacterSet="${optionCharacterSet:-${defaultTargetCharacterSet}}"
+  local targetCharacterSet="${optionCharacterSet:-${defaultTargetCharacterSet}}"
 
   # shellcheck disable=SC2154
   Log::displayInfo "create target database ${targetDbName} if needed"
   #shellcheck disable=SC2016
   Database::query dbTargetDatabase \
-    "$(printf 'CREATE DATABASE IF NOT EXISTS `%s` CHARACTER SET "%s" COLLATE "%s"' "${targetDbName}" "${taregtCharacterSet}" "${targetCollationName}")"
+    "$(printf 'CREATE DATABASE IF NOT EXISTS `%s` CHARACTER SET "%s" COLLATE "%s"' "${targetDbName}" "${targetCharacterSet}" "${targetCollationName}")"
 
   if [[ -z "${optionFromAws}" ]]; then
     Database::setQueryOptions dbTargetDatabase "${dbTargetDatabase['DB_IMPORT_OPTIONS']}"
@@ -179,13 +198,13 @@ run() {
   fi
   Log::displayInfo "import remote to local from file ${remoteDbDumpTempFile}"
   local -a dbImportStreamOptions=(
-    --profile "${optionProfile}" \
-    --target-dsn "${optionTargetDsn}" \
-    --character-set "${taregtCharacterSet}" \
+    --profile "${optionProfile}"
+    --target-dsn "${optionTargetDsn}"
+    --character-set "${targetCharacterSet}"
   )
   if [[ -n "${optionTables:-}" ]]; then
     dbImportStreamOptions+=(
-      --tables "${optionTables}" \
+      --tables "${optionTables}"
     )
   fi
   time (

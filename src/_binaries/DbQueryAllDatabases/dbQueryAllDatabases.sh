@@ -3,10 +3,20 @@
 # VAR_RELATIVE_FRAMEWORK_DIR_TO_CURRENT_DIR=..
 # FACADE
 # EMBED Db::queryOneDatabase as dbQueryOneDatabase
+# shellcheck disable=SC2034
+
+#default values
+# default value for FROM_DSN if from-aws not set
+declare queryIsFile="0"
+declare optionSeparator="|"
+declare argQuery=""
+
+# other configuration
+declare copyrightBeginYear="2020"
+declare QUERIES_DIR="${BASH_TOOLS_ROOT_DIR}/conf/dbQueries"
+declare HOME_QUERIES_DIR="${HOME}/.bash-tools/dbQueries"
 
 .INCLUDE "$(dynamicTemplateDir _binaries/DbQueryAllDatabases/dbQueryAllDatabases.options.tpl)"
-
-dbQueryAllDatabasesCommand parse "${BASH_FRAMEWORK_ARGV[@]}"
 
 declare awkScript
 awkScript="$(
@@ -27,7 +37,6 @@ run() {
   Assert::commandExists awk "sudo apt-get install -y gawk"
   Version::checkMinimal "gawk" "--version" "5.0.1"
 
-
   # query contains the sql from argQuery or from query string if -q option is provided
   declare query="${argQuery}"
   if [[ "${queryIsFile}" = "1" ]]; then
@@ -47,9 +56,10 @@ run() {
   export query
   export optionSeparator
   export optionFromDsn
+  # shellcheck disable=SC2154
   echo "${allDbs}" |
     SHELL=$(type -p bash) parallel --eta --progress "${PARALLEL_OPTIONS[@]}" \
-      "${embed_function_DbQueryOneDatabase}" |
+      "${embed_function_DbQueryOneDatabase}" "${optionFromDsn}" |
     awk --source "${awkScript}" -
 }
 

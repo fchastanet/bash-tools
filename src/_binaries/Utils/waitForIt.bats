@@ -18,10 +18,7 @@ teardown() {
 }
 
 function Utils::waitForIt::display_help { #@test
-  # shellcheck disable=SC2154
-  run "${binDir}/waitForIt" --help 2>&1
-  assert_success
-  assert_line --index 0 "DESCRIPTION: wait for host:port to be available"
+  testCommand "${binDir}/waitForIt" waitForIt.help.txt
 }
 
 function Utils::waitForIt::noArgs { #@test
@@ -96,7 +93,7 @@ function Utils::waitForIt::algo::timeoutV1WithNc::NoCommandExecutedIfFailed { #@
   (
     echo "#!/bin/bash"
     echo 'exit 1'
-  ) > "${HOME}/bin/nc"
+  ) >"${HOME}/bin/nc"
   chmod +x "${HOME}/bin/nc"
 
   stub timeout \
@@ -142,7 +139,7 @@ function Utils::waitForIt::algo::timeoutV2WithNc::NoCommandExecutedIfFailed { #@
   (
     echo "#!/bin/bash"
     echo 'exit 1'
-  ) > "${HOME}/bin/nc"
+  ) >"${HOME}/bin/nc"
   chmod +x "${HOME}/bin/nc"
 
   stub timeout \
@@ -161,8 +158,9 @@ function Utils::waitForIt::algo::timeoutV2WithNc::NoCommandExecutedIfFailed { #@
 
 function Utils::waitForIt::algo::timeoutV1WithTcp::WithoutCommand { #@test
   export WAIT_FOR_IT_MOCKED_TCP=mockedTcp
+  # shellcheck disable=SC2317
   function mockedTcp() {
-    echo "mocked $@"
+    echo "mocked $*"
   }
   export -f mockedTcp
   stub timeout "-t 1 ${binDir}/waitForIt --host localhost --port 8888 --timeout 1 --algo timeoutV1WithTcp : ${binDir}/waitForIt --host localhost --port 8888 --timeout 1 --algo timeoutV1WithTcp"
@@ -171,15 +169,16 @@ function Utils::waitForIt::algo::timeoutV1WithTcp::WithoutCommand { #@test
   assert_success
   assert_line --index 0 --partial "INFO    - waitForIt - using algorithm timeoutV1WithTcp"
   assert_line --index 1 --partial "INFO    - waitForIt - waiting 1 seconds for localhost:8888"
-  assert_line --index 2           "mocked /dev/tcp/localhost/8888"
+  assert_line --index 2 "mocked /dev/tcp/localhost/8888"
   assert_line --index 3 --partial "INFO    - waitForIt - localhost:8888 is available after "
   assert_lines_count 4
 }
 
 function Utils::waitForIt::algo::timeoutV1WithTcp::ExecCommand { #@test
   export WAIT_FOR_IT_MOCKED_TCP=mockedTcp
+  # shellcheck disable=SC2317
   function mockedTcp() {
-    echo "mocked $@"
+    echo "mocked $*"
   }
   export -f mockedTcp
   stub timeout "-t 1 ${binDir}/waitForIt --host localhost --port 8888 --timeout 1 --algo timeoutV1WithTcp echo success : \
@@ -189,7 +188,7 @@ function Utils::waitForIt::algo::timeoutV1WithTcp::ExecCommand { #@test
   assert_success
   assert_line --index 0 --partial "INFO    - waitForIt - using algorithm timeoutV1WithTcp"
   assert_line --index 1 --partial "INFO    - waitForIt - waiting 1 seconds for localhost:8888"
-  assert_line --index 2           "mocked /dev/tcp/localhost/8888"
+  assert_line --index 2 "mocked /dev/tcp/localhost/8888"
   assert_line --index 3 --partial "INFO    - waitForIt - localhost:8888 is available after "
   assert_line --index 4 "success"
   assert_lines_count 5
@@ -197,6 +196,7 @@ function Utils::waitForIt::algo::timeoutV1WithTcp::ExecCommand { #@test
 
 function Utils::waitForIt::algo::timeoutV1WithTcp::NoCommandExecutedIfFailed { #@test
   export WAIT_FOR_IT_MOCKED_TCP=mockedTcp
+  # shellcheck disable=SC2317
   function mockedTcp() {
     return 1
   }
@@ -215,6 +215,7 @@ function Utils::waitForIt::algo::timeoutV1WithTcp::NoCommandExecutedIfFailed { #
 
 function Utils::waitForIt::algo::timeoutV2WithTcp::WithoutCommand { #@test
   export WAIT_FOR_IT_MOCKED_TCP=mockedTcp
+  # shellcheck disable=SC2317
   function mockedTcp() {
     return 0
   }
@@ -231,6 +232,7 @@ function Utils::waitForIt::algo::timeoutV2WithTcp::WithoutCommand { #@test
 
 function Utils::waitForIt::algo::timeoutV2WithTcp::ExecCommand { #@test
   export WAIT_FOR_IT_MOCKED_TCP=mockedTcp
+  # shellcheck disable=SC2317
   function mockedTcp() {
     return 0
   }
@@ -249,6 +251,7 @@ function Utils::waitForIt::algo::timeoutV2WithTcp::ExecCommand { #@test
 
 function Utils::waitForIt::algo::timeoutV2WithTcp::NoCommandExecutedIfFailed { #@test
   export WAIT_FOR_IT_MOCKED_TCP=mockedTcp
+  # shellcheck disable=SC2317
   function mockedTcp() {
     return 1
   }
@@ -269,8 +272,9 @@ function Utils::waitForIt::algo::timeoutV2WithTcp::NoCommandExecutedIfFailed { #
 
 function Utils::waitForIt::algo::whileLoopWithTcp::WithoutCommand { #@test
   export WAIT_FOR_IT_MOCKED_TCP=mockedTcp
+  # shellcheck disable=SC2317
   function mockedTcp() {
-    echo "mocked $@"
+    echo "mocked $*"
   }
   export -f mockedTcp
   stub timeout "-t 1 ${binDir}/waitForIt --host localhost --port 8888 --timeout 1 --algo whileLoopWithTcp : ${binDir}/waitForIt --host localhost --port 8888 --timeout 1 --algo whileLoopWithTcp"
@@ -279,15 +283,16 @@ function Utils::waitForIt::algo::whileLoopWithTcp::WithoutCommand { #@test
   assert_success
   assert_line --index 0 --partial "INFO    - waitForIt - using algorithm whileLoopWithTcp"
   assert_line --index 1 --partial "INFO    - waitForIt - waiting 1 seconds for localhost:8888"
-  assert_line --index 2           "mocked /dev/tcp/localhost/8888"
+  assert_line --index 2 "mocked /dev/tcp/localhost/8888"
   assert_line --index 3 --partial "INFO    - waitForIt - localhost:8888 is available after "
   assert_lines_count 4
 }
 
 function Utils::waitForIt::algo::whileLoopWithTcp::ExecCommand { #@test
   export WAIT_FOR_IT_MOCKED_TCP=mockedTcp
+  # shellcheck disable=SC2317
   function mockedTcp() {
-    echo "mocked $@"
+    echo "mocked $*"
   }
   export -f mockedTcp
   stub timeout "-t 1 ${binDir}/waitForIt --host localhost --port 8888 --timeout 1 --algo whileLoopWithTcp echo success : \
@@ -297,7 +302,7 @@ function Utils::waitForIt::algo::whileLoopWithTcp::ExecCommand { #@test
   assert_success
   assert_line --index 0 --partial "INFO    - waitForIt - using algorithm whileLoopWithTcp"
   assert_line --index 1 --partial "INFO    - waitForIt - waiting 1 seconds for localhost:8888"
-  assert_line --index 2           "mocked /dev/tcp/localhost/8888"
+  assert_line --index 2 "mocked /dev/tcp/localhost/8888"
   assert_line --index 3 --partial "INFO    - waitForIt - localhost:8888 is available after "
   assert_line --index 4 "success"
   assert_lines_count 5
@@ -305,6 +310,7 @@ function Utils::waitForIt::algo::whileLoopWithTcp::ExecCommand { #@test
 
 function Utils::waitForIt::algo::whileLoopWithTcp::NoCommandExecutedIfFailed { #@test
   export WAIT_FOR_IT_MOCKED_TCP=mockedTcp
+  # shellcheck disable=SC2317
   function mockedTcp() {
     return 1
   }
@@ -323,7 +329,7 @@ function Utils::waitForIt::algo::whileLoopWithNc::WithoutCommand { #@test
   (
     echo "#!/bin/bash"
     echo 'exit 0'
-  ) > "${HOME}/bin/nc"
+  ) >"${HOME}/bin/nc"
   chmod +x "${HOME}/bin/nc"
   run "${binDir}/waitForIt" --host localhost --port 8888 --timeout 1 --algo whileLoopWithNc 2>&1
 
@@ -338,7 +344,7 @@ function Utils::waitForIt::algo::whileLoopWithNc::ExecCommand { #@test
   (
     echo "#!/bin/bash"
     echo 'exit 0'
-  ) > "${HOME}/bin/nc"
+  ) >"${HOME}/bin/nc"
   chmod +x "${HOME}/bin/nc"
   run "${binDir}/waitForIt" --host localhost --port 8888 --timeout 1 --algo whileLoopWithNc echo "success" 2>&1
 
@@ -354,7 +360,7 @@ function Utils::waitForIt::algo::whileLoopWithNc::NoCommandExecutedIfFailed { #@
   (
     echo "#!/bin/bash"
     echo 'exit 1'
-  ) > "${HOME}/bin/nc"
+  ) >"${HOME}/bin/nc"
   chmod +x "${HOME}/bin/nc"
   run "${binDir}/waitForIt" --host localhost --port 8888 --timeout 1 --strict --algo whileLoopWithNc echo "success" 2>&1
 

@@ -2,16 +2,33 @@
 # BIN_FILE=${FRAMEWORK_ROOT_DIR}/bin/waitForIt
 # VAR_RELATIVE_FRAMEWORK_DIR_TO_CURRENT_DIR=..
 # FACADE
-# shellcheck disable=SC2154
-# shellcheck disable=SC2317
+# shellcheck disable=SC2034
+
+# option values
+declare -a commandArgs=()
+declare optionHostOrIp=""
+declare optionPort=""
+declare optionStrict="0"
+declare optionTimeout="15"
+declare optionAlgo=""
+declare -a availableAlgos=(
+  "timeoutV1WithNc"
+  "timeoutV2WithNc"
+  "whileLoopWithNc"
+  "timeoutV1WithTcp"
+  "timeoutV2WithTcp"
+  "whileLoopWithTcp"
+)
+# other values
+declare copyrightBeginYear="2020"
 
 .INCLUDE "$(dynamicTemplateDir _binaries/Utils/waitForIt.options.tpl)"
 
 # Use this script to test if a given TCP host/port are available
 # https://github.com/vishnubob/wait-for-it
-waitForItCommand parse "${BASH_FRAMEWORK_ARGV[@]}"
 
 run() {
+  # shellcheck disable=SC2317
   usingTcp() {
     # couldn't find another way to mock this part
     if [[ -n "${WAIT_FOR_IT_MOCKED_TCP:-}" ]]; then
@@ -21,6 +38,7 @@ run() {
     fi
   }
 
+  # shellcheck disable=SC2317
   usingNc() {
     nc -z "${optionHostOrIp}" "${optionPort}" -w 1 2>&1
   }
@@ -38,7 +56,7 @@ run() {
         Log::displayInfo "${SCRIPT_NAME} - ${optionHostOrIp}:${optionPort} is available after $((SECONDS - start_ts)) seconds"
         break
       fi
-      if (( optionTimeout!=0 && SECONDS - start_ts >= optionTimeout)); then
+      if ((optionTimeout != 0 && SECONDS - start_ts >= optionTimeout)); then
         if [[ "${reportTimeout}" = "1" ]]; then
           Log::displayError "${SCRIPT_NAME} - timeout for ${optionHostOrIp}:${optionPort} occurred after $((SECONDS - start_ts)) seconds"
         fi
@@ -49,6 +67,7 @@ run() {
     return 0
   }
 
+  # shellcheck disable=SC2317
   timeoutCommand() {
     local timeoutVersion="$1"
     local commandToUse="$2"
@@ -61,7 +80,7 @@ run() {
 
     # compute timeout command
     local -a timeoutCmd=(timeout)
-    if  [[ "${timeoutVersion}" = "v1" ]]; then
+    if [[ "${timeoutVersion}" = "v1" ]]; then
       # In order to support SIGINT during timeout: http://unix.stackexchange.com/a/57692
       timeoutCmd+=("-t")
     fi
@@ -85,21 +104,27 @@ run() {
 
   # --------------------------------------
   # ALGORITHMS
+  # shellcheck disable=SC2317
   timeoutV1WithNc() {
     timeoutCommand "v1" "usingNc"
   }
+  # shellcheck disable=SC2317
   timeoutV2WithNc() {
     timeoutCommand "v2" "usingNc"
   }
+  # shellcheck disable=SC2317
   whileLoopWithNc() {
     whileLoop "usingNc" "1"
   }
+  # shellcheck disable=SC2317
   timeoutV1WithTcp() {
     timeoutCommand "v1" "usingTcp"
   }
+  # shellcheck disable=SC2317
   timeoutV2WithTcp() {
     timeoutCommand "v2" "usingTcp"
   }
+  # shellcheck disable=SC2317
   whileLoopWithTcp() {
     whileLoop "usingTcp" "1"
   }
@@ -117,9 +142,9 @@ run() {
       command="WithNc"
     fi
 
-    if (( optionTimeout > 0 )); then
+    if ((optionTimeout > 0)); then
       if Assert::commandExists timeout &>/dev/null; then
-        if  timeout --help 2>&1 | grep -q -E -e '--timeout '; then
+        if timeout --help 2>&1 | grep -q -E -e '--timeout '; then
           echo "timeoutV1${command}"
         else
           echo "timeoutV2${command}"

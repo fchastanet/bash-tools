@@ -17,23 +17,16 @@ ${__HELP_OPTION_COLOR}timeoutV1WithTcp${__HELP_NORMAL}: previous version of time
 ${__HELP_OPTION_COLOR}timeoutV2WithTcp${__HELP_NORMAL}: newer version of timeout command using timeout as argument
 ${__HELP_OPTION_COLOR}whileLoopWithTcp${__HELP_NORMAL}: timeout command simulated using while loop, base command tcp
 """
-declare -a availableAlgos=(
-   "timeoutV1WithNc"
-   "timeoutV2WithNc"
-   "whileLoopWithNc"
-   "timeoutV1WithTcp"
-   "timeoutV2WithTcp"
-   "whileLoopWithTcp"
-)
-declare defaultTimeout="15"
 %
 .INCLUDE "$(dynamicTemplateDir _binaries/options/options.base.tpl)"
+.INCLUDE "$(dynamicTemplateDir _binaries/options/options.timeout.tpl)"
 %
 # shellcheck source=/dev/null
 source <(
   Options::generateArg \
     --help "Execute command with args after the test finishes or exit with status code if no command provided." \
     --min 0 \
+    --max -1 \
     --name "commandArgs" \
     --variable-name "commandArgs" \
     --function-name commandArgsFunction
@@ -85,17 +78,6 @@ source <(
     --alt "--user-nc" \
     --variable-name "optionLegacy" \
     --function-name optionLegacyFunction
-
-  Options::generateOption \
-    --help-value-name "timeout" \
-    --help "Timeout in seconds, zero for no timeout." \
-    --default-value "${defaultTimeout}" \
-    --alt "--timeout" \
-    --alt "-t" \
-    --variable-type "String" \
-    --variable-name "optionTimeout" \
-    --function-name optionTimeoutFunction \
-    --callback optionTimeoutCallback
 )
 options+=(
   --unknown-option-callback unknownOption
@@ -106,7 +88,6 @@ options+=(
   optionPortFunction
   optionAlgoFunction
   optionStrictFunction
-  optionTimeoutFunction
 )
 Options::generateCommand "${options[@]}"
 %
@@ -122,12 +103,6 @@ optionPortCallback() {
   fi
 }
 
-optionTimeoutCallback() {
-  if [[ ! "${optionTimeout}" =~ ^[0-9]+$ ]]; then
-    Log::fatal "${SCRIPT_NAME} - invalid timeout option - must be greater or equal to 0"
-  fi
-}
-
 optionAlgoCallback() {
   if ! Array::contains "${optionAlgo}" "${availableAlgos[@]}"; then
     Log::fatal "${SCRIPT_NAME} - invalid algorithm '${optionAlgo}'"
@@ -140,9 +115,4 @@ commandCallback() {
   fi
 }
 
-# default values
-declare -a commandArgs=()
-declare copyrightBeginYear="2020"
-declare optionTimeout="<% ${defaultTimeout} %>"
-declare optionAlgo=""
-declare -a availableAlgos=(<% "${availableAlgos[@]}" %>)
+<% ${commandFunctionName} %> parse "${BASH_FRAMEWORK_ARGV[@]}"

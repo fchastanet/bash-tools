@@ -33,10 +33,7 @@ teardown() {
 }
 
 function Database::dbImport::display_help { #@test
-  # shellcheck disable=SC2154
-  run "${binDir}/dbImport" --help 2>&1
-  assert_success
-  assert_line --index 0 "DESCRIPTION: Import source db into target db using eventual table filter"
+  testCommand "${binDir}/dbImport" dbImport.help.txt
 }
 
 function Database::dbImport::remoteDbName_not_provided { #@test

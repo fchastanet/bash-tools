@@ -2,12 +2,13 @@
 # BIN_FILE=${FRAMEWORK_ROOT_DIR}/bin/doc
 # VAR_RELATIVE_FRAMEWORK_DIR_TO_CURRENT_DIR=..
 # FACADE
+# shellcheck disable=SC2034
 
 DOC_DIR="${BASH_TOOLS_ROOT_DIR}/pages"
+declare copyrightBeginYear="2020"
+declare -a RUN_CONTAINER_ARGV_FILTERED=()
 
 .INCLUDE "$(dynamicTemplateDir _binaries/build/doc.options.tpl)"
-
-docCommand parse "${BASH_FRAMEWORK_ARGV[@]}"
 
 run() {
   if [[ "${IN_BASH_DOCKER:-}" != "You're in docker" ]]; then
@@ -44,7 +45,7 @@ run() {
     "${DOC_DIR}/Commands.md" \
     "${FRAMEWORK_BIN_DIR}" \
     TOKEN_NOT_FOUND_COUNT \
-    '(bash-tpl|plantuml|definitionLint|compile)$'
+    '(bash-tpl|plantuml|definitionLint|compile|installFacadeExample)$'
 
   # inject plantuml diagram source code into command
   sed -E -i \

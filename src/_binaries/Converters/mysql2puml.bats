@@ -16,10 +16,7 @@ setup() {
 }
 
 function Converters::mysql2puml::display_help { #@test
-  # shellcheck disable=SC2154
-  run "${binDir}/mysql2puml" --help 2>&1
-  assert_success
-  assert_line --index 0 "DESCRIPTION: convert mysql dump sql schema to plantuml format"
+  testCommand "${binDir}/mysql2puml" mysql2puml.help.txt
 }
 
 function Converters::mysql2puml::display_version { #@test

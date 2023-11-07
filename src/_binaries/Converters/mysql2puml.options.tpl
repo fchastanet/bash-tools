@@ -26,7 +26,8 @@ ${__HELP_TITLE}List of available skins:${__HELP_NORMAL}
 source <(
   Options::generateOption \
     --variable-type String \
-    --help "header configuration of the plant uml file (default: ${optionSkinDefault})" \
+    --help "header configuration of the plant uml file" \
+    --default-value "${optionSkinDefault}" \
     --alt "--skin" \
     --callback "optionSkinCallback" \
     --variable-name "optionSkin" \
@@ -47,9 +48,6 @@ options+=(
 )
 Options::generateCommand "${options[@]}"
 %
-declare copyrightBeginYear="2020"
-declare optionBashFrameworkConfig="${BASH_TOOLS_ROOT_DIR}/.framework-config"
-declare optionSkin="<% ${optionSkinDefault} %>"
 
 optionHelpCallback() {
   local skinListHelpFile
@@ -79,3 +77,5 @@ inputSqlFileCallback() {
     return 1
   fi
 }
+
+<% ${commandFunctionName} %> parse "${BASH_FRAMEWORK_ARGV[@]}"

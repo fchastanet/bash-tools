@@ -14,7 +14,7 @@ ${containers}
 
 ${__HELP_TITLE}EXAMPLES:${__HELP_EXAMPLE}
     to connect to mysql container in bash mode with user mysql
-        ${SCRIPT_NAME} mysql mysql "//bin/bash"
+        ${SCRIPT_NAME} mysql mysql '/bin/bash'
     to connect to web container with user root
         ${SCRIPT_NAME} web root
 ${__HELP_NORMAL}
@@ -26,8 +26,6 @@ arguments ${__HELP_OPTION_COLOR}userArg${__HELP_NORMAL}, ${__HELP_OPTION_COLOR}c
 The script has to compute the following
 variables ${__HELP_OPTION_COLOR}finalUserArg${__HELP_NORMAL}, ${__HELP_OPTION_COLOR}finalContainerArg${__HELP_NORMAL}, ${__HELP_OPTION_COLOR}finalCommandArg${__HELP_NORMAL}
 '''
-declare defaultUserArg="root"
-declare -a defaultCommandArg=("//bin/sh")
 %
 .INCLUDE "$(dynamicTemplateDir _binaries/options/options.base.tpl)"
 %
@@ -68,16 +66,6 @@ options+=(
 )
 Options::generateCommand "${options[@]}"
 %
-
-# default values
-declare containerArg="default"
-declare finalUserArg="<% ${defaultUserArg} %>"
-declare finalCommandArg=("<% ${defaultCommandArg[@]} %>")
-declare copyrightBeginYear="2020"
-
-# constants
-PROFILES_DIR="${BASH_TOOLS_ROOT_DIR}/conf/cliProfiles"
-HOME_PROFILES_DIR="${HOME}/.bash-tools/cliProfiles"
 
 containerArgHelpCallback() {
   Conf::load "cliProfiles" "default"
@@ -125,3 +113,5 @@ optionHelpCallback() {
 unknownOption() {
   commandArg+=("$1")
 }
+
+<% ${commandFunctionName} %> parse "${BASH_FRAMEWORK_ARGV[@]}"

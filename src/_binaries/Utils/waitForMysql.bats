@@ -18,10 +18,7 @@ teardown() {
 }
 
 function Utils::waitForMysql::display_help { #@test
-  # shellcheck disable=SC2154
-  run "${binDir}/waitForMysql" --help 2>&1
-  assert_success
-  assert_line --index 0 "DESCRIPTION: wait for mysql to be ready"
+  testCommand "${binDir}/waitForMysql" waitForMysql.help.txt
 }
 
 function Utils::waitForMysql::missingHost { #@test

@@ -27,18 +27,15 @@ teardown() {
 }
 
 function Docker::cli::display_help { #@test
-  # shellcheck disable=SC2154
-  run "${binDir}/cli" --help 2>&1
-  assert_success
-  assert_line --index 0 "DESCRIPTION: easy connection to docker container"
+  testCommand "${binDir}/cli" cli.help.txt
 }
 
 function Docker::cli::without_any_parameter_connects_to_default_container { #@test
   stub_tput
   if read -r -t 0; then
-    stub docker 'exec -i -e COLUMNS=80 -e LINES=23 --user=www-data project-apache2 //bin/bash : echo "connected to container"'
+    stub docker 'exec -i -e COLUMNS=80 -e LINES=23 --user=www-data project-apache2 /bin/bash : echo "connected to container"'
   else
-    stub docker 'exec -it -e COLUMNS=80 -e LINES=23 --user=www-data project-apache2 //bin/bash : echo "connected to container"'
+    stub docker 'exec -it -e COLUMNS=80 -e LINES=23 --user=www-data project-apache2 /bin/bash : echo "connected to container"'
   fi
   run "${binDir}/cli" 2>&1
 
@@ -99,9 +96,9 @@ function Docker::cli::add_a_custom_profile_and_use_this_profile { #@test
 function Docker::cli::to_a_container_without_a_matching_profile { #@test
   stub_tput
   if read -r -t 0; then
-    stub docker 'exec -i -e COLUMNS=80 -e LINES=23 --user=www-data my-container //bin/bash : echo "connected to container"'
+    stub docker 'exec -i -e COLUMNS=80 -e LINES=23 --user=www-data my-container /bin/bash : echo "connected to container"'
   else
-    stub docker 'exec -it -e COLUMNS=80 -e LINES=23 --user=www-data my-container //bin/bash : echo "connected to container"'
+    stub docker 'exec -it -e COLUMNS=80 -e LINES=23 --user=www-data my-container /bin/bash : echo "connected to container"'
   fi
   run "${binDir}/cli" my-container 2>&1
 

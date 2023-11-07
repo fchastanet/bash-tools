@@ -47,6 +47,7 @@ declare -a BASH_FRAMEWORK_ARGV=("$@")
 declare -a ORIGINAL_BASH_FRAMEWORK_ARGV=("$@")
 
 # @see https://unix.stackexchange.com/a/386856
+# shellcheck disable=SC2317
 interruptManagement() {
   # restore SIGINT handler
   trap - INT
@@ -76,6 +77,7 @@ TMPDIR="$(mktemp -d -p "${PERSISTENT_TMPDIR:-/tmp}" -t bash-framework-$$-XXXXXX)
 export TMPDIR
 
 # temp dir cleaning
+# shellcheck disable=SC2317
 cleanOnExit() {
   if [[ "${KEEP_TEMP_FILES:-0}" = "1" ]]; then
     Log::displayInfo "KEEP_TEMP_FILES=1 temp files kept here '${TMPDIR}'"
@@ -134,7 +136,7 @@ Array::wrap() {
   local -i argNoAnsiLength=0
 
   while (($# > 0)); do
-    argNoAnsi="$(echo "${arg}" | Filters::removeAnsiCodes)"
+    argNoAnsi="$(echo "${arg%%*( )}" | Filters::removeAnsiCodes)"
     ((argNoAnsiLength = ${#argNoAnsi})) || true
     if (($# < 1 && argNoAnsiLength == 0)); then
       break
@@ -157,7 +159,7 @@ Array::wrap() {
       if ((currentLineLength == 0 && firstLine == 0)); then
         echo -n "${indentStr}"
       fi
-      echo -e -n "${arg}"
+      echo -e -n "${arg}" | sed 's/[\t ]*$//g'
       needEcho="1"
       ((currentLineLength += argNoAnsiLength))
       ((glueLength = ${#glue})) || true
@@ -176,7 +178,7 @@ Array::wrap() {
         fi
         local -i length
         ((length = maxLineLength - currentLineLength)) || true
-        echo -e "${arg:0:${length}}"
+        echo -e "${arg:0:${length}}" | sed 's/[\t ]*$//g'
         ((currentLineLength = 0)) || true
         ((glueLength = 0)) || true
         arg="${arg:${length}}"
@@ -184,7 +186,7 @@ Array::wrap() {
       else
         # arg cannot be stored on a whole line, so we add it on next line as a whole
         echo
-        echo -e -n "${indentStr}${arg}"
+        echo -e -n "${indentStr}${arg}" | sed 's/[\t ]*$//g'
         ((glueLength = ${#glue})) || true
         ((currentLineLength = argNoAnsiLength))
         arg="" # allows to go to next arg
@@ -516,6 +518,15 @@ Log::displayInfo() {
   Log::logInfo "$1" "${type}"
 }
 
+# @description Display message using warning color (yellow)
+# @arg $1 message:String the message to display
+Log::displayWarning() {
+  if ((BASH_FRAMEWORK_DISPLAY_LEVEL >= __LEVEL_WARNING)); then
+    echo -e "${__WARNING_COLOR}WARN    - ${1}${__RESET_COLOR}" >&2
+  fi
+  Log::logWarning "$1"
+}
+
 # @description Display message using error color (red) and exit immediately with error status 1
 # @arg $1 message:String the message to display
 Log::fatal() {
@@ -597,6 +608,7 @@ UI::drawLine() {
 # @set __HELP_EXAMPLE String to remove
 # @set __HELP_TITLE String to remove
 # @set __HELP_NORMAL String to remove
+# shellcheck disable=SC2034
 UI::theme() {
   local theme="${1-default}"
   if [[ ! "${theme}" =~ -force$ ]] && ! Assert::tty; then
@@ -612,46 +624,46 @@ UI::theme() {
       ;;
   esac
   if [[ "${theme}" = "default" ]]; then
-    export BASH_FRAMEWORK_THEME="default"
+    BASH_FRAMEWORK_THEME="default"
     # check colors applicable https://misc.flogisoft.com/bash/tip_colors_and_formatting
-    export __ERROR_COLOR='\e[31m'         # Red
-    export __INFO_COLOR='\e[44m'          # white on lightBlue
-    export __SUCCESS_COLOR='\e[32m'       # Green
-    export __WARNING_COLOR='\e[33m'       # Yellow
-    export __SKIPPED_COLOR='\e[33m'       # Yellow
-    export __DEBUG_COLOR='\e[37m'         # Grey
-    export __HELP_COLOR='\e[7;49;33m'     # Black on Gold
-    export __TEST_COLOR='\e[100m'         # Light magenta
-    export __TEST_ERROR_COLOR='\e[41m'    # white on red
-    export __HELP_TITLE_COLOR="\e[1;37m"  # Bold
-    export __HELP_OPTION_COLOR="\e[1;34m" # Blue
+    __ERROR_COLOR='\e[31m'         # Red
+    __INFO_COLOR='\e[44m'          # white on lightBlue
+    __SUCCESS_COLOR='\e[32m'       # Green
+    __WARNING_COLOR='\e[33m'       # Yellow
+    __SKIPPED_COLOR='\e[33m'       # Yellow
+    __DEBUG_COLOR='\e[37m'         # Grey
+    __HELP_COLOR='\e[7;49;33m'     # Black on Gold
+    __TEST_COLOR='\e[100m'         # Light magenta
+    __TEST_ERROR_COLOR='\e[41m'    # white on red
+    __HELP_TITLE_COLOR="\e[1;37m"  # Bold
+    __HELP_OPTION_COLOR="\e[1;34m" # Blue
     # Internal: reset color
-    export __RESET_COLOR='\e[0m' # Reset Color
+    __RESET_COLOR='\e[0m' # Reset Color
     # shellcheck disable=SC2155,SC2034
-    export __HELP_EXAMPLE="$(echo -e "\e[2;97m")"
+    __HELP_EXAMPLE="$(echo -e "\e[2;97m")"
     # shellcheck disable=SC2155,SC2034
-    export __HELP_TITLE="$(echo -e "\e[1;37m")"
+    __HELP_TITLE="$(echo -e "\e[1;37m")"
     # shellcheck disable=SC2155,SC2034
-    export __HELP_NORMAL="$(echo -e "\033[0m")"
+    __HELP_NORMAL="$(echo -e "\033[0m")"
   else
-    export BASH_FRAMEWORK_THEME="noColor"
+    BASH_FRAMEWORK_THEME="noColor"
     # check colors applicable https://misc.flogisoft.com/bash/tip_colors_and_formatting
-    export __ERROR_COLOR=''
-    export __INFO_COLOR=''
-    export __SUCCESS_COLOR=''
-    export __WARNING_COLOR=''
-    export __SKIPPED_COLOR=''
-    export __DEBUG_COLOR=''
-    export __HELP_COLOR=''
-    export __TEST_COLOR=''
-    export __TEST_ERROR_COLOR=''
-    export __HELP_TITLE_COLOR=''
-    export __HELP_OPTION_COLOR=''
+    __ERROR_COLOR=''
+    __INFO_COLOR=''
+    __SUCCESS_COLOR=''
+    __WARNING_COLOR=''
+    __SKIPPED_COLOR=''
+    __DEBUG_COLOR=''
+    __HELP_COLOR=''
+    __TEST_COLOR=''
+    __TEST_ERROR_COLOR=''
+    __HELP_TITLE_COLOR=''
+    __HELP_OPTION_COLOR=''
     # Internal: reset color
-    export __RESET_COLOR=''
-    export __HELP_EXAMPLE=''
-    export __HELP_TITLE=''
-    export __HELP_NORMAL=''
+    __RESET_COLOR=''
+    __HELP_EXAMPLE=''
+    __HELP_TITLE=''
+    __HELP_NORMAL=''
   fi
 }
 
@@ -668,8 +680,8 @@ Compiler::Facade::requireCommandBinDir() {
 # @description check if tty (interactive mode) is active
 # @noargs
 # @exitcode 1 if tty not active
-# @environment NON_INTERACTIVE if 1 consider as not interactive even if environement is interactive
-# @environment INTERACTIVE if 1 consider as interactive even if environement is not interactive
+# @env NON_INTERACTIVE if 1 consider as not interactive even if environment is interactive
+# @env INTERACTIVE if 1 consider as interactive even if environment is not interactive
 # @stderr diagnostic information + help if second argument is provided
 Assert::tty() {
   if [[ "${NON_INTERACTIVE:-0}" = "1" ]]; then
@@ -878,15 +890,6 @@ Log::displaySkipped() {
   Log::logSkipped "$1"
 }
 
-# @description Display message using warning color (yellow)
-# @arg $1 message:String the message to display
-Log::displayWarning() {
-  if ((BASH_FRAMEWORK_DISPLAY_LEVEL >= __LEVEL_WARNING)); then
-    echo -e "${__WARNING_COLOR}WARN    - ${1}${__RESET_COLOR}" >&2
-  fi
-  Log::logWarning "$1"
-}
-
 # @description log message to file
 # @arg $1 message:String the message to display
 Log::logDebug() {
@@ -941,6 +944,14 @@ Log::logMessage() {
     date="$(date '+%Y-%m-%d %H:%M:%S')"
     touch "${BASH_FRAMEWORK_LOG_FILE}"
     printf "%s|%7s|%s\n" "${date}" "${levelMsg}" "${msg}" >>"${BASH_FRAMEWORK_LOG_FILE}"
+  fi
+}
+
+# @description log message to file
+# @arg $1 message:String the message to display
+Log::logWarning() {
+  if ((BASH_FRAMEWORK_LOG_LEVEL >= __LEVEL_WARNING)); then
+    Log::logMessage "${2:-WARNING}" "$1"
   fi
 }
 
@@ -1050,14 +1061,6 @@ Log::logSkipped() {
   fi
 }
 
-# @description log message to file
-# @arg $1 message:String the message to display
-Log::logWarning() {
-  if ((BASH_FRAMEWORK_LOG_LEVEL >= __LEVEL_WARNING)); then
-    Log::logMessage "${2:-WARNING}" "$1"
-  fi
-}
-
 # @description ensure command realpath is available
 # @exitcode 1 if realpath command not available
 # @stderr diagnostics information is displayed
@@ -1107,16 +1110,29 @@ Log::requireLoad
 Compiler::Facade::requireCommandBinDir
 
 # @require Compiler::Facade::requireCommandBinDir
+# shellcheck disable=SC2034
+
+# constants
+declare defaultUserArg="root"
+declare -a defaultCommandArg=("//bin/sh")
+declare PROFILES_DIR="${BASH_TOOLS_ROOT_DIR}/conf/cliProfiles"
+declare HOME_PROFILES_DIR="${HOME}/.bash-tools/cliProfiles"
+
+# option values
+declare containerArg="default"
+declare finalUserArg="${defaultUserArg}"
+declare finalCommandArg=("${defaultCommandArg[@]}")
+
+# other values
+declare copyrightBeginYear="2020"
 
 declare -a BASH_FRAMEWORK_ARGV_FILTERED=()
 
 copyrightCallback() {
-  local years
-  years="$(date +%Y)"
-  if [[ -n "${copyrightBeginYear}" && "${copyrightBeginYear}" != "${years}" ]]; then
-    years="${copyrightBeginYear}-${years}"
+  if [[ -z "${copyrightBeginYear}" ]]; then
+    copyrightBeginYear="$(date +%Y)"
   fi
-  echo "Copyright (c) ${years} François Chastanet"
+  echo "Copyright (c) ${copyrightBeginYear}-now François Chastanet"
 }
 
 # shellcheck disable=SC2317 # if function is overridden
@@ -1290,6 +1306,29 @@ optionBashFrameworkConfigCallback() {
   fi
 }
 
+defaultFrameworkConfig="$(
+  cat <<'EOF'
+# copied from src/_includes/.framework-config.default
+# shellcheck disable=SC2034
+
+# describe the functions that will be skipped from being imported
+FRAMEWORK_FUNCTIONS_IGNORE_REGEXP='^(Namespace::functions|Functions::myFunction|Namespace::requireSomething|Acquire::ForceIPv4)$'
+# describe the files that do not contain function to be imported
+NON_FRAMEWORK_FILES_REGEXP="(^bin/|.framework-config|.bats$|/testsData/|^manualTests/|/_.sh$|/ZZZ.sh$|/__all.sh$|^src/_binaries|^src/_includes|^src/batsHeaders.sh$|^src/_standalone)"
+# describe the files that are allowed to not have an associated bats file
+BATS_FILE_NOT_NEEDED_REGEXP="(^bin/|.framework-config|.bats$|/testsData/|^manualTests/|/_.sh$|/ZZZ.sh$|/__all.sh$|^src/batsHeaders.sh$|^src/_includes)"
+# describe the files that are allowed to not have a function matching the filename
+FRAMEWORK_FILES_FUNCTION_MATCHING_IGNORE_REGEXP="^bin/|^\.framework-config$|^build.sh$|\.tpl$|/testsData/|^manualTests/|\.bats$"
+# Source directories
+FRAMEWORK_SRC_DIRS=(
+  "${FRAMEWORK_ROOT_DIR}/src"
+)
+
+# export here all the variables that will be used in your templates
+export REPOSITORY_URL="https://github.com/fchastanet/bash-tools-framework"
+EOF
+)"
+
 commandOptionParseFinished() {
   if [[ -z "${BASH_FRAMEWORK_ENV_FILES[0]+1}" ]]; then
     BASH_FRAMEWORK_ENV_FILES=()
@@ -1309,8 +1348,16 @@ commandOptionParseFinished() {
     # shellcheck disable=SC2034
     BASH_FRAMEWORK_CONFIG_FILE=""
     # shellcheck source=/.framework-config
-    Framework::loadConfig BASH_FRAMEWORK_CONFIG_FILE "${FRAMEWORK_ROOT_DIR}" ||
-      Log::fatal "Command ${SCRIPT_NAME} - error while loading .framework-config file"
+    Framework::loadConfig BASH_FRAMEWORK_CONFIG_FILE "${FRAMEWORK_ROOT_DIR}" || {
+      # load default template framework config
+      if [[ ! -f "${PERSISTENT_TMPDIR}/.framework-config" ]]; then
+        echo "${defaultFrameworkConfig}" > "${PERSISTENT_TMPDIR}/.framework-config"
+      fi
+      Framework::loadConfig BASH_FRAMEWORK_CONFIG_FILE "${PERSISTENT_TMPDIR}" || {
+        Log::fatal "Command ${SCRIPT_NAME} - error while loading .framework-config.default file"
+      }
+      Log::displayWarning "Command ${SCRIPT_NAME} - Load default .framework-config file - ${PERSISTENT_TMPDIR}/.framework-config"
+    }
   fi
 
   if [[ "${optionConfig}" = "1" ]]; then
@@ -1363,6 +1410,7 @@ cliCommand() {
     ((options_parse_argParsedCountUserArg = 0)) || true
     local -i options_parse_argParsedCountCommandArg
     ((options_parse_argParsedCountCommandArg = 0)) || true
+    # shellcheck disable=SC2034
     local -i options_parse_parsedArgIndex=0
     while (($# > 0)); do
       local options_parse_arg="$1"
@@ -1381,12 +1429,14 @@ cliCommand() {
             return 1
           fi
           ((++options_parse_optionParsedCountOptionBashFrameworkConfig))
+          # shellcheck disable=SC2034
           optionBashFrameworkConfig="$1"
           optionBashFrameworkConfigCallback "${options_parse_arg}" "${optionBashFrameworkConfig}"
           ;;
         # Option 2/14
         # Option optionConfig --config variableType Boolean min 0 max 1 authorizedValues '' regexp ''
         --config)
+          # shellcheck disable=SC2034
           optionConfig="1"
           if ((options_parse_optionParsedCountOptionConfig >= 1)); then
             Log::displayError "Command ${SCRIPT_NAME} - Option ${options_parse_arg} - Maximum number of option occurrences reached(1)"
@@ -1397,6 +1447,7 @@ cliCommand() {
         # Option 3/14
         # Option optionInfoVerbose --verbose|-v variableType Boolean min 0 max 1 authorizedValues '' regexp ''
         --verbose | -v)
+          # shellcheck disable=SC2034
           optionInfoVerbose="1"
           if ((options_parse_optionParsedCountOptionInfoVerbose >= 1)); then
             Log::displayError "Command ${SCRIPT_NAME} - Option ${options_parse_arg} - Maximum number of option occurrences reached(1)"
@@ -1409,6 +1460,7 @@ cliCommand() {
         # Option 4/14
         # Option optionDebugVerbose -vv variableType Boolean min 0 max 1 authorizedValues '' regexp ''
         -vv)
+          # shellcheck disable=SC2034
           optionDebugVerbose="1"
           if ((options_parse_optionParsedCountOptionDebugVerbose >= 1)); then
             Log::displayError "Command ${SCRIPT_NAME} - Option ${options_parse_arg} - Maximum number of option occurrences reached(1)"
@@ -1421,6 +1473,7 @@ cliCommand() {
         # Option 5/14
         # Option optionTraceVerbose -vvv variableType Boolean min 0 max 1 authorizedValues '' regexp ''
         -vvv)
+          # shellcheck disable=SC2034
           optionTraceVerbose="1"
           if ((options_parse_optionParsedCountOptionTraceVerbose >= 1)); then
             Log::displayError "Command ${SCRIPT_NAME} - Option ${options_parse_arg} - Maximum number of option occurrences reached(1)"
@@ -1446,6 +1499,7 @@ cliCommand() {
         # Option 7/14
         # Option optionNoColor --no-color variableType Boolean min 0 max 1 authorizedValues '' regexp ''
         --no-color)
+          # shellcheck disable=SC2034
           optionNoColor="1"
           if ((options_parse_optionParsedCountOptionNoColor >= 1)); then
             Log::displayError "Command ${SCRIPT_NAME} - Option ${options_parse_arg} - Maximum number of option occurrences reached(1)"
@@ -1472,6 +1526,7 @@ cliCommand() {
             return 1
           fi
           ((++options_parse_optionParsedCountOptionTheme))
+          # shellcheck disable=SC2034
           optionTheme="$1"
           optionThemeCallback "${options_parse_arg}" "${optionTheme}"
           updateArgListThemeCallback "${options_parse_arg}" "${optionTheme}"
@@ -1479,6 +1534,7 @@ cliCommand() {
         # Option 9/14
         # Option optionHelp --help|-h variableType Boolean min 0 max 1 authorizedValues '' regexp ''
         --help | -h)
+          # shellcheck disable=SC2034
           optionHelp="1"
           if ((options_parse_optionParsedCountOptionHelp >= 1)); then
             Log::displayError "Command ${SCRIPT_NAME} - Option ${options_parse_arg} - Maximum number of option occurrences reached(1)"
@@ -1490,6 +1546,7 @@ cliCommand() {
         # Option 10/14
         # Option optionVersion --version variableType Boolean min 0 max 1 authorizedValues '' regexp ''
         --version)
+          # shellcheck disable=SC2034
           optionVersion="1"
           if ((options_parse_optionParsedCountOptionVersion >= 1)); then
             Log::displayError "Command ${SCRIPT_NAME} - Option ${options_parse_arg} - Maximum number of option occurrences reached(1)"
@@ -1501,6 +1558,7 @@ cliCommand() {
         # Option 11/14
         # Option optionQuiet --quiet|-q variableType Boolean min 0 max 1 authorizedValues '' regexp ''
         --quiet | -q)
+          # shellcheck disable=SC2034
           optionQuiet="1"
           if ((options_parse_optionParsedCountOptionQuiet >= 1)); then
             Log::displayError "Command ${SCRIPT_NAME} - Option ${options_parse_arg} - Maximum number of option occurrences reached(1)"
@@ -1527,6 +1585,7 @@ cliCommand() {
             return 1
           fi
           ((++options_parse_optionParsedCountOptionLogLevel))
+          # shellcheck disable=SC2034
           optionLogLevel="$1"
           optionLogLevelCallback "${options_parse_arg}" "${optionLogLevel}"
           updateArgListLogLevelCallback "${options_parse_arg}" "${optionLogLevel}"
@@ -1544,6 +1603,7 @@ cliCommand() {
             return 1
           fi
           ((++options_parse_optionParsedCountOptionLogFile))
+          # shellcheck disable=SC2034
           optionLogFile="$1"
           optionLogFileCallback "${options_parse_arg}" "${optionLogFile}"
           updateArgListLogFileCallback "${options_parse_arg}" "${optionLogFile}"
@@ -1565,6 +1625,7 @@ cliCommand() {
             return 1
           fi
           ((++options_parse_optionParsedCountOptionDisplayLevel))
+          # shellcheck disable=SC2034
           optionDisplayLevel="$1"
           optionDisplayLevelCallback "${options_parse_arg}" "${optionDisplayLevel}"
           updateArgListDisplayLevelCallback "${options_parse_arg}" "${optionDisplayLevel}"
@@ -1584,6 +1645,7 @@ cliCommand() {
               return 1
             fi
             ((++options_parse_argParsedCountContainerArg))
+            # shellcheck disable=SC2034
             containerArg="${options_parse_arg}"
           # Argument 2/3
           # Argument userArg min 0 max 1 authorizedValues '' regexp ''
@@ -1593,6 +1655,7 @@ cliCommand() {
               return 1
             fi
             ((++options_parse_argParsedCountUserArg))
+            # shellcheck disable=SC2034
             userArg="${options_parse_arg}"
           # Argument 3/3
           # Argument commandArg min 0 max 1 authorizedValues '' regexp ''
@@ -1602,6 +1665,7 @@ cliCommand() {
               return 1
             fi
             ((++options_parse_argParsedCountCommandArg))
+            # shellcheck disable=SC2034
             commandArg="${options_parse_arg}"
           else
             unknownOption "${options_parse_arg}"
@@ -1625,67 +1689,90 @@ cliCommand() {
     echo
     echo -e "${__HELP_TITLE_COLOR}ARGUMENTS:${__RESET_COLOR}"
     echo -e "  [${__HELP_OPTION_COLOR}container${__HELP_NORMAL} {single}]"
-    echo -e "    $(Array::wrap ' ' 76 4 $(containerArgHelpCallback))"
+    local -a helpArray
+    # shellcheck disable=SC2054,SC2206
+    mapfile -t helpArray < <(containerArgHelpCallback)
+    echo -e "    $(Array::wrap " " 76 4 "${helpArray[@]}")"
     echo -e "  [${__HELP_OPTION_COLOR}user${__HELP_NORMAL} {single}]"
-    echo -e "    $(Array::wrap ' ' 76 4 $(userArgHelpCallback))"
+    local -a helpArray
+    # shellcheck disable=SC2054,SC2206
+    mapfile -t helpArray < <(userArgHelpCallback)
+    echo -e "    $(Array::wrap " " 76 4 "${helpArray[@]}")"
     echo -e "  [${__HELP_OPTION_COLOR}commandArg${__HELP_NORMAL} {single}]"
-    echo -e "    $(Array::wrap ' ' 76 4 $(commandArgHelpCallback))"
+    local -a helpArray
+    # shellcheck disable=SC2054,SC2206
+    mapfile -t helpArray < <(commandArgHelpCallback)
+    echo -e "    $(Array::wrap " " 76 4 "${helpArray[@]}")"
     echo
     echo -e "${__HELP_TITLE_COLOR}GLOBAL OPTIONS:${__RESET_COLOR}"
-    printf "  %b\n" "${__HELP_OPTION_COLOR}--bash-framework-config <String>${__HELP_NORMAL} (optional) (at most 1 times)"
+    echo -e "  ${__HELP_OPTION_COLOR}--bash-framework-config <String>${__HELP_NORMAL} {single}"
     local -a helpArray
+    # shellcheck disable=SC2054
     helpArray=(use\ alternate\ bash\ framework\ configuration.)
     echo -e "    $(Array::wrap " " 76 4 "${helpArray[@]}")"
-    printf "  %b\n" "${__HELP_OPTION_COLOR}--config${__HELP_NORMAL} (optional) (at most 1 times)"
+    echo -e "  ${__HELP_OPTION_COLOR}--config${__HELP_NORMAL} {single}"
     local -a helpArray
+    # shellcheck disable=SC2054
     helpArray=(Display\ configuration)
     echo -e "    $(Array::wrap " " 76 4 "${helpArray[@]}")"
-    printf "  %b\n" "${__HELP_OPTION_COLOR}--verbose${__HELP_NORMAL}, ${__HELP_OPTION_COLOR}-v${__HELP_NORMAL} (optional) (at most 1 times)"
+    echo -e "  ${__HELP_OPTION_COLOR}--verbose${__HELP_NORMAL}, ${__HELP_OPTION_COLOR}-v${__HELP_NORMAL} {single}"
     local -a helpArray
+    # shellcheck disable=SC2054
     helpArray=(info\ level\ verbose\ mode\ \(alias\ of\ --display-level\ INFO\))
     echo -e "    $(Array::wrap " " 76 4 "${helpArray[@]}")"
-    printf "  %b\n" "${__HELP_OPTION_COLOR}-vv${__HELP_NORMAL} (optional) (at most 1 times)"
+    echo -e "  ${__HELP_OPTION_COLOR}-vv${__HELP_NORMAL} {single}"
     local -a helpArray
+    # shellcheck disable=SC2054
     helpArray=(debug\ level\ verbose\ mode\ \(alias\ of\ --display-level\ DEBUG\))
     echo -e "    $(Array::wrap " " 76 4 "${helpArray[@]}")"
-    printf "  %b\n" "${__HELP_OPTION_COLOR}-vvv${__HELP_NORMAL} (optional) (at most 1 times)"
+    echo -e "  ${__HELP_OPTION_COLOR}-vvv${__HELP_NORMAL} {single}"
     local -a helpArray
+    # shellcheck disable=SC2054
     helpArray=(trace\ level\ verbose\ mode\ \(alias\ of\ --display-level\ TRACE\))
     echo -e "    $(Array::wrap " " 76 4 "${helpArray[@]}")"
-    printf "  %b\n" "${__HELP_OPTION_COLOR}--env-file <String>${__HELP_NORMAL} (optional)"
+    echo -e "  ${__HELP_OPTION_COLOR}--env-file <String>${__HELP_NORMAL} {list} (optional)"
     local -a helpArray
+    # shellcheck disable=SC2054
     helpArray=(Load\ the\ specified\ env\ file)
     echo -e "    $(Array::wrap " " 76 4 "${helpArray[@]}")"
-    printf "  %b\n" "${__HELP_OPTION_COLOR}--no-color${__HELP_NORMAL} (optional) (at most 1 times)"
+    echo -e "  ${__HELP_OPTION_COLOR}--no-color${__HELP_NORMAL} {single}"
     local -a helpArray
+    # shellcheck disable=SC2054
     helpArray=(Produce\ monochrome\ output.\ alias\ of\ --theme\ noColor.)
     echo -e "    $(Array::wrap " " 76 4 "${helpArray[@]}")"
-    printf "  %b\n" "${__HELP_OPTION_COLOR}--theme <String>${__HELP_NORMAL} (optional) (at most 1 times)"
+    echo -e "  ${__HELP_OPTION_COLOR}--theme <String>${__HELP_NORMAL} {single}"
     local -a helpArray
+    # shellcheck disable=SC2054
     helpArray=(choose\ color\ theme\ \(default\,\ default-force\ or\ noColor\)\ -\ default-force\ means\ colors\ will\ be\ produced\ even\ if\ command\ is\ piped)
     echo -e "    $(Array::wrap " " 76 4 "${helpArray[@]}")"
-    printf "  %b\n" "${__HELP_OPTION_COLOR}--help${__HELP_NORMAL}, ${__HELP_OPTION_COLOR}-h${__HELP_NORMAL} (optional) (at most 1 times)"
+    echo -e "  ${__HELP_OPTION_COLOR}--help${__HELP_NORMAL}, ${__HELP_OPTION_COLOR}-h${__HELP_NORMAL} {single}"
     local -a helpArray
+    # shellcheck disable=SC2054
     helpArray=(Display\ this\ command\ help)
     echo -e "    $(Array::wrap " " 76 4 "${helpArray[@]}")"
-    printf "  %b\n" "${__HELP_OPTION_COLOR}--version${__HELP_NORMAL} (optional) (at most 1 times)"
+    echo -e "  ${__HELP_OPTION_COLOR}--version${__HELP_NORMAL} {single}"
     local -a helpArray
+    # shellcheck disable=SC2054
     helpArray=(Print\ version\ information\ and\ quit)
     echo -e "    $(Array::wrap " " 76 4 "${helpArray[@]}")"
-    printf "  %b\n" "${__HELP_OPTION_COLOR}--quiet${__HELP_NORMAL}, ${__HELP_OPTION_COLOR}-q${__HELP_NORMAL} (optional) (at most 1 times)"
+    echo -e "  ${__HELP_OPTION_COLOR}--quiet${__HELP_NORMAL}, ${__HELP_OPTION_COLOR}-q${__HELP_NORMAL} {single}"
     local -a helpArray
+    # shellcheck disable=SC2054
     helpArray=(quiet\ mode\,\ doesn\'t\ display\ any\ output)
     echo -e "    $(Array::wrap " " 76 4 "${helpArray[@]}")"
-    printf "  %b\n" "${__HELP_OPTION_COLOR}--log-level <String>${__HELP_NORMAL} (optional) (at most 1 times)"
+    echo -e "  ${__HELP_OPTION_COLOR}--log-level <String>${__HELP_NORMAL} {single}"
     local -a helpArray
+    # shellcheck disable=SC2054
     helpArray=(Set\ log\ level\ \(one\ of\ OFF\,\ ERROR\,\ WARNING\,\ INFO\,\ DEBUG\,\ TRACE\ value\))
     echo -e "    $(Array::wrap " " 76 4 "${helpArray[@]}")"
-    printf "  %b\n" "${__HELP_OPTION_COLOR}--log-file <String>${__HELP_NORMAL} (optional) (at most 1 times)"
+    echo -e "  ${__HELP_OPTION_COLOR}--log-file <String>${__HELP_NORMAL} {single}"
     local -a helpArray
+    # shellcheck disable=SC2054
     helpArray=(Set\ log\ file)
     echo -e "    $(Array::wrap " " 76 4 "${helpArray[@]}")"
-    printf "  %b\n" "${__HELP_OPTION_COLOR}--display-level <String>${__HELP_NORMAL} (optional) (at most 1 times)"
+    echo -e "  ${__HELP_OPTION_COLOR}--display-level <String>${__HELP_NORMAL} {single}"
     local -a helpArray
+    # shellcheck disable=SC2054
     helpArray=(set\ display\ level\ \(one\ of\ OFF\,\ ERROR\,\ WARNING\,\ INFO\,\ DEBUG\,\ TRACE\ value\))
     echo -e "    $(Array::wrap " " 76 4 "${helpArray[@]}")"
     echo -e """
@@ -1699,7 +1786,7 @@ ${containers}
 
 ${__HELP_TITLE}EXAMPLES:${__HELP_EXAMPLE}
     to connect to mysql container in bash mode with user mysql
-        ${SCRIPT_NAME} mysql mysql "//bin/bash"
+        ${SCRIPT_NAME} mysql mysql /bin/bash
     to connect to web container with user root
         ${SCRIPT_NAME} web root
 ${__HELP_NORMAL}
@@ -1729,16 +1816,6 @@ variables ${__HELP_OPTION_COLOR}finalUserArg${__HELP_NORMAL}, ${__HELP_OPTION_CO
     return 1
   fi
 }
-
-# default values
-declare containerArg="default"
-declare finalUserArg="root"
-declare finalCommandArg=("//bin/sh")
-declare copyrightBeginYear="2020"
-
-# constants
-PROFILES_DIR="${BASH_TOOLS_ROOT_DIR}/conf/cliProfiles"
-HOME_PROFILES_DIR="${HOME}/.bash-tools/cliProfiles"
 
 containerArgHelpCallback() {
   Conf::load "cliProfiles" "default"
@@ -1790,7 +1867,6 @@ unknownOption() {
 cliCommand parse "${BASH_FRAMEWORK_ARGV[@]}"
 
 run() {
-
   # Internal function that can be used in conf profiles to load the dsn file
   loadDsn() {
     local dsn="$1"

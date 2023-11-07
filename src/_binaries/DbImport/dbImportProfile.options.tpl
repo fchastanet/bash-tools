@@ -79,17 +79,6 @@ options+=(
 Options::generateCommand "${options[@]}"
 %
 
-# default values
-declare optionProfile=""
-declare fromDbName="" # old FROM_DB
-declare optionFromDsn="<% ${defaultFromDsn} %>" # old FROM_DSN
-declare optionRatio=70 # old RATIO
-
-# other configuration
-declare copyrightBeginYear="2020"
-declare PROFILES_DIR="${BASH_TOOLS_ROOT_DIR}/conf/dbImportProfiles"
-declare HOME_PROFILES_DIR="${HOME}/.bash-tools/dbImportProfiles"
-
 optionHelpCallback() {
   local profilesList=""
   local dsnList=""
@@ -117,3 +106,5 @@ dbImportProfileCommandCallback() {
     Log::fatal "Ratio value should be between 0 and 100"
   fi
 }
+
+<% ${commandFunctionName} %> parse "${BASH_FRAMEWORK_ARGV[@]}"

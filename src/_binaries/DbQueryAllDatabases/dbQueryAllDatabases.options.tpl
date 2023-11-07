@@ -72,16 +72,6 @@ options+=(
 Options::generateCommand "${options[@]}"
 %
 
-#default values
-# default value for FROM_DSN if from-aws not set
-declare queryIsFile="0"
-declare optionSeparator="|"
-
-# other configuration
-declare copyrightBeginYear="2020"
-declare QUERIES_DIR="$(cd "${CURRENT_DIR}/.." && pwd -P)/conf/dbQueries"
-declare HOME_QUERIES_DIR="${HOME}/.bash-tools/dbQueries"
-
 optionHelpCallback() {
   local dsnList queriesList
   dsnList="$(Conf::getMergedList "dsn" "env")"
@@ -120,3 +110,5 @@ dbQueryAllDatabasesCommandCallback() {
     optionFromDsn="<% ${defaultFromDsn} %>"
   fi
 }
+
+<% ${commandFunctionName} %> parse "${BASH_FRAMEWORK_ARGV[@]}"

@@ -149,3 +149,8 @@ docsify
 htmlhintrc
 gitleaks
 nojekyll
+RUBOCOP
+TRIVY
+KICS
+TRUFFLEHOG
+GRYPE

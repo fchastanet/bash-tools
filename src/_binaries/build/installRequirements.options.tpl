@@ -27,5 +27,5 @@ ${__HELP_TITLE}INSTALLS REQUIREMENTS:${__HELP_NORMAL}
 Options::generateCommand "${options[@]}"
 declare -p externalBinaries
 %
-declare copyrightBeginYear="2020"
-declare optionBashFrameworkConfig="${BASH_TOOLS_ROOT_DIR}/.framework-config"
+
+<% ${commandFunctionName} %> parse "${BASH_FRAMEWORK_ARGV[@]}"

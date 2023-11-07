@@ -35,10 +35,7 @@ teardown() {
 }
 
 function Database::dbQueryAllDatabases::display_help { #@test
-  cp "${BATS_TEST_DIRNAME}/testsData/parallel" "${HOME}/bin"
-  # shellcheck disable=SC2154
-  run "${binDir}/dbQueryAllDatabases" --help
-  assert_line --index 0 --partial "DESCRIPTION: Execute a query on multiple databases in order to generate a report"
+  testCommand "${binDir}/dbQueryAllDatabases" dbQueryAllDatabases.help.txt
 }
 
 function Database::dbQueryAllDatabases::query_file_not_provided { #@test
@@ -49,18 +46,21 @@ function Database::dbQueryAllDatabases::query_file_not_provided { #@test
 }
 
 function Database::dbQueryAllDatabases::providingEnvFileChangeDbConnectionParametersAndRetrieveDbSize { #@test
-  cp "${BATS_TEST_DIRNAME}/testsData/parallelDbQueryAllDatabases" "${HOME}/bin/parallel"
   # shellcheck disable=SC2016,SC2086
   stub mysql \
     '\* --batch --raw --default-character-set=utf8 --connect-timeout=5 -s --skip-column-names -e \* : echo "$9" >'" "${HOME}/query1" ; cat "${BATS_TEST_DIRNAME}/testsData/getUserDbList.result"" \
     '\* --batch --raw --default-character-set=utf8 --connect-timeout=5 db1 -e \* : echo -n "${8}" >'" "${HOME}/query2" ; cat "${BATS_TEST_DIRNAME}/testsData/databaseSize.result_db1"" \
     '\* --batch --raw --default-character-set=utf8 --connect-timeout=5 db2 -e \* : echo -n "${8}" >'" "${HOME}/query3" ; cat "${BATS_TEST_DIRNAME}/testsData/databaseSize.result_db2""
 
+  # shellcheck disable=SC2016
+  stub parallel \
+    '--eta --progress --linebuffer -j 1 * * : while IFS= read -r db; do "$6" "$7" "${db}"; done'
+
   f() {
     # shellcheck disable=SC2317
     "${binDir}/dbQueryAllDatabases" \
       -f "${BATS_TEST_DIRNAME}/testsData/databaseSize.envProvided.sh" \
-      "${rootDir}/conf/dbQueries/databaseSize.sql" 2>/dev/null
+      "${rootDir}/conf/dbQueries/databaseSize.sql" 2>&1 | grep -v 'INFO    - Using dsn'
   }
   run f
 
@@ -77,7 +77,6 @@ function Database::dbQueryAllDatabases::providingEnvFileChangeDbConnectionParame
 }
 
 function Database::dbQueryAllDatabases::multipleJobs { #@test
-  cp "${BATS_TEST_DIRNAME}/testsData/parallelDbQueryAllDatabases" "${HOME}/bin/parallel"
   export BATS_TEST_DIRNAME
   export HOME
   # shellcheck disable=SC2016,SC2086
@@ -86,15 +85,16 @@ function Database::dbQueryAllDatabases::multipleJobs { #@test
     $'* --batch --raw --default-character-set=utf8 --connect-timeout=5 db1 -e * : echo -n "${8}" >"${HOME}/query2" ; cat "${BATS_TEST_DIRNAME}/testsData/databaseSize.result_db1"' \
     $'* --batch --raw --default-character-set=utf8 --connect-timeout=5 db2 -e * : echo -n "${8}" >"${HOME}/query3" ; cat "${BATS_TEST_DIRNAME}/testsData/databaseSize.result_db2"'
 
+  # shellcheck disable=SC2016
   stub parallel \
-    '--eta --progress --linebuffer -j 8 * : while IFS= read -r db; do "$6" "${db}"; done'
+    '--eta --progress --linebuffer -j 8 * * : while IFS= read -r db; do "$6" "$7" "${db}"; done'
 
   f() {
     # shellcheck disable=SC2317
     "${binDir}/dbQueryAllDatabases" \
       -f "${BATS_TEST_DIRNAME}/testsData/databaseSize.envProvided.sh" \
       -j 8 \
-      "${rootDir}/conf/dbQueries/databaseSize.sql" 2>/dev/null
+      "${rootDir}/conf/dbQueries/databaseSize.sql" 2>&1 | grep -v "INFO    - Using dsn"
   }
   run f
   assert_output "$(cat "${BATS_TEST_DIRNAME}/testsData/dbQueryAllDatabases.result")"
