@@ -24,3 +24,5 @@ options+=(
 )
 Options::generateCommand "${options[@]}"
 %
+
+<% ${commandFunctionName} %> parse "${BASH_FRAMEWORK_ARGV[@]}"

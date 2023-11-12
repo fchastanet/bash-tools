@@ -13,7 +13,8 @@ declare -a RUN_CONTAINER_ARGV_FILTERED=()
 run() {
   if [[ "${IN_BASH_DOCKER:-}" != "You're in docker" ]]; then
     DOCKER_RUN_OPTIONS=$"-e ORIGINAL_DOC_DIR=${DOC_DIR}" \
-      "${COMMAND_BIN_DIR}/runBuildContainer" "/bash/bin/doc" "${RUN_CONTAINER_ARGV_FILTERED[@]}"
+      "${COMMAND_BIN_DIR}/runBuildContainer" "/bash/bin/doc" \
+      "${RUN_CONTAINER_ARGV_FILTERED[@]}"
     return $?
   fi
 
@@ -43,7 +44,7 @@ run() {
   ShellDoc::generateMdFileFromTemplate \
     "${BASH_TOOLS_ROOT_DIR}/Commands.tmpl.md" \
     "${DOC_DIR}/Commands.md" \
-    "${FRAMEWORK_BIN_DIR}" \
+    "${BASH_TOOLS_ROOT_DIR}/bin" \
     TOKEN_NOT_FOUND_COUNT \
     '(bash-tpl|plantuml|definitionLint|compile|installFacadeExample)$'
 

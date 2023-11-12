@@ -32,3 +32,5 @@ updateArgListTraceVerboseCallback() {
   RUN_CONTAINER_ARGV_FILTERED+=(-vvv)
   BASH_FRAMEWORK_ARGV_FILTERED+=(-vvv)
 }
+
+<% ${commandFunctionName} %> parse "${BASH_FRAMEWORK_ARGV[@]}"

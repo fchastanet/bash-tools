@@ -58,7 +58,11 @@ interruptManagement() {
 trap interruptManagement INT
 SCRIPT_NAME=${0##*/}
 REAL_SCRIPT_FILE="$(readlink -e "$(realpath "${BASH_SOURCE[0]}")")"
-CURRENT_DIR="$(cd "$(readlink -e "${REAL_SCRIPT_FILE%/*}")" && pwd -P)"
+if [[ -n "${EMBED_CURRENT_DIR}" ]]; then
+  CURRENT_DIR="${EMBED_CURRENT_DIR}"
+else
+  CURRENT_DIR="$(cd "$(readlink -e "${REAL_SCRIPT_FILE%/*}")" && pwd -P)"
+fi
 
 ################################################
 # Temp dir management
@@ -1636,10 +1640,13 @@ updateArgListTraceVerboseCallback() {
   BASH_FRAMEWORK_ARGV_FILTERED+=(-vvv)
 }
 
+docCommand parse "${BASH_FRAMEWORK_ARGV[@]}"
+
 run() {
   if [[ "${IN_BASH_DOCKER:-}" != "You're in docker" ]]; then
     DOCKER_RUN_OPTIONS=$"-e ORIGINAL_DOC_DIR=${DOC_DIR}" \
-      "${COMMAND_BIN_DIR}/runBuildContainer" "/bash/bin/doc" "${RUN_CONTAINER_ARGV_FILTERED[@]}"
+      "${COMMAND_BIN_DIR}/runBuildContainer" "/bash/bin/doc" \
+      "${RUN_CONTAINER_ARGV_FILTERED[@]}"
     return $?
   fi
 
@@ -1669,7 +1676,7 @@ run() {
   ShellDoc::generateMdFileFromTemplate \
     "${BASH_TOOLS_ROOT_DIR}/Commands.tmpl.md" \
     "${DOC_DIR}/Commands.md" \
-    "${FRAMEWORK_BIN_DIR}" \
+    "${BASH_TOOLS_ROOT_DIR}/bin" \
     TOKEN_NOT_FOUND_COUNT \
     '(bash-tpl|plantuml|definitionLint|compile|installFacadeExample)$'
 
