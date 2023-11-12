@@ -3,60 +3,13 @@
 name: Lint and test
 on: # yamllint disable-line rule:truthy
   push:
+    # execute when pushing only branches, not tags
+    branches:
+      - '**'
   workflow_dispatch:
 
 jobs:
-  linters:
-    runs-on: ubuntu-22.04
-    strategy:
-      fail-fast: true
-    steps:
-      - uses: actions/checkout@v3
-
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: 3.9
-
-      - name: Install pre-commit
-        run: pip install pre-commit
-
-      - uses: ouzi-dev/commit-status-updater@v2
-        with:
-          name: lint
-          status: pending
-
-      - name: Run pre-commit
-        run: pre-commit run -a --hook-stage manual
-
-      - name: Archive results
-        if: ${{ always() }}
-        continue-on-error: true
-        uses: actions/upload-artifact@v3
-        with:
-          name: linter-reports
-          path: |
-            megalinter-reports/**
-
-      - name: Create Pull Request
-        if: ${{ failure() }}
-        uses: peter-evans/create-pull-request@v4
-        with:
-          branch: update/pre-commit-fixes
-          title: lint fixes
-          commit-message: Auto-update lint fixes
-          body: |
-            some auto fixes have been generated during pre-commit run
-          labels: updates
-
-      - uses: ouzi-dev/commit-status-updater@v2
-        if: always()
-        with:
-          name: lint
-          status: ${{ job.status }}
-
-  tests:
-    needs: linters
+  build:
     runs-on: ubuntu-22.04
     strategy:
       fail-fast: true
@@ -71,19 +24,43 @@ jobs:
         include:
           - vendor: ubuntu
             bashImage: ubuntu:20.04
-            options: -j 30
+            batsOptions: -j 30
+            bashTarVersion: 4.4
+            runPrecommitTests: false
+          - vendor: ubuntu
+            bashImage: ubuntu:20.04
+            bashTarVersion: 5.0
+            batsOptions: -j 30
+            runPrecommitTests: false
+          - vendor: ubuntu
+            bashImage: ubuntu:20.04
+            bashTarVersion: 5.1
+            batsOptions: -j 30
+            runPrecommitTests: true
           - vendor: alpine
-            bashImage: bash
-            options: -j 30
+            bashTarVersion: 4.4
+            bashImage: amd64/bash:4.4-alpine3.18
+            batsOptions: -j 30
+            runPrecommitTests: false
+          - vendor: alpine
+            bashTarVersion: 5.0
+            bashImage: amd64/bash:5.0-alpine3.18
+            batsOptions: -j 30
+            runPrecommitTests: false
+          - vendor: alpine
+            bashTarVersion: 5.1
+            bashImage: amd64/bash:5.1-alpine3.18
+            batsOptions: -j 30
+            runPrecommitTests: false
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
+        uses: docker/setup-buildx-action@v3
 
       - name: Login to DockerHub
-        uses: docker/login-action@v2
+        uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
@@ -93,14 +70,78 @@ jobs:
           name: build bash-tools-${{matrix.vendor}}-${{matrix.bashTarVersion}}
           status: pending
 
+      - name: Pull/Build/Push docker image
+        env:
+          BRANCH: ${GITHUB_REF##*/}
+        run: |
+          vendor/bash-tools-framework/bin/buildPushDockerImage \
+            --vendor "${{ matrix.vendor }}" \
+            --bash-version "${{ matrix.bashTarVersion }}" \
+            --bash-base-image "${{ matrix.bashImage }}" \
+            --branch-name "${GITHUB_REF##*/}" \
+            --push -vvv
+
+      - name: Check image
+        run: |
+          docker run --rm \
+            "build:bash-tools-${{ matrix.vendor }}-${{ matrix.bashTarVersion }}" bash \
+            --version
+
+      # only if pre-commit
+      - name: Set up Python
+        if: matrix.runPrecommitTests
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.9
+
+      - name: Install pre-commit
+        if: matrix.runPrecommitTests
+        run: pip install pre-commit
+
+      - uses: ouzi-dev/commit-status-updater@v2
+        if: matrix.runPrecommitTests
+        with:
+          name: lint
+          status: pending
+
+      - name: Run pre-commit
+        if: matrix.runPrecommitTests
+        run: pre-commit run -a --hook-stage manual
+
+      - name: Archive results
+        if: matrix.runPrecommitTests && always()
+        continue-on-error: true
+        uses: actions/upload-artifact@v3
+        with:
+          name: linter-reports
+          path: |
+            megalinter-reports/**
+
+      - name: Create Pull Request
+        if: matrix.runPrecommitTests && failure()
+        uses: peter-evans/create-pull-request@v5
+        with:
+          branch: update/pre-commit-fixes
+          title: lint fixes
+          commit-message: Auto-update lint fixes
+          body: |
+            some auto fixes have been generated during pre-commit run
+          labels: updates
+
+      - uses: ouzi-dev/commit-status-updater@v2
+        if: matrix.runPrecommitTests && always()
+        with:
+          name: lint
+          status: ${{ job.status }}
+
+      # Run unit tests
       - name: run unit tests
         run: |
           set -exo pipefail
 
-          ./bin/installRequirements
+          bin/installRequirements
 
           chmod -R 777 logs
-
           # shellcheck disable=SC2266
           USER_ID=1000 \
           GROUP_ID=1000 \
@@ -109,8 +150,8 @@ jobs:
             --vendor "${{matrix.vendor}}" \
             --bash-version "${{matrix.bashTarVersion}}" \
             --bash-base-image "${{matrix.bashImage}}" \
-            --branch-name "${BRANCH}" \
-            ${{matrix.options}} --report-formatter junit -o logs -r src --ci
+            --branch-name "${GITHUB_REF##*/}" \
+            ${{matrix.batsOptions}} --report-formatter junit -o logs -r src --ci
 
       - name: Upload Test Results
         if: always()
@@ -128,7 +169,7 @@ jobs:
   publishTestResults:
     name: 'Publish Tests Results'
     if: ${{ always() }}
-    needs: [linters, tests]
+    needs: [build]
     runs-on: ubuntu-latest
     permissions:
       checks: write
@@ -153,7 +194,6 @@ jobs:
       # You can get the conclusion via env (env.WORKFLOW_CONCLUSION)
       - uses: technote-space/workflow-conclusion-action@v3
 
-      # run other action with the workflow conclusion
       - uses: ouzi-dev/commit-status-updater@v2
         with:
           name: build

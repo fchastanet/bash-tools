@@ -2028,7 +2028,7 @@ run() {
       else
         excludedTablesCount=$((excludedTablesCount + 1))
       fi
-      echo "   grep -v '^${tableName}$' | # table size ${tableSize}MB"
+      echo "  grep -v '^${tableName}$' | # table size ${tableSize}MB"
     done < <(echo "${tableList}")
     echo "cat"
     tablesCount="$(echo "${tableList}" | wc -l)"
