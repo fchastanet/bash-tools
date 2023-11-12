@@ -1001,7 +1001,7 @@ Assert::commandExists() {
 
 # FUNCTIONS
 
-facade_main_0c81f03399944490b21f8ac30d7e073b() {
+facade_main_mysql2pumlsh() {
 BASH_TOOLS_ROOT_DIR="$(cd "${CURRENT_DIR}/.." && pwd -P)"
 if [[ -d "${BASH_TOOLS_ROOT_DIR}/vendor/bash-tools-framework/" ]]; then
   FRAMEWORK_ROOT_DIR="$(cd "${BASH_TOOLS_ROOT_DIR}/vendor/bash-tools-framework" && pwd -P)"
@@ -1983,4 +1983,4 @@ fi
 
 }
 
-facade_main_0c81f03399944490b21f8ac30d7e073b "$@"
+facade_main_mysql2pumlsh "$@"

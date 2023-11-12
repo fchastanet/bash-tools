@@ -1135,7 +1135,7 @@ Assert::commandExists() {
 
 # FUNCTIONS
 
-facade_main_24dcc22b6cc8473babfc796abe45df9b() {
+facade_main_upgradeGithubReleasesh() {
 BASH_TOOLS_ROOT_DIR="$(cd "${CURRENT_DIR}/.." && pwd -P)"
 if [[ -d "${BASH_TOOLS_ROOT_DIR}/vendor/bash-tools-framework/" ]]; then
   FRAMEWORK_ROOT_DIR="$(cd "${BASH_TOOLS_ROOT_DIR}/vendor/bash-tools-framework" && pwd -P)"
@@ -2117,4 +2117,4 @@ fi
 
 }
 
-facade_main_24dcc22b6cc8473babfc796abe45df9b "$@"
+facade_main_upgradeGithubReleasesh "$@"

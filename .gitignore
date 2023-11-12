@@ -12,14 +12,7 @@
 !/**/_sidebar.md
 !/**/_navbar.md
 
-/bin/awkLint
-/bin/buildBinFiles
-/bin/generateShellDoc
-/bin/megalinter
-/bin/runBuildContainer
-/bin/shellcheckLint
+bin/runBuildContainer
 /bin/test
-/bin/findShebangFiles
 /bin/buildPushDockerImages
 /bin/buildPushDockerImage
-/bin/frameworkLint

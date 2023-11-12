@@ -849,7 +849,7 @@ Array::contains() {
 
 # FUNCTIONS
 
-facade_main_a7456d3b93ad4a0cb0c417608cfc15d7() {
+facade_main_gitRenameBranchsh() {
 BASH_TOOLS_ROOT_DIR="$(cd "${CURRENT_DIR}/.." && pwd -P)"
 if [[ -d "${BASH_TOOLS_ROOT_DIR}/vendor/bash-tools-framework/" ]]; then
   FRAMEWORK_ROOT_DIR="$(cd "${BASH_TOOLS_ROOT_DIR}/vendor/bash-tools-framework" && pwd -P)"
@@ -1708,4 +1708,4 @@ fi
 
 }
 
-facade_main_a7456d3b93ad4a0cb0c417608cfc15d7 "$@"
+facade_main_gitRenameBranchsh "$@"

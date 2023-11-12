@@ -1175,7 +1175,7 @@ Linux::requireRealpathCommand() {
 
 # FUNCTIONS
 
-facade_main_dc9a7ae43eb7453ca997db3a8dcfeed0() {
+facade_main_dbImportProfilesh() {
 BASH_TOOLS_ROOT_DIR="$(cd "${CURRENT_DIR}/.." && pwd -P)"
 if [[ -d "${BASH_TOOLS_ROOT_DIR}/vendor/bash-tools-framework/" ]]; then
   FRAMEWORK_ROOT_DIR="$(cd "${BASH_TOOLS_ROOT_DIR}/vendor/bash-tools-framework" && pwd -P)"
@@ -2042,4 +2042,4 @@ fi
 
 }
 
-facade_main_dc9a7ae43eb7453ca997db3a8dcfeed0 "$@"
+facade_main_dbImportProfilesh "$@"

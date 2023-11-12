@@ -6,15 +6,8 @@
   - [1.3. bin/waitForMysql](#13-binwaitformysql)
   - [1.4. bin/doc](#14-bindoc)
   - [1.5. bin/findShebangFiles](#15-binfindshebangfiles)
-  - [1.6. bin/dockerLint](#16-bindockerlint)
-  - [1.7. bin/shellcheckLint](#17-binshellchecklint)
-  - [1.8. bin/awkLint](#18-binawklint)
-  - [1.9. bin/frameworkLint](#19-binframeworklint)
-  - [1.10. bin/megalinter](#110-binmegalinter)
-  - [1.11. .github/workflows/buildBinFiles](#111-githubworkflowsbuildbinfiles)
-  - [1.12. bin/test](#112-bintest)
-  - [1.13. bin/runBuildContainer](#113-binrunbuildcontainer)
-  - [1.14. bin/buildPushDockerImage](#114-binbuildpushdockerimage)
+  - [1.6. bin/test](#16-bintest)
+  - [1.7. bin/runBuildContainer](#17-binrunbuildcontainer)
 - [2. Converter and Generator tools](#2-converter-and-generator-tools)
   - [2.1. bin/generateShellDoc](#21-bingenerateshelldoc)
   - [2.2. bin/mysql2puml](#22-binmysql2puml)
@@ -77,55 +70,7 @@ imported from bash-tools-framework
 @@@findShebangFiles_help@@@
 ```
 
-### 1.6. bin/dockerLint
-
-imported from bash-tools-framework
-
-```text
-@@@dockerLint_help@@@
-```
-
-### 1.7. bin/shellcheckLint
-
-imported from bash-tools-framework
-
-```text
-@@@shellcheckLint_help@@@
-```
-
-### 1.8. bin/awkLint
-
-imported from bash-tools-framework
-
-```text
-@@@awkLint_help@@@
-```
-
-### 1.9. bin/frameworkLint
-
-imported from bash-tools-framework
-
-```text
-@@@frameworkLint_help@@@
-```
-
-### 1.10. bin/megalinter
-
-imported from bash-tools-framework
-
-```text
-@@@megalinter_help@@@
-```
-
-### 1.11. .github/workflows/buildBinFiles
-
-imported from bash-tools-framework
-
-```text
-@@@buildBinFiles_help@@@
-```
-
-### 1.12. bin/test
+### 1.6. bin/test
 
 imported from bash-tools-framework
 
@@ -133,20 +78,12 @@ imported from bash-tools-framework
 @@@test_help@@@
 ```
 
-### 1.13. bin/runBuildContainer
+### 1.7. bin/runBuildContainer
 
 imported from bash-tools-framework
 
 ```text
 @@@runBuildContainer_help@@@
-```
-
-### 1.14. bin/buildPushDockerImage
-
-imported from bash-tools-framework
-
-```text
-@@@buildPushDockerImage_help@@@
 ```
 
 ## 2. Converter and Generator tools

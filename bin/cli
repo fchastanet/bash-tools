@@ -1086,7 +1086,7 @@ Array::contains() {
 
 # FUNCTIONS
 
-facade_main_738fd7f6601040de82a4a46d9d2efa6f() {
+facade_main_clish() {
 BASH_TOOLS_ROOT_DIR="$(cd "${CURRENT_DIR}/.." && pwd -P)"
 if [[ -d "${BASH_TOOLS_ROOT_DIR}/vendor/bash-tools-framework/" ]]; then
   FRAMEWORK_ROOT_DIR="$(cd "${BASH_TOOLS_ROOT_DIR}/vendor/bash-tools-framework" && pwd -P)"
@@ -1932,4 +1932,4 @@ fi
 
 }
 
-facade_main_738fd7f6601040de82a4a46d9d2efa6f "$@"
+facade_main_clish "$@"

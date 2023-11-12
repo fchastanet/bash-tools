@@ -1,14 +1,7 @@
 %
 declare -a externalBinaries=(
-  bin/awkLint
-  bin/buildBinFiles
-  bin/frameworkLint
-  bin/findShebangFiles
-  bin/megalinter
   bin/runBuildContainer
-  bin/shellcheckLint
   bin/test
-  bin/buildPushDockerImage
 )
 declare versionNumber="1.0"
 declare commandFunctionName="installRequirementsCommand"

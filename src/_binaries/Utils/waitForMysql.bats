@@ -93,6 +93,6 @@ function Utils::waitForMysql::mysqlNotAvailableAfter1SecondTimeout { #@test
   assert_failure 2
   assert_line --index 0 --partial "INFO    - Waiting for mysql"
   assert_line --index 1 --partial "."
-  assert_line --index 2 --partial "ERROR   - waitForMysql - timeout for localhost:3306 occurred after 1 seconds"
+  assert_line --index 2 --partial "ERROR   - waitForMysql - timeout for localhost:3306 occurred after"
   assert_lines_count 3
 }

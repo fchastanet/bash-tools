@@ -864,7 +864,7 @@ Assert::tty() {
 
 # FUNCTIONS
 
-facade_main_6e8b53ac69594d439449db19aae37378() {
+facade_main_extractDatash() {
 # REQUIRES
 Linux::requireRealpathCommand
 Env::requireLoad
@@ -951,4 +951,4 @@ run
 
 }
 
-facade_main_6e8b53ac69594d439449db19aae37378 "$@"
+facade_main_extractDatash "$@"

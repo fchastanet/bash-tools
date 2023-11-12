@@ -67,7 +67,7 @@ repos:
         stages: [commit]
 
   - repo: https://github.com/fchastanet/bash-tools-framework
-    rev: 1.0.4
+    rev: 1.1.3
     hooks:
       - id: fixShebangExecutionBit
       - id: frameworkLinter
@@ -79,19 +79,14 @@ repos:
             plain,
             --theme,
             default-force,
+            --bash-framework-config,
+            .framework-config,
           ]
       - id: shellcheckLint
-
-  - repo: local
-    hooks:
       - id: buildShFiles
-        name: build sh files
-        entry: bash -c './bin/buildBinFiles --ignore-missing'
-        language: system
-        always_run: true
-        require_serial: true
-        fail_fast: true
-        stages: [commit]
+        args: [--bash-framework-config, .framework-config, --ignore-missing]
+      - id: buildShFilesGithubAction
+        args: [--bash-framework-config, .framework-config]
 
   - repo: local
     hooks:
@@ -105,7 +100,7 @@ repos:
         stages: [push]
 
   - repo: https://github.com/fchastanet/bash-tools-framework
-    rev: 1.0.4
+    rev: 1.1.3
     hooks:
       - id: runUnitTests
       - id: plantuml

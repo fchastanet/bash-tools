@@ -840,7 +840,7 @@ Log::logSkipped() {
 
 # FUNCTIONS
 
-facade_main_d396e2bc1f6e43a7b79e8a25ad41ac25() {
+facade_main_waitForItsh() {
 BASH_TOOLS_ROOT_DIR="$(cd "${CURRENT_DIR}/.." && pwd -P)"
 if [[ -d "${BASH_TOOLS_ROOT_DIR}/vendor/bash-tools-framework/" ]]; then
   FRAMEWORK_ROOT_DIR="$(cd "${BASH_TOOLS_ROOT_DIR}/vendor/bash-tools-framework" && pwd -P)"
@@ -1854,4 +1854,4 @@ fi
 
 }
 
-facade_main_d396e2bc1f6e43a7b79e8a25ad41ac25 "$@"
+facade_main_waitForItsh "$@"

@@ -922,7 +922,7 @@ Assert::commandExists() {
 
 # FUNCTIONS
 
-facade_main_ae2d7ee85d7a47bdbda1838afc5f3c2c() {
+facade_main_installRequirementssh() {
 BASH_TOOLS_ROOT_DIR="$(cd "${CURRENT_DIR}/.." && pwd -P)"
 if [[ -d "${BASH_TOOLS_ROOT_DIR}/vendor/bash-tools-framework/" ]]; then
   FRAMEWORK_ROOT_DIR="$(cd "${BASH_TOOLS_ROOT_DIR}/vendor/bash-tools-framework" && pwd -P)"
@@ -1552,7 +1552,7 @@ installRequirementsCommand() {
 [1;37mINSTALLS REQUIREMENTS:[0m
 - fchastanet/bash-tools-framework
 - and fchastanet/bash-tools-framework useful binaries:
-  bin/awkLint, bin/buildBinFiles, bin/frameworkLint, bin/findShebangFiles, bin/megalinter, bin/runBuildContainer, bin/shellcheckLint, bin/test, bin/buildPushDockerImage"""
+  bin/runBuildContainer, bin/test"""
     echo
     echo -n -e "${__HELP_TITLE_COLOR}VERSION: ${__RESET_COLOR}"
     echo '1.0'
@@ -1572,7 +1572,7 @@ installRequirementsCommand() {
     return 1
   fi
 }
-declare -a externalBinaries=([0]="bin/awkLint" [1]="bin/buildBinFiles" [2]="bin/frameworkLint" [3]="bin/findShebangFiles" [4]="bin/megalinter" [5]="bin/runBuildContainer" [6]="bin/shellcheckLint" [7]="bin/test" [8]="bin/buildPushDockerImage")
+declare -a externalBinaries=([0]="bin/runBuildContainer" [1]="bin/test")
 
 installRequirementsCommand parse "${BASH_FRAMEWORK_ARGV[@]}"
 
@@ -1599,4 +1599,4 @@ fi
 
 }
 
-facade_main_ae2d7ee85d7a47bdbda1838afc5f3c2c "$@"
+facade_main_installRequirementssh "$@"

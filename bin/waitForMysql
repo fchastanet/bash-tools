@@ -840,7 +840,7 @@ Array::contains() {
 
 # FUNCTIONS
 
-facade_main_665f5dabe75f418ea1c10f53fac6da5e() {
+facade_main_waitForMysqlsh() {
 BASH_TOOLS_ROOT_DIR="$(cd "${CURRENT_DIR}/.." && pwd -P)"
 if [[ -d "${BASH_TOOLS_ROOT_DIR}/vendor/bash-tools-framework/" ]]; then
   FRAMEWORK_ROOT_DIR="$(cd "${BASH_TOOLS_ROOT_DIR}/vendor/bash-tools-framework" && pwd -P)"
@@ -1663,4 +1663,4 @@ fi
 
 }
 
-facade_main_665f5dabe75f418ea1c10f53fac6da5e "$@"
+facade_main_waitForMysqlsh "$@"

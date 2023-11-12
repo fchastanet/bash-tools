@@ -98,7 +98,10 @@ function Database::dbImportProfile::remote_db_fully_functional_default_ratio { #
   run "${binDir}/dbImportProfile" --verbose -f default.local fromDb 2>&1
 
   [[ -f "${HOME}/tableSizeQuery.sql" ]]
-  assert_output --partial "Profile generated - 1/3 tables bigger than 70% of max table size (29MB) automatically excluded"
+  assert_lines_count 3
+  assert_line --index 0 --partial "INFO    - Using from dsn"
+  assert_line --index 1 --partial "INFO    - Profile generated - 1/3 tables bigger than 70% of max table size (29MB) automatically excluded"
+  assert_line --index 2 --partial "INFO    - File saved"
   diff >&3 "${HOME}/tableSizeQuery.sql" "${BATS_TEST_DIRNAME}/testsData/expectedDbImportProfileTableListQuery.sql"
   [[ -f "${HOME}/.bash-tools/dbImportProfiles/auto_default.local_fromDb.sh" ]]
   diff -u "${HOME}/.bash-tools/dbImportProfiles/auto_default.local_fromDb.sh" \
