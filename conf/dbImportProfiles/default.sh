@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-
+# @description filters out logs, statistics, tracking tables
 # cat represents the whole list of tables
 cat |
   grep -v '.*_log' |
