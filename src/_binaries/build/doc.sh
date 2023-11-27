@@ -13,7 +13,7 @@ declare -a RUN_CONTAINER_ARGV_FILTERED=()
 run() {
   if [[ "${IN_BASH_DOCKER:-}" != "You're in docker" ]]; then
     DOCKER_RUN_OPTIONS=$"-e ORIGINAL_DOC_DIR=${DOC_DIR}" \
-      "${COMMAND_BIN_DIR}/runBuildContainer" "/bash/bin/doc" \
+      "${FRAMEWORK_BIN_DIR}/runBuildContainer" "/bash/bin/doc" \
       "${RUN_CONTAINER_ARGV_FILTERED[@]}"
     return $?
   fi

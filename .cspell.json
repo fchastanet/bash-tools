@@ -19,6 +19,7 @@
     ".jscpd.json",
     ".mega-linter.yml",
     ".shellcheckrc",
+    "**/*.svg",
     ".env",
     "**/*.help.txt"
   ],

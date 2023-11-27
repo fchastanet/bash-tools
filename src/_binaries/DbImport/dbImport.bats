@@ -308,7 +308,6 @@ function Database::dbImport::import_from_aws_with_tables_filter { #@test
   export BASH_FRAMEWORK_ENV_FILEPATH="${BATS_TEST_DIRNAME}/testsData/.env"
 
   run "${binDir}/dbImport" --verbose --from-aws fromDb.tar.gz toDb --tables dataTable,otherTable 2>&1
-
   assert_output --partial "Import database duration : "
   assert_output --partial "ignore table emptyTable"
   assert_output --partial "begin insert dataTable"

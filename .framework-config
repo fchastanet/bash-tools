@@ -1,22 +1,35 @@
 #!/usr/bin/env bash
 # shellcheck disable=SC2034
 
-BASH_TOOLS_ROOT_DIR="${BASH_TOOLS_ROOT_DIR:-$(pwd)}"
-REAL_SCRIPT_FILE="${REAL_SCRIPT_FILE:-$(readlink -e "$(realpath "${BASH_SOURCE[0]}")")}"
-FRAMEWORK_ROOT_DIR="${FRAMEWORK_ROOT_DIR:-$(cd "$(readlink -e "${REAL_SCRIPT_FILE%/*}")" && pwd -P)}"
+BASH_TOOLS_ROOT_DIR="${BASH_TOOLS_ROOT_DIR:-$(cd "$(readlink -e "${BASH_SOURCE[0]%/*}")" && pwd -P)}"
+FRAMEWORK_ROOT_DIR="${FRAMEWORK_ROOT_DIR:-${BASH_TOOLS_ROOT_DIR}/vendor/bash-tools-framework}"
 FRAMEWORK_SRC_DIR="${FRAMEWORK_SRC_DIR:-${FRAMEWORK_ROOT_DIR}/src}"
 FRAMEWORK_BIN_DIR="${FRAMEWORK_BIN_DIR:-${FRAMEWORK_ROOT_DIR}/bin}"
 FRAMEWORK_VENDOR_DIR="${FRAMEWORK_VENDOR_DIR:-${FRAMEWORK_ROOT_DIR}/vendor}"
 FRAMEWORK_VENDOR_BIN_DIR="${FRAMEWORK_VENDOR_BIN_DIR:-${FRAMEWORK_ROOT_DIR}/vendor/bin}"
+
+# compile parameters
+# srcFile     : file that needs to be compiled
+# templateDir : directory from which bash-tpl templates will be searched
+# binDir      : fallback bin directory in case BIN_FILE has not been provided
+# rootDir     : directory used to compute src file relative path
+# srcDirs     : additional directories where to find the functions
+COMPILE_PARAMETERS=(
+  --src-dir "${BASH_TOOLS_ROOT_DIR}/src"
+  --src-dir "${FRAMEWORK_SRC_DIR}"
+  --bin-dir "${BASH_TOOLS_ROOT_DIR}/bin"
+  --root-dir "${BASH_TOOLS_ROOT_DIR}"
+  --template-dir "${BASH_TOOLS_ROOT_DIR}/src"
+)
 
 # describe the functions that will be skipped from being imported
 FRAMEWORK_FUNCTIONS_IGNORE_REGEXP="${FRAMEWORK_FUNCTIONS_IGNORE_REGEXP:-^(Namespace::functions|Functions::myFunction|Namespace::requireSomething|IMPORT::dir::file|Acquire::ForceIPv4)$}"
 # describe the files that do not contain function to be imported
 NON_FRAMEWORK_FILES_REGEXP="${NON_FRAMEWORK_FILES_REGEXP:-(^bin/|.framework-config|^install$|.bats$|/testsData/|^manualTests/|/_.sh$|/ZZZ.sh$|/__all.sh$|^src/_binaries|^src/_includes|^src/batsHeaders.sh$|^conf/)}"
 # describe the files that are allowed to not have an associated bats file
-BATS_FILE_NOT_NEEDED_REGEXP="${BATS_FILE_NOT_NEEDED_REGEXP:-(^build.sh$|^conf/|^bin/|.framework-config|^install$|.bats$|/testsData/|^manualTests/|/_.sh$|/ZZZ.sh$|/__all.sh$|^src/batsHeaders.sh$|^src/_includes)}"
+BATS_FILE_NOT_NEEDED_REGEXP="${BATS_FILE_NOT_NEEDED_REGEXP:-(^conf/|^bin/|.framework-config|^install$|.bats$|/testsData/|^manualTests/|/_.sh$|/ZZZ.sh$|/__all.sh$|^src/batsHeaders.sh$|^src/_includes)}"
 # describe the files that are allowed to not have a function matching the filename
-FRAMEWORK_FILES_FUNCTION_MATCHING_IGNORE_REGEXP="${FRAMEWORK_FILES_FUNCTION_MATCHING_IGNORE_REGEXP:-^conf/|^bin/|^\.framework-config$|^build.sh$|\.tpl$|testsData/binaryFile$}"
+FRAMEWORK_FILES_FUNCTION_MATCHING_IGNORE_REGEXP="${FRAMEWORK_FILES_FUNCTION_MATCHING_IGNORE_REGEXP:-^conf/|^bin/|^\.framework-config$|\.tpl$|testsData/binaryFile$}"
 # Source directories
 if [[ ! -v FRAMEWORK_SRC_DIRS ]]; then
   FRAMEWORK_SRC_DIRS=(

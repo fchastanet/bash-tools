@@ -16,6 +16,10 @@ repos:
     hooks:
       - id: mixed-line-ending
       - id: end-of-file-fixer
+        exclude: |
+          (?x)(
+            .svg$
+          )
       - id: check-executables-have-shebangs
       - id: check-shebang-scripts-are-executable
       - id: check-xml
@@ -57,7 +61,7 @@ repos:
       - id: prettier
 
   - repo: https://github.com/fchastanet/bash-tools-framework
-    rev: 1.1.5
+    rev: 1.1.8
     hooks:
       - id: fixShebangExecutionBit
       - id: fixShebangExecutionBitGithubActions
@@ -87,6 +91,12 @@ repos:
       - id: plantuml
       - id: buildShFiles
       - id: buildShFilesGithubAction
+      - id: runUnitTests
+        # not manual as github will run UT with several versions of bash and arch
+        stages: [pre-commit]
+      - id: megalinterCheckVersion
+      - id: megalinter
+      - id: megalinterGithubAction
 
   - repo: local
     hooks:
@@ -95,7 +105,7 @@ repos:
         name: build doc files
         language: script
         entry: bin/doc
-        args: [--verbose, --skip-docker-build]
+        args: [-vvv]
         pass_filenames: false
         require_serial: true
         always_run: true
@@ -104,17 +114,5 @@ repos:
       - <<: *BUILD_DOC_FILES
         id: buildDocFilesGithubAction
         name: build doc files for Github Actions
-        args: [--verbose]
         fail_fast: false
         stages: [manual]
-
-  # manual stage used to select github action with megalinter full config
-  - repo: https://github.com/fchastanet/bash-tools-framework
-    rev: 1.1.5
-    hooks:
-      - id: runUnitTests
-        # not manual as github will run UT with several versions of bash and arch
-        stages: [pre-commit]
-      - id: megalinterCheckVersion
-      - id: megalinter
-      - id: megalinterGithubAction

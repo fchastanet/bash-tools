@@ -49,7 +49,8 @@
   [1;34m-vvv[0m {single}
     trace level verbose mode (alias of --display-level TRACE)
   [1;34m--env-file <String>[0m {list} (optional)
-    Load the specified env file
+    Load the specified env file (deprecated, please use --bash-framework-config
+    option instead)
   [1;34m--no-color[0m {single}
     Produce monochrome output. alias of --theme noColor.
   [1;34m--theme <String>[0m {single}

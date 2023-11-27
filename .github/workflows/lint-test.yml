@@ -70,23 +70,6 @@ jobs:
           name: build bash-tools-${{matrix.vendor}}-${{matrix.bashTarVersion}}
           status: pending
 
-      - name: Pull/Build/Push docker image
-        env:
-          BRANCH: ${GITHUB_REF##*/}
-        run: |
-          vendor/bash-tools-framework/bin/buildPushDockerImage \
-            --vendor "${{ matrix.vendor }}" \
-            --bash-version "${{ matrix.bashTarVersion }}" \
-            --bash-base-image "${{ matrix.bashImage }}" \
-            --branch-name "${GITHUB_REF##*/}" \
-            --push -vvv
-
-      - name: Check image
-        run: |
-          docker run --rm \
-            "build:bash-tools-${{ matrix.vendor }}-${{ matrix.bashTarVersion }}" bash \
-            --version
-
       # only if pre-commit
       - name: Set up Python
         if: matrix.runPrecommitTests

@@ -7,7 +7,6 @@
   - [1.4. bin/doc](#14-bindoc)
   - [1.5. bin/findShebangFiles](#15-binfindshebangfiles)
   - [1.6. bin/test](#16-bintest)
-  - [1.7. bin/runBuildContainer](#17-binrunbuildcontainer)
 - [2. Converter and Generator tools](#2-converter-and-generator-tools)
   - [2.1. bin/generateShellDoc](#21-bingenerateshelldoc)
   - [2.2. bin/mysql2puml](#22-binmysql2puml)
@@ -76,14 +75,6 @@ imported from bash-tools-framework
 
 ```text
 @@@test_help@@@
-```
-
-### 1.7. bin/runBuildContainer
-
-imported from bash-tools-framework
-
-```text
-@@@runBuildContainer_help@@@
 ```
 
 ## 2. Converter and Generator tools

@@ -1,6 +1,5 @@
 %
 declare -a externalBinaries=(
-  bin/runBuildContainer
   bin/test
 )
 declare versionNumber="1.0"
