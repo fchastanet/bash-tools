@@ -91,7 +91,7 @@ function Utils::waitForIt::algo::timeoutV1WithNc::ExecCommand { #@test
 
 function Utils::waitForIt::algo::timeoutV1WithNc::NoCommandExecutedIfFailed { #@test
   (
-    echo "#!/bin/bash"
+    echo "#!/usr/bin/env bash"
     echo 'exit 1'
   ) >"${HOME}/bin/nc"
   chmod +x "${HOME}/bin/nc"
@@ -137,7 +137,7 @@ function Utils::waitForIt::algo::timeoutV2WithNc::ExecCommand { #@test
 
 function Utils::waitForIt::algo::timeoutV2WithNc::NoCommandExecutedIfFailed { #@test
   (
-    echo "#!/bin/bash"
+    echo "#!/usr/bin/env bash"
     echo 'exit 1'
   ) >"${HOME}/bin/nc"
   chmod +x "${HOME}/bin/nc"
@@ -327,7 +327,7 @@ function Utils::waitForIt::algo::whileLoopWithTcp::NoCommandExecutedIfFailed { #
 
 function Utils::waitForIt::algo::whileLoopWithNc::WithoutCommand { #@test
   (
-    echo "#!/bin/bash"
+    echo "#!/usr/bin/env bash"
     echo 'exit 0'
   ) >"${HOME}/bin/nc"
   chmod +x "${HOME}/bin/nc"
@@ -342,7 +342,7 @@ function Utils::waitForIt::algo::whileLoopWithNc::WithoutCommand { #@test
 
 function Utils::waitForIt::algo::whileLoopWithNc::ExecCommand { #@test
   (
-    echo "#!/bin/bash"
+    echo "#!/usr/bin/env bash"
     echo 'exit 0'
   ) >"${HOME}/bin/nc"
   chmod +x "${HOME}/bin/nc"
@@ -358,7 +358,7 @@ function Utils::waitForIt::algo::whileLoopWithNc::ExecCommand { #@test
 
 function Utils::waitForIt::algo::whileLoopWithNc::NoCommandExecutedIfFailed { #@test
   (
-    echo "#!/bin/bash"
+    echo "#!/usr/bin/env bash"
     echo 'exit 1'
   ) >"${HOME}/bin/nc"
   chmod +x "${HOME}/bin/nc"
