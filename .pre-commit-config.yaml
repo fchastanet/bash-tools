@@ -61,7 +61,7 @@ repos:
       - id: prettier
 
   - repo: https://github.com/fchastanet/bash-tools-framework
-    rev: 1.1.8
+    rev: 2.0.0
     hooks:
       - id: fixShebangExecutionBit
       - id: fixShebangExecutionBitGithubActions
@@ -77,6 +77,8 @@ repos:
             plain,
             --theme,
             default-force,
+            --display-level,
+            WARNING,
           ]
       - id: frameworkLinterGithubAction
         args:
@@ -87,6 +89,8 @@ repos:
             checkstyle,
             --theme,
             default-force,
+            --display-level,
+            WARNING,
           ]
       - id: plantuml
       - id: buildShFiles
