@@ -211,6 +211,108 @@ Array::wrap() {
 #set -x
 #Array::wrap ":" 40 0 "Lorem ipsum dolor sit amet," "consectetur adipiscing elit." "Curabitur ac elit id massa" "condimentum finibus."
 
+# @description checkout usage doc below
+#
+# [DockerNamespace usage](DockerUsage.md ':include')
+
+# @description run the container specified by args provided.
+# build and push the image if needed
+#
+# @env DOCKER_BUILD_OPTIONS
+# @env SKIP_USER
+# @env USER_ID
+# @env GROUP_ID
+# @env FRAMEWORK_ROOT_DIR
+# @env DOCKER_OPTION_IMAGE_TAG
+# @env RUN_CONTAINER_ARGV_FILTERED
+Docker::runBuildContainer() {
+  local optionVendor="$1"
+  local optionBashVersion="$2"
+  local optionBashBaseImage="$3"
+  local optionSkipDockerBuild="$4"
+  local optionTraceVerbose="$5"
+  local optionContinuousIntegrationMode="$6"
+  local -n localDockerRunCmd=$7
+  local -n localDockerRunArgs=$8
+  if tty -s; then
+    localDockerRunArgs+=("-it")
+  fi
+  if [[ -d "$(pwd)/vendor/bash-tools-framework" ]]; then
+    localDockerRunArgs+=(
+      -v "$(cd "$(pwd)/vendor/bash-tools-framework" && pwd -P):/bash/vendor/bash-tools-framework"
+    )
+  fi
+
+  # shellcheck disable=SC2154
+  if [[ "${optionContinuousIntegrationMode}" = "0" ]]; then
+    localDockerRunArgs+=(-v "/tmp:/tmp")
+  fi
+
+  # shellcheck disable=SC2154
+  Log::displayInfo "Using ${optionVendor}:${optionBashVersion}"
+
+  local imageRef="${DOCKER_OPTION_IMAGE_TAG:-build:bash-tools-${optionVendor}-${optionBashVersion}}"
+  if [[ "${optionSkipDockerBuild:-0}" != "1" ]]; then
+    Log::displayInfo "Build docker image ${imageRef}"
+    # shellcheck disable=SC2154
+    (
+      if [[ "${optionTraceVerbose}" = "1" ]]; then
+        set -x
+      fi
+      Docker::buildPushDockerImage \
+        "${optionVendor}" \
+        "${optionBashVersion}" \
+        "${optionBashBaseImage}" \
+        "${optionPush}" \
+        "${optionTraceVerbose}"
+    )
+  fi
+  if [[ -f "${FRAMEWORK_ROOT_DIR}/.docker/DockerfileUser" ]]; then
+    local imageRefUser="${imageRef}-user"
+    if [[ "${optionSkipDockerBuild:-0}" != "1" ]]; then
+      Log::displayInfo "build docker image ${imageRefUser} with user configuration"
+      # shellcheck disable=SC2154
+      (
+        if [[ "${optionTraceVerbose}" = "1" ]]; then
+          set -x
+        fi
+        # shellcheck disable=SC2086
+        DOCKER_BUILDKIT=1 docker build \
+          ${DOCKER_BUILD_OPTIONS} \
+          --cache-from "scrasnups/${imageRef}" \
+          --build-arg "BASH_IMAGE=scrasnups/${imageRef}" \
+          --build-arg SKIP_USER="${SKIP_USER:-0}" \
+          --build-arg USER_ID="${USER_ID:-$(id -u)}" \
+          --build-arg GROUP_ID="${GROUP_ID:-$(id -g)}" \
+          -f "${FRAMEWORK_ROOT_DIR}/.docker/DockerfileUser" \
+          -t "${imageRefUser}" \
+          "${FRAMEWORK_ROOT_DIR}/.docker"
+      )
+    fi
+  fi
+
+  Log::displayDebug "Run container with localDockerRunCmd: ${localDockerRunCmd[*]}"
+  Log::displayDebug "Run container with localDockerRunArgs: ${localDockerRunArgs[*]}"
+  Log::displayDebug "Run container with RUN_CONTAINER_ARGV_FILTERED: ${RUN_CONTAINER_ARGV_FILTERED[*]}"
+  (
+    # shellcheck disable=SC2154
+    if [[ "${optionTraceVerbose}" = "1" ]]; then
+      set -x
+    fi
+    # shellcheck disable=SC2086
+    docker run \
+      --rm \
+      "${localDockerRunArgs[@]}" \
+      ${DOCKER_RUN_OPTIONS} \
+      "${RUN_CONTAINER_ARGV_FILTERED[@]}" \
+      -w /bash \
+      -v "$(pwd):/bash" \
+      --user "${USER_ID:-$(id -u)}:${GROUP_ID:-$(id -g)}" \
+      "${imageRefUser}" \
+      "${localDockerRunCmd[@]}"
+  )
+}
+
 # @description ensure env files are loaded
 # @arg $@ list of default files to load at the end
 # @exitcode 1 if one of env files fails to load
@@ -570,6 +672,63 @@ Assert::tty() {
   [[ -t 1 || -t 2 ]]
 }
 
+# @description build image and push it ot registry
+# @env DOCKER_OPTION_IMAGE_TAG String computed from optionVendor and optionBashVersion if not provided
+# @env DOCKER_OPTION_IMAGE String default scrasnups/${DOCKER_OPTION_IMAGE_TAG}
+# @env DOCKER_BUILD_OPTIONS String list of docker arguments to pass to docker build command
+# @env FRAMEWORK_ROOT_DIR String path allowing to deduce .docker/Dockerfile.{vendor}
+Docker::buildPushDockerImage() {
+  local optionVendor="$1"
+  local optionBashVersion="$2"
+  local optionBashBaseImage="$3"
+  local optionPush="$4"
+  local optionTraceVerbose="$5"
+  # parameters based on env variables
+  local imageTag="${DOCKER_OPTION_IMAGE_TAG:-build:bash-tools-${optionVendor}-${optionBashVersion}}"
+  local image="${DOCKER_OPTION_IMAGE:-scrasnups/${imageTag}}"
+  local DOCKER_BUILD_OPTIONS="${DOCKER_BUILD_OPTIONS:-}"
+
+  Log::displayInfo "Pull image ${image}"
+  (
+    if [[ "${optionTraceVerbose}" = "1" ]]; then
+      set -x
+    fi
+    docker pull "${image}" || true
+  )
+
+  Log::displayInfo "Build image ${image}"
+  # shellcheck disable=SC2086
+  (
+    if [[ "${optionTraceVerbose}" = "1" ]]; then
+      set -x
+    fi
+    DOCKER_BUILDKIT=1 docker build \
+      ${DOCKER_BUILD_OPTIONS} \
+      -f "${FRAMEWORK_ROOT_DIR}/.docker/Dockerfile.${optionVendor}" \
+      --cache-from "${image}" \
+      --build-arg BUILDKIT_INLINE_CACHE=1 \
+      --build-arg argBashVersion="${optionBashVersion}" \
+      --build-arg BASH_IMAGE="${optionBashBaseImage}" \
+      -t "${imageTag}" \
+      -t "${image}" \
+      "${FRAMEWORK_ROOT_DIR}/.docker"
+  )
+
+  Log::displayInfo "Image ${image} - bash version check"
+  docker run --rm "${imageTag}" bash --version
+
+  # shellcheck disable=SC2154
+  if [[ "${optionPush}" = "1" ]]; then
+    Log::displayInfo "Push image ${image}"
+    (
+      if [[ "${optionTraceVerbose}" = "1" ]]; then
+        set -x
+      fi
+      docker push "scrasnups/${imageTag}"
+    )
+  fi
+}
+
 # @description prepend directories to the PATH environment variable
 # @arg $@ args:String[] list of directories to prepend
 # @set PATH update PATH with the directories prepended
@@ -774,7 +933,6 @@ Compiler::Facade::requireCommandBinDir
 
 DOC_DIR="${BASH_TOOLS_ROOT_DIR}/pages"
 declare copyrightBeginYear="2020"
-declare -a RUN_CONTAINER_ARGV_FILTERED=()
 
 declare -a BASH_FRAMEWORK_ARGV_FILTERED=()
 
@@ -1415,35 +1573,29 @@ docCommand() {
   fi
 }
 
-updateOptionSkipDockerBuildCallback() {
-  if [[ "${IN_BASH_DOCKER:-}" != "You're in docker" ]]; then
-    BASH_FRAMEWORK_ARGV_FILTERED+=("$1")
-    RUN_CONTAINER_ARGV_FILTERED+=("$1")
-  fi
-}
-# shellcheck disable=SC2317 # if function is overridden
-updateArgListInfoVerboseCallback() {
-  RUN_CONTAINER_ARGV_FILTERED+=(--verbose)
-  BASH_FRAMEWORK_ARGV_FILTERED+=(--verbose)
-}
-# shellcheck disable=SC2317 # if function is overridden
-updateArgListDebugVerboseCallback() {
-  RUN_CONTAINER_ARGV_FILTERED+=(-vv)
-  BASH_FRAMEWORK_ARGV_FILTERED+=(-vv)
-}
-# shellcheck disable=SC2317 # if function is overridden
-updateArgListTraceVerboseCallback() {
-  RUN_CONTAINER_ARGV_FILTERED+=(-vvv)
-  BASH_FRAMEWORK_ARGV_FILTERED+=(-vvv)
-}
-
 docCommand parse "${BASH_FRAMEWORK_ARGV[@]}"
 
 run() {
   if [[ "${IN_BASH_DOCKER:-}" != "You're in docker" ]]; then
-    DOCKER_RUN_OPTIONS=$"-e ORIGINAL_DOC_DIR=${DOC_DIR}" \
-      "${FRAMEWORK_BIN_DIR}/runBuildContainer" "/bash/bin/doc" \
-      "${RUN_CONTAINER_ARGV_FILTERED[@]}"
+    local -a dockerRunCmd=(
+      "/bash/bin/doc"
+      "${BASH_FRAMEWORK_ARGV_FILTERED[@]}"
+    )
+    # shellcheck disable=SC2034
+    local -a dockerArgvFiltered=(
+      -e ORIGINAL_DOC_DIR="${DOC_DIR}"
+    )
+    # shellcheck disable=SC2154
+    Docker::runBuildContainer \
+      "${optionVendor:-ubuntu}" \
+      "${optionBashVersion:-5.1}" \
+      "${optionBashBaseImage:-ubuntu:20.04}" \
+      "${optionSkipDockerBuild}" \
+      "${optionTraceVerbose}" \
+      "${optionContinuousIntegrationMode}" \
+      dockerRunCmd \
+      dockerArgvFiltered
+
     return $?
   fi
 

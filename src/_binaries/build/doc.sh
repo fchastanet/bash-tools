@@ -6,15 +6,30 @@
 
 DOC_DIR="${BASH_TOOLS_ROOT_DIR}/pages"
 declare copyrightBeginYear="2020"
-declare -a RUN_CONTAINER_ARGV_FILTERED=()
 
 .INCLUDE "$(dynamicTemplateDir _binaries/build/doc.options.tpl)"
 
 run() {
   if [[ "${IN_BASH_DOCKER:-}" != "You're in docker" ]]; then
-    DOCKER_RUN_OPTIONS=$"-e ORIGINAL_DOC_DIR=${DOC_DIR}" \
-      "${FRAMEWORK_BIN_DIR}/runBuildContainer" "/bash/bin/doc" \
-      "${RUN_CONTAINER_ARGV_FILTERED[@]}"
+    local -a dockerRunCmd=(
+      "/bash/bin/doc"
+      "${BASH_FRAMEWORK_ARGV_FILTERED[@]}"
+    )
+    # shellcheck disable=SC2034
+    local -a dockerArgvFiltered=(
+      -e ORIGINAL_DOC_DIR="${DOC_DIR}"
+    )
+    # shellcheck disable=SC2154
+    Docker::runBuildContainer \
+      "${optionVendor:-ubuntu}" \
+      "${optionBashVersion:-5.1}" \
+      "${optionBashBaseImage:-ubuntu:20.04}" \
+      "${optionSkipDockerBuild}" \
+      "${optionTraceVerbose}" \
+      "${optionContinuousIntegrationMode}" \
+      dockerRunCmd \
+      dockerArgvFiltered
+
     return $?
   fi
 
