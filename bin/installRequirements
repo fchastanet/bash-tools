@@ -1342,7 +1342,7 @@ installRequirementsCommand() {
     helpArray=(set\ display\ level\ \(one\ of\ OFF\,\ ERROR\,\ WARNING\,\ INFO\,\ DEBUG\,\ TRACE\ value\))
     echo -e "    $(Array::wrap " " 76 4 "${helpArray[@]}")"
     echo -e """
-[1;37mINSTALLS REQUIREMENTS:[0m
+INSTALLS REQUIREMENTS:
 - fchastanet/bash-tools-framework
 - and fchastanet/bash-tools-framework useful binaries:
   bin/test"""

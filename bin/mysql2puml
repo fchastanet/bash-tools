@@ -1499,12 +1499,12 @@ mysql2pumlCommand() {
     helpArray=(set\ display\ level\ \(one\ of\ OFF\,\ ERROR\,\ WARNING\,\ INFO\,\ DEBUG\,\ TRACE\ value\))
     echo -e "    $(Array::wrap " " 76 4 "${helpArray[@]}")"
     echo -e """
-[1;37mExamples[0m
+Examples
 mysql2puml dump.dql
 
 mysqldump --skip-add-drop-table   --skip-add-locks   --skip-disable-keys   --skip-set-charset   --user=root   --password=root   --no-data skills | mysql2puml
 
-[1;37mList of available skins:[0m
+List of available skins:
 @@@SKINS_LIST@@@"""
     echo
     echo -n -e "${__HELP_TITLE_COLOR}VERSION: ${__RESET_COLOR}"

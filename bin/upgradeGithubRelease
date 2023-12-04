@@ -1623,7 +1623,7 @@ upgradeGithubReleaseCommand() {
     echo -e "  ${__HELP_OPTION_COLOR}--version-arg <versionArg>${__HELP_NORMAL} {single}"
     local -a helpArray
     # shellcheck disable=SC2054
-    helpArray=($'The argument that will be provided to the currently installed binary  to check the version of the software. \n This parameter is needed if \E[2;97m--minimal-version\E[0m argument is used and is  different than default value (\E[2;97m--version\E[0m).')
+    helpArray=($'The argument that will be provided to the currently installed binary  to check the version of the software. \n This parameter is needed if --minimal-version argument is used and is  different than default value (--version).')
     echo -e "    $(Array::wrap " " 76 4 "${helpArray[@]}")"
     echo '    Default value: --version'
     echo -e "  ${__HELP_OPTION_COLOR}--current-version${__HELP_NORMAL}, ${__HELP_OPTION_COLOR}-c <currentVersion>${__HELP_NORMAL} {single}"
@@ -1634,12 +1634,12 @@ upgradeGithubReleaseCommand() {
     echo -e "  ${__HELP_OPTION_COLOR}--exact-version${__HELP_NORMAL}, ${__HELP_OPTION_COLOR}-e <exactVersion>${__HELP_NORMAL} {single}"
     local -a helpArray
     # shellcheck disable=SC2054
-    helpArray=($'if provided and currently installed binary is not this \E[2;97mexactVersion\E[0m, \n This exact version of the binary will be installed.')
+    helpArray=($'if provided and currently installed binary is not this exactVersion, \n This exact version of the binary will be installed.')
     echo -e "    $(Array::wrap " " 76 4 "${helpArray[@]}")"
     echo -e "  ${__HELP_OPTION_COLOR}--minimal-version${__HELP_NORMAL}, ${__HELP_OPTION_COLOR}-m <minimalVersion>${__HELP_NORMAL} {single}"
     local -a helpArray
     # shellcheck disable=SC2054
-    helpArray=($'if provided and currently installed binary is below this \E[2;97mminimalVersion\E[0m, \n a new version of the binary will be installed. \n If this argument is not provided, the latest binary is unconditionally downloaded from github.')
+    helpArray=($'if provided and currently installed binary is below this minimalVersion, \n a new version of the binary will be installed. \n If this argument is not provided, the latest binary is unconditionally downloaded from github.')
     echo -e "    $(Array::wrap " " 76 4 "${helpArray[@]}")"
     echo
     echo -e "${__HELP_TITLE_COLOR}GLOBAL OPTIONS:${__RESET_COLOR}"
@@ -1714,15 +1714,15 @@ upgradeGithubReleaseCommand() {
     helpArray=(set\ display\ level\ \(one\ of\ OFF\,\ ERROR\,\ WARNING\,\ INFO\,\ DEBUG\,\ TRACE\ value\))
     echo -e "    $(Array::wrap " " 76 4 "${helpArray[@]}")"
     echo -e """
-[1;37mOPTIONS EXCEPTIONS:[0m
+OPTIONS EXCEPTIONS:
 
-[2;97m--current-version[0m|[2;97m-c[0m and [2;97m--version-arg[0m are mutually exclusive,
+--current-version|-c and --version-arg are mutually exclusive,
 you cannot use both argument at the same time.
 
-[2;97m--exact-version[0m|[2;97m-e[0m and [2;97m--minimal-version[0m|[2;97m-m[0m are mutually exclusive,
+--exact-version|-e and --minimal-version|-m are mutually exclusive,
 you cannot use both argument at the same time.
 
-[1;37mGITHUB TEMPLATE URLS EXAMPLES:[0m
+GITHUB TEMPLATE URLS EXAMPLES:
 
 Simple ones(Sometimes @version@ template variable has to be specified twice):
 'https://github.com/hadolint/hadolint/releases/download/v@version@/hadolint-Linux-x86_64'
@@ -1739,15 +1739,15 @@ If you want to add a condition on architecture(linux, windows, x86, 64/32 bits):
 \"https://github.com/docker/docker-credential-helpers/releases/download/v@version@/docker-credential-wincred-v@version@.windows-\$(dpkg --print-architecture).exe\"
 \"https://github.com/Blacksmoke16/oq/releases/download/v@version@/oq-v@version@-\$(uname -s)-\$(uname -m)\"
 
-[1;37mCOMMAND EXAMPLES:[0m
+COMMAND EXAMPLES:
 Download docker-compose latest version
-[2;97mupgradeGithubRelease /usr/local/bin/docker-compose \"https://github.com/docker/compose/releases/download/v@version@/docker-compose-\$(uname -s | tr '[:upper:]' '[:lower:]')-\$(uname -m)\"[0m
+upgradeGithubRelease /usr/local/bin/docker-compose \"https://github.com/docker/compose/releases/download/v@version@/docker-compose-\$(uname -s | tr '[:upper:]' '[:lower:]')-\$(uname -m)\"
 
 Download oq specific version
-[2;97mupgradeGithubRelease /usr/local/bin/oq --exact-version 1.3.4 \"https://github.com/Blacksmoke16/oq/releases/download/v@version@/oq-v@version@-\$(uname -s)-\$(uname -m)\"[0m
+upgradeGithubRelease /usr/local/bin/oq --exact-version 1.3.4 \"https://github.com/Blacksmoke16/oq/releases/download/v@version@/oq-v@version@-\$(uname -s)-\$(uname -m)\"
 
 Download oq specific version correctly retrieving the oq version and not the jq one
-[2;97mupgradeGithubRelease /usr/local/bin/oq --exact-version 1.3.4 --version-arg '-V | grep oq:' \"https://github.com/Blacksmoke16/oq/releases/download/v@version@/oq-v@version@-\$(uname -s)-\$(uname -m)\"[0m"""
+upgradeGithubRelease /usr/local/bin/oq --exact-version 1.3.4 --version-arg '-V | grep oq:' \"https://github.com/Blacksmoke16/oq/releases/download/v@version@/oq-v@version@-\$(uname -s)-\$(uname -m)\""""
     echo
     echo -n -e "${__HELP_TITLE_COLOR}VERSION: ${__RESET_COLOR}"
     echo '2.0'

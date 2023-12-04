@@ -1437,18 +1437,18 @@ waitForItCommand() {
     helpArray=(set\ display\ level\ \(one\ of\ OFF\,\ ERROR\,\ WARNING\,\ INFO\,\ DEBUG\,\ TRACE\ value\))
     echo -e "    $(Array::wrap " " 76 4 "${helpArray[@]}")"
     echo -e """
-[1;37mEXIT STATUS CODES:[0m
-\e[1;34m0[0m: the host/port is available
-\e[1;34m1[0m: indicates host/port is not available or argument error
-\e[1;34m2[0m: timeout reached
+EXIT STATUS CODES:
+0: the host/port is available
+1: indicates host/port is not available or argument error
+2: timeout reached
 
-[1;37mAVAILABLE ALGORITHMS:[0m
-\e[1;34mtimeoutV1WithNc[0m: previous version of timeout command with --timeout option, base command nc
-\e[1;34mtimeoutV2WithNc[0m: newer version of timeout command using timeout as argument, base command nc
-\e[1;34mwhileLoopWithNc[0m: timeout command simulated using while loop, base command nc
-\e[1;34mtimeoutV1WithTcp[0m: previous version of timeout command with --timeout option
-\e[1;34mtimeoutV2WithTcp[0m: newer version of timeout command using timeout as argument
-\e[1;34mwhileLoopWithTcp[0m: timeout command simulated using while loop, base command tcp"""
+AVAILABLE ALGORITHMS:
+timeoutV1WithNc: previous version of timeout command with --timeout option, base command nc
+timeoutV2WithNc: newer version of timeout command using timeout as argument, base command nc
+whileLoopWithNc: timeout command simulated using while loop, base command nc
+timeoutV1WithTcp: previous version of timeout command with --timeout option
+timeoutV2WithTcp: newer version of timeout command using timeout as argument
+whileLoopWithTcp: timeout command simulated using while loop, base command tcp"""
     echo
     echo -n -e "${__HELP_TITLE_COLOR}VERSION: ${__RESET_COLOR}"
     echo '2.0'
