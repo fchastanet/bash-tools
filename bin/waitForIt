@@ -1437,18 +1437,18 @@ waitForItCommand() {
     helpArray=(set\ display\ level\ \(one\ of\ OFF\,\ ERROR\,\ WARNING\,\ INFO\,\ DEBUG\,\ TRACE\ value\))
     echo -e "    $(Array::wrap " " 76 4 "${helpArray[@]}")"
     echo -e """
-[1;37mEXIT STATUS CODES:[0m
-\e[1;34m0[0m: the host/port is available
-\e[1;34m1[0m: indicates host/port is not available or argument error
-\e[1;34m2[0m: timeout reached
+${__HELP_TITLE}EXIT STATUS CODES:${__HELP_NORMAL}
+${__HELP_OPTION_COLOR}0${__HELP_NORMAL}: the host/port is available
+${__HELP_OPTION_COLOR}1${__HELP_NORMAL}: indicates host/port is not available or argument error
+${__HELP_OPTION_COLOR}2${__HELP_NORMAL}: timeout reached
 
-[1;37mAVAILABLE ALGORITHMS:[0m
-\e[1;34mtimeoutV1WithNc[0m: previous version of timeout command with --timeout option, base command nc
-\e[1;34mtimeoutV2WithNc[0m: newer version of timeout command using timeout as argument, base command nc
-\e[1;34mwhileLoopWithNc[0m: timeout command simulated using while loop, base command nc
-\e[1;34mtimeoutV1WithTcp[0m: previous version of timeout command with --timeout option
-\e[1;34mtimeoutV2WithTcp[0m: newer version of timeout command using timeout as argument
-\e[1;34mwhileLoopWithTcp[0m: timeout command simulated using while loop, base command tcp"""
+${__HELP_TITLE}AVAILABLE ALGORITHMS:${__HELP_NORMAL}
+${__HELP_OPTION_COLOR}timeoutV1WithNc${__HELP_NORMAL}: previous version of timeout command with --timeout option, base command nc
+${__HELP_OPTION_COLOR}timeoutV2WithNc${__HELP_NORMAL}: newer version of timeout command using timeout as argument, base command nc
+${__HELP_OPTION_COLOR}whileLoopWithNc${__HELP_NORMAL}: timeout command simulated using while loop, base command nc
+${__HELP_OPTION_COLOR}timeoutV1WithTcp${__HELP_NORMAL}: previous version of timeout command with --timeout option
+${__HELP_OPTION_COLOR}timeoutV2WithTcp${__HELP_NORMAL}: newer version of timeout command using timeout as argument
+${__HELP_OPTION_COLOR}whileLoopWithTcp${__HELP_NORMAL}: timeout command simulated using while loop, base command tcp"""
     echo
     echo -n -e "${__HELP_TITLE_COLOR}VERSION: ${__RESET_COLOR}"
     echo '2.0'

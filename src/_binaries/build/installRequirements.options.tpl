@@ -5,12 +5,13 @@ declare -a externalBinaries=(
 declare versionNumber="1.0"
 declare commandFunctionName="installRequirementsCommand"
 declare help="installs requirements"
-declare longDescription="""
+# shellcheck disable=SC2016
+declare longDescription='''
 ${__HELP_TITLE}INSTALLS REQUIREMENTS:${__HELP_NORMAL}
 - fchastanet/bash-tools-framework
 - and fchastanet/bash-tools-framework useful binaries:
-  $(Array::join ', ' "${externalBinaries[@]}")
-"""
+  $(Array::join ", " "${externalBinaries[@]}")
+'''
 %
 
 .INCLUDE "$(dynamicTemplateDir _binaries/options/options.base.tpl)"

@@ -1393,10 +1393,10 @@ waitForMysqlCommand() {
     helpArray=(set\ display\ level\ \(one\ of\ OFF\,\ ERROR\,\ WARNING\,\ INFO\,\ DEBUG\,\ TRACE\ value\))
     echo -e "    $(Array::wrap " " 76 4 "${helpArray[@]}")"
     echo -e """
-[1;37mEXIT STATUS CODES:[0m
-\e[1;34m0[0m: mysql is available
-\e[1;34m1[0m: indicates mysql is not available or argument error
-\e[1;34m2[0m: timeout reached"""
+${__HELP_TITLE}EXIT STATUS CODES:${__HELP_NORMAL}
+${__HELP_OPTION_COLOR}0${__HELP_NORMAL}: mysql is available
+${__HELP_OPTION_COLOR}1${__HELP_NORMAL}: indicates mysql is not available or argument error
+${__HELP_OPTION_COLOR}2${__HELP_NORMAL}: timeout reached"""
     echo
     echo -n -e "${__HELP_TITLE_COLOR}VERSION: ${__RESET_COLOR}"
     echo '2.0'

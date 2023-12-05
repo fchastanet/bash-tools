@@ -3,12 +3,12 @@ declare versionNumber="2.0"
 declare commandFunctionName="waitForMysqlCommand"
 declare help="wait for mysql to be ready"
 # shellcheck disable=SC2016
-declare longDescription="""
+declare longDescription='''
 ${__HELP_TITLE}EXIT STATUS CODES:${__HELP_NORMAL}
 ${__HELP_OPTION_COLOR}0${__HELP_NORMAL}: mysql is available
 ${__HELP_OPTION_COLOR}1${__HELP_NORMAL}: indicates mysql is not available or argument error
 ${__HELP_OPTION_COLOR}2${__HELP_NORMAL}: timeout reached
-"""
+'''
 %
 .INCLUDE "$(dynamicTemplateDir _binaries/options/options.base.tpl)"
 .INCLUDE "$(dynamicTemplateDir _binaries/options/options.timeout.tpl)"

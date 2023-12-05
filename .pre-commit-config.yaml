@@ -20,10 +20,12 @@ repos:
           (?x)(
             .svg$
           )
+      - id: trailing-whitespace
       - id: check-executables-have-shebangs
       - id: check-shebang-scripts-are-executable
       - id: check-xml
       - id: check-yaml
+      - id: check-added-large-files
       - id: forbid-new-submodules
       - id: mixed-line-ending
         args: [--fix=lf]
@@ -34,6 +36,11 @@ repos:
             .vscode\/settings.json|
             .vscode\/launch.json
           )$
+
+  - repo: https://github.com/pre-commit/mirrors-prettier
+    rev: v3.1.0
+    hooks:
+      - id: prettier
 
   - repo: https://github.com/fchastanet/jumanjihouse-pre-commit-hooks
     rev: 3.0.2
@@ -54,11 +61,6 @@ repos:
       # and conflict-marker-size configuration in a git repo.
       - id: git-check
         exclude: /testsData/
-
-  - repo: https://github.com/pre-commit/mirrors-prettier
-    rev: v3.1.0
-    hooks:
-      - id: prettier
 
   - repo: https://github.com/fchastanet/bash-tools-framework
     rev: 2.0.1

@@ -3,20 +3,22 @@ declare versionNumber="1.0"
 declare commandFunctionName="mysql2pumlCommand"
 declare optionSkinDefault="default"
 declare help="convert mysql dump sql schema to plantuml format"
-declare longDescription="""
-${__HELP_TITLE}Examples${__HELP_NORMAL}
-mysql2puml dump.dql
+# shellcheck disable=SC2016
+declare longDescription='''
+${__HELP_TITLE}EXAMPLE 1:${__HELP_NORMAL}
+${__HELP_EXAMPLE}mysql2puml dump.dql${__HELP_NORMAL}
 
-mysqldump --skip-add-drop-table \
+${__HELP_TITLE}EXAMPLE 2:${__HELP_NORMAL}
+${__HELP_EXAMPLE}mysqldump --skip-add-drop-table \
   --skip-add-locks \
   --skip-disable-keys \
   --skip-set-charset \
   --user=root \
   --password=root \
   --no-data skills | mysql2puml
-
-${__HELP_TITLE}List of available skins:${__HELP_NORMAL}
-@@@SKINS_LIST@@@"""
+${__HELP_NORMAL}
+${__HELP_TITLE}LIST OF AVAILABLE SKINS:${__HELP_NORMAL}
+@@@SKINS_LIST@@@'''
 %
 
 .INCLUDE "$(dynamicTemplateDir _binaries/options/options.base.tpl)"

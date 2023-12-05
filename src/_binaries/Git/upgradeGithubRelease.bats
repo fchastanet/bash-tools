@@ -29,7 +29,7 @@ function Git::upgradeGithubRelease::noArg { #@test
 function Git::upgradeGithubRelease::1Arg { #@test
   run "${binDir}/upgradeGithubRelease" arg1 2>&1
   assert_failure 1
-  assert_output --partial "FATAL   - File /bash/arg1 is not writable"
+  assert_output --partial "ERROR   - Command upgradeGithubRelease - Argument 'githubUrlPattern' should be provided at least 1 time(s)"
 }
 
 function Git::upgradeGithubRelease::githubArgInvalid { #@test

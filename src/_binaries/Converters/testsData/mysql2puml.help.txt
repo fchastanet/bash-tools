@@ -47,12 +47,13 @@
   [1;34m--display-level <String>[0m {single}
     set display level (one of OFF, ERROR, WARNING, INFO, DEBUG, TRACE value)
 
-[1;37mExamples[0m
-mysql2puml dump.dql
+[1;37mEXAMPLE 1:[0m
+[2;97mmysql2puml dump.dql[0m
 
-mysqldump --skip-add-drop-table   --skip-add-locks   --skip-disable-keys   --skip-set-charset   --user=root   --password=root   --no-data skills | mysql2puml
-
-[1;37mList of available skins:[0m
+[1;37mEXAMPLE 2:[0m
+[2;97mmysqldump --skip-add-drop-table   --skip-add-locks   --skip-disable-keys   --skip-set-charset   --user=root   --password=root   --no-data skills | mysql2puml
+[0m
+[1;37mLIST OF AVAILABLE SKINS:[0m
   - default
 
 [1;37mVERSION: [0m1.0

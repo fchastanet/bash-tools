@@ -173,7 +173,7 @@ function Database::dbImport::remote_db_fully_functional_from_mysql { #@test
   export BASH_FRAMEWORK_ENV_FILEPATH="${BATS_TEST_DIRNAME}/testsData/.env"
 
   run "${binDir}/dbImport" --verbose -f default.local fromDb toDb 2>&1
-  unstub zcat
+  unstub_all
   assert_output --partial "Import database duration : "
   assert_output --partial "begin insert emptyTable"
   assert_output --partial "begin insert dataTable"
