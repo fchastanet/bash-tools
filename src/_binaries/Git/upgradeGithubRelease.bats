@@ -26,8 +26,14 @@ function Git::upgradeGithubRelease::noArg { #@test
   assert_output --partial "ERROR   - Command upgradeGithubRelease - Argument 'targetFile' should be provided at least 1 time(s)"
 }
 
-function Git::upgradeGithubRelease::1Arg { #@test
-  run "${binDir}/upgradeGithubRelease" arg1 2>&1
+function Git::upgradeGithubRelease::1ArgNotWritable { #@test
+  run "${binDir}/upgradeGithubRelease" /notWritable/arg1 2>&1
+  assert_failure 1
+  assert_output --partial "FATAL   - File /notWritable/arg1 is not writable"
+}
+
+function Git::upgradeGithubRelease::1ArgWritable { #@test
+  run "${binDir}/upgradeGithubRelease" /tmp/arg1 2>&1
   assert_failure 1
   assert_output --partial "ERROR   - Command upgradeGithubRelease - Argument 'githubUrlPattern' should be provided at least 1 time(s)"
 }
