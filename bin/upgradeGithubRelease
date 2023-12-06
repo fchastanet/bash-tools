@@ -1634,12 +1634,12 @@ upgradeGithubReleaseCommand() {
     echo -e "  ${__HELP_OPTION_COLOR}--exact-version${__HELP_NORMAL}, ${__HELP_OPTION_COLOR}-e <exactVersion>${__HELP_NORMAL} {single}"
     local -a helpArray
     # shellcheck disable=SC2054
-    helpArray=($'if provided and currently installed binary is not this [2;97mexactVersion[0m,\n      This exact version of the binary will be installed.\n      See options constraints below.')
+    helpArray=($'if provided and currently installed binary is not this exactVersion,\n      This exact version of the binary will be installed.\n      See options constraints below.')
     echo -e "    $(Array::wrap " " 76 4 "${helpArray[@]}")"
     echo -e "  ${__HELP_OPTION_COLOR}--minimal-version${__HELP_NORMAL}, ${__HELP_OPTION_COLOR}-m <minimalVersion>${__HELP_NORMAL} {single}"
     local -a helpArray
     # shellcheck disable=SC2054
-    helpArray=($'if provided and currently installed binary is below this [2;97mminimalVersion[0m,\na new version of the binary will be installed.\nIf this argument is not provided, the latest binary is unconditionally downloaded from github.\nSee options constraints below.')
+    helpArray=($'if provided and currently installed binary is below this minimalVersion,\na new version of the binary will be installed.\nIf this argument is not provided, the latest binary is unconditionally downloaded from github.\nSee options constraints below.')
     echo -e "    $(Array::wrap " " 76 4 "${helpArray[@]}")"
     echo
     echo -e "${__HELP_TITLE_COLOR}GLOBAL OPTIONS:${__RESET_COLOR}"

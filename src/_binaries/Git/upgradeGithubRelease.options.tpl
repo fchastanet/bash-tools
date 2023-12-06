@@ -78,7 +78,7 @@ See options constraints below." \
   # shellcheck disable=SC2116,SC2016
   Options::generateOption \
     --help-value-name "minimalVersion" \
-    --help 'if provided and currently installed binary is below this ${__HELP_EXAMPLE}minimalVersion${__HELP_NORMAL},
+    --help 'if provided and currently installed binary is below this minimalVersion,
 a new version of the binary will be installed.
 If this argument is not provided, the latest binary is unconditionally downloaded from github.
 See options constraints below.' \
@@ -92,7 +92,7 @@ See options constraints below.' \
   # shellcheck disable=SC2116,SC2016
   Options::generateOption \
     --help-value-name "exactVersion" \
-    --help 'if provided and currently installed binary is not this ${__HELP_EXAMPLE}exactVersion${__HELP_NORMAL},
+    --help 'if provided and currently installed binary is not this exactVersion,
       This exact version of the binary will be installed.
       See options constraints below.' \
     --group groupVersionManagementFunction \

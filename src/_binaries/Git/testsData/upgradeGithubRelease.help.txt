@@ -29,11 +29,11 @@
     version you currently have, see examples below.
     See options constraints below.
   [1;34m--exact-version[0m, [1;34m-e <exactVersion>[0m {single}
-    if provided and currently installed binary is not this [2;97mexactVersion[0m,
+    if provided and currently installed binary is not this exactVersion,
           This exact version of the binary will be installed.
           See options constraints below.
   [1;34m--minimal-version[0m, [1;34m-m <minimalVersion>[0m {single}
-    if provided and currently installed binary is below this [2;97mminimalVersion[0m,
+    if provided and currently installed binary is below this minimalVersion,
     a new version of the binary will be installed. If this argument is not provi
     ded, the latest binary is unconditionally downloaded from github.
     See options constraints below.
