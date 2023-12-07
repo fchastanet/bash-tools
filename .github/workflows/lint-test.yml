@@ -1,4 +1,5 @@
 ---
+# kics-scan disable=555ab8f9-2001-455e-a077-f2d0f41e2fb9
 # Lint the code base and launch unit test at each push or pull request
 name: Lint and test
 on: # yamllint disable-line rule:truthy

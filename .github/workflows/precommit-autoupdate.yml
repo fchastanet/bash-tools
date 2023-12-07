@@ -1,4 +1,5 @@
 ---
+# kics-scan disable=555ab8f9-2001-455e-a077-f2d0f41e2fb9
 # Check if precommit packages need to be updated and create PR if this is the case
 name: Pre-commit auto-update
 on:

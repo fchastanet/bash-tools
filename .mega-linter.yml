@@ -1,6 +1,6 @@
 ---
 # Configuration file for MegaLinter
-# See all available variables at https://oxsecurity.github.io/megalinter/configuration/ and in linters documentation
+# See all available variables at https://megalinter.io/latest/configuration/ and in linters documentation
 
 APPLY_FIXES: all # all, none, or list of linter keys
 # ENABLE: # If you use ENABLE variable, all other languages/formats/tooling-formats will be disabled by default
@@ -95,11 +95,7 @@ JAVASCRIPT_DEFAULT_STYLE: prettier
 JAVASCRIPT_ES_CONFIG_FILE: .eslintrc.js
 JAVASCRIPT_ES_FILTER_REGEX_EXCLUDE: (report/)
 
-JSON_JSONLINT_FILTER_REGEX_EXCLUDE: |
-  (?x)(
-    ^\.vscode/(settings|launch)\.json|
-    ^conf/\.vscode/settings\.json
-  )
+JSON_JSONLINT_FILTER_REGEX_EXCLUDE: (.vscode/)
 
 MARKDOWN_MARKDOWN_LINK_CHECK_FILTER_REGEX_EXCLUDE: (report)
 

@@ -1,0 +1,15 @@
+http://localhost*
+file://pages/Commands.md
+s3://s3server/exports
+https://github.com/sharkdp/fd/releases/download/v@version@/fd_@version@_amd64.deb*
+https://github.com/sharkdp/bat/releases/download/v@version@/bat_@version@_amd64.deb*
+https://github.com/koalaman/shellcheck/releases/download/v@version@/shellcheck-v@version@.linux.x86_64.tar.xz*
+https://github.com/hadolint/hadolint/releases/download/v@version@/hadolint-Linux-x86_64*
+https://github.com/kubernetes-sigs/kind/releases/download/v@version@/kind-linux-amd64*
+https://github.com/Blacksmoke16/oq/releases/download/v@version@/oq-v@version@-/*
+https://github.com/kubernetes/minikube/releases/download/v@version@/minikube-linux-amd64*
+https://github.com/docker/compose/releases/download/v@version@/docker-compose*
+https://github.com/plantuml/plantuml/releases/download/v@version@/plantuml-@version@.jar*
+https://github.com/docker/docker-credential-helpers/releases/download/v@version@/docker-credential-wincred-v@version@.windows*
+https://github.com/Versent/saml2aws/releases/download/v@version@/saml2aws_@version@_linux_amd64.tar.gz
+https://github.com/fchastanet/bash-tools/tree/master/src/_binaries*

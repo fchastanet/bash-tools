@@ -118,3 +118,7 @@ ppassword
 DELIMS
 Facadesh
 Scriptsh
+noargs
+exitcode
+Datash
+installsh
