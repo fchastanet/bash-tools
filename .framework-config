@@ -2,11 +2,14 @@
 # shellcheck disable=SC2034
 
 BASH_TOOLS_ROOT_DIR="$(cd -- "$(dirname -- "${CURRENT_LOADED_ENV_FILE}")" &>/dev/null && pwd -P)"
-FRAMEWORK_ROOT_DIR="${FRAMEWORK_ROOT_DIR:-${BASH_TOOLS_ROOT_DIR}/vendor/bash-tools-framework}"
-FRAMEWORK_SRC_DIR="${FRAMEWORK_SRC_DIR:-${FRAMEWORK_ROOT_DIR}/src}"
-FRAMEWORK_BIN_DIR="${FRAMEWORK_BIN_DIR:-${FRAMEWORK_ROOT_DIR}/bin}"
-FRAMEWORK_VENDOR_DIR="${FRAMEWORK_VENDOR_DIR:-${FRAMEWORK_ROOT_DIR}/vendor}"
-FRAMEWORK_VENDOR_BIN_DIR="${FRAMEWORK_VENDOR_BIN_DIR:-${FRAMEWORK_ROOT_DIR}/vendor/bin}"
+FRAMEWORK_ROOT_DIR="${BASH_TOOLS_ROOT_DIR}/vendor/bash-tools-framework"
+FRAMEWORK_SRC_DIR="${FRAMEWORK_ROOT_DIR}/src"
+FRAMEWORK_BIN_DIR="${FRAMEWORK_ROOT_DIR}/bin"
+FRAMEWORK_VENDOR_DIR="${FRAMEWORK_ROOT_DIR}/vendor"
+FRAMEWORK_VENDOR_BIN_DIR="${FRAMEWORK_VENDOR_DIR}/bin"
+
+# allows to generate bin file in the right directory
+export BASH_TOOLS_ROOT_DIR
 
 # compile parameters
 # srcFile     : file that needs to be compiled
@@ -16,7 +19,7 @@ FRAMEWORK_VENDOR_BIN_DIR="${FRAMEWORK_VENDOR_BIN_DIR:-${FRAMEWORK_ROOT_DIR}/vend
 # srcDirs     : additional directories where to find the functions
 COMPILE_PARAMETERS=(
   --src-dir "${BASH_TOOLS_ROOT_DIR}/src"
-  --src-dir "${FRAMEWORK_SRC_DIR}"
+  --src-dir "${FRAMEWORK_ROOT_DIR}/src"
   --bin-dir "${BASH_TOOLS_ROOT_DIR}/bin"
   --root-dir "${BASH_TOOLS_ROOT_DIR}"
   --template-dir "${BASH_TOOLS_ROOT_DIR}/src"
@@ -40,6 +43,7 @@ fi
 
 # export here all the variables that will be used in your templates
 export REPOSITORY_URL="${REPOSITORY_URL:-https://github.com/fchastanet/bash-tools}"
+SRC_FILE_PATH="${CURRENT_COMPILED_RELATIVE_FILE#/}"
 
 BASH_FRAMEWORK_THEME="${BASH_FRAMEWORK_THEME:-default}"
 BASH_FRAMEWORK_LOG_LEVEL="${BASH_FRAMEWORK_LOG_LEVEL:-0}"

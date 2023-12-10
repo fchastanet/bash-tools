@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# BIN_FILE=${FRAMEWORK_ROOT_DIR}/bin/mysql2puml
+# BIN_FILE=${BASH_TOOLS_ROOT_DIR}/bin/mysql2puml
 # VAR_RELATIVE_FRAMEWORK_DIR_TO_CURRENT_DIR=..
 # FACADE
 # shellcheck disable=SC2034

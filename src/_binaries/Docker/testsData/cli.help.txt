@@ -1,31 +1,37 @@
 [1;37mDESCRIPTION:[0m easy connection to docker container
 
 [1;37mUSAGE:[0m cli [OPTIONS] [ARGUMENTS]
-[1;37mUSAGE:[0m cli [--bash-framework-config <String>] [--config] [--verbose|-v] [-vv]
-  [-vvv] [--env-file <String>] [--no-color] [--theme <String>] [--help|-h]
-  [--version] [--quiet|-q] [--log-level <String>] [--log-file <String>]
-  [--display-level <String>]
+[1;37mUSAGE:[0m cli [--bash-framework-config <String>] [--config]
+  [--verbose|-v] [-vv] [-vvv] [--env-file <String>] [--no-color]
+  [--theme <String>] [--help|-h] [--version] [--quiet|-q] [--log-level <String>]
+  [--log-file <String>] [--display-level <String>]
 
 [1;37mARGUMENTS:[0m
   [[1;34mcontainer[0m {single}]
     container should be the name of a profile from profile list,
     check containers list below.
     If not provided, it will load the container specified in default configu
-    ration.
-    Default configuration: [1;34mdefault[0m
+    ration. Default configuration: [1;34mdefault[0m
     Default container: [1;34mproject-apache2[0m
   [[1;34muser[0m {single}]
     user to connect on this container
+
     Default user: [1;34mwww-data[0m
       loaded from profile selected as first arg
       or deduced from default configuration.
-    Default configuration: [1;34mdefault[0m if first arg is not a profile
+
+    Default configuration: [1;34mdefault[0m
+
+    if first arg is not a profile
   [[1;34mcommandArg[0m {single}]
     The command to execute
+
     Default command: [1;34m/bin/bash[0m
       loaded from profile selected as first arg
       or deduced from default configuration.
-    Default configuration: [1;34mdefault[0m if first arg is not a profile
+    Default configuration: [1;34mdefault[0m
+
+    if first arg is not a profile
 
 [1;37mGLOBAL OPTIONS:[0m
   [1;34m--bash-framework-config <String>[0m {single}
@@ -44,8 +50,10 @@
   [1;34m--no-color[0m {single}
     Produce monochrome output. alias of --theme noColor.
   [1;34m--theme <String>[0m {single}
-    choose color theme (default, default-force or noColor) - default-force means
-     colors will be produced even if command is piped
+    choose color theme - default-force means colors will be produced even if com
+    mand is piped
+    Default value: default
+    Possible values: default|default-force|noColor
   [1;34m--help[0m, [1;34m-h[0m {single}
     Display this command help
   [1;34m--version[0m {single}
@@ -53,11 +61,13 @@
   [1;34m--quiet[0m, [1;34m-q[0m {single}
     quiet mode, doesn't display any output
   [1;34m--log-level <String>[0m {single}
-    Set log level (one of OFF, ERROR, WARNING, INFO, DEBUG, TRACE value)
+    Set log level
+    Possible values: OFF|ERROR|WARNING|INFO|DEBUG|TRACE
   [1;34m--log-file <String>[0m {single}
     Set log file
   [1;34m--display-level <String>[0m {single}
-    set display level (one of OFF, ERROR, WARNING, INFO, DEBUG, TRACE value)
+    set display level
+    Possible values: OFF|ERROR|WARNING|INFO|DEBUG|TRACE
 
 [1;37mAVAILABLE PROFILES (from /bash/conf/cliProfiles)[0m
 This list can be overridden in home/.bash-tools/cliProfiles

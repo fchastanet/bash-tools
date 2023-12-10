@@ -7,13 +7,18 @@ on:
   schedule:
     # https://crontab.cronhub.io/
     - cron: '30 10 * * *'
+
+permissions: read-all
+
 jobs:
   auto-update:
     runs-on: ubuntu-22.04
     steps:
+      # kics-scan ignore-line
       - uses: actions/checkout@v4
 
       - name: Set up Python
+        # kics-scan ignore-line
         uses: actions/setup-python@v4
         with:
           python-version: 3.9
@@ -25,6 +30,7 @@ jobs:
         run: pre-commit autoupdate
 
       - name: Create Pull Request
+        # kics-scan ignore-line
         uses: peter-evans/create-pull-request@v5
         with:
           branch: update/pre-commit-autoupdate

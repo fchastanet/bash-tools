@@ -1,10 +1,11 @@
 [1;37mDESCRIPTION:[0m convert mysql dump sql schema to plantuml format
 
 [1;37mUSAGE:[0m mysql2puml [OPTIONS] [ARGUMENTS]
-[1;37mUSAGE:[0m mysql2puml [--skin <String>] [--bash-framework-config <String>]
-  [--config] [--verbose|-v] [-vv] [-vvv] [--env-file <String>] [--no-color]
-  [--theme <String>] [--help|-h] [--version] [--quiet|-q] [--log-level <String>]
-  [--log-file <String>] [--display-level <String>]
+[1;37mUSAGE:[0m mysql2puml [--skin <String>]
+  [--bash-framework-config <String>] [--config] [--verbose|-v] [-vv] [-vvv]
+  [--env-file <String>] [--no-color] [--theme <String>] [--help|-h] [--version]
+  [--quiet|-q] [--log-level <String>] [--log-file <String>]
+  [--display-level <String>]
 
 [1;37mARGUMENTS:[0m
   [[1;34minputSqlFile[0m {single}]
@@ -32,8 +33,10 @@
   [1;34m--no-color[0m {single}
     Produce monochrome output. alias of --theme noColor.
   [1;34m--theme <String>[0m {single}
-    choose color theme (default, default-force or noColor) - default-force means
-     colors will be produced even if command is piped
+    choose color theme - default-force means colors will be produced even if com
+    mand is piped
+    Default value: default
+    Possible values: default|default-force|noColor
   [1;34m--help[0m, [1;34m-h[0m {single}
     Display this command help
   [1;34m--version[0m {single}
@@ -41,11 +44,13 @@
   [1;34m--quiet[0m, [1;34m-q[0m {single}
     quiet mode, doesn't display any output
   [1;34m--log-level <String>[0m {single}
-    Set log level (one of OFF, ERROR, WARNING, INFO, DEBUG, TRACE value)
+    Set log level
+    Possible values: OFF|ERROR|WARNING|INFO|DEBUG|TRACE
   [1;34m--log-file <String>[0m {single}
     Set log file
   [1;34m--display-level <String>[0m {single}
-    set display level (one of OFF, ERROR, WARNING, INFO, DEBUG, TRACE value)
+    set display level
+    Possible values: OFF|ERROR|WARNING|INFO|DEBUG|TRACE
 
 [1;37mEXAMPLE 1:[0m
 [2;97mmysql2puml dump.dql[0m

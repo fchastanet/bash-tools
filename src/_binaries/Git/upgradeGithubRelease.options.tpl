@@ -21,7 +21,8 @@ declare defaultVersionArg="--version"
 source <(
   targetFileArgCallback() { :; }
   Options::generateArg \
-    --help "the binary downloaded will e written to this file path. Ensure the path is writable." \
+    --help $'the binary downloaded will be written to this file path.\n
+      Ensure the path is writable.' \
     --min 1 \
     --max 1 \
     --name "targetFile" \
@@ -32,11 +33,9 @@ source <(
   githubUrlPatternArgCallback() { :; }
   # shellcheck disable=SC2116
   Options::generateArg \
-    --help "$(echo \
-        "the url pattern to use to download the binary, see examples below." $'\n' \
-        "@version@ is template variable that will be replaced by the latest"  $'\n' \
-        "version tag found on github." \
-      )" \
+    --help $'the url pattern to use to download the binary, see examples below.\n
+      @version@ is template variable that will be replaced by the latest \n
+      version tag found on github.' \
     --min 1 \
     --max 1 \
     --name "githubUrlPattern" \
@@ -52,8 +51,9 @@ source <(
   Options::generateOption \
     --help-value-name "versionArg" \
     --default-value "${defaultVersionArg}" \
-    --help "The argument that will be provided to the currently installed binary
-to check the version of the software. See options constraints below." \
+    --help $'The argument that will be provided to the currently installed binary\n
+      to check the version of the software. \n
+      See options constraints below.' \
     --group groupVersionManagementFunction \
     --alt "--version-arg" \
     --variable-type "String" \
@@ -63,11 +63,11 @@ to check the version of the software. See options constraints below." \
   # shellcheck disable=SC2116
   Options::generateOption \
     --help-value-name "currentVersion" \
-    --help "Sometimes the command to retrieve the version is complicated.
-Some command needs you to parse json or other commands provides
-multiple sub command versions. In this case you can provide the
-version you currently have, see examples below.
-See options constraints below." \
+    --help $'Sometimes the command to retrieve the version is complicated. \n
+      Some command needs you to parse json or other commands provides multiple \n
+      sub command versions. In this case you can provide the version you \n
+      currently have, see examples below. \n
+      See options constraints below.' \
     --group groupVersionManagementFunction \
     --alt "--current-version" \
     --alt "-c" \
@@ -78,10 +78,11 @@ See options constraints below." \
   # shellcheck disable=SC2116,SC2016
   Options::generateOption \
     --help-value-name "minimalVersion" \
-    --help 'if provided and currently installed binary is below this minimalVersion,
-a new version of the binary will be installed.
-If this argument is not provided, the latest binary is unconditionally downloaded from github.
-See options constraints below.' \
+    --help $'if provided and currently installed binary is below this \n
+      minimalVersion, a new version of the binary will be installed. \n
+      If this argument is not provided, the latest binary is unconditionally \n
+      downloaded from github. \n
+      See options constraints below.' \
     --group groupVersionManagementFunction \
     --alt "--minimal-version" \
     --alt "-m" \
@@ -92,8 +93,8 @@ See options constraints below.' \
   # shellcheck disable=SC2116,SC2016
   Options::generateOption \
     --help-value-name "exactVersion" \
-    --help 'if provided and currently installed binary is not this exactVersion,
-      This exact version of the binary will be installed.
+    --help $'if provided and currently installed binary is not this exactVersion,\n
+      This exact version of the binary will be installed.\n
       See options constraints below.' \
     --group groupVersionManagementFunction \
     --alt "--exact-version" \

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# BIN_FILE=${FRAMEWORK_ROOT_DIR}/conf/dbScripts/extractData
+# BIN_FILE=${BASH_TOOLS_ROOT_DIR}/conf/dbScripts/extractData
 # FACADE
 # shellcheck disable=SC2154
 

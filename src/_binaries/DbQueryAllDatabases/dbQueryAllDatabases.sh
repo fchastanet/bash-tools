@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# BIN_FILE=${FRAMEWORK_ROOT_DIR}/bin/dbQueryAllDatabases
+# BIN_FILE=${BASH_TOOLS_ROOT_DIR}/bin/dbQueryAllDatabases
 # VAR_RELATIVE_FRAMEWORK_DIR_TO_CURRENT_DIR=..
 # FACADE
 # EMBED Db::queryOneDatabase as dbQueryOneDatabase

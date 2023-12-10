@@ -5,7 +5,7 @@
 # @generated
 ###############################################################################
 # shellcheck disable=SC2288,SC2034
-# BIN_FILE=${FRAMEWORK_ROOT_DIR}/conf/dbScripts/extractData
+# BIN_FILE=${BASH_TOOLS_ROOT_DIR}/conf/dbScripts/extractData
 # FACADE
 
 # ensure that no user aliases could interfere with

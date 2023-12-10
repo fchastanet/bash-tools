@@ -1,8 +1,9 @@
 [1;37mDESCRIPTION:[0m wait for host:port to be available
 
 [1;37mUSAGE:[0m waitForIt [OPTIONS] [ARGUMENTS]
-[1;37mUSAGE:[0m waitForIt [--timeout|-t <timeout>] --host|-i <hostOrIp> --port|-p <port>
-  [--algorithm|--algo <algorithm>] [--exec-command-on-success-only|--strict|-s]
+[1;37mUSAGE:[0m waitForIt [--timeout|-t <timeout>] --host|-i <hostOrIp>
+  --port|-p <port> [--algorithm|--algo <algorithm>]
+  [--exec-command-on-success-only|--strict|-s]
   [--bash-framework-config <String>] [--config] [--verbose|-v] [-vv] [-vvv]
   [--env-file <String>] [--no-color] [--theme <String>] [--help|-h] [--version]
   [--quiet|-q] [--log-level <String>] [--log-file <String>]
@@ -22,8 +23,8 @@
   [1;34m--port[0m, [1;34m-p <port>[0m {single} (mandatory)
     TCP port under test.
   [1;34m--algorithm[0m, [1;34m--algo <algorithm>[0m {single}
-    Algorithm to use Check algorithms list below.  (default: automatic selectio
-    n based on commands availability and timeout option value).
+    Algorithm to use Check algorithms list below.  (default: automatic selection
+    based on commands availability and timeout option value).
   [1;34m--exec-command-on-success-only[0m, [1;34m--strict[0m, [1;34m-s[0m {single}
     Only execute sub-command if the test succeeds.
 
@@ -44,8 +45,10 @@
   [1;34m--no-color[0m {single}
     Produce monochrome output. alias of --theme noColor.
   [1;34m--theme <String>[0m {single}
-    choose color theme (default, default-force or noColor) - default-force means
-     colors will be produced even if command is piped
+    choose color theme - default-force means colors will be produced even if com
+    mand is piped
+    Default value: default
+    Possible values: default|default-force|noColor
   [1;34m--help[0m, [1;34m-h[0m {single}
     Display this command help
   [1;34m--version[0m {single}
@@ -53,11 +56,13 @@
   [1;34m--quiet[0m, [1;34m-q[0m {single}
     quiet mode, doesn't display any output
   [1;34m--log-level <String>[0m {single}
-    Set log level (one of OFF, ERROR, WARNING, INFO, DEBUG, TRACE value)
+    Set log level
+    Possible values: OFF|ERROR|WARNING|INFO|DEBUG|TRACE
   [1;34m--log-file <String>[0m {single}
     Set log file
   [1;34m--display-level <String>[0m {single}
-    set display level (one of OFF, ERROR, WARNING, INFO, DEBUG, TRACE value)
+    set display level
+    Possible values: OFF|ERROR|WARNING|INFO|DEBUG|TRACE
 
 [1;37mEXIT STATUS CODES:[0m
 [1;34m0[0m: the host/port is available

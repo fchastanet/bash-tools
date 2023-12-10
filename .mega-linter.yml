@@ -18,22 +18,27 @@ DISABLE_LINTERS:
   - SPELL_VALE
   - SPELL_LYCHEE
   - SPELL_PROSELINT
+  - JSON_JSONLINT
 # DISABLE_ERRORS: true # Uncomment if you want MegaLinter to detect errors but not block CI to pass
 EXCLUDED_DIRECTORIES:
   - '.history'
   - '.git'
   - '.idea'
   - 'logs'
+  - 'node_modules'
 FILTER_REGEX_EXCLUDE: |
   (?x)(
     \.git/|
     \.history/|
     \.idea/|
-    ^vendor/
+    ^vendor/|
+    ^node_modules/
   )
 FILEIO_REPORTER: false
 PRE_COMMANDS:
   - command: env
+    cwd: 'workspace'
+  - command: yarn add --dev eslint-plugin-json eslint-config-prettier
     cwd: 'workspace'
 POST_COMMANDS:
   # FIX files set as root user
@@ -66,13 +71,11 @@ CREDENTIALS_SECRETLINT_CONFIG_FILE: .secretlintrc.yml
 EDITORCONFIG_EDITORCONFIG_CHECKER_FILTER_REGEX_EXCLUDE: |
   (?x)(
     \.git/|
-    /testsData/.*\.(txt|help)|
+    /testsData/|
     ^manualTests/data/|
-    ^src/Log/testsData|
-    ^Gemfile.lock$|
     bin/bash-tpl|
     ^doc/guides/Options/generate.*\.md$|
-    ^pages/Commands.md
+    ^pages/Commands.md|
     ^.*-megalinter_file_names_cspell.txt
   )
 
@@ -95,9 +98,14 @@ JAVASCRIPT_DEFAULT_STYLE: prettier
 JAVASCRIPT_ES_CONFIG_FILE: .eslintrc.js
 JAVASCRIPT_ES_FILTER_REGEX_EXCLUDE: (report/)
 
-JSON_JSONLINT_FILTER_REGEX_EXCLUDE: (.vscode/)
-
-MARKDOWN_MARKDOWN_LINK_CHECK_FILTER_REGEX_EXCLUDE: (report)
+MARKDOWN_MARKDOWN_LINK_CHECK_FILTER_REGEX_EXCLUDE: (report/)
 
 SPELL_CSPELL_FILTER_REGEX_EXCLUDE: (\.git/|\.history/|IDE/.*/.idea|.*-megalinter_file_names_cspell.txt)
 SPELL_FILTER_REGEX_EXCLUDE: (\.git/|\.history/|IDE/.*/.idea)
+
+SPELL_LYCHEE_FILTER_REGEX_EXCLUDE: |
+  (?x)(
+    ^pages/Commands.md$
+  )
+
+JSON_ESLINT_PLUGIN_JSONC_FILE_NAME: .eslintrc.js

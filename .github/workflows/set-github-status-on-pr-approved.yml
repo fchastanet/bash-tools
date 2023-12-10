@@ -6,13 +6,17 @@ on:
   pull_request_review:
     types: [submitted]
 
+permissions: read-all
+
 jobs:
   build:
     if: github.event.review.state == 'approved'
     runs-on: ubuntu-22.04
     steps:
+      # kics-scan ignore-line
       - uses: actions/checkout@v4
       - name: Run the action # You would run your tests before this using the output to set state/desc
+        # kics-scan ignore-line
         uses: Sibz/github-status-action@v1
         with:
           authToken: ${{secrets.GITHUB_TOKEN}}

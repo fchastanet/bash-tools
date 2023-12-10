@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# BIN_FILE=${FRAMEWORK_ROOT_DIR}/bin/dbImportProfile
+# BIN_FILE=${BASH_TOOLS_ROOT_DIR}/bin/dbImportProfile
 # VAR_RELATIVE_FRAMEWORK_DIR_TO_CURRENT_DIR=..
 # FACADE
 # shellcheck disable=SC2034
@@ -64,13 +64,13 @@ run() {
       tableSize="$(echo "${line}" | awk -F ' ' '{print $2}')"
       tableName="$(echo "${line}" | awk -F ' ' '{print $1}')"
       if ((tableSize < maxTableSize * optionRatio / 100)); then
-        echo -n '#'
+        echo -n '  #'
       else
         excludedTablesCount=$((excludedTablesCount + 1))
       fi
       echo "  grep -v '^${tableName}$' | # table size ${tableSize}MB"
     done < <(echo "${tableList}")
-    echo "cat"
+    echo "  cat"
     tablesCount="$(echo "${tableList}" | wc -l)"
     Log::displayInfo "Profile generated - ${excludedTablesCount}/${tablesCount} tables bigger than ${optionRatio}% of max table size (${maxTableSize}MB) automatically excluded"
   ) >"${HOME_PROFILES_DIR}/${optionProfile}"

@@ -1,4 +1,5 @@
-[1;37mDESCRIPTION:[0m retrieve latest binary release from github and install it
+[1;37mDESCRIPTION:[0m
+retrieve latest binary release from github and install it
 
 [1;37mUSAGE:[0m upgradeGithubRelease [OPTIONS] [ARGUMENTS]
 [1;37mUSAGE:[0m upgradeGithubRelease [--version-arg <versionArg>]
@@ -10,32 +11,34 @@
 
 [1;37mARGUMENTS:[0m
   [1;34mtargetFile[0m {single} (mandatory)
-    the binary downloaded will e written to this file path. Ensure the path is w
-    ritable.
+    the binary downloaded will be written to this file path.
+    Ensure the path is writable.
   [1;34mgithubUrlPattern[0m {single} (mandatory)
     the url pattern to use to download the binary, see examples below.
-     @version@ is template variable that will be replaced by the latest
-     version tag found on github.
+    @version@ is template variable that will be replaced by the latest
+    version tag found on github.
 
 [1;37mVERSION MANAGEMENT:[0m
   [1;34m--version-arg <versionArg>[0m {single}
     The argument that will be provided to the currently installed binary
-    to check the version of the software. See options constraints below.
+    to check the version of the software.
+    See options constraints below.
     Default value: --version
   [1;34m--current-version[0m, [1;34m-c <currentVersion>[0m {single}
     Sometimes the command to retrieve the version is complicated.
-    Some command needs you to parse json or other commands provides
-    multiple sub command versions. In this case you can provide the
-    version you currently have, see examples below.
+    Some command needs you to parse json or other commands provides multiple
+    sub command versions. In this case you can provide the version you
+    currently have, see examples below.
     See options constraints below.
   [1;34m--exact-version[0m, [1;34m-e <exactVersion>[0m {single}
     if provided and currently installed binary is not this exactVersion,
-          This exact version of the binary will be installed.
-          See options constraints below.
+    This exact version of the binary will be installed.
+    See options constraints below.
   [1;34m--minimal-version[0m, [1;34m-m <minimalVersion>[0m {single}
-    if provided and currently installed binary is below this minimalVersion,
-    a new version of the binary will be installed. If this argument is not provi
-    ded, the latest binary is unconditionally downloaded from github.
+    if provided and currently installed binary is below this
+    minimalVersion, a new version of the binary will be installed.
+    If this argument is not provided, the latest binary is unconditionally
+    downloaded from github.
     See options constraints below.
 
 [1;37mGLOBAL OPTIONS:[0m
@@ -55,8 +58,10 @@
   [1;34m--no-color[0m {single}
     Produce monochrome output. alias of --theme noColor.
   [1;34m--theme <String>[0m {single}
-    choose color theme (default, default-force or noColor) - default-force means
-     colors will be produced even if command is piped
+    choose color theme - default-force means colors will be produced even if com
+    mand is piped
+    Default value: default
+    Possible values: default|default-force|noColor
   [1;34m--help[0m, [1;34m-h[0m {single}
     Display this command help
   [1;34m--version[0m {single}
@@ -64,11 +69,13 @@
   [1;34m--quiet[0m, [1;34m-q[0m {single}
     quiet mode, doesn't display any output
   [1;34m--log-level <String>[0m {single}
-    Set log level (one of OFF, ERROR, WARNING, INFO, DEBUG, TRACE value)
+    Set log level
+    Possible values: OFF|ERROR|WARNING|INFO|DEBUG|TRACE
   [1;34m--log-file <String>[0m {single}
     Set log file
   [1;34m--display-level <String>[0m {single}
-    set display level (one of OFF, ERROR, WARNING, INFO, DEBUG, TRACE value)
+    set display level
+    Possible values: OFF|ERROR|WARNING|INFO|DEBUG|TRACE
 
 [1;37mOPTIONS CONSTRAINTS:[0m
 

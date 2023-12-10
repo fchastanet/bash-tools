@@ -34,6 +34,7 @@ Allows to execute a script on each database of specified mysql server
   [1;34m--log-format[0m, [1;34m-l <logFormat>[0m {single}
     if output dir provided, will log each db result to log file
     Default value: none
+    Possible values: none|log
 
 [1;37mGLOBAL OPTIONS:[0m
   [1;34m--bash-framework-config <String>[0m {single}
@@ -52,8 +53,10 @@ Allows to execute a script on each database of specified mysql server
   [1;34m--no-color[0m {single}
     Produce monochrome output. alias of --theme noColor.
   [1;34m--theme <String>[0m {single}
-    choose color theme (default, default-force or noColor) - default-force means
-     colors will be produced even if command is piped
+    choose color theme - default-force means colors will be produced even if com
+    mand is piped
+    Default value: default
+    Possible values: default|default-force|noColor
   [1;34m--help[0m, [1;34m-h[0m {single}
     Display this command help
   [1;34m--version[0m {single}
@@ -61,11 +64,13 @@ Allows to execute a script on each database of specified mysql server
   [1;34m--quiet[0m, [1;34m-q[0m {single}
     quiet mode, doesn't display any output
   [1;34m--log-level <String>[0m {single}
-    Set log level (one of OFF, ERROR, WARNING, INFO, DEBUG, TRACE value)
+    Set log level
+    Possible values: OFF|ERROR|WARNING|INFO|DEBUG|TRACE
   [1;34m--log-file <String>[0m {single}
     Set log file
   [1;34m--display-level <String>[0m {single}
-    set display level (one of OFF, ERROR, WARNING, INFO, DEBUG, TRACE value)
+    set display level
+    Possible values: OFF|ERROR|WARNING|INFO|DEBUG|TRACE
 
 [1;37mNOTE:[0m
 the use of output, log-format, verbose options highly depends on the script used

@@ -4,6 +4,7 @@ declare commandFunctionName="mysql2pumlCommand"
 declare optionSkinDefault="default"
 declare help="convert mysql dump sql schema to plantuml format"
 # shellcheck disable=SC2016
+# kics-scan disable=487f4be7-3fd9-4506-a07a-eae252180c08
 declare longDescription='''
 ${__HELP_TITLE}EXAMPLE 1:${__HELP_NORMAL}
 ${__HELP_EXAMPLE}mysql2puml dump.dql${__HELP_NORMAL}

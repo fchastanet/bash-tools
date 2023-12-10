@@ -1,11 +1,12 @@
 [1;37mDESCRIPTION:[0m generate optimized profiles to be used by dbImport
 
 [1;37mUSAGE:[0m dbImportProfile [OPTIONS] [ARGUMENTS]
-[1;37mUSAGE:[0m dbImportProfile [--profile|-p <String>] [--from-dsn|-f <String>]
-  [--ratio|-r <String>] [--bash-framework-config <String>] [--config]
-  [--verbose|-v] [-vv] [-vvv] [--env-file <String>] [--no-color]
-  [--theme <String>] [--help|-h] [--version] [--quiet|-q] [--log-level <String>]
-  [--log-file <String>] [--display-level <String>]
+[1;37mUSAGE:[0m dbImportProfile [--profile|-p <String>]
+  [--from-dsn|-f <String>] [--ratio|-r <String>]
+  [--bash-framework-config <String>] [--config] [--verbose|-v] [-vv] [-vvv]
+  [--env-file <String>] [--no-color] [--theme <String>] [--help|-h] [--version]
+  [--quiet|-q] [--log-level <String>] [--log-file <String>]
+  [--display-level <String>]
 
 [1;37mARGUMENTS:[0m
   [1;34mfromDbName[0m {single} (mandatory)
@@ -21,8 +22,8 @@
   [1;34m--ratio[0m, [1;34m-r <String>[0m {single}
     define the ratio to use (0 to 100% - default 70).  0 means profile will filt
     er out all the tables.  100 means profile will keep all the tables.  Eg:
-     70 means that tables with size(table+index) that are greater that 70% o
-    f the max table size will be excluded.
+    70 means that tables with size(table+index) that are greater that 70% of
+    the max table size will be excluded.
 
 [1;37mGLOBAL OPTIONS:[0m
   [1;34m--bash-framework-config <String>[0m {single}
@@ -41,8 +42,10 @@
   [1;34m--no-color[0m {single}
     Produce monochrome output. alias of --theme noColor.
   [1;34m--theme <String>[0m {single}
-    choose color theme (default, default-force or noColor) - default-force means
-     colors will be produced even if command is piped
+    choose color theme - default-force means colors will be produced even if com
+    mand is piped
+    Default value: default
+    Possible values: default|default-force|noColor
   [1;34m--help[0m, [1;34m-h[0m {single}
     Display this command help
   [1;34m--version[0m {single}
@@ -50,11 +53,13 @@
   [1;34m--quiet[0m, [1;34m-q[0m {single}
     quiet mode, doesn't display any output
   [1;34m--log-level <String>[0m {single}
-    Set log level (one of OFF, ERROR, WARNING, INFO, DEBUG, TRACE value)
+    Set log level
+    Possible values: OFF|ERROR|WARNING|INFO|DEBUG|TRACE
   [1;34m--log-file <String>[0m {single}
     Set log file
   [1;34m--display-level <String>[0m {single}
-    set display level (one of OFF, ERROR, WARNING, INFO, DEBUG, TRACE value)
+    set display level
+    Possible values: OFF|ERROR|WARNING|INFO|DEBUG|TRACE
 
 [1;37mDefault profiles directory:[0m
 /bash/conf/dbImportProfiles

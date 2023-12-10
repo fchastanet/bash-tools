@@ -16,3 +16,8 @@ bin/runBuildContainer
 /bin/test
 /bin/buildPushDockerImages
 /bin/buildPushDockerImage
+
+# node modules
+node_modules/
+package*.json
+yarn.lock

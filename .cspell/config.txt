@@ -198,3 +198,11 @@ difftool
 apos
 hpdy
 tagname
+Aftertabs
+GKHF
+cyclonedx
+cpes
+UNINDEXED
+unindexed
+logrus
+JSONLINT

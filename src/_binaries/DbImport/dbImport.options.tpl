@@ -26,7 +26,7 @@ ${__HELP_EXAMPLE}TODO${__HELP_NORMAL}
 ${__HELP_TITLE}Example 2: import from S3${__HELP_NORMAL}
 ${__HELP_EXAMPLE}TODO${__HELP_NORMAL}'''
 # shellcheck disable=SC2116
-declare defaultFromDsnHelp=$'dsn to use for source database\n\
+declare defaultFromDsnHelp=$'dsn to use for source database\n
   this option is incompatible with -a|--from-aws option'
 
 %

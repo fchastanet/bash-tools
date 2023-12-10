@@ -74,8 +74,8 @@ Options::generateCommand "${options[@]}"
 %
 
 assumeYesHelpCallback() {
-  echo "do not ask for confirmation (use with caution)" $'\n'
-  echo '  Automatic yes to prompts; assume "y" as answer to all prompts' $'\n'
+  echo "do not ask for confirmation (use with caution)"
+  echo '  Automatic yes to prompts; assume "y" as answer to all prompts'
   echo '  and run non-interactively.'
 }
 

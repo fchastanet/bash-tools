@@ -70,36 +70,36 @@ Options::generateCommand "${options[@]}"
 containerArgHelpCallback() {
   Conf::load "cliProfiles" "default"
   echo "container should be the name of a profile from profile list,"
-  echo "check containers list below." $'\n'
-  echo "If not provided, it will load the container specified in default configuration." $'\n'
-  echo "Default configuration: ${__HELP_OPTION_COLOR}${containerArg}${__HELP_NORMAL}" $'\n'
+  echo "check containers list below."
+  echo "If not provided, it will load the container specified in default configuration."
+  echo "Default configuration: ${__HELP_OPTION_COLOR}${containerArg}${__HELP_NORMAL}"
   echo "Default container: ${__HELP_OPTION_COLOR}${finalContainerArg}${__HELP_NORMAL}"
 }
 
 userArgHelpCallback() {
   Conf::load "cliProfiles" "default"
   echo "user to connect on this container" $'\n'
-  echo "Default user: ${__HELP_OPTION_COLOR}${finalUserArg}${__HELP_NORMAL}" $'\n'
-  echo "  loaded from profile selected as first arg" $'\n'
+  echo "Default user: ${__HELP_OPTION_COLOR}${finalUserArg}${__HELP_NORMAL}"
+  echo "  loaded from profile selected as first arg"
   echo "  or deduced from default configuration." $'\n'
-  echo "Default configuration: ${__HELP_OPTION_COLOR}${containerArg}${__HELP_NORMAL}"
+  echo "Default configuration: ${__HELP_OPTION_COLOR}${containerArg}${__HELP_NORMAL}" $'\n'
   echo "if first arg is not a profile"
 }
 
 commandArgHelpCallback() {
   Conf::load "cliProfiles" "default"
   echo "The command to execute" $'\n'
-  echo "Default command: ${__HELP_OPTION_COLOR}${finalCommandArg[*]}${__HELP_NORMAL}" $'\n'
-  echo "  loaded from profile selected as first arg" $'\n'
-  echo "  or deduced from default configuration." $'\n'
-  echo "Default configuration: ${__HELP_OPTION_COLOR}${containerArg}${__HELP_NORMAL}"
+  echo "Default command: ${__HELP_OPTION_COLOR}${finalCommandArg[*]}${__HELP_NORMAL}"
+  echo "  loaded from profile selected as first arg"
+  echo "  or deduced from default configuration."
+  echo "Default configuration: ${__HELP_OPTION_COLOR}${containerArg}${__HELP_NORMAL}" $'\n'
   echo "if first arg is not a profile"
 }
 
 optionHelpCallback() {
   local containers
   # shellcheck disable=SC2046
-  containers="$(Array::wrap ", " 80 0 $(docker ps --format '{{.Names}}'))"
+  containers="$(Array::wrap2 ", " 80 0 $(docker ps --format '{{.Names}}'))"
   local profilesList=""
   Conf::load "cliProfiles" "default"
 

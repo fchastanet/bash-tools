@@ -1,13 +1,15 @@
-[1;37mDESCRIPTION:[0m Import source db into target db using eventual table filter
+[1;37mDESCRIPTION:[0m
+Import source db into target db using eventual table filter
 
 [1;37mUSAGE:[0m dbImport [OPTIONS] [ARGUMENTS]
-[1;37mUSAGE:[0m dbImport [--profile|-p <String>] [--tables <tablesSeparatedByComma>]
-  [--from-dsn|-f <String>] [--skip-schema|-s] [--from-aws|-a <awsFile>]
-  [--target-dsn|-t <targetDsn>] [--character-set|-c <String>]
-  [--collation-name|-o <String>] [--bash-framework-config <String>] [--config]
-  [--verbose|-v] [-vv] [-vvv] [--env-file <String>] [--no-color]
-  [--theme <String>] [--help|-h] [--version] [--quiet|-q] [--log-level <String>]
-  [--log-file <String>] [--display-level <String>]
+[1;37mUSAGE:[0m dbImport [--profile|-p <String>]
+  [--tables <tablesSeparatedByComma>] [--from-dsn|-f <String>]
+  [--skip-schema|-s] [--from-aws|-a <awsFile>] [--target-dsn|-t <targetDsn>]
+  [--character-set|-c <String>] [--collation-name|-o <String>]
+  [--bash-framework-config <String>] [--config] [--verbose|-v] [-vv] [-vvv]
+  [--env-file <String>] [--no-color] [--theme <String>] [--help|-h] [--version]
+  [--quiet|-q] [--log-level <String>] [--log-file <String>]
+  [--display-level <String>]
 
 [1;37mARGUMENTS:[0m
   [1;34mfromDbName[0m {single} (mandatory)
@@ -18,22 +20,23 @@
 
 [1;37mPROFILE OPTIONS:[0m
   [1;34m--profile[0m, [1;34m-p <String>[0m {single}
-    the name of the profile to use in order to include or exclude tables (if not
-     specified in default.sh from 'User profiles directory' if exists or 'De
-    fault profiles directory')
+    the name of the profile to use in order to include or exclude tables
+    (if not specified in default.sh from 'User profiles directory' if exists
+    or 'Default profiles directory')
   [1;34m--tables <tablesSeparatedByComma>[0m {single}
     import only table specified in the list.  If aws mode, ignore profile option
 
 [1;37mFROM OPTIONS:[0m
   [1;34m--from-dsn[0m, [1;34m-f <String>[0m {single}
     dsn to use for source database
-      this option is incompatible with -a|--from-aws option
+    this option is incompatible with -a|--from-aws option
   [1;34m--skip-schema[0m, [1;34m-s[0m {single}
     avoid to import the schema
   [1;34m--from-aws[0m, [1;34m-a <awsFile>[0m {single}
     db dump will be downloaded from s3 instead of using remote db. The value <aw
     sFile> is the name of the file without s3 location (Only .gz or tar.gz f
-    ile are supported). This option is incompatible with -f|--from-dsn option
+    ile are supported). This option is incompatible with -f|--from-dsn optio
+    n
 
 [1;37mTARGET OPTIONS:[0m
   [1;34m--target-dsn[0m, [1;34m-t <targetDsn>[0m {single}
@@ -61,8 +64,10 @@
   [1;34m--no-color[0m {single}
     Produce monochrome output. alias of --theme noColor.
   [1;34m--theme <String>[0m {single}
-    choose color theme (default, default-force or noColor) - default-force means
-     colors will be produced even if command is piped
+    choose color theme - default-force means colors will be produced even if com
+    mand is piped
+    Default value: default
+    Possible values: default|default-force|noColor
   [1;34m--help[0m, [1;34m-h[0m {single}
     Display this command help
   [1;34m--version[0m {single}
@@ -70,11 +75,13 @@
   [1;34m--quiet[0m, [1;34m-q[0m {single}
     quiet mode, doesn't display any output
   [1;34m--log-level <String>[0m {single}
-    Set log level (one of OFF, ERROR, WARNING, INFO, DEBUG, TRACE value)
+    Set log level
+    Possible values: OFF|ERROR|WARNING|INFO|DEBUG|TRACE
   [1;34m--log-file <String>[0m {single}
     Set log file
   [1;34m--display-level <String>[0m {single}
-    set display level (one of OFF, ERROR, WARNING, INFO, DEBUG, TRACE value)
+    set display level
+    Possible values: OFF|ERROR|WARNING|INFO|DEBUG|TRACE
 
 [1;37mDefault profiles directory:[0m
 /bash/conf/dbImportProfiles

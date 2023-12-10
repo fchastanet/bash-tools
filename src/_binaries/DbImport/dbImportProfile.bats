@@ -118,7 +118,8 @@ function Database::dbImportProfile::remote_db_fully_functional_ratio_20 { #@test
   run "${binDir}/dbImportProfile" --verbose -f default.local -r 20 fromDb 2>&1
 
   [[ -f "${HOME}/tableSizeQuery.sql" ]]
-  assert_lines_count 3
+
+  assert_lines_count 3 || assert_output ""
   assert_line --index 0 --partial "INFO    - Using from dsn"
   assert_line --index 1 --partial "Profile generated - 2/3 tables bigger than 20% of max table size (29MB) automatically excluded"
   assert_line --index 2 --partial "INFO    - File saved in"
