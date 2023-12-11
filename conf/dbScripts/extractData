@@ -1,38 +1,52 @@
 #!/usr/bin/env bash
-
-# shellcheck disable=SC2034
-
-#####################################
-# GENERATED FILE FROM https://github.com/fchastanet/bash-tools/tree/master/src/DbScriptAllDatabases/extractData.sh
+###############################################################################
+# GENERATED FACADE FROM https://github.com/fchastanet/bash-tools/tree/master/src/_binaries/DbScriptAllDatabases/extractData.sh
 # DO NOT EDIT IT
-#####################################
+# @generated
+###############################################################################
+# shellcheck disable=SC2288,SC2034
+# BIN_FILE=${BASH_TOOLS_ROOT_DIR}/conf/dbScripts/extractData
+# FACADE
+
+# ensure that no user aliases could interfere with
+# commands used in this script
+unalias -a || true
+shopt -u expand_aliases
 
 # shellcheck disable=SC2034
-SCRIPT_NAME=${0##*/}
-REAL_SCRIPT_FILE="$(readlink -e "$(realpath "${BASH_SOURCE[0]}")")"
-# shellcheck disable=SC2034
-CURRENT_DIR="$(cd "$(readlink -e "${REAL_SCRIPT_FILE%/*}")" && pwd -P)"
-BIN_DIR="${CURRENT_DIR}"
-ROOT_DIR="$(cd "${BIN_DIR}/../.." && pwd -P)"
-# shellcheck disable=SC2034
-SRC_DIR="${ROOT_DIR}/src"
-# shellcheck disable=SC2034
-VENDOR_DIR="${ROOT_DIR}/vendor"
-# shellcheck disable=SC2034
-VENDOR_BIN_DIR="${ROOT_DIR}/vendor/bin"
-export PATH="${BIN_DIR}":"${VENDOR_BIN_DIR}":${PATH}
+((failures = 0)) || true
 
-# shellcheck disable=SC2034
-TMPDIR="$(mktemp -d -p "${TMPDIR:-/tmp}" -t bash-framework-$$-XXXXXX)"
-export TMPDIR
+# Bash will remember & return the highest exit code in a chain of pipes.
+# This way you can catch the error inside pipes, e.g. mysqldump | gzip
+set -o pipefail
+set -o errexit
 
-# temp dir cleaning
-cleanOnExit() {
-  rm -Rf "${TMPDIR}" >/dev/null 2>&1
-}
-trap cleanOnExit EXIT HUP QUIT ABRT TERM
+# Command Substitution can inherit errexit option since bash v4.4
+shopt -s inherit_errexit || true
+
+# a log is generated when a command fails
+set -o errtrace
+
+# use nullglob so that (file*.php) will return an empty array if no file matches the wildcard
+shopt -s nullglob
+
+# ensure regexp are interpreted without accentuated characters
+export LC_ALL=POSIX
+
+export TERM=xterm-256color
+
+# avoid interactive install
+export DEBIAN_FRONTEND=noninteractive
+export DEBCONF_NONINTERACTIVE_SEEN=true
+
+# store command arguments for later usage
+# shellcheck disable=SC2034
+declare -a BASH_FRAMEWORK_ARGV=("$@")
+# shellcheck disable=SC2034
+declare -a ORIGINAL_BASH_FRAMEWORK_ARGV=("$@")
 
 # @see https://unix.stackexchange.com/a/386856
+# shellcheck disable=SC2317
 interruptManagement() {
   # restore SIGINT handler
   trap - INT
@@ -41,273 +55,65 @@ interruptManagement() {
   kill -s INT "$$"
 }
 trap interruptManagement INT
+SCRIPT_NAME=${0##*/}
+REAL_SCRIPT_FILE="$(readlink -e "$(realpath "${BASH_SOURCE[0]}")")"
+if [[ -n "${EMBED_CURRENT_DIR}" ]]; then
+  CURRENT_DIR="${EMBED_CURRENT_DIR}"
+else
+  CURRENT_DIR="$(cd "$(readlink -e "${REAL_SCRIPT_FILE%/*}")" && pwd -P)"
+fi
+
+################################################
+# Temp dir management
+################################################
+
+KEEP_TEMP_FILES="${KEEP_TEMP_FILES:-0}"
+export KEEP_TEMP_FILES
+
+# PERSISTENT_TMPDIR is not deleted by traps
+PERSISTENT_TMPDIR="${TMPDIR:-/tmp}/bash-framework"
+export PERSISTENT_TMPDIR
+mkdir -p "${PERSISTENT_TMPDIR}"
 
 # shellcheck disable=SC2034
-((failures = 0)) || true
+TMPDIR="$(mktemp -d -p "${PERSISTENT_TMPDIR:-/tmp}" -t bash-framework-$$-XXXXXX)"
+export TMPDIR
 
-shopt -s expand_aliases
-
-# Bash will remember & return the highest exit code in a chain of pipes.
-# This way you can catch the error inside pipes, e.g. mysqldump | gzip
-set -o pipefail
-set -o errexit
-
-# a log is generated when a command fails
-set -o errtrace
-
-# use nullglob so that (file*.php) will return an empty array if no file matches the wildcard
-shopt -s nullglob
-
-export TERM=xterm-256color
-
-#avoid interactive install
-export DEBIAN_FRONTEND=noninteractive
-export DEBCONF_NONINTERACTIVE_SEEN=true
-
-if [[ -t 1 || -t 2 ]]; then
-  # check colors applicable https://misc.flogisoft.com/bash/tip_colors_and_formatting
-  readonly __ERROR_COLOR='\e[31m'      # Red
-  readonly __INFO_COLOR='\e[44m'       # white on lightBlue
-  readonly __SUCCESS_COLOR='\e[32m'    # Green
-  readonly __WARNING_COLOR='\e[33m'    # Yellow
-  readonly __TEST_COLOR='\e[100m'      # Light magenta
-  readonly __TEST_ERROR_COLOR='\e[41m' # white on red
-  readonly __SKIPPED_COLOR='\e[33m'    # Yellow
-  readonly __HELP_COLOR='\e[7;49;33m'  # Black on Gold
-  readonly __DEBUG_COLOR='\e[37m'      # Grey
-  # Internal: reset color
-  readonly __RESET_COLOR='\e[0m' # Reset Color
-  # shellcheck disable=SC2155,SC2034
-  readonly __HELP_EXAMPLE="$(echo -e "\e[1;30m")"
-  # shellcheck disable=SC2155,SC2034
-  readonly __HELP_TITLE="$(echo -e "\e[1;37m")"
-  # shellcheck disable=SC2155,SC2034
-  readonly __HELP_NORMAL="$(echo -e "\033[0m")"
-else
-  # check colors applicable https://misc.flogisoft.com/bash/tip_colors_and_formatting
-  readonly __ERROR_COLOR=''
-  readonly __INFO_COLOR=''
-  readonly __SUCCESS_COLOR=''
-  readonly __WARNING_COLOR=''
-  readonly __SKIPPED_COLOR=''
-  readonly __HELP_COLOR=''
-  readonly __TEST_COLOR=''
-  readonly __TEST_ERROR_COLOR=''
-  readonly __DEBUG_COLOR=''
-  # Internal: reset color
-  readonly __RESET_COLOR=''
-  readonly __HELP_EXAMPLE=''
-  readonly __HELP_TITLE=''
-  readonly __HELP_NORMAL=''
-fi
-export __ERROR_COLOR
-export __INFO_COLOR
-export __SUCCESS_COLOR
-export __WARNING_COLOR
-export __SKIPPED_COLOR
-export __TEST_COLOR
-export __TEST_ERROR_COLOR
-export __SKIPPED_COLOR
-export __HELP_COLOR
-export __DEBUG_COLOR
-export __RESET_COLOR
-export __HELP_EXAMPLE
-export __HELP_TITLE
-export __HELP_NORMAL
-
-Args::defaultHelp() {
-  if ! Args::defaultHelpNoExit "$@"; then
-    exit 0
+# temp dir cleaning
+# shellcheck disable=SC2317
+cleanOnExit() {
+  if [[ "${KEEP_TEMP_FILES:-0}" = "1" ]]; then
+    Log::displayInfo "KEEP_TEMP_FILES=1 temp files kept here '${TMPDIR}'"
+  elif [[ -n "${TMPDIR+xxx}" ]]; then
+    Log::displayDebug "KEEP_TEMP_FILES=0 removing temp files '${TMPDIR}'"
+    rm -Rf "${TMPDIR:-/tmp/fake}" >/dev/null 2>&1
   fi
 }
+trap cleanOnExit EXIT HUP QUIT ABRT TERM
 
-# Public: exits with message if current user is root
-#
-# **Exit**: code 1 if current user is root
+# @description exits with message if current user is root
+# @noargs
+# @exitcode 1 if current user is root
+# @stderr diagnostics information is displayed
 Assert::expectNonRootUser() {
   if [[ "$(id -u)" = "0" ]]; then
     Log::fatal "The script must not be run as root"
   fi
 }
 
-# Public: create a new db instance
-#
-# **Arguments**:
-# * $1 - (passed by reference) database instance to create
-# * $2 - dsn profile - load the dsn.env profile
-#     absolute file is deduced using rules defined in Profiles::getAbsoluteConfFile
-#
-# **Example:**
-# ```shell
-# declare -Agx dbInstance
-# Database::newInstance dbInstance "default.local"
-# ```
-#
-# Returns immediately if the instance is already initialized
-Database::newInstance() {
-  local -n instanceNewInstance=$1
-  local dsn="$2"
-  local DSN_FILE
-
-  if [[ -v instanceNewInstance['INITIALIZED'] && "${instanceNewInstance['INITIALIZED']:-0}" == "1" ]]; then
-    return
-  fi
-
-  # final auth file generated from dns file
-  instanceNewInstance['AUTH_FILE']=""
-  instanceNewInstance['DSN_FILE']=""
-
-  # check dsn file
-  DSN_FILE="$(Profiles::getAbsoluteConfFile "dsn" "${dsn}" "env")" || return 1
-  Database::checkDsnFile "${DSN_FILE}" || return 1
-  instanceNewInstance['DSN_FILE']="${DSN_FILE}"
-
-  # shellcheck source=/tests/data/dsn_valid.env
-  source "${instanceNewInstance['DSN_FILE']}"
-
-  instanceNewInstance['USER']="${USER}"
-  instanceNewInstance['PASSWORD']="${PASSWORD}"
-  instanceNewInstance['HOSTNAME']="${HOSTNAME}"
-  instanceNewInstance['PORT']="${PORT}"
-
-  # generate authFile for easy authentication
-  instanceNewInstance['AUTH_FILE']=$(mktemp -p "${TMPDIR:-/tmp}" -t "mysql.XXXXXXXXXXXX")
-  (
-    echo "[client]"
-    echo "user = ${USER}"
-    echo "password = ${PASSWORD}"
-    echo "host = ${HOSTNAME}"
-    echo "port = ${PORT}"
-  ) >"${instanceNewInstance['AUTH_FILE']}"
-
-  # some of those values can be overridden using the dsn file
-  # SKIP_COLUMN_NAMES enabled by default
-  instanceNewInstance['SKIP_COLUMN_NAMES']="${SKIP_COLUMN_NAMES:-1}"
-  instanceNewInstance['SSL_OPTIONS']="${MYSQL_SSL_OPTIONS:---ssl-mode=DISABLED}"
-  instanceNewInstance['QUERY_OPTIONS']="${MYSQL_QUERY_OPTIONS:---batch --raw --default-character-set=utf8}"
-  instanceNewInstance['DUMP_OPTIONS']="${MYSQL_DUMP_OPTIONS:---default-character-set=utf8 --compress --hex-blob --routines --triggers --single-transaction --set-gtid-purged=OFF --column-statistics=0 ${instanceNewInstance['SSL_OPTIONS']}}"
-  instanceNewInstance['DB_IMPORT_OPTIONS']="${DB_IMPORT_OPTIONS:---connect-timeout=5 --batch --raw --default-character-set=utf8}"
-
-  instanceNewInstance['INITIALIZED']=1
-}
-
-# Public: mysql query on a given db
-#
-# **Arguments**:
-# * $1 (passed by reference) database instance to use
-# * $2 sql query to execute.
-#    if not provided or empty, the command can be piped (eg: cat file.sql | Database::query ...)
-# * _$3 (optional)_ the db name
-#
-# **Returns**: mysql command status code
-Database::query() {
-  local -n instanceQuery=$1
-  local -a mysqlCommand=()
-
-  mysqlCommand+=(mysql)
-  mysqlCommand+=("--defaults-extra-file=${instanceQuery['AUTH_FILE']}")
-  IFS=' ' read -r -a queryOptions <<<"${instanceQuery['QUERY_OPTIONS']}"
-  mysqlCommand+=("${queryOptions[@]}")
-  if [[ "${instanceQuery['SKIP_COLUMN_NAMES']}" = "1" ]]; then
-    mysqlCommand+=("-s" "--skip-column-names")
-  fi
-  # add optional db name
-  if [[ -n "${3+x}" ]]; then
-    mysqlCommand+=("$3")
-  fi
-  # add optional sql query
-  if [[ -n "${2+x}" && -n "$2" ]]; then
-    if [[ ! -f "$2" ]]; then
-      mysqlCommand+=("-e")
-      mysqlCommand+=("$2")
-    fi
-  fi
-  Log::displayDebug "$(printf "execute command: '%s'" "${mysqlCommand[*]}")"
-
-  if [[ -f "$2" ]]; then
-    "${mysqlCommand[@]}" <"$2"
-  else
-    "${mysqlCommand[@]}"
-  fi
-}
-
-# Public: set the general options to use on mysql command to query the database
-# Differs than setOptions in the way that these options could change each time
-#
-# **Arguments**:
-# * $1 - (passed by reference) database instance to use
-# * $2 - options list
-Database::setQueryOptions() {
-  local -n instanceSetQueryOptions=$1
-  # shellcheck disable=SC2034
-  instanceSetQueryOptions['QUERY_OPTIONS']="$2"
-}
-
-# Public: by default we skip the column names
-# but sometimes we need column names to display some results
-# disable this option temporarily and then restore it to true
-#
-# **Arguments**:
-# * $1 - (passed by reference) database instance to use
-# * $2 - 0 to disable, 1 to enable (hide column names)
-Database::skipColumnNames() {
-  local -n instanceSkipColumnNames=$1
-  # shellcheck disable=SC2034
-  instanceSkipColumnNames['SKIP_COLUMN_NAMES']="$2"
-}
-
-# Public: log level off
-export __LEVEL_OFF=0
-# Public: log level error
-export __LEVEL_ERROR=1
-# Public: log level warning
-export __LEVEL_WARNING=2
-# Public: log level info
-export __LEVEL_INFO=3
-# Public: log level success
-export __LEVEL_SUCCESS=3
-# Public: log level debug
-export __LEVEL_DEBUG=4
-
-export __LEVEL_OFF
-export __LEVEL_ERROR
-export __LEVEL_WARNING
-export __LEVEL_INFO
-export __LEVEL_SUCCESS
-export __LEVEL_DEBUG
-
-# Display message using info color (bg light blue/fg white)
-# @param {String} $1 message
-Log::displayInfo() {
-  echo -e "${__INFO_COLOR}INFO    - ${1}${__RESET_COLOR}" >&2
-  Log::logInfo "$1"
-}
-
-# Display message using error color (red) and exit immediately with error status 1
-# @param {String} $1 message
-Log::fatal() {
-  echo -e "${__ERROR_COLOR}FATAL   - ${1}${__RESET_COLOR}" >&2
-  Log::logFatal "$1"
-  exit 1
-}
-
-# shellcheck disable=SC2034
-declare -Ag allDepsResultSeen=()
-declare -ag allDepsResult=()
-
-# Public: get absolute conf file from specified conf folder deduced using these rules
+# @description get absolute conf file from specified conf folder deduced using these rules
 #   * from absolute file (ignores <confFolder> and <extension>)
 #   * relative to where script is executed (ignores <confFolder> and <extension>)
 #   * from home/.bash-tools/<confFolder>
 #   * from framework conf/<confFolder>
 #
-# **Arguments**:
-# * $1 confFolder the directory name (not the path) to list
-# * $2 conf file to use without extension
-# * $3 the extension (sh by default)
+# @arg $1 confFolder:String the directory name (not the path) to list
+# @arg $2 conf:String file to use without extension
+# @arg $3 extension:String the extension (.sh by default)
 #
-# Returns absolute conf filename
-Profiles::getAbsoluteConfFile() {
+# @stdout absolute conf filename
+# @exitcode 1 if file is not found in any location
+Conf::getAbsoluteFile() {
   local confFolder="$1"
   local conf="$2"
   local extension="${3-.sh}"
@@ -342,12 +148,12 @@ Profiles::getAbsoluteConfFile() {
   # from home/.bash-tools/<confFolder>
   testAbs "$(File::concatenatePath "${HOME}/.bash-tools" "${confFolder}")/${conf}${extension}" && return 0
 
-  if [[ -n "${ROOT_DIR+xxx}" ]]; then
+  if [[ -n "${FRAMEWORK_ROOT_DIR+xxx}" ]]; then
     # from framework conf/<confFolder> (including extension)
-    testAbs "$(File::concatenatePath "${ROOT_DIR}/conf" "${confFolder}")/${conf}${extension}" && return 0
+    testAbs "$(File::concatenatePath "${FRAMEWORK_ROOT_DIR}/conf" "${confFolder}")/${conf}${extension}" && return 0
 
     # from framework conf/<confFolder>
-    testAbs "$(File::concatenatePath "${ROOT_DIR}/conf" "${confFolder}")/${conf}" && return 0
+    testAbs "$(File::concatenatePath "${FRAMEWORK_ROOT_DIR}/conf" "${confFolder}")/${conf}" && return 0
   fi
 
   # file not found
@@ -356,373 +162,614 @@ Profiles::getAbsoluteConfFile() {
   return 1
 }
 
-Args::defaultHelpNoExit() {
-  local helpArg="$1"
-  shift || true
-  # shellcheck disable=SC2034
-  local args
-  args="$(getopt -l help -o h -- "$@" 2>/dev/null)" || true
-  eval set -- "${args}"
+# @description create a new db instance
+# Returns immediately if the instance is already initialized
+#
+# @arg $1 instanceNewInstance:&Map<String,String> (passed by reference) database instance to use
+# @arg $2 dsn:String dsn profile - load the dsn.env profile deduced using rules defined in Conf::getAbsoluteFile
+#
+# @example
+#   declare -Agx dbInstance
+#   Database::newInstance dbInstance "default.local"
+#
+# @exitcode 1 if dns file not able to loaded
+Database::newInstance() {
+  local -n instanceNewInstance=$1
+  local dsn="$2"
+  local DSN_FILE
 
-  while true; do
-    case $1 in
-      -h | --help)
-        Args::showHelp "${helpArg}"
-        return 1
-        ;;
-      --)
-        break
-        ;;
-      *)
-        # ignore
-        ;;
-    esac
-  done
+  if [[ -v instanceNewInstance['INITIALIZED'] && "${instanceNewInstance['INITIALIZED']:-0}" == "1" ]]; then
+    return
+  fi
+
+  # final auth file generated from dns file
+  instanceNewInstance['AUTH_FILE']=""
+  instanceNewInstance['DSN_FILE']=""
+
+  # check dsn file
+  DSN_FILE="$(Conf::getAbsoluteFile "dsn" "${dsn}" "env")" || return 1
+  Database::checkDsnFile "${DSN_FILE}" || return 1
+  instanceNewInstance['DSN_FILE']="${DSN_FILE}"
+
+  # shellcheck source=/src/Database/testsData/dsn_valid.env
+  source "${instanceNewInstance['DSN_FILE']}"
+
+  instanceNewInstance['USER']="${USER}"
+  instanceNewInstance['PASSWORD']="${PASSWORD}"
+  instanceNewInstance['HOSTNAME']="${HOSTNAME}"
+  instanceNewInstance['PORT']="${PORT}"
+
+  # generate authFile for easy authentication
+  instanceNewInstance['AUTH_FILE']=$(mktemp -p "${TMPDIR:-/tmp}" -t "mysql.XXXXXXXXXXXX")
+  (
+    echo "[client]"
+    echo "user = ${USER}"
+    echo "password = ${PASSWORD}"
+    echo "host = ${HOSTNAME}"
+    echo "port = ${PORT}"
+  ) >"${instanceNewInstance['AUTH_FILE']}"
+
+  # some of those values can be overridden using the dsn file
+  # SKIP_COLUMN_NAMES enabled by default
+  instanceNewInstance['SKIP_COLUMN_NAMES']="${SKIP_COLUMN_NAMES:-1}"
+  instanceNewInstance['SSL_OPTIONS']="${MYSQL_SSL_OPTIONS:---ssl-mode=DISABLED}"
+  instanceNewInstance['QUERY_OPTIONS']="${MYSQL_QUERY_OPTIONS:---batch --raw --default-character-set=utf8}"
+  instanceNewInstance['DUMP_OPTIONS']="${MYSQL_DUMP_OPTIONS:---default-character-set=utf8 --compress --hex-blob --routines --triggers --single-transaction --set-gtid-purged=OFF --column-statistics=0 ${instanceNewInstance['SSL_OPTIONS']}}"
+  instanceNewInstance['DB_IMPORT_OPTIONS']="${DB_IMPORT_OPTIONS:---connect-timeout=5 --batch --raw --default-character-set=utf8}"
+
+  instanceNewInstance['INITIALIZED']=1
 }
 
-# Internal: check if dsn file has all the mandatory variables set
+# @description mysql query on a given db
+# @warning could use QUERY_OPTIONS variable from dsn if defined
+# @example
+#   cat file.sql | Database::query ...
+# @arg $1 instanceQuery:&Map<String,String> (passed by reference) database instance to use
+# @arg $2 sqlQuery:String (optional) sql query or sql file to execute. if not provided or empty, the command can be piped
+# @arg $3 dbName:String (optional) the db name
+#
+# @exitcode mysql command status code
+Database::query() {
+  local -n instanceQuery=$1
+  local -a mysqlCommand=()
+  local -a queryOptions
+
+  mysqlCommand+=(mysql)
+  mysqlCommand+=("--defaults-extra-file=${instanceQuery['AUTH_FILE']}")
+  IFS=' ' read -r -a queryOptions <<<"${instanceQuery['QUERY_OPTIONS']}"
+  mysqlCommand+=("${queryOptions[@]}")
+  if [[ "${instanceQuery['SKIP_COLUMN_NAMES']}" = "1" ]]; then
+    mysqlCommand+=("-s" "--skip-column-names")
+  fi
+  # add optional db name
+  if [[ -n "${3+x}" ]]; then
+    mysqlCommand+=("$3")
+  fi
+  # add optional sql query
+  if [[ -n "${2+x}" && -n "$2" && ! -f "$2" ]]; then
+    mysqlCommand+=("-e")
+    mysqlCommand+=("$2")
+  fi
+  Log::displayDebug "$(printf "execute command: '%s'" "${mysqlCommand[*]}")"
+
+  if [[ -f "$2" ]]; then
+    "${mysqlCommand[@]}" <"$2"
+  else
+    "${mysqlCommand[@]}"
+  fi
+}
+
+# @description set the general options to use on mysql command to query the database
+# Differs than setOptions in the way that these options could change each time
+#
+# @arg $1 instanceSetQueryOptions:&Map<String,String> (passed by reference) database instance to use
+# @arg $2 optionsList:String query options list
+Database::setQueryOptions() {
+  local -n instanceSetQueryOptions=$1
+  # shellcheck disable=SC2034
+  instanceSetQueryOptions['QUERY_OPTIONS']="$2"
+}
+
+# @description by default we skip the column names
+# but sometimes we need column names to display some results
+# disable this option temporarily and then restore it to true
+#
+# @arg $1 instanceSetQueryOptions:&Map<String,String> (passed by reference) database instance to use
+# @arg $2 skipColumnNames:Boolean 0 to disable, 1 to enable (hide column names)
+Database::skipColumnNames() {
+  local -n instanceSkipColumnNames=$1
+  # shellcheck disable=SC2034
+  instanceSkipColumnNames['SKIP_COLUMN_NAMES']="$2"
+}
+
+# @description Log namespace provides 2 kind of functions
+# - Log::display* allows to display given message with
+#   given display level
+# - Log::log* allows to log given message with
+#   given log level
+# Log::display* functions automatically log the message too
+# @see Env::requireLoad to load the display and log level from .env file
+
+# @description log level off
+export __LEVEL_OFF=0
+# @description log level error
+export __LEVEL_ERROR=1
+# @description log level warning
+export __LEVEL_WARNING=2
+# @description log level info
+export __LEVEL_INFO=3
+# @description log level success
+export __LEVEL_SUCCESS=3
+# @description log level debug
+export __LEVEL_DEBUG=4
+
+# @description verbose level off
+export __VERBOSE_LEVEL_OFF=0
+# @description verbose level info
+export __VERBOSE_LEVEL_INFO=1
+# @description verbose level info
+export __VERBOSE_LEVEL_DEBUG=2
+# @description verbose level info
+export __VERBOSE_LEVEL_TRACE=3
+
+# @description Display message using debug color (grey)
+# @arg $1 message:String the message to display
+Log::displayDebug() {
+  if ((BASH_FRAMEWORK_DISPLAY_LEVEL >= __LEVEL_DEBUG)); then
+    echo -e "${__DEBUG_COLOR}DEBUG   - ${1}${__RESET_COLOR}" >&2
+  fi
+  Log::logDebug "$1"
+}
+
+# @description Display message using info color (bg light blue/fg white)
+# @arg $1 message:String the message to display
+Log::displayInfo() {
+  local type="${2:-INFO}"
+  if ((BASH_FRAMEWORK_DISPLAY_LEVEL >= __LEVEL_INFO)); then
+    echo -e "${__INFO_COLOR}${type}    - ${1}${__RESET_COLOR}" >&2
+  fi
+  Log::logInfo "$1" "${type}"
+}
+
+# @description Display message using error color (red) and exit immediately with error status 1
+# @arg $1 message:String the message to display
+Log::fatal() {
+  echo -e "${__ERROR_COLOR}FATAL   - ${1}${__RESET_COLOR}" >&2
+  Log::logFatal "$1"
+  exit 1
+}
+
+# @description ensure COMMAND_BIN_DIR env var is set
+# and PATH correctly prepared
+# @noargs
+# @set COMMAND_BIN_DIR string the directory where to find this command
+# @set PATH string add directory where to find this command binary
+Compiler::Facade::requireCommandBinDir() {
+  COMMAND_BIN_DIR="${CURRENT_DIR}"
+  Env::pathPrepend "${COMMAND_BIN_DIR}"
+}
+
+# @description check if dsn file has all the mandatory variables set
 # Mandatory variables are: HOSTNAME, USER, PASSWORD, PORT
 #
-# **Arguments**:
-# * $1 - dsn absolute filename
-#
-# Returns 0 on valid file, 1 otherwise with log output
+# @arg $1 dsnFileName:String dsn absolute filename
+# @set HOSTNAME loaded from dsn file
+# @set PORT loaded from dsn file
+# @set USER loaded from dsn file
+# @set PASSWORD loaded from dsn file
+# @exitcode 0 on valid file
+# @exitcode 1 if one of the properties of the conf file is invalid or if file not found
+# @stderr log output if error found in conf file
 Database::checkDsnFile() {
-  local DSN_FILENAME="$1"
-  if [[ ! -f "${DSN_FILENAME}" ]]; then
-    Log::displayError "dsn file ${DSN_FILENAME} not found"
+  local dsnFileName="$1"
+  if [[ ! -f "${dsnFileName}" ]]; then
+    Log::displayError "dsn file ${dsnFileName} not found"
     return 1
   fi
 
   (
     unset HOSTNAME PORT PASSWORD USER
-    # shellcheck source=/tests/data/dsn_valid.env
-    source "${DSN_FILENAME}"
+    # shellcheck source=/src/Database/testsData/dsn_valid.env
+    source "${dsnFileName}"
     if [[ -z ${HOSTNAME+x} ]]; then
-      Log::displayError "dsn file ${DSN_FILENAME} : HOSTNAME not provided"
+      Log::displayError "dsn file ${dsnFileName} : HOSTNAME not provided"
       return 1
     fi
     if [[ -z "${HOSTNAME}" ]]; then
-      Log::displayWarning "dsn file ${DSN_FILENAME} : HOSTNAME value not provided"
+      Log::displayWarning "dsn file ${dsnFileName} : HOSTNAME value not provided"
     fi
     if [[ "${HOSTNAME}" = "localhost" ]]; then
-      Log::displayWarning "dsn file ${DSN_FILENAME} : check that HOSTNAME should not be 127.0.0.1 instead of localhost"
+      Log::displayWarning "dsn file ${dsnFileName} : check that HOSTNAME should not be 127.0.0.1 instead of localhost"
     fi
     if [[ -z "${PORT+x}" ]]; then
-      Log::displayError "dsn file ${DSN_FILENAME} : PORT not provided"
+      Log::displayError "dsn file ${dsnFileName} : PORT not provided"
       return 1
     fi
     if ! [[ ${PORT} =~ ^[0-9]+$ ]]; then
-      Log::displayError "dsn file ${DSN_FILENAME} : PORT invalid"
+      Log::displayError "dsn file ${dsnFileName} : PORT invalid"
       return 1
     fi
     if [[ -z "${USER+x}" ]]; then
-      Log::displayError "dsn file ${DSN_FILENAME} : USER not provided"
+      Log::displayError "dsn file ${dsnFileName} : USER not provided"
       return 1
     fi
     if [[ -z "${PASSWORD+x}" ]]; then
-      Log::displayError "dsn file ${DSN_FILENAME} : PASSWORD not provided"
+      Log::displayError "dsn file ${dsnFileName} : PASSWORD not provided"
       return 1
     fi
   )
 }
 
-# lazy initialization
-declare -g BASH_FRAMEWORK_INITIALIZED="0"
-declare -g BASH_FRAMEWORK_CACHED_ENV_FILE
-declare -g BASH_FRAMEWORK_DEFAULT_ENV_FILE
-
-# load variables in order(from less specific to more specific) from :
-# - ${ROOT_DIR}/src/Env/testsData/.env file
-# - ${ROOT_DIR}/conf/.env file if exists
-# - ~/.env file if exists
-# - ~/.bash-tools/.env file if exists
-# - BASH_FRAMEWORK_ENV_FILEPATH=<fullPathToEnvFile or empty if no file to be loaded>
-Env::load() {
-  if [[ "${BASH_FRAMEWORK_INITIALIZED}" = "1" ]]; then
-    return 0
-  fi
-  BASH_FRAMEWORK_CACHED_ENV_FILE="$(mktemp -p "${TMPDIR:-/tmp}" -t "env_vars.XXXXXXX")"
-  BASH_FRAMEWORK_DEFAULT_ENV_FILE="$(mktemp -p "${TMPDIR:-/tmp}" -t "default_env_file.XXXXXXX")"
-  # shellcheck source=src/Env/testsData/.env
-  (
-    echo "BASH_FRAMEWORK_LOG_LEVEL=${BASH_FRAMEWORK_LOG_LEVEL:-0}"
-    echo "BASH_FRAMEWORK_DISPLAY_LEVEL=${BASH_FRAMEWORK_DISPLAY_LEVEL:-3}"
-    echo "BASH_FRAMEWORK_LOG_FILE=${BASH_FRAMEWORK_LOG_FILE:-${ROOT_DIR}/logs/${SCRIPT_NAME}.log}"
-    echo "BASH_FRAMEWORK_LOG_FILE_MAX_ROTATION=${BASH_FRAMEWORK_LOG_FILE_MAX_ROTATION:-5}"
-  ) >"${BASH_FRAMEWORK_DEFAULT_ENV_FILE}"
-
-  (
-    # reset temp file
-    echo >"${BASH_FRAMEWORK_CACHED_ENV_FILE}"
-
-    # list .env files that need to be loaded
-    local -a files=()
-    if [[ -f "${BASH_FRAMEWORK_DEFAULT_ENV_FILE}" ]]; then
-      files+=("${BASH_FRAMEWORK_DEFAULT_ENV_FILE}")
+# @description prepend directories to the PATH environment variable
+# @arg $@ args:String[] list of directories to prepend
+# @set PATH update PATH with the directories prepended
+Env::pathPrepend() {
+  local arg
+  for arg in "$@"; do
+    if [[ -d "${arg}" && ":${PATH}:" != *":${arg}:"* ]]; then
+      PATH="$(realpath "${arg}"):${PATH}"
     fi
-    if [[ -f "${ROOT_DIR}/conf/.env" && -r "${ROOT_DIR}/conf/.env" ]]; then
-      files+=("${ROOT_DIR}/conf/.env")
-    fi
-    if [[ -f "${HOME}/.env" && -r "${HOME}/.env" ]]; then
-      files+=("${HOME}/.env")
-    fi
-    local file
-    for file in "$@"; do
-      if [[ -f "${file}" && -r "${file}" ]]; then
-        files+=("${file}")
-      fi
-    done
-    # import custom .env file
-    if [[ -n "${BASH_FRAMEWORK_ENV_FILEPATH+xxx}" ]]; then
-      # load BASH_FRAMEWORK_ENV_FILEPATH
-      if [[ -f "${BASH_FRAMEWORK_ENV_FILEPATH}" && -r "${BASH_FRAMEWORK_ENV_FILEPATH}" ]]; then
-        files+=("${BASH_FRAMEWORK_ENV_FILEPATH}")
-      else
-        Log::displayWarning "env file not not found - ${BASH_FRAMEWORK_ENV_FILEPATH}"
-      fi
-    fi
-
-    # add all files added as parameters
-    files+=("$@")
-
-    # source each file in order
-    local file
-    for file in "${files[@]}"; do
-      # shellcheck source=src/Env/testsData/.env
-      source "${file}" || {
-        Log::displayWarning "Cannot load '${file}'"
-      }
-    done
-
-    # copy only the variables to the tmp file
-    local varName overrideVarName
-    while IFS=$'\n' read -r varName; do
-      overrideVarName="OVERRIDE_${varName}"
-      if [[ -z ${!overrideVarName+xxx} ]]; then
-        echo "${varName}='${!varName}'" >>"${BASH_FRAMEWORK_CACHED_ENV_FILE}"
-      else
-        # variable is overridden
-        echo "${varName}='${!overrideVarName}'" >>"${BASH_FRAMEWORK_CACHED_ENV_FILE}"
-      fi
-
-      # using awk deduce all variables that need to be copied in tmp file
-      #   from less specific file to the most
-    done < <(awk -F= '!a[$1]++' "${files[@]}" | grep -v '^$\|^\s*\#' | cut -d= -f1)
-  ) || exit 1
-
-  # ensure all sourced variables will be exported
-  set -o allexport
-
-  # Finally load the temp file to make the variables available in current script
-  # shellcheck source=src/Env/testsData/.env
-  source "${BASH_FRAMEWORK_CACHED_ENV_FILE}"
-
-  export BASH_FRAMEWORK_INITIALIZED=1
-
-  set +o allexport
+  done
 }
 
+# @description concatenate 2 paths and ensure the path is correct using realpath -m
+# @arg $1 basePath:String
+# @arg $2 subPath:String
+# @require Linux::requireRealpathCommand
 File::concatenatePath() {
-  local basePath="${1}"
-  local subPath=${2}
+  local basePath="$1"
+  local subPath="$2"
   local fullPath="${basePath:+${basePath}/}${subPath}"
 
   realpath -m "${fullPath}" 2>/dev/null
 }
 
-# Display message using debug color (grey)
-# @param {String} $1 message
-Log::displayDebug() {
-  echo -e "${__DEBUG_COLOR}DEBUG   - ${1}${__RESET_COLOR}" >&2
-  Log::logDebug "$1"
-}
-
-# Display message using error color (red)
-# @param {String} $1 message
+# @description Display message using error color (red)
+# @arg $1 message:String the message to display
 Log::displayError() {
-  echo -e "${__ERROR_COLOR}ERROR   - ${1}${__RESET_COLOR}" >&2
+  if ((BASH_FRAMEWORK_DISPLAY_LEVEL >= __LEVEL_ERROR)); then
+    echo -e "${__ERROR_COLOR}ERROR   - ${1}${__RESET_COLOR}" >&2
+  fi
   Log::logError "$1"
 }
 
-# Display message using info color (bg light blue/fg white)
-# @param {String} $1 message
-Log::displayHelp() {
-  echo -e "${__HELP_COLOR}HELP    - ${1}${__RESET_COLOR}" >&2
-  Log::logHelp "$1"
-}
-
-# Display message using skip color (yellow)
-# @param {String} $1 message
-Log::displaySkipped() {
-  echo -e "${__SKIPPED_COLOR}SKIPPED - ${1}${__RESET_COLOR}" >&2
-  Log::logSkipped "$1"
-}
-
-# Display message using success color (bg green/fg white)
-# @param {String} $1 message
-Log::displaySuccess() {
-  echo -e "${__SUCCESS_COLOR}SUCCESS - ${1}${__RESET_COLOR}" >&2
-  Log::logSuccess "$1"
-}
-
-# Display message using warning color (yellow)
-# @param {String} $1 message
-Log::displayWarning() {
-  echo -e "${__WARNING_COLOR}WARN    - ${1}${__RESET_COLOR}" >&2
-  Log::logWarning "$1"
-}
-
-# log message to file
-# @param {String} $1 message
+# @description log message to file
+# @arg $1 message:String the message to display
 Log::logDebug() {
-  Log::logMessage "DEBUG" "$@"
-}
-
-# log message to file
-# @param {String} $1 message
-Log::logError() {
-  Log::logMessage "ERROR" "$@"
-}
-
-# log message to file
-# @param {String} $1 message
-Log::logFatal() {
-  Log::logMessage "FATAL" "$@"
-}
-
-# log message to file
-# @param {String} $1 message
-Log::logHelp() {
-  Log::logMessage "HELP" "$@"
-}
-
-# log message to file
-# @param {String} $1 message
-Log::logInfo() {
-  Log::logMessage "INFO" "$@"
-}
-
-# log message to file
-# @param {String} $1 message
-Log::logSkipped() {
-  Log::logMessage "SKIPPED" "$@"
-}
-
-# log message to file
-# @param {String} $1 message
-Log::logSuccess() {
-  Log::logMessage "SUCCESS" "$@"
-}
-
-# log message to file
-# @param {String} $1 message
-Log::logWarning() {
-  Log::logMessage "WARNING" "$@"
-}
-
-# To be called before logging in the log file
-# @param $1 log file name
-# @param $2 maximum number of log files
-Log::rotate() {
-  local FILENAME="$1"
-  local MAX_LOG="${2:-5}"
-  for i in $(seq $((MAX_LOG - 1)) -1 1); do
-    Log::displayInfo "Log rotation ${FILENAME}.${i} to ${FILENAME}.$((i + 1))"
-    mv "${FILENAME}."{"${i}","$((i + 1))"} &>/dev/null || true
-  done
-  if mv "${FILENAME}" "${FILENAME}.1" &>/dev/null; then
-    Log::displayInfo "Log rotation ${FILENAME} to ${FILENAME}.1"
+  if ((BASH_FRAMEWORK_LOG_LEVEL >= __LEVEL_DEBUG)); then
+    Log::logMessage "${2:-DEBUG}" "$1"
   fi
 }
 
-Args::showHelp() {
-  local helpArg="$1"
-  echo -e "${helpArg}"
+# @description log message to file
+# @arg $1 message:String the message to display
+Log::logFatal() {
+  Log::logMessage "${2:-FATAL}" "$1"
 }
 
-# Internal: common log message
+# @description log message to file
+# @arg $1 message:String the message to display
+Log::logInfo() {
+  if ((BASH_FRAMEWORK_LOG_LEVEL >= __LEVEL_INFO)); then
+    Log::logMessage "${2:-INFO}" "$1"
+  fi
+}
+
+# @description Display message using warning color (yellow)
+# @arg $1 message:String the message to display
+Log::displayWarning() {
+  if ((BASH_FRAMEWORK_DISPLAY_LEVEL >= __LEVEL_WARNING)); then
+    echo -e "${__WARNING_COLOR}WARN    - ${1}${__RESET_COLOR}" >&2
+  fi
+  Log::logWarning "$1"
+}
+
+# @description log message to file
+# @arg $1 message:String the message to display
+Log::logError() {
+  if ((BASH_FRAMEWORK_LOG_LEVEL >= __LEVEL_ERROR)); then
+    Log::logMessage "${2:-ERROR}" "$1"
+  fi
+}
+
+# @description Internal: common log message
+# @example text
+#   [date]|[levelMsg]|message
 #
-# **Arguments**:
-# * $1 - message's level description
-# * $2 - message
-# **Output**:
-# [date]|[levelMsg]|message
+# @example text
+#   2020-01-19 19:20:21|ERROR  |log error
+#   2020-01-19 19:20:21|SKIPPED|log skipped
 #
-# **Examples**:
-# <pre>
-# 2020-01-19 19:20:21|ERROR  |log error
-# 2020-01-19 19:20:21|SKIPPED|log skipped
-# </pre>
+# @arg $1 levelMsg:String message's level description (eg: STATUS, ERROR, ...)
+# @arg $2 msg:String the message to display
+# @env BASH_FRAMEWORK_LOG_FILE String log file to use, do nothing if empty
+# @env BASH_FRAMEWORK_LOG_LEVEL int log level log only if > OFF or fatal messages
+# @stderr diagnostics information is displayed
+# @require Env::requireLoad
+# @require Log::requireLoad
 Log::logMessage() {
   local levelMsg="$1"
   local msg="$2"
   local date
 
-  if ((BASH_FRAMEWORK_LOG_LEVEL > __LEVEL_OFF)); then
+  if [[ -n "${BASH_FRAMEWORK_LOG_FILE}" ]] && ((BASH_FRAMEWORK_LOG_LEVEL > __LEVEL_OFF)); then
     date="$(date '+%Y-%m-%d %H:%M:%S')"
+    touch "${BASH_FRAMEWORK_LOG_FILE}"
     printf "%s|%7s|%s\n" "${date}" "${levelMsg}" "${msg}" >>"${BASH_FRAMEWORK_LOG_FILE}"
+  fi
+}
+
+# @description ensure command realpath is available
+# @exitcode 1 if realpath command not available
+# @stderr diagnostics information is displayed
+Linux::requireRealpathCommand() {
+  Assert::commandExists realpath
+}
+
+# @description check if command specified exists or return 1
+# with error and message if not
+#
+# @arg $1 commandName:String on which existence must be checked
+# @arg $2 helpIfNotExists:String a help command to display if the command does not exist
+#
+# @exitcode 1 if the command specified does not exist
+# @stderr diagnostic information + help if second argument is provided
+Assert::commandExists() {
+  local commandName="$1"
+  local helpIfNotExists="$2"
+
+  "${BASH_FRAMEWORK_COMMAND:-command}" -v "${commandName}" >/dev/null 2>/dev/null || {
+    Log::displayError "${commandName} is not installed, please install it"
+    if [[ -n "${helpIfNotExists}" ]]; then
+      Log::displayInfo "${helpIfNotExists}"
+    fi
+    return 1
+  }
+  return 0
+}
+
+# @description log message to file
+# @arg $1 message:String the message to display
+Log::logWarning() {
+  if ((BASH_FRAMEWORK_LOG_LEVEL >= __LEVEL_WARNING)); then
+    Log::logMessage "${2:-WARNING}" "$1"
+  fi
+}
+
+# @description ensure env files are loaded
+# @arg $@ list of default files to load at the end
+# @exitcode 1 if one of env files fails to load
+# @stderr diagnostics information is displayed
+# shellcheck disable=SC2120
+Env::requireLoad() {
+  local -a defaultFiles=("$@")
+  # get list of possible config files
+  local -a configFiles=()
+  if [[ -n "${BASH_FRAMEWORK_ENV_FILES[0]+1}" ]]; then
+    # BASH_FRAMEWORK_ENV_FILES is an array
+    configFiles+=("${BASH_FRAMEWORK_ENV_FILES[@]}")
+  fi
+  if [[ -f "$(pwd)/.framework-config" ]]; then
+    configFiles+=("$(pwd)/.framework-config")
+  fi
+  if [[ -f "${FRAMEWORK_ROOT_DIR}/.framework-config" ]]; then
+    configFiles+=("${FRAMEWORK_ROOT_DIR}/.framework-config")
+  fi
+  if [[ -n "${optionBashFrameworkConfig}" && -f "${optionBashFrameworkConfig}" ]]; then
+    # shellcheck disable=SC2034
+    configFiles+=("${optionBashFrameworkConfig}")
+  fi
+  configFiles+=("${optionEnvFiles[@]}")
+  configFiles+=("${defaultFiles[@]}")
+
+  for file in "${configFiles[@]}"; do
+    # shellcheck source=/.framework-config
+    CURRENT_LOADED_ENV_FILE="${file}" source "${file}" || {
+      Log::displayError "while loading config file: ${file}"
+      return 1
+    }
+  done
+}
+
+# @description activate or not Log::display* and Log::log* functions
+# based on BASH_FRAMEWORK_DISPLAY_LEVEL and BASH_FRAMEWORK_LOG_LEVEL
+# environment variables loaded by Env::requireLoad
+# try to create log file and rotate it if necessary
+# @noargs
+# @set BASH_FRAMEWORK_LOG_LEVEL int to OFF level if BASH_FRAMEWORK_LOG_FILE is empty or not writable
+# @env BASH_FRAMEWORK_DISPLAY_LEVEL int
+# @env BASH_FRAMEWORK_LOG_LEVEL int
+# @env BASH_FRAMEWORK_LOG_FILE String
+# @env BASH_FRAMEWORK_LOG_FILE_MAX_ROTATION int do log rotation if > 0
+# @exitcode 0 always successful
+# @stderr diagnostics information about log file is displayed
+# @require Env::requireLoad
+# @require UI::requireTheme
+Log::requireLoad() {
+  if [[ -z "${BASH_FRAMEWORK_LOG_FILE:-}" ]]; then
+    BASH_FRAMEWORK_LOG_LEVEL=${__LEVEL_OFF}
+    export BASH_FRAMEWORK_LOG_LEVEL
+  fi
+
+  if ((BASH_FRAMEWORK_LOG_LEVEL > __LEVEL_OFF)); then
+    if [[ ! -f "${BASH_FRAMEWORK_LOG_FILE}" ]]; then
+      if
+        ! mkdir -p "$(dirname "${BASH_FRAMEWORK_LOG_FILE}")" 2>/dev/null ||
+          ! touch --no-create "${BASH_FRAMEWORK_LOG_FILE}" 2>/dev/null
+      then
+        BASH_FRAMEWORK_LOG_LEVEL=${__LEVEL_OFF}
+        echo -e "${__ERROR_COLOR}ERROR   - File ${BASH_FRAMEWORK_LOG_FILE} is not writable${__RESET_COLOR}" >&2
+      fi
+    elif [[ ! -w "${BASH_FRAMEWORK_LOG_FILE}" ]]; then
+      BASH_FRAMEWORK_LOG_LEVEL=${__LEVEL_OFF}
+      echo -e "${__ERROR_COLOR}ERROR   - File ${BASH_FRAMEWORK_LOG_FILE} is not writable${__RESET_COLOR}" >&2
+    fi
+
+  fi
+
+  if ((BASH_FRAMEWORK_LOG_LEVEL > __LEVEL_OFF)); then
+    # will always be created even if not in info level
+    Log::logMessage "INFO" "Logging to file ${BASH_FRAMEWORK_LOG_FILE} - Log level ${BASH_FRAMEWORK_LOG_LEVEL}"
+    if ((BASH_FRAMEWORK_LOG_FILE_MAX_ROTATION > 0)); then
+      Log::rotate "${BASH_FRAMEWORK_LOG_FILE}" "${BASH_FRAMEWORK_LOG_FILE_MAX_ROTATION}"
+    fi
+  fi
+}
+
+# @description To be called before logging in the log file
+# @arg $1 file:string log file name
+# @arg $2 maxLogFilesCount:int maximum number of log files
+Log::rotate() {
+  local file="$1"
+  local maxLogFilesCount="${2:-5}"
+
+  if [[ ! -f "${file}" ]]; then
+    Log::displaySkipped "Log file ${file} doesn't exist yet"
+    return 0
+  fi
+  for i in $(seq $((maxLogFilesCount - 1)) -1 1); do
+    Log::displayInfo "Log rotation ${file}.${i} to ${file}.$((i + 1))"
+    mv "${file}."{"${i}","$((i + 1))"} &>/dev/null || true
+  done
+  if cp "${file}" "${file}.1" &>/dev/null; then
+    echo >"${file}" # reset log file
+    Log::displayInfo "Log rotation ${file} to ${file}.1"
+  fi
+}
+
+# @description load color theme
+# @noargs
+# @env BASH_FRAMEWORK_THEME String theme to use
+# @exitcode 0 always successful
+UI::requireTheme() {
+  UI::theme "${BASH_FRAMEWORK_THEME-default}"
+}
+
+# @description Display message using skip color (yellow)
+# @arg $1 message:String the message to display
+Log::displaySkipped() {
+  if ((BASH_FRAMEWORK_DISPLAY_LEVEL >= __LEVEL_INFO)); then
+    echo -e "${__SKIPPED_COLOR}SKIPPED - ${1}${__RESET_COLOR}" >&2
+  fi
+  Log::logSkipped "$1"
+}
+
+# @description load colors theme constants
+# @warning if tty not opened, noColor theme will be chosen
+# @arg $1 theme:String the theme to use (default, noColor)
+# @arg $@ args:String[]
+# @set __ERROR_COLOR String indicate error status
+# @set __INFO_COLOR String indicate info status
+# @set __SUCCESS_COLOR String indicate success status
+# @set __WARNING_COLOR String indicate warning status
+# @set __SKIPPED_COLOR String indicate skipped status
+# @set __DEBUG_COLOR String indicate debug status
+# @set __HELP_COLOR String indicate help status
+# @set __TEST_COLOR String not used
+# @set __TEST_ERROR_COLOR String not used
+# @set __HELP_TITLE_COLOR String used to display help title in help strings
+# @set __HELP_OPTION_COLOR String used to display highlight options in help strings
+#
+# @set __RESET_COLOR String reset default color
+#
+# @set __HELP_EXAMPLE String to remove
+# @set __HELP_TITLE String to remove
+# @set __HELP_NORMAL String to remove
+# shellcheck disable=SC2034
+UI::theme() {
+  local theme="${1-default}"
+  if [[ ! "${theme}" =~ -force$ ]] && ! Assert::tty; then
+    theme="noColor"
+  fi
+  case "${theme}" in
+    default | default-force)
+      theme="default"
+      ;;
+    noColor) ;;
+    *)
+      Log::fatal "invalid theme provided"
+      ;;
+  esac
+  if [[ "${theme}" = "default" ]]; then
+    BASH_FRAMEWORK_THEME="default"
+    # check colors applicable https://misc.flogisoft.com/bash/tip_colors_and_formatting
+    __ERROR_COLOR='\e[31m'         # Red
+    __INFO_COLOR='\e[44m'          # white on lightBlue
+    __SUCCESS_COLOR='\e[32m'       # Green
+    __WARNING_COLOR='\e[33m'       # Yellow
+    __SKIPPED_COLOR='\e[33m'       # Yellow
+    __DEBUG_COLOR='\e[37m'         # Grey
+    __HELP_COLOR='\e[7;49;33m'     # Black on Gold
+    __TEST_COLOR='\e[100m'         # Light magenta
+    __TEST_ERROR_COLOR='\e[41m'    # white on red
+    __HELP_TITLE_COLOR="\e[1;37m"  # Bold
+    __HELP_OPTION_COLOR="\e[1;34m" # Blue
+    # Internal: reset color
+    __RESET_COLOR='\e[0m' # Reset Color
+    # shellcheck disable=SC2155,SC2034
+    __HELP_EXAMPLE="$(echo -e "\e[2;97m")"
+    # shellcheck disable=SC2155,SC2034
+    __HELP_TITLE="$(echo -e "\e[1;37m")"
+    # shellcheck disable=SC2155,SC2034
+    __HELP_NORMAL="$(echo -e "\033[0m")"
+  else
+    BASH_FRAMEWORK_THEME="noColor"
+    # check colors applicable https://misc.flogisoft.com/bash/tip_colors_and_formatting
+    __ERROR_COLOR=''
+    __INFO_COLOR=''
+    __SUCCESS_COLOR=''
+    __WARNING_COLOR=''
+    __SKIPPED_COLOR=''
+    __DEBUG_COLOR=''
+    __HELP_COLOR=''
+    __TEST_COLOR=''
+    __TEST_ERROR_COLOR=''
+    __HELP_TITLE_COLOR=''
+    __HELP_OPTION_COLOR=''
+    # Internal: reset color
+    __RESET_COLOR=''
+    __HELP_EXAMPLE=''
+    __HELP_TITLE=''
+    __HELP_NORMAL=''
+  fi
+}
+
+# @description check if tty (interactive mode) is active
+# @noargs
+# @exitcode 1 if tty not active
+# @env NON_INTERACTIVE if 1 consider as not interactive even if environment is interactive
+# @env INTERACTIVE if 1 consider as interactive even if environment is not interactive
+# @stderr diagnostic information + help if second argument is provided
+Assert::tty() {
+  if [[ "${NON_INTERACTIVE:-0}" = "1" ]]; then
+    return 1
+  fi
+  if [[ "${INTERACTIVE:-0}" = "1" ]]; then
+    return 0
+  fi
+  [[ -t 1 || -t 2 ]]
+}
+
+# @description log message to file
+# @arg $1 message:String the message to display
+Log::logSkipped() {
+  if ((BASH_FRAMEWORK_LOG_LEVEL >= __LEVEL_INFO)); then
+    Log::logMessage "${2:-SKIPPED}" "$1"
   fi
 }
 
 # FUNCTIONS
 
-Env::load
+facade_main_extractDatash() {
+# REQUIRES
+Linux::requireRealpathCommand
+Env::requireLoad
+Log::requireLoad
+UI::requireTheme
+Compiler::Facade::requireCommandBinDir
 
-# disable display methods following display level
-if ((BASH_FRAMEWORK_DISPLAY_LEVEL < __LEVEL_DEBUG)); then
-  Log::displayDebug() { :; }
-fi
-if ((BASH_FRAMEWORK_DISPLAY_LEVEL < __LEVEL_INFO)); then
-  Log::displayHelp() { :; }
-  Log::displayInfo() { :; }
-  Log::displaySkipped() { :; }
-  Log::displaySuccess() { :; }
-fi
-if ((BASH_FRAMEWORK_DISPLAY_LEVEL < __LEVEL_WARNING)); then
-  Log::displayWarning() { :; }
-fi
-if ((BASH_FRAMEWORK_DISPLAY_LEVEL < __LEVEL_ERROR)); then
-  Log::displayError() { :; }
-fi
-# disable log methods following log level
-if ((BASH_FRAMEWORK_LOG_LEVEL < __LEVEL_DEBUG)); then
-  Log::logDebug() { :; }
-fi
-if ((BASH_FRAMEWORK_LOG_LEVEL < __LEVEL_INFO)); then
-  Log::logHelp() { :; }
-  Log::logInfo() { :; }
-  Log::logSkipped() { :; }
-  Log::logSuccess() { :; }
-fi
-if ((BASH_FRAMEWORK_LOG_LEVEL < __LEVEL_WARNING)); then
-  Log::logWarning() { :; }
-fi
-if ((BASH_FRAMEWORK_LOG_LEVEL < __LEVEL_ERROR)); then
-  Log::logError() { :; }
-fi
-
-if ((BASH_FRAMEWORK_LOG_LEVEL > __LEVEL_OFF)); then
-  if [[ -z "${BASH_FRAMEWORK_LOG_FILE}" ]]; then
-    BASH_FRAMEWORK_LOG_LEVEL=${__LEVEL_OFF}
-    export BASH_FRAMEWORK_LOG_LEVEL
-  elif [[ ! -f "${BASH_FRAMEWORK_LOG_FILE}" ]]; then
-    if ! mkdir -p "$(dirname "${BASH_FRAMEWORK_LOG_FILE}")" 2>/dev/null; then
-      BASH_FRAMEWORK_LOG_LEVEL=__LEVEL_OFF
-      Log::displayWarning "Log dir cannot be created $(dirname "${BASH_FRAMEWORK_LOG_FILE}")"
-    fi
-    if ! touch --no-create "${BASH_FRAMEWORK_LOG_FILE}" 2>/dev/null; then
-      BASH_FRAMEWORK_LOG_LEVEL=__LEVEL_OFF
-      Log::displayWarning "Log file '${BASH_FRAMEWORK_LOG_FILE}' cannot be created"
-    fi
-  fi
-  Log::displayInfo "Logging to file ${BASH_FRAMEWORK_LOG_FILE}"
-  if ((BASH_FRAMEWORK_LOG_FILE_MAX_ROTATION > 0)); then
-    Log::rotate "${BASH_FRAMEWORK_LOG_FILE}" "${BASH_FRAMEWORK_LOG_FILE_MAX_ROTATION}"
-  fi
-fi
-
-BASH_FRAMEWORK_ENV_FILEPATH=${HOME}/.bash-tools/.env
+# @require Compiler::Facade::requireCommandBinDir
+# shellcheck disable=SC2154
 
 ############################################################
 # INTERNAL USE ONLY
@@ -735,7 +782,7 @@ declare DSN="$1"
 # shellcheck disable=SC2034
 declare LOG_FORMAT="$2"
 # shellcheck disable=SC2034
-declare VERBOSE="$3"
+declare VERBOSE="${3:-0}"
 # shellcheck disable=SC2034
 declare outputDir="$4"
 # shellcheck disable=SC2034
@@ -746,60 +793,58 @@ declare -i length=$(($# - 6))
 declare -a scriptParameters=("${@:6:${length}}")
 # shellcheck disable=SC2034,SC2124
 declare db="${@:$(($#)):1}"
-
-[[ "${VERBOSE}" = "1" ]] && Log::displayInfo "process db '${db}'"
-
 # shellcheck disable=SC2034
 declare -A dbInstance
-Database::newInstance dbInstance "${DSN}"
-Database::setQueryOptions dbInstance "${dbInstance[QUERY_OPTIONS]} --connect-timeout=5"
 
-HELP="$(
-  cat <<EOF
-${__HELP_TITLE}Description:${__HELP_NORMAL} example script file that can
-be used by bin/dbScriptAllDatabases
+init() {
+  if ((VERBOSE >= 1)); then
+    Log::displayInfo "process db '${db}'"
+  fi
 
-${__HELP_TITLE}Author:${__HELP_NORMAL}
-[François Chastanet](https://github.com/fchastanet)
-
-${__HELP_TITLE}License:${__HELP_NORMAL}
-MIT License
-
-Copyright (c) 2022 François Chastanet
-EOF
-)"
-Args::defaultHelp "${HELP}" "$@"
-
-# shellcheck disable=SC2154
-if [[ -z "${scriptParameters[0]}" ]]; then
-  Log::fatal "query string or file not provided"
-fi
-
-# extra parameters passed through dbScriptAllDatabases
-declare query="${scriptParameters[0]}"
-declare queryName="customQuery"
-declare queryFile="${query}"
-queryFile="$(Profiles::getAbsoluteConfFile "dbQueries" "${queryFile}" "sql" 2>/dev/null || echo "")"
-if [[ -n "${queryFile}" ]]; then
-  queryName="$(basename "${queryFile%.*}")"
-  query="$(cat "${queryFile}")"
-fi
-
-# create log file
-declare logFile=""
-if [[ "${LOG_FORMAT}" = "log" ]]; then
   # shellcheck disable=SC2154
-  declare logFile="${outputDir}/${db}_${queryName}.log"
-  exec 6>&1 1>"${logFile}" # redirect stdout to logFile
-fi
+  if [[ -z "${scriptParameters[0]}" ]]; then
+    Log::fatal "query string or file not provided"
+  fi
 
-Database::skipColumnNames dbInstance 0
-Database::query dbInstance "${query}" "${db}" || true
-Database::skipColumnNames dbInstance 1
+  Database::newInstance dbInstance "${DSN}"
+  Database::setQueryOptions dbInstance "${dbInstance[QUERY_OPTIONS]} --connect-timeout=5"
+}
 
-if [[ "${LOG_FORMAT}" = "log" ]]; then
-  # restore stdout
-  exec 1>&6 6>&-
-fi
+run() {
+  # extra parameters passed through dbScriptAllDatabases
+  declare query="${scriptParameters[0]}"
+  declare queryName="customQuery"
+  declare queryFile="${query}"
+  queryFile="$(Conf::getAbsoluteFile "dbQueries" "${queryFile}" "sql" 2>/dev/null || echo "")"
+  if [[ -n "${queryFile}" ]]; then
+    queryName="$(basename "${queryFile%.*}")"
+    query="$(cat "${queryFile}")"
+  fi
 
-[[ "${LOG_FORMAT}" = "log" ]] && Log::displayInfo "result available in '${logFile}'"
+  # create log file
+  declare logFile=""
+  if [[ "${LOG_FORMAT}" = "log" ]]; then
+    declare logFile="${outputDir}/${db}_${queryName}.log"
+    exec 6>&1 1>"${logFile}" # redirect stdout to logFile
+  fi
+
+  Database::skipColumnNames dbInstance 0
+  Database::query dbInstance "${query}" "${db}" || true
+  Database::skipColumnNames dbInstance 1
+
+  if [[ "${LOG_FORMAT}" = "log" ]]; then
+    # restore stdout
+    exec 1>&6 6>&-
+  fi
+
+  if [[ "${LOG_FORMAT}" = "log" ]]; then
+    Log::displayInfo "result available in '${logFile}'"
+  fi
+}
+
+init
+run
+
+}
+
+facade_main_extractDatash "$@"

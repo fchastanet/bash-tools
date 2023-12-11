@@ -1,11 +1,18 @@
 {
   "recommendations": [
     "ms-azuretools.vscode-docker",
+    "timonwong.shellcheck",
     "lizebang.bash-extension-pack",
+    "luggage66.awk",
+    "streetsidesoftware.code-spell-checker",
     "jetmartin.bats",
+    "esbenp.prettier-vscode",
+    "HTMLHint.vscode-htmlhint",
+    "yzhang.markdown-all-in-one",
     "exiasr.hadolint",
     "shd101wyy.markdown-preview-enhanced",
-    "yzhang.markdown-all-in-one",
-    "luggage66.awk"
+    "monosans.djlint",
+    "foxundermoon.shell-format",
+    "rogalmic.bash-debug"
   ]
 }

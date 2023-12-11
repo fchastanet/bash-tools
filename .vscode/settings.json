@@ -1,18 +1,27 @@
 {
   "search.useIgnoreFiles": true,
   "search.exclude": {
-    "report": true,
-    "backup": true,
-    "megalinter-reports": true,
-    "**/bin": true,
-    "_site": true,
-    "vendor/bats-*": true,
-    "vendor/tomdoc.sh": true
+    "/report": true,
+    "/backup": true,
+    "/megalinter-reports": true,
+    "/bin": true,
+    "/vendor": true,
+    "/logs": true,
+    "pages/assets": true,
+    "pages/**/*.md": true,
+    "pages/_navbar.md": false,
+    "pages/_sidebar.md": false,
+    "/bin/**": true,
+    "/install": true,
+    "/conf/dbScripts": true
   },
   "files.exclude": {
-    "_site/**": true,
     "**/.git": true
   },
+  "workbench.editorAssociations": {
+    "*.md": "default"
+  },
+  "explorer.autoReveal": false,
   "markdown.extension.toc.omittedFromToc": {
     "*.md": ["# %%"]
   },

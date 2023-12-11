@@ -1,6 +1,0 @@
-#!/usr/bin/env bash
-if [[ "$1" = "--version" ]]; then
-  echo "GNU Awk 5.0.1, API: 2.0 (GNU MPFR 4.1.0, GNU MP 6.2.0)"
-else
-  echo "$(</dev/stdin)"
-fi

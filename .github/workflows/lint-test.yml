@@ -1,70 +1,26 @@
 ---
+# kics-scan disable=555ab8f9-2001-455e-a077-f2d0f41e2fb9
 # Lint the code base and launch unit test at each push or pull request
 name: Lint and test
-on:
+on: # yamllint disable-line rule:truthy
   push:
+    # execute when pushing only branches, not tags
+    branches:
+      - '**'
   workflow_dispatch:
 
+permissions: read-all
+
 jobs:
-  linters:
+  build:
     runs-on: ubuntu-22.04
-    strategy:
-      fail-fast: true
-      matrix:
-        vendor:
-          - ubuntu
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v3
-
-      - uses: ouzi-dev/commit-status-updater@v2
-        with:
-          name: lint
-          status: pending
-
-      - name: Install vendors
-        run: |
-          set -exo pipefail
-          ./bin/installRequirements
-
-      - name: Linting - Shellcheck
-        run: |
-          set -exo pipefail
-          ./vendor/bash-tools-framework/bin/shellcheckLint --source-path=SCRIPTDIR --external-sources | \
-            tee logs/shellcheck-checkstyle.xml
-
-      - name: Linting - Awk
-        run: |
-          set -exo pipefail
-          ./vendor/bash-tools-framework/bin/awkLint | tee logs/awk-checkstyle.xml
-
-      - name: build bin files + check md5
-        run: |
-          set -exo pipefail
-          ./.github/workflows/buildBinFiles.sh 2>&1 | tee logs/buidBinFiles.log
-
-      - name: Checkstyle aggregation
-        uses: jwgmeligmeyling/checkstyle-github-action@master
-        with:
-          path: 'logs/*-checkstyle.xml'
-
-      - name: Archive results
-        uses: actions/upload-artifact@v3
-        with:
-          name: linter-reports
-          path: |
-            logs/*.xml
-            logs/*.log
-
-      - uses: ouzi-dev/commit-status-updater@v2
-        if: always()
-        with:
-          name: lint
-          status: ${{ job.status }}
-
-  tests:
-    needs: linters
-    runs-on: ubuntu-22.04
+    permissions:
+      # needed by ouzi-dev/commit-status-updater@v2
+      statuses: write
+      # needed by peter-evans/create-pull-request@v5
+      pull-requests: write
+      # needed by peter-evans/create-pull-request@v5
+      contents: write
     strategy:
       fail-fast: true
       matrix:
@@ -78,67 +34,174 @@ jobs:
         include:
           - vendor: ubuntu
             bashImage: ubuntu:20.04
-            options: -j 1
+            batsOptions: -j 1
+            bashTarVersion: 4.4
+            runPrecommitTests: false
+          - vendor: ubuntu
+            bashImage: ubuntu:20.04
+            bashTarVersion: 5.0
+            batsOptions: -j 1
+            runPrecommitTests: false
+          - vendor: ubuntu
+            bashImage: ubuntu:20.04
+            bashTarVersion: 5.1
+            batsOptions: -j 1
+            runPrecommitTests: true
           - vendor: alpine
-            bashImage: bash
-            options: -j 1
+            bashTarVersion: 4.4
+            bashImage: amd64/bash:4.4-alpine3.18
+            batsOptions: -j 1
+            runPrecommitTests: false
+          - vendor: alpine
+            bashTarVersion: 5.0
+            bashImage: amd64/bash:5.0-alpine3.18
+            batsOptions: -j 1
+            runPrecommitTests: false
+          - vendor: alpine
+            bashTarVersion: 5.1
+            bashImage: amd64/bash:5.1-alpine3.18
+            batsOptions: -j 1
+            runPrecommitTests: false
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        # kics-scan ignore-line
+        uses: actions/checkout@v4
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
+        # kics-scan ignore-line
+        uses: docker/setup-buildx-action@v3
 
       - name: Login to DockerHub
-        uses: docker/login-action@v2
+        # kics-scan ignore-line
+        uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
+      # kics-scan ignore-line
       - uses: ouzi-dev/commit-status-updater@v2
         with:
           name: build bash-tools-${{matrix.vendor}}-${{matrix.bashTarVersion}}
           status: pending
 
+      # only if pre-commit
+      - name: Set up Python
+        if: matrix.runPrecommitTests
+        # kics-scan ignore-line
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.9
+
+      - name: Install pre-commit
+        if: matrix.runPrecommitTests
+        run: pip install pre-commit
+
+      # kics-scan ignore-line
+      - uses: ouzi-dev/commit-status-updater@v2
+        if: matrix.runPrecommitTests
+        with:
+          name: lint
+          status: pending
+
+      - name: Run pre-commit
+        if: matrix.runPrecommitTests
+        run: pre-commit run -a --hook-stage manual
+
+      - name: Archive results
+        if: matrix.runPrecommitTests && always()
+        continue-on-error: true
+        # kics-scan ignore-line
+        uses: actions/upload-artifact@v3
+        with:
+          name: linter-reports
+          path: |
+            megalinter-reports/**
+
+      - name: Create Pull Request
+        if: matrix.runPrecommitTests && failure()
+        # kics-scan ignore-line
+        uses: peter-evans/create-pull-request@v5
+        with:
+          branch: update/pre-commit-fixes
+          title: lint fixes
+          commit-message: Auto-update lint fixes
+          body: |
+            some auto fixes have been generated during pre-commit run
+          labels: updates
+
+      # kics-scan ignore-line
+      - uses: ouzi-dev/commit-status-updater@v2
+        if: matrix.runPrecommitTests && always()
+        with:
+          name: lint
+          status: ${{ job.status }}
+
+      # Run unit tests
       - name: run unit tests
         run: |
           set -exo pipefail
 
-          ./bin/installRequirements
+          bin/installRequirements
 
+          chmod -R 777 logs
           # shellcheck disable=SC2266
-          VENDOR="${{ matrix.vendor }}" \
-          BASH_TAR_VERSION="${{ matrix.bashTarVersion }}" \
-          BASH_IMAGE="${{ matrix.bashImage }}" \
-          SKIP_BUILD=0 \
-          SKIP_USER=1 \
-          ./bin/test ${{matrix.options}} --report-formatter junit -o logs -r tests
+          USER_ID=1000 \
+          GROUP_ID=1000 \
+          vendor/bash-tools-framework/bin/test \
+            -vvv \
+            --vendor "${{matrix.vendor}}" \
+            --bash-version "${{matrix.bashTarVersion}}" \
+            --bash-base-image "${{matrix.bashImage}}" \
+            --branch-name "${GITHUB_REF##*/}" \
+            ${{matrix.batsOptions}} --report-formatter junit -o logs -r src --ci
 
-      - name: Publish Unit Test Results
-        uses: EnricoMi/publish-unit-test-result-action@v1
+      - name: Upload Test Results
         if: always()
+        # kics-scan ignore-line
+        uses: actions/upload-artifact@v3
         with:
-          files: logs/report.xml
-          check_name:
-            'Unit Test Results ${{matrix.vendor}} ${{matrix.bashTarVersion}}'
+          name: Test Results ${{matrix.vendor}} ${{matrix.bashTarVersion}}
+          path: logs/report.xml
 
+      # kics-scan ignore-line
       - uses: ouzi-dev/commit-status-updater@v2
         if: always()
         with:
           name: build bash-tools-${{matrix.vendor}}-${{matrix.bashTarVersion}}
           status: ${{ job.status }}
 
-  buildResults:
+  publishTestResults:
+    name: 'Publish Tests Results'
     if: ${{ always() }}
+    needs: [build]
     runs-on: ubuntu-latest
-    name: Final Build Results
-    needs: [linters, tests]
+    permissions:
+      checks: write
+
+      # needed by ouzi-dev/commit-status-updater@v2
+      statuses: write
+
+      # only needed unless run with comment_mode: off
+      pull-requests: write
     steps:
+      - name: Download Artifacts
+        # kics-scan ignore-line
+        uses: actions/download-artifact@v3
+        with:
+          path: artifacts
+
+      - name: Checkstyle aggregation
+        # kics-scan ignore-line
+        uses: lcollins/checkstyle-github-action@v2.0.0
+        with:
+          path: 'artifacts/**/*.xml'
+
       # run this action to get the workflow conclusion
       # You can get the conclusion via env (env.WORKFLOW_CONCLUSION)
+      # kics-scan ignore-line
       - uses: technote-space/workflow-conclusion-action@v3
 
-      # run other action with the workflow conclusion
+      # kics-scan ignore-line
       - uses: ouzi-dev/commit-status-updater@v2
         with:
           name: build

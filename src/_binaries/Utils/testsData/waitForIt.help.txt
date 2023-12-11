@@ -1,0 +1,91 @@
+[1;37mDESCRIPTION:[0m wait for host:port to be available
+
+[1;37mUSAGE:[0m waitForIt [OPTIONS] [ARGUMENTS]
+[1;37mUSAGE:[0m waitForIt [--timeout|-t <timeout>] --host|-i <hostOrIp>
+  --port|-p <port> [--algorithm|--algo <algorithm>]
+  [--exec-command-on-success-only|--strict|-s]
+  [--bash-framework-config <String>] [--config] [--verbose|-v] [-vv] [-vvv]
+  [--env-file <String>] [--no-color] [--theme <String>] [--help|-h] [--version]
+  [--quiet|-q] [--log-level <String>] [--log-file <String>]
+  [--display-level <String>]
+
+[1;37mARGUMENTS:[0m
+  [[1;34mcommandArgs[0m {list} (optional)]
+    Execute command with args after the test finishes or exit with status code i
+    f no command provided.
+
+[1;37mOPTIONS:[0m
+  [1;34m--timeout[0m, [1;34m-t <timeout>[0m {single}
+    Timeout in seconds, zero for no timeout.
+    Default value: 15
+  [1;34m--host[0m, [1;34m-i <hostOrIp>[0m {single} (mandatory)
+    Host or IP under test.
+  [1;34m--port[0m, [1;34m-p <port>[0m {single} (mandatory)
+    TCP port under test.
+  [1;34m--algorithm[0m, [1;34m--algo <algorithm>[0m {single}
+    Algorithm to use Check algorithms list below.  (default: automatic selection
+    based on commands availability and timeout option value).
+  [1;34m--exec-command-on-success-only[0m, [1;34m--strict[0m, [1;34m-s[0m {single}
+    Only execute sub-command if the test succeeds.
+
+[1;37mGLOBAL OPTIONS:[0m
+  [1;34m--bash-framework-config <String>[0m {single}
+    use alternate bash framework configuration.
+  [1;34m--config[0m {single}
+    Display configuration
+  [1;34m--verbose[0m, [1;34m-v[0m {single}
+    info level verbose mode (alias of --display-level INFO)
+  [1;34m-vv[0m {single}
+    debug level verbose mode (alias of --display-level DEBUG)
+  [1;34m-vvv[0m {single}
+    trace level verbose mode (alias of --display-level TRACE)
+  [1;34m--env-file <String>[0m {list} (optional)
+    Load the specified env file (deprecated, please use --bash-framework-config
+    option instead)
+  [1;34m--no-color[0m {single}
+    Produce monochrome output. alias of --theme noColor.
+  [1;34m--theme <String>[0m {single}
+    choose color theme - default-force means colors will be produced even if com
+    mand is piped
+    Default value: default
+    Possible values: default|default-force|noColor
+  [1;34m--help[0m, [1;34m-h[0m {single}
+    Display this command help
+  [1;34m--version[0m {single}
+    Print version information and quit
+  [1;34m--quiet[0m, [1;34m-q[0m {single}
+    quiet mode, doesn't display any output
+  [1;34m--log-level <String>[0m {single}
+    Set log level
+    Possible values: OFF|ERROR|WARNING|INFO|DEBUG|TRACE
+  [1;34m--log-file <String>[0m {single}
+    Set log file
+  [1;34m--display-level <String>[0m {single}
+    set display level
+    Possible values: OFF|ERROR|WARNING|INFO|DEBUG|TRACE
+
+[1;37mEXIT STATUS CODES:[0m
+[1;34m0[0m: the host/port is available
+[1;34m1[0m: indicates host/port is not available or argument error
+[1;34m2[0m: timeout reached
+
+[1;37mAVAILABLE ALGORITHMS:[0m
+[1;34mtimeoutV1WithNc[0m: previous version of timeout command with --timeout option, base command nc
+[1;34mtimeoutV2WithNc[0m: newer version of timeout command using timeout as argument, base command nc
+[1;34mwhileLoopWithNc[0m: timeout command simulated using while loop, base command nc
+[1;34mtimeoutV1WithTcp[0m: previous version of timeout command with --timeout option
+[1;34mtimeoutV2WithTcp[0m: newer version of timeout command using timeout as argument
+[1;34mwhileLoopWithTcp[0m: timeout command simulated using while loop, base command tcp
+
+[1;37mVERSION: [0m2.0
+
+[1;37mAUTHOR:[0m
+[François Chastanet](https://github.com/fchastanet)
+
+[1;37mSOURCE FILE:[0m
+https://github.com/fchastanet/bash-tools/tree/master/src/_binaries/Utils/waitForIt.sh
+
+[1;37mLICENSE:[0m
+MIT License
+
+Copyright (c) 2020-now François Chastanet

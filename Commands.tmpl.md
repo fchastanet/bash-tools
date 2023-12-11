@@ -9,30 +9,28 @@
   - [2.1. bin/mysql2puml](#21-binmysql2puml)
     - [2.1.1. Help](#211-help)
     - [2.1.2. Example](#212-example)
-- [3. Installers](#3-installers)
-  - [3.1. bin/Installers/installDockerInWsl](#31-bininstallersinstalldockerinwsl)
-- [4. Git tools](#4-git-tools)
-  - [4.1. bin/gitIsAncestorOf](#41-bingitisancestorof)
-  - [4.2. bin/gitIsBranch](#42-bingitisbranch)
-  - [4.3. bin/gitRenameBranch](#43-bingitrenamebranch)
-- [5. Dev tools](#5-dev-tools)
-  - [5.1. bin/cli](#51-bincli)
+- [3. Git tools](#3-git-tools)
+  - [3.1. bin/gitIsAncestorOf](#31-bingitisancestorof)
+  - [3.2. bin/gitIsBranch](#32-bingitisbranch)
+  - [3.3. bin/gitRenameBranch](#33-bingitrenamebranch)
+  - [3.4. bin/upgradeGithubRelease](#34-binupgradegithubrelease)
+- [4. Dev tools](#4-dev-tools)
+  - [4.1. bin/cli](#41-bincli)
+    - [4.1.1. Help](#411-help)
+    - [4.1.2. Example 1: open bash on a container named web](#412-example-1-open-bash-on-a-container-named-web)
+    - [4.1.3. Example 2: connect to mysql container with root user](#413-example-2-connect-to-mysql-container-with-root-user)
+    - [4.1.4. Example 3: connect to mysql server in order to execute a query](#414-example-3-connect-to-mysql-server-in-order-to-execute-a-query)
+    - [4.1.5. Example 4: pipe sql command to mysql container](#415-example-4-pipe-sql-command-to-mysql-container)
+- [5. Database tools](#5-database-tools)
+  - [5.1. bin/dbQueryAllDatabases](#51-bindbqueryalldatabases)
     - [5.1.1. Help](#511-help)
-    - [5.1.2. Example 1: open bash on a container named web](#512-example-1-open-bash-on-a-container-named-web)
-    - [5.1.3. Example 2: connect to mysql container with root user](#513-example-2-connect-to-mysql-container-with-root-user)
-    - [5.1.4. Example 3: connect to mysql server in order to execute a query](#514-example-3-connect-to-mysql-server-in-order-to-execute-a-query)
-    - [5.1.5. Example 4: pipe sql command to mysql container](#515-example-4-pipe-sql-command-to-mysql-container)
-- [6. Database tools](#6-database-tools)
-  - [6.1. bin/dbQueryAllDatabases](#61-bindbqueryalldatabases)
-    - [6.1.1. Help](#611-help)
-  - [6.2. bin/dbScriptAllDatabases](#62-bindbscriptalldatabases)
-    - [6.2.1. Help](#621-help)
-  - [6.3. bin/dbImport](#63-bindbimport)
-    - [6.3.1. Help](#631-help)
-  - [6.4. bin/dbImportProfile](#64-bindbimportprofile)
-    - [6.4.1. Help](#641-help)
-  - [6.5. bin/dbImportStream](#65-bindbimportstream)
-  - [6.6. bin/dbQueryOneDatabase](#66-bindbqueryonedatabase)
+  - [5.2. bin/dbScriptAllDatabases](#52-bindbscriptalldatabases)
+    - [5.2.1. Help](#521-help)
+  - [5.3. bin/dbImport](#53-bindbimport)
+    - [5.3.1. Help](#531-help)
+  - [5.4. bin/dbImportProfile](#54-bindbimportprofile)
+    - [5.4.1. Help](#541-help)
+  - [5.5. bin/dbImportStream](#55-bindbimportstream)
 
 ## 1. Build tools
 
@@ -87,7 +85,9 @@ mysqldump --skip-add-drop-table --skip-add-locks \
 Transform mysql dump to plant uml format
 
 ```bash
-mysql2puml tests/tools/data/mysql2puml.dump.sql -s default > tests/tools/data/mysql2puml.puml
+mysql2puml \
+  src/_binaries/Converters/testsData/mysql2puml.dump.sql \
+  -s default > src/_binaries/Converters/testsData/mysql2puml.dump.puml
 ```
 
 Plantuml diagram generated
@@ -98,47 +98,45 @@ Plantuml diagram generated
 
 using plantuml software, here an example of resulting diagram
 
-![resulting database diagram](tests/data/mysql2puml-model.png)
+![resulting database diagram](src/_binaries/Converters/testsData/mysql2puml-model.png)
 
-## 3. Installers
+## 3. Git tools
 
-### 3.1. bin/Installers/installDockerInWsl
-
-```text
-@@@Installers_installDockerInWsl_help@@@
-```
-
-## 4. Git tools
-
-### 4.1. bin/gitIsAncestorOf
+### 3.1. bin/gitIsAncestorOf
 
 ```text
 @@@gitIsAncestorOf_help@@@
 ```
 
-### 4.2. bin/gitIsBranch
+### 3.2. bin/gitIsBranch
 
 ```text
 @@@gitIsBranch_help@@@
 ```
 
-### 4.3. bin/gitRenameBranch
+### 3.3. bin/gitRenameBranch
 
 ```text
 @@@gitRenameBranch_help@@@
 ```
 
-## 5. Dev tools
+### 3.4. bin/upgradeGithubRelease
 
-### 5.1. bin/cli
+```text
+@@@upgradeGithubRelease_help@@@
+```
 
-#### 5.1.1. Help
+## 4. Dev tools
+
+### 4.1. bin/cli
+
+#### 4.1.1. Help
 
 ```text
 @@@cli_help@@@
 ```
 
-#### 5.1.2. Example 1: open bash on a container named web
+#### 4.1.2. Example 1: open bash on a container named web
 
 ```bash
 cli web
@@ -152,7 +150,7 @@ docker exec -it -e COLUMNS="$(tput cols)" -e LINES="$(tput lines)" --user=
 apache2 //bin/bash
 ```
 
-#### 5.1.3. Example 2: connect to mysql container with root user
+#### 4.1.3. Example 2: connect to mysql container with root user
 
 ```bash
 cli mysql root bash
@@ -166,7 +164,7 @@ docker exec -e COLUMNS="$(tput cols)" -e LINES="$(tput lines)" -it --user=root
 project-mysql bash
 ```
 
-#### 5.1.4. Example 3: connect to mysql server in order to execute a query
+#### 4.1.4. Example 3: connect to mysql server in order to execute a query
 
 will actually execute this command :
 
@@ -176,7 +174,7 @@ docker exec -it -e COLUMNS="$(tput cols)" -e LINES="$(tput lines)" --user=mysql
 project-mysql //bin/bash -c 'mysql -h127.0.0.1 -uroot -proot -P3306'
 ```
 
-#### 5.1.5. Example 4: pipe sql command to mysql container
+#### 4.1.5. Example 4: pipe sql command to mysql container
 
 ```bash
 echo 'SELECT
@@ -196,9 +194,9 @@ project-mysql //bin/bash -c 'mysql -h127.0.0.1 -uroot -proot -P3306'
 notice that as input is given to the command, tty option is not provided to
 docker exec
 
-## 6. Database tools
+## 5. Database tools
 
-### 6.1. bin/dbQueryAllDatabases
+### 5.1. bin/dbQueryAllDatabases
 
 Execute a query on multiple database in order to generate a report, query can be
 parallelized on multiple databases
@@ -207,13 +205,13 @@ parallelized on multiple databases
 bin/dbQueryAllDatabases -e localhost-root conf/dbQueries/databaseSize.sql
 ```
 
-#### 6.1.1. Help
+#### 5.1.1. Help
 
 ```text
 @@@dbQueryAllDatabases_help@@@
 ```
 
-### 6.2. bin/dbScriptAllDatabases
+### 5.2. bin/dbScriptAllDatabases
 
 Allow to execute a script on each database of specified mysql server
 
@@ -233,13 +231,13 @@ launch script in parallel on multiple db at once
 bin/dbScriptAllDatabases --jobs 10 -d localhost-root dbCheckStructOneDatabase
 ```
 
-#### 6.2.1. Help
+#### 5.2.1. Help
 
 ```text
 @@@dbScriptAllDatabases_help@@@
 ```
 
-### 6.3. bin/dbImport
+### 5.3. bin/dbImport
 
 Import default source dsn/db ExampleDbName into default target dsn/db
 ExampleDbName
@@ -250,7 +248,7 @@ dbImport ExampleDbName
 
 Ability to import db from dump stored on aws the dump file should have this name
 `<fromDbName>.tar.gz` and stored on AWS location defined by S3_BASE_URL env
-variable (see tests/data/.env file)
+variable (see src/\_binaries/DbImport/testsData/.env file)
 
 ```bash
 dbImport --from-aws ExampleDbName.tar.gz
@@ -271,13 +269,13 @@ dbImport --from-dsn default.remote --target-dsn default.local -p all \
   fromDb targetDB --tables tableA,tableB
 ```
 
-#### 6.3.1. Help
+#### 5.3.1. Help
 
 ```text
 @@@dbImport_help@@@
 ```
 
-### 6.4. bin/dbImportProfile
+### 5.4. bin/dbImportProfile
 
 Import remote db into local db
 
@@ -290,20 +288,14 @@ bigger than given ratio (based on biggest table size). Profile is automatically
 saved in ${HOME}/.bash-tools/dbImportProfiles with this format `auto*<dsn>*<db>`
 **eg:** auto_default.local_MY_DB
 
-#### 6.4.1. Help
+#### 5.4.1. Help
 
 ```text
 @@@dbImportProfile_help@@@
 ```
 
-### 6.5. bin/dbImportStream
+### 5.5. bin/dbImportStream
 
 ```text
 @@@dbImportStream_help@@@
-```
-
-### 6.6. bin/dbQueryOneDatabase
-
-```text
-@@@dbQueryOneDatabase_help@@@
 ```

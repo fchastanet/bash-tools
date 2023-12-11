@@ -1,0 +1,119 @@
+[1;37mDESCRIPTION:[0m
+Allows to execute a script on each database of specified mysql server
+
+[1;37mUSAGE:[0m dbScriptAllDatabases [OPTIONS] [ARGUMENTS]
+[1;37mUSAGE:[0m dbScriptAllDatabases [--jobs|-j <jobsCount>] [--bar|-b]
+  [--from-dsn|-f <String>] [--database <dbName>] [--output|-o <outputDirectory>]
+  [--log-format|-l <logFormat>] [--bash-framework-config <String>] [--config]
+  [--verbose|-v] [-vv] [-vvv] [--env-file <String>] [--no-color]
+  [--theme <String>] [--help|-h] [--version] [--quiet|-q] [--log-level <String>]
+  [--log-file <String>] [--display-level <String>]
+
+[1;37mARGUMENTS:[0m
+  [1;34mscriptToExecute[0m {single} (mandatory)
+    the script that will be executed on each databases
+  [[1;34mscriptArguments[0m {list} (optional)]
+    optional parameters to pass to the script
+
+[1;37mOPTIONS:[0m
+  [1;34m--jobs[0m, [1;34m-j <jobsCount>[0m {single}
+    specify the number of db to query in parallel
+    Default value: 1
+  [1;34m--bar[0m, [1;34m-b[0m {single}
+    Show progress as a progress bar. In the bar is shown: % of jobs completed, e
+    stimated seconds left, and number of jobs started.
+
+[1;37mSCRIPT OPTIONS:[0m
+  [1;34m--from-dsn[0m, [1;34m-f <String>[0m {single}
+    target mysql server
+  [1;34m--database <dbName>[0m {list} (optional)
+    if provided will check only this db, otherwise script will be executed on al
+    l dbs of mysql server
+  [1;34m--output[0m, [1;34m-o <outputDirectory>[0m {single}
+    output directory, see log-format option
+  [1;34m--log-format[0m, [1;34m-l <logFormat>[0m {single}
+    if output dir provided, will log each db result to log file
+    Default value: none
+    Possible values: none|log
+
+[1;37mGLOBAL OPTIONS:[0m
+  [1;34m--bash-framework-config <String>[0m {single}
+    use alternate bash framework configuration.
+  [1;34m--config[0m {single}
+    Display configuration
+  [1;34m--verbose[0m, [1;34m-v[0m {single}
+    info level verbose mode (alias of --display-level INFO)
+  [1;34m-vv[0m {single}
+    debug level verbose mode (alias of --display-level DEBUG)
+  [1;34m-vvv[0m {single}
+    trace level verbose mode (alias of --display-level TRACE)
+  [1;34m--env-file <String>[0m {list} (optional)
+    Load the specified env file (deprecated, please use --bash-framework-config
+    option instead)
+  [1;34m--no-color[0m {single}
+    Produce monochrome output. alias of --theme noColor.
+  [1;34m--theme <String>[0m {single}
+    choose color theme - default-force means colors will be produced even if com
+    mand is piped
+    Default value: default
+    Possible values: default|default-force|noColor
+  [1;34m--help[0m, [1;34m-h[0m {single}
+    Display this command help
+  [1;34m--version[0m {single}
+    Print version information and quit
+  [1;34m--quiet[0m, [1;34m-q[0m {single}
+    quiet mode, doesn't display any output
+  [1;34m--log-level <String>[0m {single}
+    Set log level
+    Possible values: OFF|ERROR|WARNING|INFO|DEBUG|TRACE
+  [1;34m--log-file <String>[0m {single}
+    Set log file
+  [1;34m--display-level <String>[0m {single}
+    set display level
+    Possible values: OFF|ERROR|WARNING|INFO|DEBUG|TRACE
+
+[1;37mNOTE:[0m
+the use of output, log-format, verbose options highly depends on the script used
+
+[1;37mLIST OF AVAILABLE DSN:[0m
+       - dsn_local
+       - dsn_valid
+
+[1;37mDEFAULT QUERIES DIRECTORY:[0m
+/bash/conf/dbQueries
+
+[1;37mUSER QUERIES DIRECTORY:[0m
+home/.bash-tools/dbQueries
+Allows to override queries defined in Default queries directory
+
+[1;37mLIST OF AVAILABLE SCRIPTS:[0m
+
+
+[1;37mEXAMPLES:[0m script conf/dbScripts/extractData.sh
+    executes query databaseSize (see conf/dbQueries/databaseSize.sql) on each db and log the result in log file in default output dir, call it using
+    [2;97m/bash/bin/dbScriptAllDatabases -j 10 extractData databaseSize[0m
+
+    executes query databaseSize on each db and display the result on stdout (2>/dev/null hides information messages)
+    [2;97m/bash/bin/dbScriptAllDatabases -j 10 --log-format none extractData databaseSize[0m
+
+    use --verbose to get some debug information
+    [2;97m/bash/bin/dbScriptAllDatabases -j 10 --log-format none --verbose extractData databaseSize[0m
+
+[1;37mUSE CASES:[0m
+    you can use this script in order to check that each db model conforms with your ORM schema
+    simply create a new script in conf/dbQueries that will call your orm schema checker
+
+    update multiple db at once (simple to complex update script)
+
+[1;37mVERSION: [0m2.0
+
+[1;37mAUTHOR:[0m
+[François Chastanet](https://github.com/fchastanet)
+
+[1;37mSOURCE FILE:[0m
+https://github.com/fchastanet/bash-tools/tree/master/src/_binaries/DbScriptAllDatabases/dbScriptAllDatabases.sh
+
+[1;37mLICENSE:[0m
+MIT License
+
+Copyright (c) 2020-now François Chastanet

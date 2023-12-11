@@ -1,112 +1,125 @@
 ---
+default_stages: [pre-commit, manual]
 repos:
   - repo: local
     hooks:
-      - id: remove-megalinter-containers
-        name: remove-megalinter-containers
-        entry:
-          bash -c 'set -x && docker ps -a -q --filter="name=megalinter" | xargs
-          -r docker rm || true'
+      - id: install-requirements
+        name: install-requirements
+        entry: bash -c './bin/installRequirements'
         language: system
         always_run: true
         require_serial: true
-        verbose: true
+        fail_fast: true
 
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.4.0
+    rev: v4.5.0
     hooks:
       - id: mixed-line-ending
       - id: end-of-file-fixer
+        exclude: |
+          (?x)(
+            .svg$
+          )
+      - id: trailing-whitespace
       - id: check-executables-have-shebangs
       - id: check-shebang-scripts-are-executable
       - id: check-xml
       - id: check-yaml
+      - id: check-added-large-files
       - id: forbid-new-submodules
       - id: mixed-line-ending
         args: [--fix=lf]
       - id: check-json
         exclude: |
           (?x)^(
-            conf\/.vscode\/settings.json
+            conf\/.vscode\/settings.json|
+            .vscode\/settings.json|
+            .vscode\/launch.json
           )$
 
-  - repo: https://github.com/jumanjihouse/pre-commit-hooks
-    rev: 3.0.0
+  - repo: https://github.com/pre-commit/mirrors-prettier
+    rev: v3.1.0
     hooks:
-      - id: shellcheck
-        exclude: ^vendor/.*$|\.tpl$|^conf/dbScripts/extractData$|^bin/.*$|^install$
-        args:
-          - --source-path=SCRIPTDIR
-          - --external-sources
+      - id: prettier
 
+  - repo: https://github.com/fchastanet/jumanjihouse-pre-commit-hooks
+    rev: 3.0.2
+    hooks:
       - id: shfmt
         args: [-i, '2', -ci]
-        exclude: ^vendor/.*$|^tests/data/.*$
+        exclude: |
+          (?x)(
+            /testsData/|
+            ^bin/|
+            ^conf/dbScripts/|
+            ^install
+          )
+        stages: [pre-commit]
 
       # Check both committed and uncommitted files for git conflict
       # markers and whitespace errors according to core.whitespace
       # and conflict-marker-size configuration in a git repo.
       - id: git-check
+        exclude: /testsData/
 
-  - repo: https://github.com/pre-commit/mirrors-prettier
-    rev: v3.0.0-alpha.6
+  - repo: https://github.com/fchastanet/bash-tools-framework
+    rev: 2.1.0
     hooks:
-      - id: prettier
+      - id: fixShebangExecutionBit
+      - id: fixShebangExecutionBitGithubActions
+      - id: awkLint
+      - id: shellcheckLint
+      - id: shellcheckLintGithubAction
+      - id: frameworkLinter
+        args:
+          [
+            --expected-warnings-count,
+            '6',
+            --format,
+            plain,
+            --theme,
+            default-force,
+            --display-level,
+            WARNING,
+          ]
+      - id: frameworkLinterGithubAction
+        args:
+          [
+            --expected-warnings-count,
+            '6',
+            --format,
+            checkstyle,
+            --theme,
+            default-force,
+            --display-level,
+            WARNING,
+          ]
+      - id: plantuml
+      - id: buildShFiles
+      - id: buildShFilesGithubAction
+      - id: runUnitTests
+        args: [-r, src, -j, '1']
+        # not manual as github will run UT with several versions of bash and arch
+        stages: [pre-commit]
+      - id: megalinterCheckVersion
+      - id: megalinter
+      - id: megalinterGithubAction
 
   - repo: local
     hooks:
-      - id: build-sh-files
-        name: build-sh-files
-        entry: bash -c './.github/workflows/buildBinFiles.sh'
-        language: system
-        always_run: true
+      - &BUILD_DOC_FILES
+        id: buildDocFiles
+        name: build doc files
+        language: script
+        entry: bin/doc
+        args: [-vvv]
+        pass_filenames: false
         require_serial: true
+        always_run: true
         fail_fast: true
-        verbose: true
-
-  - repo: local
-    hooks:
-      - id: build-doc-files
-        name: build-doc-files
-        entry: bash -c './bin/doc'
-        language: system
-        always_run: true
-        require_serial: true
-        fail_fast: true
-        verbose: true
-
-  - repo: local
-    hooks:
-      - id: run-unit-tests
-        name: run-unit-tests
-        entry: bash -c './bin/test -r tests -j 8'
-        language: system
-        always_run: true
-        require_serial: true
-        fail_fast: true
-        verbose: true
-
-  ## Python, Polyglot, Git, pre-commit
-  - repo: https://github.com/ScribeMD/pre-commit-hooks
-    rev: 0.15.6
-    hooks:
-      - id: megalinter-incremental
-        args: [--flavor, terraform, --release, v6.16.0]
-        stages:
-          - commit
-      - id: megalinter-full
-        args: [--flavor, terraform, --release, v6.16.0]
-        stages:
-          - push
-
-  - repo: local
-    hooks:
-      - id: remove-megalinter-containers-after-run
-        name: remove-megalinter-containers
-        entry:
-          bash -c 'set -x && docker ps -a -q --filter="name=megalinter" | xargs
-          -r docker rm || true'
-        language: system
-        always_run: true
-        require_serial: true
-        verbose: true
+        stages: [pre-push]
+      - <<: *BUILD_DOC_FILES
+        id: buildDocFilesGithubAction
+        name: build doc files for Github Actions
+        fail_fast: false
+        stages: [manual]

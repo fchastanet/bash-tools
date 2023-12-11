@@ -4,6 +4,9 @@
   "ignorePatterns": [
     {
       "pattern": "^http://localhost:.*/"
+    },
+    {
+      "pattern": "^Commands.md$"
     }
   ]
 }

@@ -112,3 +112,13 @@ Chastanet
 Scrasnups
 datetime
 gensub
+hlocalhost
+uuser
+ppassword
+DELIMS
+Facadesh
+Scriptsh
+noargs
+exitcode
+Datash
+installsh

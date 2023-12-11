@@ -1,0 +1,87 @@
+[1;37mDESCRIPTION:[0m
+rename git local branch, push new branch and delete old branch
+
+[1;37mUSAGE:[0m gitRenameBranch [OPTIONS] [ARGUMENTS]
+[1;37mUSAGE:[0m gitRenameBranch [--assume-yes|--yes|-y] [--push|-p]
+  [--delete|-d] [--bash-framework-config <String>] [--config] [--verbose|-v]
+  [-vv] [-vvv] [--env-file <String>] [--no-color] [--theme <String>] [--help|-h]
+  [--version] [--quiet|-q] [--log-level <String>] [--log-file <String>]
+  [--display-level <String>]
+
+[1;37mARGUMENTS:[0m
+  [1;34mnewBranchName[0m {single} (mandatory)
+    the branch name to check
+  [[1;34moldBranchName[0m {single}]
+    the name of the old branch if not current one
+
+[1;37mOPTIONS:[0m
+  [1;34m--assume-yes[0m, [1;34m--yes[0m, [1;34m-y[0m {single}
+    do not ask for confirmation (use with caution)
+      Automatic yes to prompts; assume "y" as answer to all prompts
+      and run non-interactively.
+  [1;34m--push[0m, [1;34m-p[0m {single}
+    push the new branch
+  [1;34m--delete[0m, [1;34m-d[0m {single}
+    delete the old remote branch
+
+[1;37mGLOBAL OPTIONS:[0m
+  [1;34m--bash-framework-config <String>[0m {single}
+    use alternate bash framework configuration.
+  [1;34m--config[0m {single}
+    Display configuration
+  [1;34m--verbose[0m, [1;34m-v[0m {single}
+    info level verbose mode (alias of --display-level INFO)
+  [1;34m-vv[0m {single}
+    debug level verbose mode (alias of --display-level DEBUG)
+  [1;34m-vvv[0m {single}
+    trace level verbose mode (alias of --display-level TRACE)
+  [1;34m--env-file <String>[0m {list} (optional)
+    Load the specified env file (deprecated, please use --bash-framework-config
+    option instead)
+  [1;34m--no-color[0m {single}
+    Produce monochrome output. alias of --theme noColor.
+  [1;34m--theme <String>[0m {single}
+    choose color theme - default-force means colors will be produced even if com
+    mand is piped
+    Default value: default
+    Possible values: default|default-force|noColor
+  [1;34m--help[0m, [1;34m-h[0m {single}
+    Display this command help
+  [1;34m--version[0m {single}
+    Print version information and quit
+  [1;34m--quiet[0m, [1;34m-q[0m {single}
+    quiet mode, doesn't display any output
+  [1;34m--log-level <String>[0m {single}
+    Set log level
+    Possible values: OFF|ERROR|WARNING|INFO|DEBUG|TRACE
+  [1;34m--log-file <String>[0m {single}
+    Set log file
+  [1;34m--display-level <String>[0m {single}
+    set display level
+    Possible values: OFF|ERROR|WARNING|INFO|DEBUG|TRACE
+
+[1;37mEXIT CODES:[0m
+[1;34m1[0m : if current directory is not a git repository
+    or if invalid or missing arguments
+[1;34m2[0m : if impossible to compute current branch name
+[1;34m3[0m : master/main branch not supported by this command,
+    please do it manually
+[1;34m5[0m : New and old branch names are the same
+[1;34m6[0m : You can use this tool in non interactive mode only
+    if --assume-yes option is provided
+[1;34m7[0m : if failed to rename local branch
+[1;34m8[0m : if remote branch deletion failed
+[1;34m9[0m : if failed to push the new branch
+
+[1;37mVERSION: [0m1.0
+
+[1;37mAUTHOR:[0m
+[François Chastanet](https://github.com/fchastanet)
+
+[1;37mSOURCE FILE:[0m
+https://github.com/fchastanet/bash-tools/tree/master/src/_binaries/Git/gitRenameBranch.sh
+
+[1;37mLICENSE:[0m
+MIT License
+
+Copyright (c) 2020-now François Chastanet
