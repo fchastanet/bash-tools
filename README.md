@@ -145,7 +145,8 @@ touch ~/.parallel/will-cite
 
 Dependencies are automatically installed when used.
 
-`vendor/bash-tools-framework/bin/test` script will install the following libraries inside `vendor` folder:
+`vendor/bash-tools-framework/bin/test` script will install the following
+libraries inside `vendor` folder:
 
 - [bats-core/bats-core](https://github.com/bats-core/bats-core.git)
 - [bats-core/bats-support](https://github.com/bats-core/bats-support.git)
