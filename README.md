@@ -145,14 +145,14 @@ touch ~/.parallel/will-cite
 
 Dependencies are automatically installed when used.
 
-`bin/test` script will install the following libraries inside `vendor` folder:
+`vendor/bash-tools-framework/bin/test` script will install the following libraries inside `vendor` folder:
 
 - [bats-core/bats-core](https://github.com/bats-core/bats-core.git)
 - [bats-core/bats-support](https://github.com/bats-core/bats-support.git)
 - [bats-core/bats-assert](https://github.com/bats-core/bats-assert.git)
 - [Flamefire/bats-mock](https://github.com/Flamefire/bats-mock.git)
 
-`./bin/doc` script will install:
+`bin/doc` script will install:
 
 - [fchastanet/tomdoc.sh](https://github.com/fchastanet/tomdoc.sh.git)
 
@@ -181,25 +181,25 @@ All the commands are unit tested, you can run the unit tests using the following
 command
 
 ```bash
-./bin/test -r tests
+vendor/bash-tools-framework/bin/test -r tests
 ```
 
 Launch UT on different environments:
 
 ```bash
 VENDOR="alpine" BASH_TAR_VERSION=4.4 BASH_IMAGE=bash \
-  SKIP_BUILD=1 SKIP_USER=1 ./bin/test -r src -j 16
+  SKIP_BUILD=1 SKIP_USER=1 vendor/bash-tools-framework/bin/test -r src -j 16
 VENDOR="alpine" BASH_TAR_VERSION=5.0 BASH_IMAGE=bash \
-  SKIP_BUILD=1 SKIP_USER=1 ./bin/test -r src -j 16
+  SKIP_BUILD=1 SKIP_USER=1 vendor/bash-tools-framework/bin/test -r src -j 16
 VENDOR="alpine" BASH_TAR_VERSION=5.1 BASH_IMAGE=bash \
-  SKIP_BUILD=1 SKIP_USER=1 ./bin/test -r src -j 16
+  SKIP_BUILD=1 SKIP_USER=1 vendor/bash-tools-framework/bin/test -r src -j 16
 
 VENDOR="ubuntu" BASH_TAR_VERSION=4.4 BASH_IMAGE=ubuntu:20.04 \
-  SKIP_BUILD=1 SKIP_USER=1 ./bin/test -r src -j 2
+  SKIP_BUILD=1 SKIP_USER=1 vendor/bash-tools-framework/bin/test -r src -j 2
 VENDOR="ubuntu" BASH_TAR_VERSION=5.0 BASH_IMAGE=ubuntu:20.04 \
-  SKIP_BUILD=1 SKIP_USER=1 ./bin/test -r src -j 2
+  SKIP_BUILD=1 SKIP_USER=1 vendor/bash-tools-framework/bin/test -r src -j 2
 VENDOR="ubuntu" BASH_TAR_VERSION=5.1 BASH_IMAGE=ubuntu:20.04 \
-  SKIP_BUILD=1 SKIP_USER=1 ./bin/test -r src -j 2
+  SKIP_BUILD=1 SKIP_USER=1 vendor/bash-tools-framework/bin/test -r src -j 2
 ```
 
 ### 3.4. auto generated bash doc

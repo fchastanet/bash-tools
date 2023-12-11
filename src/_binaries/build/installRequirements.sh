@@ -15,13 +15,6 @@ run() {
   Git::cloneOrPullIfNoChanges \
     "${BASH_TOOLS_ROOT_DIR}/vendor/bash-tools-framework" \
     "https://github.com/fchastanet/bash-tools-framework.git"
-
-  Log::displayInfo "Copying useful binaries from bash-tools-framework"
-  local externalBinary
-  for externalBinary in "${externalBinaries[@]}"; do
-    cp -v "${BASH_TOOLS_ROOT_DIR}/vendor/bash-tools-framework/${externalBinary}" \
-      "${BASH_TOOLS_ROOT_DIR}/bin"
-  done
 }
 
 if [[ "${BASH_FRAMEWORK_QUIET_MODE:-0}" = "1" ]]; then

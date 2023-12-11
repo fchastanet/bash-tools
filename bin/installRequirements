@@ -93,22 +93,6 @@ cleanOnExit() {
 trap cleanOnExit EXIT HUP QUIT ABRT TERM
 
 # @description concat each element of an array with a separator
-#
-# @arg $1 glue:String
-# @arg $@ array:String[]
-# @example
-#  declare -a array=(test1, test2)
-#  echo "Result= $(Array::join "," "${array[@]})"
-#  Result= test1,test2
-Array::join() {
-  local glue="${1-}"
-  shift || true
-  local first="${1-}"
-  shift || true
-  printf %s "${first}" "${@/#/${glue}}"
-}
-
-# @description concat each element of an array with a separator
 # but wrapping text when line length is more than provided argument
 # The algorithm will try not to cut the array element if it can.
 # if an arg can be placed on current line it will be,
@@ -1387,9 +1371,7 @@ installRequirementsCommand() {
     echo '    Possible values: OFF|ERROR|WARNING|INFO|DEBUG|TRACE'
     echo -e """
 ${__HELP_TITLE}INSTALLS REQUIREMENTS:${__HELP_NORMAL}
-- fchastanet/bash-tools-framework
-- and fchastanet/bash-tools-framework useful binaries:
-  $(Array::join ", " "${externalBinaries[@]}")"""
+- fchastanet/bash-tools-framework"""
     echo
     echo -n -e "${__HELP_TITLE_COLOR}VERSION: ${__RESET_COLOR}"
     echo '1.0'
@@ -1409,7 +1391,6 @@ ${__HELP_TITLE}INSTALLS REQUIREMENTS:${__HELP_NORMAL}
     return 1
   fi
 }
-declare -a externalBinaries=([0]="bin/test")
 
 installRequirementsCommand parse "${BASH_FRAMEWORK_ARGV[@]}"
 
@@ -1419,13 +1400,6 @@ run() {
   Git::cloneOrPullIfNoChanges \
     "${BASH_TOOLS_ROOT_DIR}/vendor/bash-tools-framework" \
     "https://github.com/fchastanet/bash-tools-framework.git"
-
-  Log::displayInfo "Copying useful binaries from bash-tools-framework"
-  local externalBinary
-  for externalBinary in "${externalBinaries[@]}"; do
-    cp -v "${BASH_TOOLS_ROOT_DIR}/vendor/bash-tools-framework/${externalBinary}" \
-      "${BASH_TOOLS_ROOT_DIR}/bin"
-  done
 }
 
 if [[ "${BASH_FRAMEWORK_QUIET_MODE:-0}" = "1" ]]; then

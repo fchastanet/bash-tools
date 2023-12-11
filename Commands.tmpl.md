@@ -5,13 +5,10 @@
   - [1.2. bin/waitForIt](#12-binwaitforit)
   - [1.3. bin/waitForMysql](#13-binwaitformysql)
   - [1.4. bin/doc](#14-bindoc)
-  - [1.5. bin/findShebangFiles](#15-binfindshebangfiles)
-  - [1.6. bin/test](#16-bintest)
 - [2. Converter and Generator tools](#2-converter-and-generator-tools)
-  - [2.1. bin/generateShellDoc](#21-bingenerateshelldoc)
-  - [2.2. bin/mysql2puml](#22-binmysql2puml)
-    - [2.2.1. Help](#221-help)
-    - [2.2.2. Example](#222-example)
+  - [2.1. bin/mysql2puml](#21-binmysql2puml)
+    - [2.1.1. Help](#211-help)
+    - [2.1.2. Example](#212-example)
 - [3. Git tools](#3-git-tools)
   - [3.1. bin/gitIsAncestorOf](#31-bingitisancestorof)
   - [3.2. bin/gitIsBranch](#32-bingitisbranch)
@@ -61,41 +58,17 @@
 @@@doc_help@@@
 ```
 
-### 1.5. bin/findShebangFiles
-
-imported from bash-tools-framework
-
-```text
-@@@findShebangFiles_help@@@
-```
-
-### 1.6. bin/test
-
-imported from bash-tools-framework
-
-```text
-@@@test_help@@@
-```
-
 ## 2. Converter and Generator tools
 
-### 2.1. bin/generateShellDoc
+### 2.1. bin/mysql2puml
 
-imported from bash-tools-framework
-
-```text
-@@@generateShellDoc_help@@@
-```
-
-### 2.2. bin/mysql2puml
-
-#### 2.2.1. Help
+#### 2.1.1. Help
 
 ```text
 @@@mysql2puml_help@@@
 ```
 
-#### 2.2.2. Example
+#### 2.1.2. Example
 
 Mysql dump of some tables
 
