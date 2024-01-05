@@ -15,6 +15,7 @@ setup() {
     "${HOME}/.bash-tools/dbQueries" \
     "${HOME}/.bash-tools/dbScripts"
   cp "${BATS_TEST_DIRNAME}/testsData/pv" "${HOME}/bin"
+  cp "${rootDir}/conf/.env" "${HOME}/.bash-tools/.env"
   touch \
     "${HOME}/bin/mysqldump" \
     "${HOME}/bin/mysqlshow" \

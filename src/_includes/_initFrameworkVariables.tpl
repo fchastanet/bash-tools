@@ -12,6 +12,7 @@ FRAMEWORK_BIN_DIR="${FRAMEWORK_ROOT_DIR}/bin"
 FRAMEWORK_VENDOR_DIR="${FRAMEWORK_ROOT_DIR}/vendor"
 FRAMEWORK_VENDOR_BIN_DIR="${FRAMEWORK_ROOT_DIR}/vendor/bin"
 
+# @require BashTools::Conf::requireLoad
 if [[ -f "${HOME}/.bash-tools/.env" ]]; then
   export BASH_FRAMEWORK_ENV_FILES=("${HOME}/.bash-tools/.env")
 fi

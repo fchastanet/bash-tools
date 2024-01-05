@@ -990,6 +990,7 @@ FRAMEWORK_BIN_DIR="${FRAMEWORK_ROOT_DIR}/bin"
 FRAMEWORK_VENDOR_DIR="${FRAMEWORK_ROOT_DIR}/vendor"
 FRAMEWORK_VENDOR_BIN_DIR="${FRAMEWORK_ROOT_DIR}/vendor/bin"
 
+# @require BashTools::Conf::requireLoad
 if [[ -f "${HOME}/.bash-tools/.env" ]]; then
   export BASH_FRAMEWORK_ENV_FILES=("${HOME}/.bash-tools/.env")
 fi
@@ -1722,7 +1723,7 @@ dbScriptAllDatabasesCommand() {
     # shellcheck disable=SC2054
     helpArray=(specify\ the\ number\ of\ db\ to\ query\ in\ parallel)
     echo -e "    $(Array::wrap2 " " 76 4 "${helpArray[@]}")"
-    echo '    Default value: 1'
+    echo "    Default value: 1"
     echo -e "  ${__HELP_OPTION_COLOR}--bar${__HELP_NORMAL}, ${__HELP_OPTION_COLOR}-b${__HELP_NORMAL} {single}"
     local -a helpArray
     # shellcheck disable=SC2054
@@ -1750,7 +1751,7 @@ dbScriptAllDatabasesCommand() {
     # shellcheck disable=SC2054
     helpArray=(if\ output\ dir\ provided\,\ will\ log\ each\ db\ result\ to\ log\ file)
     echo -e "    $(Array::wrap2 " " 76 4 "${helpArray[@]}")"
-    echo '    Default value: none'
+    echo "    Default value: none"
     echo '    Possible values: none|log'
     echo
     echo -e "${__HELP_TITLE_COLOR}GLOBAL OPTIONS:${__RESET_COLOR}"
@@ -1794,7 +1795,7 @@ dbScriptAllDatabasesCommand() {
     # shellcheck disable=SC2054
     helpArray=(choose\ color\ theme\ -\ default-force\ means\ colors\ will\ be\ produced\ even\ if\ command\ is\ piped)
     echo -e "    $(Array::wrap2 " " 76 4 "${helpArray[@]}")"
-    echo '    Default value: default'
+    echo "    Default value: default"
     echo '    Possible values: default|default-force|noColor'
     echo -e "  ${__HELP_OPTION_COLOR}--help${__HELP_NORMAL}, ${__HELP_OPTION_COLOR}-h${__HELP_NORMAL} {single}"
     local -a helpArray

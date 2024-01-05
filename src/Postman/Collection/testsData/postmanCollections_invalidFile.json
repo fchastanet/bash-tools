@@ -1,0 +1,31 @@
+{
+  "collectionsInvalid": [
+    {
+      "id": "b47cdd04-f4ea-4a96-8735-90efa20fee2d",
+      "name": "GitHub API - 1. Basic (no Auth)",
+      "owner": "27246549",
+      "createdAt": "2024-01-02T23:37:53.000Z",
+      "updatedAt": "2024-01-04T11:47:40.000Z",
+      "uid": "27246549-b47cdd04-f4ea-4a96-8735-90efa20fee2d",
+      "isPublic": false
+    },
+    {
+      "id": "758f8445-f82c-482c-a8a4-87f3e2f6566d",
+      "name": "GitHub API - 2. Advanced (with Auth)",
+      "owner": "27246549",
+      "createdAt": "2024-01-02T23:37:51.000Z",
+      "updatedAt": "2024-01-04T11:47:38.000Z",
+      "uid": "27246549-758f8445-f82c-482c-a8a4-87f3e2f6566d",
+      "isPublic": false
+    },
+    {
+      "id": "758f8445-f82c-482c-a8a4-87f3e2f6566d",
+      "name": "GitHub API - 2. Advanced (with Auth)",
+      "owner": "27246549",
+      "createdAt": "2024-01-02T23:37:51.000Z",
+      "updatedAt": "2024-01-04T11:47:38.000Z",
+      "uid": "27246549-758f8445-f82c-482c-a8a4-87f3e2f6566d",
+      "isPublic": false
+    }
+  ]
+}

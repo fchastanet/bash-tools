@@ -1,0 +1,311 @@
+{
+  "info": {
+    "_postman_id": "758f8445-f82c-482c-a8a4-87f3e2f6566d",
+    "name": "GitHub API - 2. Advanced (with Auth)",
+    "description": "Create a fork of this collection to play around with advanced operations in the GitHub API, using authorization!\n\nThis collection shows just a few of the many actions you can perform using the [GitHub REST API](https://docs.github.com/en/rest).\n\n### Authorization\n\nWhile the GitHub API allows some public requests to be made by anyone, such as searching for repos, to do more advanced operations you will need to authorize your requests. In other words, you have to prove that you are allowed to make that request. You can't just go around deleting other people's code on GitHub!\n\nLearn more about Authorization in Postman [here in the Postman Learning Center](https://learning.postman.com/docs/sending-requests/authorization/](https://learning.postman.com/docs/sending-requests/authorization/).\n\n## Set up authorization\n\nTo authorize requests to the GitHub API using your GitHub account, follow these steps:\n\n1.  Log in to GitHub and create a [Personal Access Token](https://docs.github.com/en/github/authenticating-to-github/keeping-your-account-and-data-secure/creating-a-personal-access-token). Give your token the permission scopes you wish to use.\n2.  In this collection's \"Variables\" tab, paste your token in the `CURRENT VALUE` column of  \n    `personalAccessToken` (Do NOT paste in the `INITIAL VALUE` column! This column is public if shared - keep your secrets secret!)\n3.  Enter your GitHub username for the `username` variable\n4.  Save your changes!\n    \n\nOnce you've set up Auth on this collection `GitHub API - 2. Advanced (with Auth)`, it will apply to all the requests inside.\n\nAs you can see in the \"Authorization\" or (\"Auth\") tab of this collection, the values you provide to the variables in the steps above are used to authorize all request in this collection using Basic Auth. Neat!\n\n## Be careful!\n\nOnce authorized, you can make real changes to your actual GitHub account! **Be especially careful if making a request to update or delete a repo, as these changes will really happen without being asked 'are you sure?'**",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "updatedAt": "2024-01-04T21:41:54.000Z",
+    "uid": "27246549-758f8445-f82c-482c-a8a4-87f3e2f6566d",
+    "createdAt": "2024-01-02T23:37:51.000Z",
+    "lastUpdatedBy": "27246549"
+  },
+  "item": [
+    {
+      "name": "replace or update a file in repo",
+      "item": [
+        {
+          "name": "1. base64 encode a file",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// globally import the btoa library to base64 encoding text",
+                  "require(\"btoa\")",
+                  "",
+                  "// get response body",
+                  "const body = pm.response.json()",
+                  "",
+                  "// retrieve file data",
+                  "const { data: rawData } = body",
+                  "",
+                  "// encode plain text to base64",
+                  "const encodedFileData = btoa(rawData)",
+                  "",
+                  "pm.collectionVariables.set('encodedFileData', encodedFileData)",
+                  ""
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "id": "533d956d-9828-4b35-8dab-6d2c7994cc01",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {"mode": "file", "file": {"src": "IVfZVvvDp/test.md"}},
+            "url": {
+              "raw": "postman-echo.com/post",
+              "host": ["postman-echo", "com"],
+              "path": ["post"]
+            }
+          },
+          "response": [],
+          "uid": "27246549-533d956d-9828-4b35-8dab-6d2c7994cc01"
+        },
+        {
+          "name": "2. replace or update file in repo",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {"exec": [""], "type": "text/javascript"}
+            },
+            {
+              "listen": "test",
+              "script": {"exec": [""], "type": "text/javascript"}
+            }
+          ],
+          "id": "fb33abcc-8329-4fa9-9fbb-8e513f9307f6",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"message\": \"This file was added using the GitHub API!\",\n    \"content\": \"{{encodedFileData}}\"\n}",
+              "options": {"raw": {"language": "json"}}
+            },
+            "url": {
+              "raw": "{{baseUrl}}/repos/:owner/:repo/contents/:path",
+              "host": ["{{baseUrl}}"],
+              "path": ["repos", ":owner", ":repo", "contents", ":path"],
+              "variable": [
+                {
+                  "key": "owner",
+                  "value": "clairefro",
+                  "description": "user or org name"
+                },
+                {
+                  "key": "repo",
+                  "value": "my-repo",
+                  "description": "name of the repo "
+                },
+                {
+                  "key": "path",
+                  "value": "foo.md",
+                  "description": "path to the file to be uploaded/replaced\n"
+                }
+              ]
+            },
+            "description": "**WARNING!** Running this request will overwrite an existing file if specified filepath already exists in the provided repo, if you have the proper authorization credentials. Proceed with caution!\n\n## Before making this request \nEncode the file you would like to upload from your computer into base64 using request #1 above. \n\nThat request will save the base64 encoded file to a colelction variable called `encodedFileData`, which will be sent in the body of this request.\n\nEdit the values in the `Params` tab in the request before sending."
+          },
+          "response": [],
+          "uid": "27246549-fb33abcc-8329-4fa9-9fbb-8e513f9307f6"
+        }
+      ],
+      "id": "d22f764e-33c8-44ab-953e-21ced97d2022",
+      "description": "**WARNING!** Running #2 in this folder will overwrite an existing file if specified filepath already exists in the provided repo.\n\n## How to use\nTo upload or replace a file in a repo, the GitHub API requires a the contents of a file to be base64 encoded. \n\nThat is why this request is broken into two steps: \n\n1. Encode a file from your computer to base64 and save it to a collection variable called `encodedFileData`\n\n2. Include `encodedFileData` in the body of the request to the GitHub API\n\n```json\n{\n    \"message\": \"My commit message\",\n    \"content\": \"<<encodedFileData>>\"\n}\n```",
+      "uid": "27246549-d22f764e-33c8-44ab-953e-21ced97d2022"
+    },
+    {
+      "name": "search repos",
+      "id": "2d2c4c2b-8f81-4ac6-85d2-ede1fef38430",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/search/repositories?q=postman&order=desc&per_page=30",
+          "host": ["{{baseUrl}}"],
+          "path": ["search", "repositories"],
+          "query": [
+            {"key": "q", "value": "postman"},
+            {"key": "order", "value": "desc"},
+            {"key": "per_page", "value": "30"}
+          ]
+        },
+        "description": "Searches repositories based on keywords `q`"
+      },
+      "response": [],
+      "uid": "27246549-2d2c4c2b-8f81-4ac6-85d2-ede1fef38430"
+    },
+    {
+      "name": "user info",
+      "id": "3e173fc6-3eab-42a4-9517-d670b7dd83c4",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/users/:owner",
+          "host": ["{{baseUrl}}"],
+          "path": ["users", ":owner"],
+          "variable": [
+            {
+              "key": "owner",
+              "value": "octocat",
+              "description": "username or organization name you would like information about"
+            }
+          ]
+        },
+        "description": "Get information about the given user.\n\nYou can see more detailed information if you make this request while authorized, such as the authorized user's private repos."
+      },
+      "response": [],
+      "uid": "27246549-3e173fc6-3eab-42a4-9517-d670b7dd83c4"
+    },
+    {
+      "name": "user repos",
+      "id": "74098d8d-76e2-42fc-8990-bd8bf209b1c4",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/users/:owner/repos",
+          "host": ["{{baseUrl}}"],
+          "path": ["users", ":owner", "repos"],
+          "variable": [
+            {
+              "key": "owner",
+              "value": "octocat",
+              "description": "username or organization name whose repos you would like to see"
+            }
+          ]
+        },
+        "description": "Lists repos for a given user.\n\nYou can see more detailed information if you make this request while authorized, such as the authorized user's private repos."
+      },
+      "response": [],
+      "uid": "27246549-74098d8d-76e2-42fc-8990-bd8bf209b1c4"
+    },
+    {
+      "name": "create an empty repo",
+      "id": "8b5db2c0-b51b-4dad-8e09-e67c3961b83d",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"name\": \"i-made-this-repo-from-an-api\"\n}",
+          "options": {"raw": {"language": "json"}}
+        },
+        "url": {
+          "raw": "{{baseUrl}}/user/repos",
+          "host": ["{{baseUrl}}"],
+          "path": ["user", "repos"]
+        },
+        "description": "Creates a new repo with a given `name` for the authorized user"
+      },
+      "response": [],
+      "uid": "27246549-8b5db2c0-b51b-4dad-8e09-e67c3961b83d"
+    },
+    {
+      "name": "create a fork",
+      "id": "2ee8cb21-4b8b-4b75-b834-40b21d1bcd02",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"name\": \"api-fork-test-hello-world\"\n}",
+          "options": {"raw": {"language": "json"}}
+        },
+        "url": {
+          "raw": "{{baseUrl}}/repos/:owner/:repo/forks",
+          "host": ["{{baseUrl}}"],
+          "path": ["repos", ":owner", ":repo", "forks"],
+          "variable": [
+            {
+              "key": "owner",
+              "value": "octocat",
+              "description": "owner of the repo you would like to fork"
+            },
+            {
+              "key": "repo",
+              "value": "Hello-World",
+              "description": "name of the repo you would like to fork"
+            }
+          ]
+        },
+        "description": "Forks a given `repo` from a given `owner` to a new repo called `name` in the authorized user's GitHub account.\n\nThis is usually the first step when you are going to make changes to someone else's code!"
+      },
+      "response": [],
+      "uid": "27246549-2ee8cb21-4b8b-4b75-b834-40b21d1bcd02"
+    },
+    {
+      "name": "update a repo",
+      "id": "97ce6844-387c-46ef-a51f-40442a3e6821",
+      "request": {
+        "method": "PATCH",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"name\": \"updated-with-api\"\n}",
+          "options": {"raw": {"language": "json"}}
+        },
+        "url": {
+          "raw": "{{baseUrl}}/repos/:owner/:repo",
+          "host": ["{{baseUrl}}"],
+          "path": ["repos", ":owner", ":repo"],
+          "variable": [
+            {
+              "key": "owner",
+              "value": "clairefro",
+              "description": "your GitHub username"
+            },
+            {"key": "repo", "value": "Hello-World"}
+          ]
+        },
+        "description": "Updates data on a repo, such as `name`"
+      },
+      "response": [],
+      "uid": "27246549-97ce6844-387c-46ef-a51f-40442a3e6821"
+    },
+    {
+      "name": "delete repo",
+      "id": "3d639231-4dcd-4767-9d0c-f1283ce47a8a",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/repos/:owner/:repo",
+          "host": ["{{baseUrl}}"],
+          "path": ["repos", ":owner", ":repo"],
+          "variable": [
+            {
+              "key": "owner",
+              "value": "clairefro",
+              "description": "your GitHub username"
+            },
+            {
+              "key": "repo",
+              "value": "i-made-this-repo-from-an-api",
+              "description": "name of your repository"
+            }
+          ]
+        },
+        "description": "**WARNING!** This will really delete your repo :)\n\nDeletes a given `repo` for given `owner`"
+      },
+      "response": [],
+      "uid": "27246549-3d639231-4dcd-4767-9d0c-f1283ce47a8a"
+    }
+  ],
+  "auth": {
+    "type": "basic",
+    "basic": [
+      {"key": "password", "value": "{{personalAccessToken}}", "type": "string"},
+      {"key": "username", "value": "{{username}}", "type": "string"}
+    ]
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {"type": "text/javascript", "exec": [""]}
+    },
+    {"listen": "test", "script": {"type": "text/javascript", "exec": [""]}}
+  ],
+  "variable": [
+    {"key": "baseUrl", "value": "https://api.github.com"},
+    {
+      "key": "personalAccessToken",
+      "value": "<PASTE YOUR PERSONAL ACCESS TOKEN IN CURRENT VALUE COLUMN ONLY>"
+    },
+    {"key": "username", "value": "<your github username>"},
+    {"key": "encodedFileData", "value": ""}
+  ]
+}

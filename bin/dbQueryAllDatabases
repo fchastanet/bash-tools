@@ -1142,6 +1142,7 @@ FRAMEWORK_BIN_DIR="${FRAMEWORK_ROOT_DIR}/bin"
 FRAMEWORK_VENDOR_DIR="${FRAMEWORK_ROOT_DIR}/vendor"
 FRAMEWORK_VENDOR_BIN_DIR="${FRAMEWORK_ROOT_DIR}/vendor/bin"
 
+# @require BashTools::Conf::requireLoad
 if [[ -f "${HOME}/.bash-tools/.env" ]]; then
   export BASH_FRAMEWORK_ENV_FILES=("${HOME}/.bash-tools/.env")
 fi
@@ -1835,7 +1836,7 @@ dbQueryAllDatabasesCommand() {
     # shellcheck disable=SC2054
     helpArray=(specify\ the\ number\ of\ db\ to\ query\ in\ parallel)
     echo -e "    $(Array::wrap2 " " 76 4 "${helpArray[@]}")"
-    echo '    Default value: 1'
+    echo "    Default value: 1"
     echo -e "  ${__HELP_OPTION_COLOR}--bar${__HELP_NORMAL}, ${__HELP_OPTION_COLOR}-b${__HELP_NORMAL} {single}"
     local -a helpArray
     # shellcheck disable=SC2054
@@ -1846,7 +1847,7 @@ dbQueryAllDatabasesCommand() {
     # shellcheck disable=SC2054
     helpArray=(character\ to\ use\ to\ separate\ mysql\ column)
     echo -e "    $(Array::wrap2 " " 76 4 "${helpArray[@]}")"
-    echo '    Default value: |'
+    echo "    Default value: |"
     echo
     echo -e "${__HELP_TITLE_COLOR}QUERY OPTIONS:${__RESET_COLOR}"
     echo -e "  ${__HELP_OPTION_COLOR}--from-dsn${__HELP_NORMAL}, ${__HELP_OPTION_COLOR}-f <String>${__HELP_NORMAL} {single}"
@@ -1896,7 +1897,7 @@ dbQueryAllDatabasesCommand() {
     # shellcheck disable=SC2054
     helpArray=(choose\ color\ theme\ -\ default-force\ means\ colors\ will\ be\ produced\ even\ if\ command\ is\ piped)
     echo -e "    $(Array::wrap2 " " 76 4 "${helpArray[@]}")"
-    echo '    Default value: default'
+    echo "    Default value: default"
     echo '    Possible values: default|default-force|noColor'
     echo -e "  ${__HELP_OPTION_COLOR}--help${__HELP_NORMAL}, ${__HELP_OPTION_COLOR}-h${__HELP_NORMAL} {single}"
     local -a helpArray

@@ -7,9 +7,10 @@ setup() {
   export TMPDIR="${BATS_TEST_TMPDIR}"
 
   export HOME="${BATS_TEST_TMPDIR}/home"
-  mkdir -p "${HOME}"
+  mkdir -p "${HOME}/.bash-tools"
   mkdir -p "${HOME}/bin"
   export PATH="${HOME}/bin:${PATH}"
+  cp "${rootDir}/conf/.env" "${HOME}/.bash-tools/.env"
 }
 
 teardown() {

@@ -17,6 +17,7 @@ setup() {
   cp "${BATS_TEST_DIRNAME}/testsData/pv" "${HOME}/bin"
   cp "${BATS_TEST_DIRNAME}/testsData/gawk" "${HOME}/bin"
   cp "${BATS_TEST_DIRNAME}/testsData/gawk" "${HOME}/bin/awk"
+  cp "${rootDir}/conf/.env" "${HOME}/.bash-tools/.env"
   touch \
     "${HOME}/bin/mysql" \
     "${HOME}/bin/mysqldump" \
