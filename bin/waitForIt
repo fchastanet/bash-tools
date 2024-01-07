@@ -1451,7 +1451,7 @@ waitForItCommand() {
     # shellcheck disable=SC2054
     helpArray=(Timeout\ in\ seconds\,\ zero\ for\ no\ timeout.)
     echo -e "    $(Array::wrap2 " " 76 4 "${helpArray[@]}")"
-    echo "    Default value: 15"
+    echo '    Default value: 15'
     echo -e "  ${__HELP_OPTION_COLOR}--host${__HELP_NORMAL}, ${__HELP_OPTION_COLOR}-i <hostOrIp>${__HELP_NORMAL} {single} (mandatory)"
     local -a helpArray
     # shellcheck disable=SC2054
@@ -1514,7 +1514,7 @@ waitForItCommand() {
     # shellcheck disable=SC2054
     helpArray=(choose\ color\ theme\ -\ default-force\ means\ colors\ will\ be\ produced\ even\ if\ command\ is\ piped)
     echo -e "    $(Array::wrap2 " " 76 4 "${helpArray[@]}")"
-    echo "    Default value: default"
+    echo '    Default value: default'
     echo '    Possible values: default|default-force|noColor'
     echo -e "  ${__HELP_OPTION_COLOR}--help${__HELP_NORMAL}, ${__HELP_OPTION_COLOR}-h${__HELP_NORMAL} {single}"
     local -a helpArray

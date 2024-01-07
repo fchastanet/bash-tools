@@ -4,6 +4,8 @@
 source "$(cd "${BATS_TEST_DIRNAME}/.." && pwd)/batsHeaders.sh"
 # shellcheck source=src/Postman/api.sh
 source "${rootDir}/src/Postman/api.sh"
+# shellcheck source=vendor/bash-tools-framework/src/Bash/handlePipelineFailure.sh
+source "${FRAMEWORK_ROOT_DIR}/src/Bash/handlePipelineFailure.sh"
 
 setup() {
   export BASH_FRAMEWORK_THEME="noColor"

@@ -1733,7 +1733,7 @@ upgradeGithubReleaseCommand() {
     # shellcheck disable=SC2054
     helpArray=($'The argument that will be provided to the currently installed binary\n\n      to check the version of the software. \n\n      See options constraints below.')
     echo -e "    $(Array::wrap2 " " 76 4 "${helpArray[@]}")"
-    echo "    Default value: --version"
+    echo '    Default value: --version'
     echo -e "  ${__HELP_OPTION_COLOR}--current-version${__HELP_NORMAL}, ${__HELP_OPTION_COLOR}-c <currentVersion>${__HELP_NORMAL} {single}"
     local -a helpArray
     # shellcheck disable=SC2054
@@ -1791,7 +1791,7 @@ upgradeGithubReleaseCommand() {
     # shellcheck disable=SC2054
     helpArray=(choose\ color\ theme\ -\ default-force\ means\ colors\ will\ be\ produced\ even\ if\ command\ is\ piped)
     echo -e "    $(Array::wrap2 " " 76 4 "${helpArray[@]}")"
-    echo "    Default value: default"
+    echo '    Default value: default'
     echo '    Possible values: default|default-force|noColor'
     echo -e "  ${__HELP_OPTION_COLOR}--help${__HELP_NORMAL}, ${__HELP_OPTION_COLOR}-h${__HELP_NORMAL} {single}"
     local -a helpArray

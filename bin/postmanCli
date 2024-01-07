@@ -1152,6 +1152,8 @@ Postman::api() {
     responseFile="$(Framework::createTempFile)"
 
     local status=0
+    # shellcheck disable=SC2034
+    local -a pipeStatus=()
     getCollectionDataFromFile "${collectionFile}" |
       curl \
         --request POST https://api.getpostman.com/collections \
@@ -1160,7 +1162,7 @@ Postman::api() {
         --header 'Accept: application/json' \
         --header "X-Api-Key: ${POSTMAN_API_KEY}" \
         --data @- \
-        --fail --silent --show-error || status=$?
+        --fail --silent --show-error || Bash::handlePipelineFailure status pipeStatus
 
     Postman::displayResponse "createCollectionFromFile" "${responseFile}"
 
@@ -1174,6 +1176,8 @@ Postman::api() {
     responseFile="$(Framework::createTempFile)"
 
     local status=0
+    # shellcheck disable=SC2034
+    local -a pipeStatus=()
     getCollectionDataFromFile "${collectionFile}" |
       curl \
         --request PUT "https://api.getpostman.com/collections/${collectionId}" \
@@ -1182,7 +1186,7 @@ Postman::api() {
         --header 'Accept: application/json' \
         --header "X-Api-Key: ${POSTMAN_API_KEY}" \
         --data @- \
-        --fail --silent --show-error || status=$?
+        --fail --silent --show-error || Bash::handlePipelineFailure status pipeStatus
 
     Postman::displayResponse "updateCollectionFromFile" "${responseFile}"
 
@@ -1215,6 +1219,36 @@ Postman::api() {
       return 1
       ;;
   esac
+}
+
+# @description ignore exit code 141 from simple command pipes
+# @example use with:
+#   local resultingStatus=0
+#   local -a originalPipeStatus=()
+#   cmd1 | cmd2 || Bash::handlePipelineFailure resultingStatus originalPipeStatus || true
+#   [[ "${resultingStatus}" = "0" ]]
+# @arg $1 resultingStatusCode:&int (passed by reference) (optional) resulting status code
+# @arg $2 originalStatus:int[] (passed by reference) (optional) copy of original PIPESTATUS array
+# @env PIPESTATUS assuming that this function is called like in the example provided
+# @see https://unix.stackexchange.com/a/709880/582856
+Bash::handlePipelineFailure() {
+  local -a pipeStatusBackup=("${PIPESTATUS[@]}")
+  local -n handlePipelineFailure_resultingStatusCode=$1
+  local -n handlePipelineFailure_originalStatus=$2
+  # shellcheck disable=SC2034
+  handlePipelineFailure_originalStatus=("${pipeStatusBackup[@]}")
+  handlePipelineFailure_resultingStatusCode=0
+  local statusCode
+  for statusCode in "${pipeStatusBackup[@]}"; do
+    if ((statusCode == 141)); then
+      return 0
+    elif ((statusCode > 0)); then
+      # shellcheck disable=SC2034
+      handlePipelineFailure_resultingStatusCode="${statusCode}"
+      break
+    fi
+  done
+  return "${handlePipelineFailure_resultingStatusCode}"
 }
 
 # @description log message to file
@@ -1588,6 +1622,14 @@ commandOptionParseFinished() {
     displayConfig
   fi
 }
+NBSP="\xc2\xa0"
+NBSP2="${NBSP}${NBSP}"
+argCommandHelp() {
+  echo -e "${__HELP_OPTION_COLOR}pull${__HELP_NORMAL}"
+  echo -e "${NBSP2}Pull collections from Postman back to repositories.\r"
+  echo -e "${__HELP_OPTION_COLOR}push${__HELP_NORMAL}"
+  echo -e "${NBSP2}Push repositories collections to Postman."
+}
 
 postmanCliCommand() {
   local options_parse_cmd="$1"
@@ -1921,8 +1963,8 @@ postmanCliCommand() {
     echo -e "${__HELP_TITLE_COLOR}ARGUMENTS:${__RESET_COLOR}"
     echo -e "  [${__HELP_OPTION_COLOR}command${__HELP_NORMAL} {single}]"
     local -a helpArray
-    # shellcheck disable=SC2054
-    helpArray=($'\e[1;34mpull[0m\n\n      \xc2\xa0\xc2\xa0Pull collections from Postman back to repositories.\n\n      \e[1;34mpush[0m\n\n      \xc2\xa0\xc2\xa0Push repositories collections to Postman.\n')
+    # shellcheck disable=SC2054,SC2206
+    mapfile -t helpArray < <(argCommandHelp)
     echo -e "    $(Array::wrap2 " " 76 4 "${helpArray[@]}")"
     echo -e "  [${__HELP_OPTION_COLOR}commandArgs${__HELP_NORMAL} {list} (optional)]"
     local -a helpArray
@@ -1978,7 +2020,7 @@ postmanCliCommand() {
     # shellcheck disable=SC2054
     helpArray=(choose\ color\ theme\ -\ default-force\ means\ colors\ will\ be\ produced\ even\ if\ command\ is\ piped)
     echo -e "    $(Array::wrap2 " " 76 4 "${helpArray[@]}")"
-    echo "    Default value: default"
+    echo '    Default value: default'
     echo '    Possible values: default|default-force|noColor'
     echo -e "  ${__HELP_OPTION_COLOR}--help${__HELP_NORMAL}, ${__HELP_OPTION_COLOR}-h${__HELP_NORMAL} {single}"
     local -a helpArray
@@ -2032,6 +2074,7 @@ postmanCliCommand() {
   fi
 }
 declare optionPostmanModelConfig="$(pwd -P)/postmanCli.collections.json"
+declare copyrightBeginYear="2023"
 
 # shellcheck disable=SC2317 # if function is overridden
 unknownOption() {

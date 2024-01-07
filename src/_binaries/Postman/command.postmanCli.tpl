@@ -2,15 +2,21 @@
 declare versionNumber="1.0"
 declare commandFunctionName="postmanCliCommand"
 declare help="Push/Pull postman collections of all the configured repositories"
-declare copyrightBeginYear="2023"
 # shellcheck disable=SC2016
 %
 
 .INCLUDE "$(dynamicTemplateDir _binaries/options/options.base.tpl)"
-%
-
 NBSP="\xc2\xa0"
 NBSP2="${NBSP}${NBSP}"
+argCommandHelp() {
+  echo -e "${__HELP_OPTION_COLOR}pull${__HELP_NORMAL}"
+  echo -e "${NBSP2}Pull collections from Postman back to repositories." $'\r'
+  echo -e "${__HELP_OPTION_COLOR}push${__HELP_NORMAL}"
+  echo -e "${NBSP2}Push repositories collections to Postman."
+}
+
+%
+
 # shellcheck source=/dev/null
 source <(
   Options::generateGroup \
@@ -28,17 +34,14 @@ source <(
     --variable-name "optionPostmanModelConfig" \
     --function-name optionPostmanModelConfigFunction
 
+  argCommandHelp() { :; }
   Options::generateArg \
     --variable-name "argCommand" \
     --min 0 \
     --max 1 \
     --name "command" \
     --authorized-values 'pull|push' \
-    --help \
-    $'${__HELP_OPTION_COLOR}pull${__HELP_NORMAL}\n
-      ${NBSP2}Pull collections from Postman back to repositories.\n
-      ${__HELP_OPTION_COLOR}push${__HELP_NORMAL}\n
-      ${NBSP2}Push repositories collections to Postman.\n' \
+    --help argCommandHelp \
     --function-name argCommandFunction
 
   Options::generateArg \
@@ -63,6 +66,7 @@ options+=(
 Options::generateCommand "${options[@]}"
 %
 declare optionPostmanModelConfig="$(pwd -P)/postmanCli.collections.json"
+declare copyrightBeginYear="2023"
 
 # shellcheck disable=SC2317 # if function is overridden
 unknownOption() {

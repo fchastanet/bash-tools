@@ -11,6 +11,10 @@ setup() {
   export BASH_FRAMEWORK_THEME="noColor"
 }
 
+teardown() {
+  chmod -R u+w "${BATS_TEST_TMPDIR}/pullMode" 2>/dev/null || true
+}
+
 function Postman::Model::validate::missingMode { #@test
   run Postman::Model::validate \
     "fileNotFound.json" "invalidMode"
@@ -89,17 +93,20 @@ function Postman::Model::validate::pushModeCollectionsWithErrors { #@test
 }
 
 function Postman::Model::validate::pullModeCollectionsWithErrors { #@test
+  cp -R "${BATS_TEST_DIRNAME}/testsData/pullMode" "${BATS_TEST_TMPDIR}"
+  chmod -w "${BATS_TEST_TMPDIR}/pullMode/GithubAPI/notWritableFile.json"
+  chmod -w "${BATS_TEST_TMPDIR}/pullMode"
   Postman::Model::getRelativeConfigDirectory() {
-    echo "${BATS_TEST_DIRNAME}/testsData/pullMode"
+    echo "${BATS_TEST_TMPDIR}/pullMode"
   }
-  local file="${BATS_TEST_DIRNAME}/testsData/pullMode/getCollectionRefs-collectionsWithErrors.json"
+  local file="${BATS_TEST_TMPDIR}/pullMode/getCollectionRefs-collectionsWithErrors.json"
   run Postman::Model::validate \
     "${file}" "pull"
 
   assert_failure 1
   assert_line --index 0 "ERROR   - File '${file}' - collection 0 - missing file property"
-  assert_line --index 1 "ERROR   - File '${file}' - collection fileNotWritable - collection file ${BATS_TEST_DIRNAME}/testsData/pullMode/GithubAPI/notWritableFile.json is not writable"
-  assert_line --index 2 "ERROR   - File '${file}' - collection dirNotWritable - config directory ${BATS_TEST_DIRNAME}/testsData/pullMode is not writable"
+  assert_line --index 1 "ERROR   - File '${file}' - collection fileNotWritable - collection file ${BATS_TEST_TMPDIR}/pullMode/GithubAPI/notWritableFile.json is not writable"
+  assert_line --index 2 "ERROR   - File '${file}' - collection dirNotWritable - config directory ${BATS_TEST_TMPDIR}/pullMode is not writable"
 
   assert_lines_count 3
 }

@@ -30,6 +30,8 @@ Postman::api() {
     responseFile="$(Framework::createTempFile)"
 
     local status=0
+    # shellcheck disable=SC2034
+    local -a pipeStatus=()
     getCollectionDataFromFile "${collectionFile}" |
       curl \
         --request POST https://api.getpostman.com/collections \
@@ -38,7 +40,7 @@ Postman::api() {
         --header 'Accept: application/json' \
         --header "X-Api-Key: ${POSTMAN_API_KEY}" \
         --data @- \
-        --fail --silent --show-error || status=$?
+        --fail --silent --show-error || Bash::handlePipelineFailure status pipeStatus
 
     Postman::displayResponse "createCollectionFromFile" "${responseFile}"
 
@@ -52,6 +54,8 @@ Postman::api() {
     responseFile="$(Framework::createTempFile)"
 
     local status=0
+    # shellcheck disable=SC2034
+    local -a pipeStatus=()
     getCollectionDataFromFile "${collectionFile}" |
       curl \
         --request PUT "https://api.getpostman.com/collections/${collectionId}" \
@@ -60,7 +64,7 @@ Postman::api() {
         --header 'Accept: application/json' \
         --header "X-Api-Key: ${POSTMAN_API_KEY}" \
         --data @- \
-        --fail --silent --show-error || status=$?
+        --fail --silent --show-error || Bash::handlePipelineFailure status pipeStatus
 
     Postman::displayResponse "updateCollectionFromFile" "${responseFile}"
 
