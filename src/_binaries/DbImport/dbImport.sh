@@ -190,9 +190,13 @@ run() {
       Log::displayInfo "avoid to create db structure"
     else
       Log::displayInfo "create db structure from ${remoteDbStructureDumpTempFile}"
+      # shellcheck disable=SC2034
+      local status=0
+      # shellcheck disable=SC2034
+      local -a pipeStatus=()
       time (
         pv "${remoteDbStructureDumpTempFile}" | zcat |
-          Database::query dbTargetDatabase "" "${targetDbName}"
+          Database::query dbTargetDatabase "" "${targetDbName}" || Bash::handlePipelineFailure status pipeStatus
       )
     fi
   fi

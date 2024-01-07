@@ -37,7 +37,7 @@ run() {
   Version::checkMinimal "gawk" "--version" "5.0.1"
 
   # create db instances
-  declare -Agx dbTargetInstance
+  local -Agx dbTargetInstance
 
   Database::newInstance dbTargetInstance "${optionTargetDsn}"
   Database::setQueryOptions dbTargetInstance "${dbTargetInstance[QUERY_OPTIONS]} --connect-timeout=5"
@@ -46,7 +46,11 @@ run() {
   initializeDefaultTargetMysqlOptions dbTargetInstance "${argTargetDbName}"
 
   # TODO character set should be retrieved from dump files if possible
-  declare remoteCharacterSet="${optionCharacterSet:-${defaultRemoteCharacterSet}}"
+  local remoteCharacterSet="${optionCharacterSet:-${defaultRemoteCharacterSet}}"
+
+  local status=0
+  # shellcheck disable=SC2034
+  local -a pipeStatus=()
 
   # shellcheck disable=2086
   (
@@ -55,19 +59,19 @@ run() {
     elif [[ "${argDumpFile}" =~ \.gz$ ]]; then
       zcat "${argDumpFile}"
     fi
-    # zcat will continue to write to stdout whereas awk has finished if table has been found
-    # we detect this case because zcat will return code 141 because pipe closed
-    status=$?
-    if [[ "${status}" -eq "141" ]]; then true; else exit "${status}"; fi
   ) |
     awk \
       -v PROFILE_COMMAND="${profileCommandFile}" \
       -v CHARACTER_SET="${remoteCharacterSet}" \
       --source "${awkScript}" \
-      - | mysql \
-    "--defaults-extra-file=${dbTargetInstance['AUTH_FILE']}" \
-    ${dbTargetInstance['DB_IMPORT_OPTIONS']} \
-    "${argTargetDbName}" || exit $?
+      - |
+    mysql \
+      "--defaults-extra-file=${dbTargetInstance['AUTH_FILE']}" \
+      ${dbTargetInstance['DB_IMPORT_OPTIONS']} \
+      "${argTargetDbName}" ||
+    # zcat will continue to write to stdout whereas awk has finished if table has been found
+    # we detect this case because zcat will return code 141 because pipe closed
+    Bash::handlePipelineFailure status pipeStatus
 }
 
 if [[ "${BASH_FRAMEWORK_QUIET_MODE:-0}" = "1" ]]; then

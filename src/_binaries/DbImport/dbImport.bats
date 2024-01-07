@@ -173,13 +173,13 @@ function Database::dbImport::remote_db_fully_functional_from_mysql { #@test
   export BASH_FRAMEWORK_ENV_FILEPATH="${BATS_TEST_DIRNAME}/testsData/.env"
 
   run "${binDir}/dbImport" --verbose -f default.local fromDb toDb 2>&1
-  unstub_all
   assert_output --partial "Import database duration : "
   assert_output --partial "begin insert emptyTable"
   assert_output --partial "begin insert dataTable"
   assert_output --partial "begin insert otherTable"
   [[ -f "${HOME}/.bash-tools/dbImportDumps/fromDb_default.sql.gz" ]]
   [[ -f "${HOME}/.bash-tools/dbImportDumps/fromDb_default_structure.sql.gz" ]]
+  unstub_all
   [[ "$(zcat "${HOME}/.bash-tools/dbImportDumps/fromDb_default.sql.gz" | grep '####data####')" = "####data####" ]]
   [[ "$(zcat "${HOME}/.bash-tools/dbImportDumps/fromDb_default_structure.sql.gz" | grep '####structure####')" = "####structure####" ]]
 }
@@ -283,10 +283,12 @@ function Database::dbImport::import_local_dump_not_aws_with_tables_filter { #@te
     $'* --connect-timeout=5 --batch --raw --default-character-set=utf8  toDb : i=0 ; while read line; do ((i=i+1)); echo "line $i"; done < /dev/stdin'
 
   run "${binDir}/dbImport" --verbose -f default.local fromDb toDb --tables dataTable,otherTable 2>&1
-  assert_output --partial "Import database duration : "
+  assert_output --partial "db created"
+  assert_output --partial "import structure dump"
   assert_output --partial "ignore table emptyTable"
-  assert_output --partial "begin insert dataTable"
+  assert_output --partial "Import database duration : "
   assert_output --partial "begin insert otherTable"
+  assert_output --partial "begin insert dataTable"
   [[ -f "${HOME}/.bash-tools/dbImportDumps/fromDb_default.sql.gz" ]]
   [[ -f "${HOME}/.bash-tools/dbImportDumps/fromDb_default_structure.sql.gz" ]]
   # check files have been touched

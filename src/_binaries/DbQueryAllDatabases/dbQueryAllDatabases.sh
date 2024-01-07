@@ -2,8 +2,15 @@
 # BIN_FILE=${BASH_TOOLS_ROOT_DIR}/bin/dbQueryAllDatabases
 # VAR_RELATIVE_FRAMEWORK_DIR_TO_CURRENT_DIR=..
 # FACADE
-# EMBED Db::queryOneDatabase as dbQueryOneDatabase
 # shellcheck disable=SC2034
+
+# later on, parallel calls this script(inception)
+if [[ "$1" = "DbQueryOneDatabase" ]]; then
+  shift || true
+  Linux::requireExecutedAsUser
+  Db::queryOneDatabase "$@"
+  exit 0
+fi
 
 #default values
 # default value for FROM_DSN if from-aws not set
@@ -58,8 +65,8 @@ run() {
   export optionFromDsn
   # shellcheck disable=SC2154
   echo "${allDbs}" |
-    SHELL=$(type -p bash) parallel --eta --progress "${PARALLEL_OPTIONS[@]}" \
-      "${embed_function_DbQueryOneDatabase}" "${optionFromDsn}" |
+    SHELL=$(type -p bash) parallel --eta --progress -m "${PARALLEL_OPTIONS[@]}" \
+      ::: "$0" "DbQueryOneDatabase" "${optionFromDsn}" |
     awk --source "${awkScript}" -
 }
 

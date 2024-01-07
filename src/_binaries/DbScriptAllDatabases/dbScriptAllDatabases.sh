@@ -2,7 +2,6 @@
 # BIN_FILE=${BASH_TOOLS_ROOT_DIR}/bin/dbScriptAllDatabases
 # VAR_RELATIVE_FRAMEWORK_DIR_TO_CURRENT_DIR=..
 # FACADE
-# EMBED Db::queryOneDatabase as dbQueryOneDatabase
 # shellcheck disable=SC2034
 
 # default values

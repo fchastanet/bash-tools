@@ -54,7 +54,7 @@ function Database::dbQueryAllDatabases::providingEnvFileChangeDbConnectionParame
 
   # shellcheck disable=SC2016
   stub parallel \
-    '--eta --progress --linebuffer -j 1 * * : while IFS= read -r db; do "$6" "$7" "${db}"; done'
+    '--eta --progress -m --linebuffer -j 1 ::: * DbQueryOneDatabase * * : while IFS= read -r db; do "$8" "$9" "${10}" "${db}"; done'
 
   f() {
     # shellcheck disable=SC2317
@@ -87,7 +87,7 @@ function Database::dbQueryAllDatabases::multipleJobs { #@test
 
   # shellcheck disable=SC2016
   stub parallel \
-    '--eta --progress --linebuffer -j 8 * * : while IFS= read -r db; do "$6" "$7" "${db}"; done'
+    '--eta --progress -m --linebuffer -j 8 ::: * DbQueryOneDatabase * * : while IFS= read -r db; do "$8" "$9" "${10}" "${db}"; done'
 
   f() {
     # shellcheck disable=SC2317

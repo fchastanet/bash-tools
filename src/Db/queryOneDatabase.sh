@@ -1,5 +1,4 @@
 #!/usr/bin/env bash
-# VAR_MAIN_FUNCTION_VAR_NAME=dbQueryAllDatabasesFacade
 
 # @description used to execute given query when using
 # dbScriptAllDatabases

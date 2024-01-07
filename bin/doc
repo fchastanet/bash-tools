@@ -1653,7 +1653,7 @@ run() {
     "${DOC_DIR}/Commands.md" \
     "${BASH_TOOLS_ROOT_DIR}/bin" \
     TOKEN_NOT_FOUND_COUNT \
-    '(bash-tpl|plantuml|definitionLint|compile|installFacadeExample)$'
+    '(test)$'
 
   # inject plantuml diagram source code into command
   sed -E -i \
