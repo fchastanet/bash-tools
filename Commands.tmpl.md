@@ -21,6 +21,8 @@
     - [4.1.3. Example 2: connect to mysql container with root user](#413-example-2-connect-to-mysql-container-with-root-user)
     - [4.1.4. Example 3: connect to mysql server in order to execute a query](#414-example-3-connect-to-mysql-server-in-order-to-execute-a-query)
     - [4.1.5. Example 4: pipe sql command to mysql container](#415-example-4-pipe-sql-command-to-mysql-container)
+  - [4.1. bin/postmanCli](#41-binpostmancli)
+    - [4.1.1. Help](#411-help-1)
 - [5. Database tools](#5-database-tools)
   - [5.1. bin/dbQueryAllDatabases](#51-bindbqueryalldatabases)
     - [5.1.1. Help](#511-help)
@@ -193,6 +195,14 @@ project-mysql //bin/bash -c 'mysql -h127.0.0.1 -uroot -proot -P3306'
 
 notice that as input is given to the command, tty option is not provided to
 docker exec
+
+### 4.1. bin/postmanCli
+
+#### 4.1.1. Help
+
+```text
+@@@postmanCli_help@@@
+```
 
 ## 5. Database tools
 
