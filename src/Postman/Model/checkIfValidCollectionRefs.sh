@@ -4,7 +4,7 @@
 #   exists in the model file
 # @arg $1 modelFile:String model file in which availableRefs have been retrieved
 # @arg $2 availableRefs:&String[] list of known collection references
-# @arg $3 modelCollectionRefs:&String[] list ofcollection references to check
+# @arg $3 modelCollectionRefs:&String[] list of collection references to check
 Postman::Model::checkIfValidCollectionRefs() {
   local modelFile="$1"
   local -n availableRefs=$2

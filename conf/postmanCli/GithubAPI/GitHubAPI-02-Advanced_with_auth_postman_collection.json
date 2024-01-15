@@ -96,7 +96,7 @@
                 }
               ]
             },
-            "description": "**WARNING!** Running this request will overwrite an existing file if specified filepath already exists in the provided repo, if you have the proper authorization credentials. Proceed with caution!\n\n## Before making this request \nEncode the file you would like to upload from your computer into base64 using request #1 above. \n\nThat request will save the base64 encoded file to a colelction variable called `encodedFileData`, which will be sent in the body of this request.\n\nEdit the values in the `Params` tab in the request before sending."
+            "description": "**WARNING!** Running this request will overwrite an existing file if specified filepath already exists in the provided repo, if you have the proper authorization credentials. Proceed with caution!\n\n## Before making this request \nEncode the file you would like to upload from your computer into base64 using request #1 above. \n\nThat request will save the base64 encoded file to a collection variable called `encodedFileData`, which will be sent in the body of this request.\n\nEdit the values in the `Params` tab in the request before sending."
           },
           "response": [],
           "uid": "27246549-fb33abcc-8329-4fa9-9fbb-8e513f9307f6"

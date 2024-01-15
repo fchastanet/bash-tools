@@ -109,3 +109,15 @@ SPELL_LYCHEE_FILTER_REGEX_EXCLUDE: |
   )
 
 JSON_ESLINT_PLUGIN_JSONC_FILE_NAME: .eslintrc.js
+JSON_PRETTIER_FILTER_REGEX_EXCLUDE: |
+  (?x)(
+    ^src/Postman/Model/testsData/pushMode/GithubAPI/notValidJsonFile.json$|
+    ^src/Postman/Collection/testsData/postmanCollections_invalidJsonFile.json$|
+    ^src/Postman/Model/testsData/getCollectionInvalid.json$
+  )
+JSON_ESLINT_PLUGIN_JSONC_FILTER_REGEX_EXCLUDE: |
+  (?x)(
+    ^src/Postman/Model/testsData/pushMode/GithubAPI/notValidJsonFile.json$|
+    ^src/Postman/Collection/testsData/postmanCollections_invalidJsonFile.json$|
+    ^src/Postman/Model/testsData/getCollectionInvalid.json$
+  )

@@ -10,8 +10,10 @@ Push/Pull postman collections of all the configured repositories
 
 [1;37mARGUMENTS:[0m
   [[1;34mcommand[0m {single}]
-    [1;34mpull[0m   Pull collections from Postman back to repositories.
-    [1;34mpush[0m   Push repositories collections to Postman.
+    [1;34mpull[0m
+      Pull collections from Postman back to repositories.
+    [1;34mpush[0m
+      Push repositories collections to Postman.
   [[1;34mcommandArgs[0m {list} (optional)]
     list of postman collection's references to pull or push
     or no argument to pull or push all the collections
