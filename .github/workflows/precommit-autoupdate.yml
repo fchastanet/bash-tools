@@ -13,6 +13,9 @@ permissions: read-all
 jobs:
   auto-update:
     runs-on: ubuntu-22.04
+    permissions:
+      pull-requests: write
+      contents: write
     steps:
       # kics-scan ignore-line
       - uses: actions/checkout@v4
