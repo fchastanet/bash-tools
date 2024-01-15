@@ -1929,8 +1929,8 @@ postmanCliCommand() {
     echo -e "${__HELP_TITLE_COLOR}ARGUMENTS:${__RESET_COLOR}"
     echo -e "  [${__HELP_OPTION_COLOR}command${__HELP_NORMAL} {single}]"
     local -a helpArray
-    # shellcheck disable=SC2054
-    helpArray=($'\e[1;34mpull[0m\r\n  Pull collections from Postman back to repositories.\r\n\e[1;34mpush[0m\r\n  Push repositories collections to Postman.')
+    # shellcheck disable=SC2054,SC2206
+    mapfile -t helpArray < <(argCommandHelp)
     echo -e "    $(Array::wrap2 " " 76 4 "${helpArray[@]}")"
     echo -e "  [${__HELP_OPTION_COLOR}commandArgs${__HELP_NORMAL} {list} (optional)]"
     local -a helpArray
@@ -2041,6 +2041,13 @@ postmanCliCommand() {
 }
 declare optionPostmanModelConfig="$(pwd -P)/postmanCli.collections.json"
 declare copyrightBeginYear="2023"
+
+argCommandHelp() {
+  echo "${__HELP_OPTION_COLOR}pull${__HELP_NORMAL}" $'\r'
+  echo "  Pull collections from Postman back to repositories." $'\r'
+  echo "${__HELP_OPTION_COLOR}push${__HELP_NORMAL}" $'\r'
+  echo '  Push repositories collections to Postman.'
+}
 
 # shellcheck disable=SC2317 # if function is overridden
 unknownOption() {

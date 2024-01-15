@@ -26,16 +26,14 @@ Default value: <currentDir>/postmanCli.collections.json' \
     --variable-name "optionPostmanModelConfig" \
     --function-name optionPostmanModelConfigFunction
 
+  argCommandHelp() { :; }
   Options::generateArg \
     --variable-name "argCommand" \
     --min 0 \
     --max 1 \
     --name "command" \
     --authorized-values 'pull|push' \
-    --help $'${__HELP_OPTION_COLOR}pull${__HELP_NORMAL}\r
-  Pull collections from Postman back to repositories.\r
-${__HELP_OPTION_COLOR}push${__HELP_NORMAL}\r
-  Push repositories collections to Postman.' \
+    --help argCommandHelp \
     --function-name argCommandFunction
 
   Options::generateArg \
@@ -61,6 +59,13 @@ Options::generateCommand "${options[@]}"
 %
 declare optionPostmanModelConfig="$(pwd -P)/postmanCli.collections.json"
 declare copyrightBeginYear="2023"
+
+argCommandHelp() {
+  echo "${__HELP_OPTION_COLOR}pull${__HELP_NORMAL}" $'\r'
+  echo "  Pull collections from Postman back to repositories." $'\r'
+  echo "${__HELP_OPTION_COLOR}push${__HELP_NORMAL}" $'\r'
+  echo '  Push repositories collections to Postman.'
+}
 
 # shellcheck disable=SC2317 # if function is overridden
 unknownOption() {
