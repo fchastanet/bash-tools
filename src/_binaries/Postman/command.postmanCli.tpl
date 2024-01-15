@@ -6,14 +6,6 @@ declare help="Push/Pull postman collections of all the configured repositories"
 %
 
 .INCLUDE "$(dynamicTemplateDir _binaries/options/options.base.tpl)"
-NBSP="\xc2\xa0"
-NBSP2="${NBSP}${NBSP}"
-argCommandHelp() {
-  echo -e "${__HELP_OPTION_COLOR}pull${__HELP_NORMAL}"
-  echo -e "${NBSP2}Pull collections from Postman back to repositories." $'\r'
-  echo -e "${__HELP_OPTION_COLOR}push${__HELP_NORMAL}"
-  echo -e "${NBSP2}Push repositories collections to Postman."
-}
 
 %
 
@@ -26,22 +18,24 @@ source <(
   # shellcheck disable=SC2016
   Options::generateOption \
     --variable-type String \
-    --help $'postmanCli model file to use\n
-      Default value: <currentDir>/postmanCli.collections.json' \
+    --help $'postmanCli model file to use\r
+Default value: <currentDir>/postmanCli.collections.json' \
     --group groupPushPullFunction \
     --alt "--postman-model" \
     --alt "-m" \
     --variable-name "optionPostmanModelConfig" \
     --function-name optionPostmanModelConfigFunction
 
-  argCommandHelp() { :; }
   Options::generateArg \
     --variable-name "argCommand" \
     --min 0 \
     --max 1 \
     --name "command" \
     --authorized-values 'pull|push' \
-    --help argCommandHelp \
+    --help $'${__HELP_OPTION_COLOR}pull${__HELP_NORMAL}\r
+  Pull collections from Postman back to repositories.\r
+${__HELP_OPTION_COLOR}push${__HELP_NORMAL}\r
+  Push repositories collections to Postman.' \
     --function-name argCommandFunction
 
   Options::generateArg \
@@ -50,8 +44,8 @@ source <(
     --max -1 \
     --name "commandArgs" \
     --help \
-    $'list of postman collection\'s references to pull or push\n
-      or no argument to pull or push all the collections' \
+    $'list of postman collection\'s references to pull or push\r
+or no argument to pull or push all the collections' \
     --function-name commandArgsFunction
 )
 
