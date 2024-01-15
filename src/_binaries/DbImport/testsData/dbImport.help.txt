@@ -20,23 +20,23 @@ Import source db into target db using eventual table filter
 
 [1;37mPROFILE OPTIONS:[0m
   [1;34m--profile[0m, [1;34m-p <String>[0m {single}
-    the name of the profile to use in order to include or exclude tables
-    (if not specified in default.sh from 'User profiles directory' if exists
-    or 'Default profiles directory')
+    the name of the profile to use in order to include or exclude tables (if not
+    specified in default.sh from 'User profiles directory' if exists or 'Def
+    ault profiles directory')
   [1;34m--tables <tablesSeparatedByComma>[0m {single}
     import only table specified in the list.  If aws mode, ignore profile option
 
 [1;37mFROM OPTIONS:[0m
   [1;34m--from-dsn[0m, [1;34m-f <String>[0m {single}
     dsn to use for source database
-    this option is incompatible with -a|--from-aws option
+
+      this option is incompatible with -a|--from-aws option
   [1;34m--skip-schema[0m, [1;34m-s[0m {single}
     avoid to import the schema
   [1;34m--from-aws[0m, [1;34m-a <awsFile>[0m {single}
     db dump will be downloaded from s3 instead of using remote db. The value <aw
     sFile> is the name of the file without s3 location (Only .gz or tar.gz f
-    ile are supported). This option is incompatible with -f|--from-dsn optio
-    n
+        ile are supported). This option is incompatible with -f|--from-dsn option
 
 [1;37mTARGET OPTIONS:[0m
   [1;34m--target-dsn[0m, [1;34m-t <targetDsn>[0m {single}
@@ -76,12 +76,12 @@ Import source db into target db using eventual table filter
     quiet mode, doesn't display any output
   [1;34m--log-level <String>[0m {single}
     Set log level
-    Possible values: OFF|ERROR|WARNING|INFO|DEBUG|TRACE
+    Possible values: OFF|ERR|ERROR|WARN|WARNING|INFO|DEBUG|TRACE
   [1;34m--log-file <String>[0m {single}
     Set log file
   [1;34m--display-level <String>[0m {single}
     set display level
-    Possible values: OFF|ERROR|WARNING|INFO|DEBUG|TRACE
+    Possible values: OFF|ERR|ERROR|WARN|WARNING|INFO|DEBUG|TRACE
 
 [1;37mDefault profiles directory:[0m
 /bash/conf/dbImportProfiles

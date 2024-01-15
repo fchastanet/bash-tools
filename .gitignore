@@ -18,3 +18,5 @@ package*.json
 yarn.lock
 
 commit-msg.md
+
+bin/test

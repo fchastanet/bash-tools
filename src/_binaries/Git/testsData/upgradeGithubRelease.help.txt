@@ -12,34 +12,50 @@ retrieve latest binary release from github and install it
 [1;37mARGUMENTS:[0m
   [1;34mtargetFile[0m {single} (mandatory)
     the binary downloaded will be written to this file path.
-    Ensure the path is writable.
+
+          Ensure the path is writable.
   [1;34mgithubUrlPattern[0m {single} (mandatory)
     the url pattern to use to download the binary, see examples below.
-    @version@ is template variable that will be replaced by the latest
-    version tag found on github.
+
+          @version@ is template variable that will be replaced by the latest
+
+          version tag found on github.
 
 [1;37mVERSION MANAGEMENT:[0m
   [1;34m--version-arg <versionArg>[0m {single}
     The argument that will be provided to the currently installed binary
-    to check the version of the software.
-    See options constraints below.
+
+          to check the version of the software.
+
+          See options constraints below.
     Default value: --version
   [1;34m--current-version[0m, [1;34m-c <currentVersion>[0m {single}
     Sometimes the command to retrieve the version is complicated.
-    Some command needs you to parse json or other commands provides multiple
-    sub command versions. In this case you can provide the version you
-    currently have, see examples below.
-    See options constraints below.
+
+          Some command needs you to parse json or other commands provides mu
+    ltiple
+
+          sub command versions. In this case you can provide the version you
+
+          currently have, see examples below.
+
+          See options constraints below.
   [1;34m--exact-version[0m, [1;34m-e <exactVersion>[0m {single}
     if provided and currently installed binary is not this exactVersion,
-    This exact version of the binary will be installed.
-    See options constraints below.
+
+          This exact version of the binary will be installed.
+
+          See options constraints below.
   [1;34m--minimal-version[0m, [1;34m-m <minimalVersion>[0m {single}
     if provided and currently installed binary is below this
-    minimalVersion, a new version of the binary will be installed.
-    If this argument is not provided, the latest binary is unconditionally
-    downloaded from github.
-    See options constraints below.
+
+          minimalVersion, a new version of the binary will be installed.
+
+              If this argument is not provided, the latest binary is unconditionally
+
+          downloaded from github.
+
+          See options constraints below.
 
 [1;37mGLOBAL OPTIONS:[0m
   [1;34m--bash-framework-config <String>[0m {single}
@@ -70,12 +86,12 @@ retrieve latest binary release from github and install it
     quiet mode, doesn't display any output
   [1;34m--log-level <String>[0m {single}
     Set log level
-    Possible values: OFF|ERROR|WARNING|INFO|DEBUG|TRACE
+    Possible values: OFF|ERR|ERROR|WARN|WARNING|INFO|DEBUG|TRACE
   [1;34m--log-file <String>[0m {single}
     Set log file
   [1;34m--display-level <String>[0m {single}
     set display level
-    Possible values: OFF|ERROR|WARNING|INFO|DEBUG|TRACE
+    Possible values: OFF|ERR|ERROR|WARN|WARNING|INFO|DEBUG|TRACE
 
 [1;37mOPTIONS CONSTRAINTS:[0m
 

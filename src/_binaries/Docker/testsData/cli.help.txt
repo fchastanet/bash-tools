@@ -9,9 +9,9 @@
 [1;37mARGUMENTS:[0m
   [[1;34mcontainer[0m {single}]
     container should be the name of a profile from profile list,
-    check containers list below.
-    If not provided, it will load the container specified in default configu
-    ration. Default configuration: [1;34mdefault[0m
+    check containers list below. If not provided, it will load the container
+    specified in default configuration.
+    Default configuration: [1;34mdefault[0m
     Default container: [1;34mproject-apache2[0m
   [[1;34muser[0m {single}]
     user to connect on this container
@@ -62,12 +62,12 @@
     quiet mode, doesn't display any output
   [1;34m--log-level <String>[0m {single}
     Set log level
-    Possible values: OFF|ERROR|WARNING|INFO|DEBUG|TRACE
+    Possible values: OFF|ERR|ERROR|WARN|WARNING|INFO|DEBUG|TRACE
   [1;34m--log-file <String>[0m {single}
     Set log file
   [1;34m--display-level <String>[0m {single}
     set display level
-    Possible values: OFF|ERROR|WARNING|INFO|DEBUG|TRACE
+    Possible values: OFF|ERR|ERROR|WARN|WARNING|INFO|DEBUG|TRACE
 
 [1;37mAVAILABLE PROFILES (from /bash/conf/cliProfiles)[0m
 This list can be overridden in home/.bash-tools/cliProfiles

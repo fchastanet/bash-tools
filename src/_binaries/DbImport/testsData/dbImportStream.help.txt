@@ -16,9 +16,9 @@
 
 [1;37mPROFILE OPTIONS:[0m
   [1;34m--profile[0m, [1;34m-p <String>[0m {single}
-    the name of the profile to use in order to include or exclude tables
-    (if not specified in default.sh from 'User profiles directory' if exists
-    or 'Default profiles directory')
+    the name of the profile to use in order to include or exclude tables (if not
+    specified in default.sh from 'User profiles directory' if exists or 'Def
+    ault profiles directory')
   [1;34m--tables <tablesSeparatedByComma>[0m {single}
     import only table specified in the list.  If aws mode, ignore profile option
 
@@ -57,12 +57,12 @@
     quiet mode, doesn't display any output
   [1;34m--log-level <String>[0m {single}
     Set log level
-    Possible values: OFF|ERROR|WARNING|INFO|DEBUG|TRACE
+    Possible values: OFF|ERR|ERROR|WARN|WARNING|INFO|DEBUG|TRACE
   [1;34m--log-file <String>[0m {single}
     Set log file
   [1;34m--display-level <String>[0m {single}
     set display level
-    Possible values: OFF|ERROR|WARNING|INFO|DEBUG|TRACE
+    Possible values: OFF|ERR|ERROR|WARN|WARNING|INFO|DEBUG|TRACE
 
 [1;37mDefault profiles directory:[0m
 /bash/conf/dbImportProfiles

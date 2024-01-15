@@ -54,12 +54,12 @@
     quiet mode, doesn't display any output
   [1;34m--log-level <String>[0m {single}
     Set log level
-    Possible values: OFF|ERROR|WARNING|INFO|DEBUG|TRACE
+    Possible values: OFF|ERR|ERROR|WARN|WARNING|INFO|DEBUG|TRACE
   [1;34m--log-file <String>[0m {single}
     Set log file
   [1;34m--display-level <String>[0m {single}
     set display level
-    Possible values: OFF|ERROR|WARNING|INFO|DEBUG|TRACE
+    Possible values: OFF|ERR|ERROR|WARN|WARNING|INFO|DEBUG|TRACE
 
 [1;37mDefault profiles directory:[0m
 /bash/conf/dbImportProfiles

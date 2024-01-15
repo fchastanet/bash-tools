@@ -1,6 +1,5 @@
-[1;37mDESCRIPTION:[0m
-Execute a query on multiple databases in order to generate a report with tsv for
-mat, query can be parallelized on multiple databases
+[1;37mDESCRIPTION:[0m Execute a query on multiple databases in order to gene
+rate a report with tsv format, query can be parallelized on multiple databases
 
 [1;37mUSAGE:[0m dbQueryAllDatabases [OPTIONS] [ARGUMENTS]
 [1;37mUSAGE:[0m dbQueryAllDatabases [--jobs|-j <jobsCount>] [--bar|-b]
@@ -12,10 +11,10 @@ mat, query can be parallelized on multiple databases
 
 [1;37mARGUMENTS:[0m
   [1;34margQuery[0m {single} (mandatory)
-    Query to execute  - <file>, try to execute the mysql query provided by the f
-    ile
-    - <queryFile>, search for query file in queries directory (see below)
-    - else the argument is interpreted as query string
+    Query to execute
+     - <file>, try to execute the mysql query provided by the file
+     - <queryFile>, search for query file in queries directory (see below)
+     - else the argument is interpreted as query string
 
 [1;37mOPTIONS:[0m
   [1;34m--jobs[0m, [1;34m-j <jobsCount>[0m {single}
@@ -61,12 +60,12 @@ mat, query can be parallelized on multiple databases
     quiet mode, doesn't display any output
   [1;34m--log-level <String>[0m {single}
     Set log level
-    Possible values: OFF|ERROR|WARNING|INFO|DEBUG|TRACE
+    Possible values: OFF|ERR|ERROR|WARN|WARNING|INFO|DEBUG|TRACE
   [1;34m--log-file <String>[0m {single}
     Set log file
   [1;34m--display-level <String>[0m {single}
     set display level
-    Possible values: OFF|ERROR|WARNING|INFO|DEBUG|TRACE
+    Possible values: OFF|ERR|ERROR|WARN|WARNING|INFO|DEBUG|TRACE
 
 [1;37mLIST OF AVAILABLE DSN:[0m
        - dsn_local

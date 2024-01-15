@@ -104,7 +104,17 @@ function Git::upgradeGithubRelease::filePathNotExistsExactVersionLongArg { #@tes
 function Git::upgradeGithubRelease::filePathNotExistsLatestVersionNotFound { #@test
   # shellcheck disable=SC2016
   stub curl \
-    '-L -o * --fail --silent https://api.github.com/repos/hadolint/hadolint/releases/latest : echo "{}" > "$3"'
+    '-L -o * --fail --silent https://api.github.com/repos/hadolint/hadolint/releases/latest : exit 1' \
+    '-L -o * --fail --silent https://api.github.com/repos/hadolint/hadolint/releases/latest : exit 1' \
+    '-L -o * --fail --silent https://api.github.com/repos/hadolint/hadolint/releases/latest : exit 1' \
+    '-L -o * --fail --silent https://api.github.com/repos/hadolint/hadolint/releases/latest : exit 1' \
+    '-L -o * --fail --silent https://api.github.com/repos/hadolint/hadolint/releases/latest : exit 1'
+
+  stub sleep \
+    '15 : exit 0' \
+    '15 : exit 0' \
+    '15 : exit 0' \
+    '15 : exit 0'
 
   run "${binDir}/upgradeGithubRelease" \
     "${BATS_TEST_TMPDIR}/targetFile" \
@@ -112,11 +122,11 @@ function Git::upgradeGithubRelease::filePathNotExistsLatestVersionNotFound { #@t
     --verbose \
     2>&1
   assert_failure 5
-  assert_lines_count 4
+  assert_lines_count 13
   assert_line --index 0 --partial "INFO    - compute last remote version"
   assert_line --index 1 --partial "INFO    - Attempt 1/5:"
-  assert_line --index 2 --partial "INFO    - Repo hadolint/hadolint latest version found is "
-  assert_line --index 3 --partial "ERROR   - ${BATS_TEST_TMPDIR}/targetFile latest version not found on github"
+  assert_line --index 2 --partial "WARN    - Command failed. Wait for 15 seconds"
+  assert_line --index 12 --partial "ERROR   - ${BATS_TEST_TMPDIR}/targetFile latest version not found on github"
 }
 
 function Git::upgradeGithubRelease::filePathNotExistsLatestVersionFound { #@test
