@@ -1,0 +1,112 @@
+{
+  "info": {
+    "_postman_id": "b47cdd04-f4ea-4a96-8735-90efa20fee2d",
+    "name": "GitHub API - 1. Basic (no Auth)",
+    "description": "### What is GitHub?\n\n[GitHub](https://github.com/) is a popular code version control platform that over 73 million developers worldwide trust to organize their code bases.\n\nWhile you can interact with GitHub by clicking around their website, you can also interact with GitHub programmatically using their API.  \n  \nThis collection shows just a few of the many actions you can perform using the [GitHub REST API](https://docs.github.com/en/rest).\n\n### What is a repo?\n\nShort for \"repository\", a repo is simply a place where code is stored. You can think of a repo like a project folder.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "updatedAt": "2024-01-04T11:47:40.000Z",
+    "uid": "27246549-b47cdd04-f4ea-4a96-8735-90efa20fee2d",
+    "createdAt": "2024-01-02T23:37:53.000Z",
+    "lastUpdatedBy": "27246549"
+  },
+  "item": [
+    {
+      "name": "search repos",
+      "id": "a84e7139-cff4-4cb0-a2b5-cddd286c185e",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/search/repositories?q=postman&order=desc&per_page=30",
+          "host": ["{{baseUrl}}"],
+          "path": ["search", "repositories"],
+          "query": [
+            {
+              "key": "q",
+              "value": "postman"
+            },
+            {
+              "key": "order",
+              "value": "desc"
+            },
+            {
+              "key": "per_page",
+              "value": "30"
+            }
+          ]
+        },
+        "description": "Searches repositories based on keywords `q`"
+      },
+      "response": [],
+      "uid": "27246549-a84e7139-cff4-4cb0-a2b5-cddd286c185e"
+    },
+    {
+      "name": "user info",
+      "id": "d97527a0-a93f-4146-a4ae-955c9f579838",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/users/:owner",
+          "host": ["{{baseUrl}}"],
+          "path": ["users", ":owner"],
+          "variable": [
+            {
+              "key": "owner",
+              "value": "octocat",
+              "description": "username or organization name you would like information about"
+            }
+          ]
+        },
+        "description": "Get information about the given user. \n\nMore detailed information is given if the requested user is the currently authorized user."
+      },
+      "response": [],
+      "uid": "27246549-d97527a0-a93f-4146-a4ae-955c9f579838"
+    },
+    {
+      "name": "user repos",
+      "id": "d54b66aa-77d6-45ae-acbd-b81592eefc0f",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/users/:owner/repos",
+          "host": ["{{baseUrl}}"],
+          "path": ["users", ":owner", "repos"],
+          "variable": [
+            {
+              "key": "owner",
+              "value": "octocat",
+              "description": "username or organization name whose repos you would like to see"
+            }
+          ]
+        },
+        "description": "Lists all public repos for a given user"
+      },
+      "response": [],
+      "uid": "27246549-d54b66aa-77d6-45ae-acbd-b81592eefc0f"
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [""]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [""]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "https://api.github.com"
+    }
+  ]
+}

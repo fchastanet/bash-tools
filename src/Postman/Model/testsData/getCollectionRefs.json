@@ -1,0 +1,17 @@
+{
+  "name": "Open Apis",
+  "collections": {
+    "githubBasic": {
+      "file": "GithubAPI/githubBasic.json",
+      "environment": null
+    },
+    "githubAdvanced": {
+      "file": "GithubAPI/githubAdvanced.json",
+      "environment": null
+    },
+    "microsoftGraph": {
+      "file": "MicrosoftGraph/microsoftGraph.json",
+      "environment": null
+    }
+  }
+}

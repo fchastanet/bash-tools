@@ -13,13 +13,16 @@ permissions: read-all
 jobs:
   auto-update:
     runs-on: ubuntu-22.04
+    permissions:
+      pull-requests: write
+      contents: write
     steps:
       # kics-scan ignore-line
       - uses: actions/checkout@v4
 
       - name: Set up Python
         # kics-scan ignore-line
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: 3.9
 

@@ -781,6 +781,96 @@ Version::checkMinimal() {
 
 }
 
+bashToolsDefaultConfigTemplate="${bashToolsDefaultConfigTemplate:-$(
+  cat <<'EOF'
+# shellcheck disable=SC2034
+
+# Default settings
+# you can override these settings by creating ${HOME}/.bash-tools/.env file
+###
+### LOG Level
+### minimum level of the messages that will be logged into LOG_FILE
+###
+### 0: NO LOG
+### 1: ERROR
+### 2: WARNING
+### 3: INFO
+### 4: DEBUG
+###
+BASH_FRAMEWORK_LOG_LEVEL=${BASH_FRAMEWORK_LOG_LEVEL:-0}
+
+###
+### DISPLAY Level
+### minimum level of the messages that will be displayed on screen
+###
+### 0: NO LOG
+### 1: ERROR
+### 2: WARNING
+### 3: INFO
+### 4: DEBUG
+###
+BASH_FRAMEWORK_DISPLAY_LEVEL=${BASH_FRAMEWORK_DISPLAY_LEVEL:-3}
+
+###
+### Log to file
+###
+### all log messages will be redirected to log file specified
+### this same path will be used inside and outside of the container
+###
+BASH_FRAMEWORK_LOG_FILE=${BASH_FRAMEWORK_LOG_FILE:-${FRAMEWORK_ROOT_DIR}/logs/bash.log}
+
+# absolute directory containing db import sql dumps
+DB_IMPORT_DUMP_DIR=${DB_IMPORT_DUMP_DIR:-${HOME}/.bash-tools/dbImportDumps}
+
+# garbage collect all files for which modification is greater than eg: 30 days (+30)
+# each time an existing file is used by dbImport/dbImportTable
+# the file modification time is set to now
+DB_IMPORT_GARBAGE_COLLECT_DAYS=${DB_IMPORT_GARBAGE_COLLECT_DAYS:-+30}
+
+# absolute directory containing dbScripts used by dbScriptAllDatabases
+SCRIPTS_FOLDER=${SCRIPTS_FOLDER:-${HOME}/.bash-tools/conf/dbScripts}
+
+# -----------------------------------------------------
+# AWS Parameters
+# -----------------------------------------------------
+S3_BASE_URL=${S3_BASE_URL:-}
+
+# -----------------------------------------------------
+# Postman Parameters
+# -----------------------------------------------------
+POSTMAN_API_KEY=
+EOF
+)}"
+
+# @description loads ~/.bash-tools/.env if available
+# if not creates it from a default template
+# else check if new options need to be added
+BashTools::Conf::requireLoad() {
+  local envFile="${HOME}/.bash-tools/.env"
+  if [[ ! -f "${envFile}" ]]; then
+    mkdir -p "${HOME}/.bash-tools"
+    (
+      echo "#!/usr/bin/env bash"
+      echo "${bashToolsDefaultConfigTemplate}"
+    ) >"${envFile}"
+    Log::displayInfo "Configuration file '${envFile}' created"
+  else
+    if ! grep -q '^POSTMAN_API_KEY=' "${envFile}"; then
+      (
+        echo '# -----------------------------------------------------'
+        echo '# Postman Parameters'
+        echo '# -----------------------------------------------------'
+        echo 'POSTMAN_API_KEY='
+      ) >>"${envFile}"
+    fi
+  fi
+  # shellcheck source=/conf/.env
+  source "${envFile}" || {
+    Log::displayError "impossible to load '${envFile}'"
+    exit 1
+  }
+}
+
 # @description ensure COMMAND_BIN_DIR env var is set
 # and PATH correctly prepared
 # @noargs
@@ -1101,6 +1191,7 @@ FRAMEWORK_BIN_DIR="${FRAMEWORK_ROOT_DIR}/bin"
 FRAMEWORK_VENDOR_DIR="${FRAMEWORK_ROOT_DIR}/vendor"
 FRAMEWORK_VENDOR_BIN_DIR="${FRAMEWORK_ROOT_DIR}/vendor/bin"
 
+# @require BashTools::Conf::requireLoad
 if [[ -f "${HOME}/.bash-tools/.env" ]]; then
   export BASH_FRAMEWORK_ENV_FILES=("${HOME}/.bash-tools/.env")
 fi
@@ -1109,6 +1200,7 @@ Env::requireLoad
 UI::requireTheme
 Linux::requireRealpathCommand
 Log::requireLoad
+BashTools::Conf::requireLoad
 Compiler::Facade::requireCommandBinDir
 Linux::requireExecutedAsUser
 

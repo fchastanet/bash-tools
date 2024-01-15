@@ -1,0 +1,20 @@
+{
+  "name": "Open Apis",
+  "collections": {
+    "missingFileProperty": {
+      "environment": null
+    },
+    "fileMissing": {
+      "file": "GithubAPI/missingFile.json",
+      "environment": null
+    },
+    "notValidJsonFile": {
+      "file": "GithubAPI/notValidJsonFile.json",
+      "environment": null
+    },
+    "missingInfoName": {
+      "file": "GithubAPI/missingInfoName.json",
+      "environment": null
+    }
+  }
+}

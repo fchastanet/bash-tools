@@ -88,7 +88,7 @@ jobs:
       - name: Set up Python
         if: matrix.runPrecommitTests
         # kics-scan ignore-line
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: 3.9
 
@@ -149,7 +149,6 @@ jobs:
           USER_ID=1000 \
           GROUP_ID=1000 \
           vendor/bash-tools-framework/bin/test \
-            -vvv \
             --vendor "${{matrix.vendor}}" \
             --bash-version "${{matrix.bashTarVersion}}" \
             --bash-base-image "${{matrix.bashImage}}" \

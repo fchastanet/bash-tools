@@ -1,0 +1,16 @@
+{
+  "name": "Open Apis",
+  "missingCollections": {
+    "missingFileProperty": {
+      "environment": null
+    },
+    "fileNotWritable": {
+      "file": "GithubAPI/notWritableFile.json",
+      "environment": null
+    },
+    "dirNotWritable": {
+      "file": "NotWritable/notWritableFile.json",
+      "environment": null
+    }
+  }
+}

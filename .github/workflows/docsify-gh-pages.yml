@@ -16,6 +16,8 @@ permissions:
   contents: read
   pages: write
   id-token: write
+  # actions: read needed by actions/deploy-pages
+  actions: read
 
 # Allow one concurrent deployment
 concurrency:
@@ -50,9 +52,10 @@ jobs:
         uses: actions/configure-pages@v2
 
       - name: Upload artifact
-        uses: actions/upload-pages-artifact@v1
+        uses: actions/upload-pages-artifact@v3
         with:
           path: 'pages'
+          if-no-files-found: error
 
   # Deployment job
   deploy:

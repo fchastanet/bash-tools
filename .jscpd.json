@@ -25,6 +25,9 @@
     "**/.idea/**",
     "**/report/**",
     "**/*.svg",
-    "**/testsData/**"
+    "**/testsData/**",
+    "conf/postmanCli/MongoDbData/MongoDBDataAPI.postman_collection.json",
+    "conf/postmanCli/GithubAPI/GitHubAPI-01-Basic_no_auth_postman_collection.json",
+    "conf/postmanCli/GithubAPI/GitHubAPI-02-Advanced_with_auth_postman_collection.json"
   ]
 }

@@ -1,0 +1,17 @@
+{
+  "name": "Open Apis",
+  "collections": {
+    "githubBasic": {
+      "file": "GithubAPI/GitHubAPI-01-Basic_no_auth_postman_collection.json",
+      "environment": null
+    },
+    "githubAdvanced": {
+      "file": "GithubAPI/GitHubAPI-02-Advanced_with_auth_postman_collection.json",
+      "environment": null
+    },
+    "microsoftGraph": {
+      "file": "MicrosoftGraph/MicrosoftGraph-postman_collection.json",
+      "environment": null
+    }
+  }
+}

@@ -11,6 +11,9 @@ load "${FRAMEWORK_ROOT_DIR}/vendor/bats-support/load.bash"
 load "${FRAMEWORK_ROOT_DIR}/vendor/bats-assert/load.bash"
 load "${FRAMEWORK_ROOT_DIR}/vendor/bats-mock-Flamefire/load.bash"
 
+# shellcheck source=vendor/bash-tools-framework/src/_includes/_mandatoryHeader.sh
+source "${FRAMEWORK_ROOT_DIR}/src/_includes/_mandatoryHeader.sh"
+
 # shellcheck source=vendor/bash-tools-framework/src/_standalone/Bats/assert_lines_count.sh
 source "${FRAMEWORK_ROOT_DIR}/src/_standalone/Bats/assert_lines_count.sh"
 # shellcheck source=vendor/bash-tools-framework/src/Env/__all.sh
@@ -72,9 +75,14 @@ Log::requireLoad
 testCommand() {
   local command="$1"
   local expectedOutputFile="$2"
+  shift 2 || true
+  local -a args=("$@")
+  if ((${#args} == 0)); then
+    args=(--help)
+  fi
   export INTERACTIVE=1
   UI::theme default
-  run "${command}" --help
+  run "${command}" "${args[@]}"
   assert_success
   if [[ "${BATS_FIX_TEST}" = "1" && ! -f "${BATS_TEST_DIRNAME}/testsData/${expectedOutputFile}" ]]; then
     mkdir -p "${BATS_TEST_DIRNAME}/testsData" || true
