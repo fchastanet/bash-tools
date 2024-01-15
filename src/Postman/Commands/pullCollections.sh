@@ -36,7 +36,7 @@ Postman::Commands::pullCollections() {
         echo "${response}" >"${collectionFile}"
         Log::displaySuccess "Collection '${collectionName}' has been pulled successfully to '${collectionFile}'"
       else
-        Log::displayError "Collection '${collectionName}' an error occured pulling the collection from postman"
+        Log::displayError "Collection '${collectionName}' an error occurred pulling the collection from postman"
       fi
     fi
   }

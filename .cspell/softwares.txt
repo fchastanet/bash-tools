@@ -154,3 +154,9 @@ TRIVY
 KICS
 TRUFFLEHOG
 GRYPE
+octocat
+prerequest
+slurpfile
+EJSON
+ejson
+clairefro
