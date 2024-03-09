@@ -4,8 +4,8 @@
 source "$(cd "${BATS_TEST_DIRNAME}/../.." && pwd)/batsHeaders.sh"
 # shellcheck source=src/Postman/Commands/forEachCollection.sh
 source "${rootDir}/src/Postman/Commands/forEachCollection.sh"
-# shellcheck source=src/Postman/Commands/pushCollections.sh
-source "${rootDir}/src/Postman/Commands/pushCollections.sh"
+# shellcheck source=src/Postman/Commands/pushCollectionsSingle.sh
+source "${rootDir}/src/Postman/Commands/pushCollectionsSingle.sh"
 
 setup() {
   export TMPDIR="${BATS_TEST_TMPDIR}"
@@ -17,13 +17,13 @@ teardown() {
   unstub_all
 }
 
-function Postman::Commands::pushCollections::noRefsSpecified { #@test
-  run Postman::Commands::pushCollections modelFile 2>&1
+function Postman::Commands::pushCollectionsSingle::noRefsSpecified { #@test
+  run Postman::Commands::pushCollectionsSingle modelFile 2>&1
   assert_failure 2
   assert_output ""
 }
 
-function Postman::Commands::pushCollections::collectionRefCreate { #@test
+function Postman::Commands::pushCollectionsSingle::collectionRefCreate { #@test
   Postman::checkApiKey() {
     echo "$@" >"${BATS_TEST_TMPDIR}/checkApiKey"
   }
@@ -54,7 +54,7 @@ function Postman::Commands::pushCollections::collectionRefCreate { #@test
       echo "${@:2}"
     ) >"${BATS_TEST_TMPDIR}/getCollectionIdByName"
   }
-  run Postman::Commands::pushCollections modelFile ref1 2>&1
+  run Postman::Commands::pushCollectionsSingle modelFile ref1 2>&1
   assert_lines_count 7
   assert_line --index 0 --partial "DEBUG   - Retrieving collections from postman in /tmp"
   assert_line --index 1 "DEBUG   - Retrieving collection file from collection reference ref1"
@@ -76,7 +76,7 @@ function Postman::Commands::pushCollections::collectionRefCreate { #@test
   assert_line --index 1 "collectionName"
 }
 
-function Postman::Commands::pushCollections::collectionRefUpdate { #@test
+function Postman::Commands::pushCollectionsSingle::collectionRefUpdate { #@test
   Postman::checkApiKey() {
     echo "$@" >"${BATS_TEST_TMPDIR}/checkApiKey"
   }
@@ -109,7 +109,7 @@ function Postman::Commands::pushCollections::collectionRefUpdate { #@test
     echo "collectionId"
   }
 
-  run Postman::Commands::pushCollections modelFile ref1 2>&1
+  run Postman::Commands::pushCollectionsSingle modelFile ref1 2>&1
   assert_lines_count 7
   assert_line --index 0 --partial "DEBUG   - Retrieving collections from postman in /tmp"
   assert_line --index 1 "DEBUG   - Retrieving collection file from collection reference ref1"

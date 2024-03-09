@@ -182,7 +182,7 @@ All the commands are unit tested, you can run the unit tests using the following
 command
 
 ```bash
-vendor/bash-tools-framework/bin/test -r tests
+vendor/bash-tools-framework/bin/test -r src
 ```
 
 Launch UT on different environments:

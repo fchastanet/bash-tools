@@ -64,6 +64,17 @@ function Postman::Model::validate::missingName { #@test
   assert_lines_count 1
 }
 
+function Postman::Model::validate::invalidWriteMode { #@test
+  Postman::Model::getRelativeConfigDirectory() {
+    echo "$1"
+  }
+  run Postman::Model::validate \
+    "${BATS_TEST_DIRNAME}/testsData/getCollection-invalidWriteMode.json" "push"
+  assert_output "ERROR   - File '${BATS_TEST_DIRNAME}/testsData/getCollection-invalidWriteMode.json' - writeMode 'invalid' is invalid"
+  assert_failure 1
+  assert_lines_count 1
+}
+
 function Postman::Model::validate::missingCollections { #@test
   Postman::Model::getRelativeConfigDirectory() {
     echo "$1"

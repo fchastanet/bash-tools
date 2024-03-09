@@ -1,0 +1,12 @@
+{
+  "name": "PostmanCliExample",
+  "rootCollection": {
+    "file": "postman_root_collection.json"
+  },
+  "collections": {
+    "API1": {
+      "file": "API1/postman_collection.json",
+      "environment": null
+    }
+  }
+}

@@ -5,12 +5,17 @@
 # @arg $1 modelFile:String model file in which availableRefs have been retrieved
 # @arg $2 availableRefs:&String[] list of known collection references
 # @arg $3 modelCollectionRefs:&String[] list of collection references to check
+# @exitcode 1 if no refs available
 Postman::Model::checkIfValidCollectionRefs() {
   local modelFile="$1"
   local -n availableRefs=$2
   shift 2 || true
   local -a modelCollectionRefs=("$@")
 
+  if ((${#availableRefs} == 0)); then
+    Log::displayError "No refs available"
+    return 1
+  fi
   # shellcheck disable=SC2154
   Log::displayDebug "Checking collection refs using config ${modelFile}"
 

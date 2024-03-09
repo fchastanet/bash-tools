@@ -89,7 +89,7 @@
       "languageId": "plantUml"
     },
     {
-      "filename": "README.md",
+      "filename": "**/README.md",
       "languageId": "readme"
     },
     {

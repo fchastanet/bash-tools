@@ -1,17 +1,17 @@
 #!/bin/bash
 
-# @description pull collections specified by modelFile
+# @description pull collections specified by modelFile in write mode single file
 # @arg $1 modelFile:String model file containing the collections to be pulled
 # @arg $@ list of collection references to pull (all if not provided)
 # @stderr diagnostic logs
 # @exitcode 2 if no refs specified
 # @exitcode * if one of sub commands fails
-Postman::Commands::pullCollections() {
+Postman::Commands::pullCollectionsSingle() {
   local modelFile="$1"
   shift || true
 
   # shellcheck disable=SC2317
-  pullCollectionsCallback() {
+  pullCollectionsSingleCallback() {
     local modelFile="$1"
     # local postmanCollectionsFile="$2"
     local collectionRef="$3"
@@ -40,5 +40,5 @@ Postman::Commands::pullCollections() {
       fi
     fi
   }
-  Postman::Commands::forEachCollection "${modelFile}" pullCollectionsCallback "$@"
+  Postman::Commands::forEachCollection "${modelFile}" pullCollectionsSingleCallback "$@"
 }

@@ -399,18 +399,24 @@ Postman::Commands::pullCommand() {
   local -a refs
   # shellcheck disable=SC2154
   Postman::Model::getCollectionRefs "${modelFile}" refs || return 1
+  if ((${#refs} == 0)); then
+    Log::displayError "No collection refs to pull"
+    return 1
+  fi
+
   if (($# > 0)); then
     # shellcheck disable=SC2154
     Postman::Model::checkIfValidCollectionRefs "${modelFile}" refs "$@" || return 1
     refs=("$@")
   fi
 
-  if ((${#refs} == 0)); then
-    Log::displayError "No collection refs to pull"
-    return 1
+  local writeMode
+  writeMode="$(Postman::Model::getWriteMode "${modelFile}")"
+  Log::displayDebug "Collection refs to pull ${refs[*]} - write mode ${writeMode}"
+  if [[ "${writeMode}" = "single" ]]; then
+    Postman::Commands::pullCollectionsSingle "${modelFile}" "${refs[@]}" || return 1
   else
-    Log::displayDebug "Collection refs to pull ${refs[*]}"
-    Postman::Commands::pullCollections "${modelFile}" "${refs[@]}" || return 1
+    Postman::Commands::pullCollectionsMerge "${modelFile}" "${refs[@]}" || return 1
   fi
 }
 
@@ -438,8 +444,14 @@ Postman::Commands::pushCommand() {
     Log::displayError "No collection refs to push"
     return 1
   else
-    Log::displayDebug "Collection refs to push ${refs[*]}"
-    Postman::Commands::pushCollections "${modelFile}" "${refs[@]}" || return 1
+    local writeMode
+    writeMode="$(Postman::Model::getWriteMode "${modelFile}")"
+    Log::displayDebug "Collection refs to push ${refs[*]} - write mode ${writeMode}"
+    if [[ "${writeMode}" = "single" ]]; then
+      Postman::Commands::pushCollectionsSingle "${modelFile}" "${refs[@]}" || return 1
+    else
+      Postman::Commands::pushCollectionsMerge "${modelFile}" "${refs[@]}" || return 1
+    fi
   fi
 }
 
@@ -477,6 +489,14 @@ Postman::Model::validate() {
   }
   if [[ -z "${name}" ]]; then
     Log::displayError "File '${modelFile}' name property cannot be empty"
+    ((++errorCount))
+  fi
+
+  # check write mode
+  local writeMode
+  writeMode="$(jq -cre '.writeMode // "single"' 2>/dev/null <"${modelFile}")" || true
+  if ! Array::contains "${writeMode}" "single" "merge"; then
+    Log::displayError "File '${modelFile}' - writeMode '${writeMode}' is invalid"
     ((++errorCount))
   fi
 
@@ -871,18 +891,87 @@ Log::rotate() {
   fi
 }
 
-# @description pull collections specified by modelFile
+# @description pull collections specified by modelFile in write merge mode
 # @arg $1 modelFile:String model file containing the collections to be pulled
 # @arg $@ list of collection references to pull (all if not provided)
 # @stderr diagnostic logs
 # @exitcode 2 if no refs specified
 # @exitcode * if one of sub commands fails
-Postman::Commands::pullCollections() {
+Postman::Commands::pullCollectionsMerge() {
+  local modelFile="$1"
+  shift || true
+  local -a refs=("$@")
+
+  if ((${#refs[@]} == 0)); then
+    return 2
+  fi
+  Postman::checkApiKey "${HOME}/.bash-tools/.env" || return 1
+
+  local postmanCollectionsFile
+  postmanCollectionsFile="$(Framework::createTempFile "postmanCollections")"
+
+  # shellcheck disable=SC2154
+  Log::displayDebug "Retrieving collections from postman in ${postmanCollectionsFile}"
+  Postman::api getCollections >"${postmanCollectionsFile}" || return 1
+
+  local modelName
+  modelName="$(Postman::Model::getName "${modelFile}")"
+  Log::displayDebug "Deducing postman collection id using ${postmanCollectionsFile} and model name '${modelName}'"
+
+  local postmanCollectionId
+  local postmanCollectionIdStatus
+  postmanCollectionId="$(Postman::Collection::getCollectionIdByName \
+    "${postmanCollectionsFile}" "${modelName}")" || postmanCollectionIdStatus="$?"
+
+  case "${postmanCollectionIdStatus}" in
+    0) ;; # success, next statement will pull the collection
+    2)
+      Log::displayError "Cannot find collection with name '${modelName}'"
+      return 2
+      ;;
+    3)
+      Log::displayError "More than one collection with name '${modelName}'"
+      return 2
+      ;;
+    *)
+      Log::displayError "Error parsing collections file from postman"
+      return 1
+      ;;
+  esac
+
+  Log::displayInfo "Pulling collection ${modelName} with id ${postmanCollectionId} from postman"
+  local statusCode=0
+  local response
+  response="$(Postman::api pullCollection "${postmanCollectionId}" | jq -cre '.collection')" || statusCode=$?
+  if [[ "${statusCode}" != "0" ]]; then
+    Log::displayError "Collection '${modelName}' an error occurred pulling the collection from postman"
+    return 1
+  fi
+
+  local ref
+  for ref in "${refs[@]}"; do
+    local collectionFile postmanCollectionId
+    Log::displayDebug "Retrieving collection file from collection reference ${ref}"
+    collectionFile="$(Postman::Model::getCollectionFileByRef "${modelFile}" "${ref}")"
+
+    # TODO push before
+    # TODO retrieve sub collection in response based on ref
+
+  done
+}
+
+# @description pull collections specified by modelFile in write mode single file
+# @arg $1 modelFile:String model file containing the collections to be pulled
+# @arg $@ list of collection references to pull (all if not provided)
+# @stderr diagnostic logs
+# @exitcode 2 if no refs specified
+# @exitcode * if one of sub commands fails
+Postman::Commands::pullCollectionsSingle() {
   local modelFile="$1"
   shift || true
 
   # shellcheck disable=SC2317
-  pullCollectionsCallback() {
+  pullCollectionsSingleCallback() {
     local modelFile="$1"
     # local postmanCollectionsFile="$2"
     local collectionRef="$3"
@@ -911,21 +1000,80 @@ Postman::Commands::pullCollections() {
       fi
     fi
   }
-  Postman::Commands::forEachCollection "${modelFile}" pullCollectionsCallback "$@"
+  Postman::Commands::forEachCollection "${modelFile}" pullCollectionsSingleCallback "$@"
 }
 
-# @description push collections specified by modelFile
+# @description push collections specified by modelFile in write merge mode
 # @arg $1 modelFile:String model file containing the collections to be pushed
 # @arg $@ list of collection references to push (all if not provided)
 # @stderr diagnostic logs
 # @exitcode 2 if no refs specified
 # @exitcode * if one of sub commands fails
-Postman::Commands::pushCollections() {
+Postman::Commands::pushCollectionsMerge() {
+  local modelFile="$1"
+  shift || true
+  local -a refs=("$@")
+
+  if ((${#refs[@]} == 0)); then
+    return 2
+  fi
+  Postman::checkApiKey "${HOME}/.bash-tools/.env" || return 1
+
+  local postmanCollectionsFile
+  postmanCollectionsFile="$(Framework::createTempFile "postmanCollections")"
+
+  # shellcheck disable=SC2154
+  Log::displayDebug "Retrieving collections from postman in ${postmanCollectionsFile}"
+  Postman::api getCollections >"${postmanCollectionsFile}" || return 1
+
+  local modelName
+  modelName="$(Postman::Model::getName "${modelFile}")"
+  Log::displayDebug "Deducing postman collection id using ${postmanCollectionsFile} and model name '${modelName}'"
+
+  local postmanCollectionId
+  local postmanCollectionIdStatus
+  # shellcheck disable=SC2034 # TODO remove when dev OK
+  postmanCollectionId="$(Postman::Collection::getCollectionIdByName \
+    "${postmanCollectionsFile}" "${modelName}")" || postmanCollectionIdStatus="$?"
+
+  case "${postmanCollectionIdStatus}" in
+    0) ;; # success, next statement will pull the collection
+    2) ;; # collection not found, we will have to create it
+    3)
+      Log::displayError "More than one collection with name '${modelName}'"
+      return 2
+      ;;
+    *)
+      Log::displayError "Error parsing collections file from postman"
+      return 1
+      ;;
+  esac
+
+  local ref
+  for ref in "${refs[@]}"; do
+    local collectionFile
+    Log::displayDebug "Retrieving collection file from collection reference ${ref}"
+    # shellcheck disable=SC2034 # TODO remove when dev OK
+    collectionFile="$(Postman::Model::getCollectionFileByRef "${modelFile}" "${ref}")"
+
+    # TODO push before
+    # TODO retrieve sub collection in response based on ref
+
+  done
+}
+
+# @description push collections specified by modelFile in write mode single file
+# @arg $1 modelFile:String model file containing the collections to be pushed
+# @arg $@ list of collection references to push (all if not provided)
+# @stderr diagnostic logs
+# @exitcode 2 if no refs specified
+# @exitcode * if one of sub commands fails
+Postman::Commands::pushCollectionsSingle() {
   local modelFile="$1"
   shift || true
 
   # shellcheck disable=SC2317
-  pushCollectionsCallback() {
+  pushCollectionsSingleCallback() {
     local modelFile="$1"
     # local postmanCollectionsFile="$2"
     local collectionRef="$3"
@@ -951,7 +1099,7 @@ Postman::Commands::pushCollections() {
     fi
   }
 
-  Postman::Commands::forEachCollection "${modelFile}" pushCollectionsCallback "$@"
+  Postman::Commands::forEachCollection "${modelFile}" pushCollectionsSingleCallback "$@"
 }
 
 # @description check that each collection references passed as parameter
@@ -959,12 +1107,17 @@ Postman::Commands::pushCollections() {
 # @arg $1 modelFile:String model file in which availableRefs have been retrieved
 # @arg $2 availableRefs:&String[] list of known collection references
 # @arg $3 modelCollectionRefs:&String[] list of collection references to check
+# @exitcode 1 if no refs available
 Postman::Model::checkIfValidCollectionRefs() {
   local modelFile="$1"
   local -n availableRefs=$2
   shift 2 || true
   local -a modelCollectionRefs=("$@")
 
+  if ((${#availableRefs} == 0)); then
+    Log::displayError "No refs available"
+    return 1
+  fi
   # shellcheck disable=SC2154
   Log::displayDebug "Checking collection refs using config ${modelFile}"
 
@@ -1004,6 +1157,16 @@ Postman::Model::getRelativeConfigDirectory() {
   File::relativeToDir "${configDir}" "$(pwd -P)"
 }
 
+# @description retrieve the write mode of the model json file
+# @arg $1 modelFile:String
+# @exitcode 1 if error while parsing model file
+# @exitcode * jq exit code, 4 for invalid file
+# @stdout model property writeMode of model json file (default to single if property not set)
+Postman::Model::getWriteMode() {
+  local modelFile="$1"
+  jq -cre '.writeMode // "single"' 2>/dev/null <"${modelFile}" || echo "single"
+}
+
 # @description load color theme
 # @noargs
 # @env BASH_FRAMEWORK_THEME String theme to use
@@ -1040,6 +1203,39 @@ Log::displaySuccess() {
     echo -e "${__SUCCESS_COLOR}SUCCESS - ${1}${__RESET_COLOR}" >&2
   fi
   Log::logSuccess "$1"
+}
+
+# @description retrieve the collection id
+# associated to the given collection name
+# from the postman collection file
+# @arg $1 collectionFile:String
+# @arg $2 collectionName:String
+# @exitcode 1 if error while parsing the collection file
+# @exitcode 2 if name not found
+# @exitcode 3 if more than one collection matches that name
+# @stderr details, on failure
+# @stdout the collection id associated to a unique collection name
+Postman::Collection::getCollectionIdByName() {
+  local collectionFile="$1"
+  local collectionName="$2"
+  local result
+  local errorCode="0"
+  result="$(
+    jq -cre --arg name "${collectionName}" \
+      '.collections[] | select( .name == $name) | .id' 2>&1 <"${collectionFile}"
+  )" || errorCode="$?"
+  if [[ "${errorCode}" = "4" ]]; then
+    Log::displayWarning "collection name '${collectionName}' not found in '${collectionFile}'"
+    return 2
+  elif [[ "${errorCode}" != "0" ]]; then
+    Log::displayError "Error while parsing '${collectionFile}' - error code ${errorCode} - ${result}"
+    return 1
+  fi
+  if (($(wc -l <<<"${result}") > 1)); then
+    Log::displayError "More than one collection match the collection name '${collectionName}', please clean up your postman workspace"
+    return 3
+  fi
+  echo "${result}"
 }
 
 # @description apply callback on each collection specified by modelFile
@@ -1083,7 +1279,8 @@ Postman::Commands::forEachCollection() {
     collectionName="$(Postman::Collection::getName "${collectionFile}")"
     Log::displayDebug "Deducing postman collection id using ${postmanCollectionsFile} and collection name '${collectionName}'"
     local postmanCollectionIdStatus="0"
-    postmanCollectionId="$(Postman::Collection::getCollectionIdByName "${postmanCollectionsFile}" "${collectionName}")" || status=$?
+    postmanCollectionId="$(Postman::Collection::getCollectionIdByName \
+      "${postmanCollectionsFile}" "${collectionName}")" || postmanCollectionIdStatus=$?
     local status=0
     "${callback}" \
       "${modelFile}" "${postmanCollectionsFile}" \
@@ -1094,6 +1291,31 @@ Postman::Commands::forEachCollection() {
       *) return 1 ;;
     esac
   done
+}
+
+# @description retrieve the file associated to the collection ref
+# @arg $1 configFile:String the config file to parse
+# @arg $2 ref:String the collection reference to get
+# @stdout the file relative to current execution directory
+# @exitcode 1 - if jq parsing error, file not found or any other error
+Postman::Model::getCollectionFileByRef() {
+  local configFile="$1"
+  local ref="$2"
+  local file
+  file="$(jq -cre ".collections.${ref}.file" <"${configFile}")" || return 1
+  echo "$(Postman::Model::getRelativeConfigDirectory "${configFile}")/${file}"
+}
+
+# @description retrieve the name of the model json file
+# @arg $1 modelFile:String
+# @exitcode 1 if error while parsing model file
+# @exitcode * jq exit code, 4 for invalid file
+# @stdout model property name of model json file
+Postman::Model::getName() {
+  local modelFile="$1"
+  local output
+  output="$(jq -cre .name <"${modelFile}")" || return 1
+  echo "${output}"
 }
 
 # @description call postman REST api
@@ -1195,6 +1417,19 @@ Postman::api() {
   esac
 }
 
+# @description check if postman api key is set in .env file
+# @arg $1 envFile:String .env file that should contain POSTMAN_API_KEY variable
+# @stderr display warning message if postman api key is not filled
+# @exitcode 0 always successful
+Postman::checkApiKey() {
+  local envFile="$1"
+
+  if grep -q '^POSTMAN_API_KEY=$' "${envFile}" 2>/dev/null ||
+    ! grep -q '^POSTMAN_API_KEY=' "${envFile}" 2>/dev/null; then
+    Log::displayWarning "Please update POSTMAN_API_KEY in '${envFile}'"
+  fi
+}
+
 # @description ignore exit code 141 from simple command pipes
 # @example use with:
 #   local resultingStatus=0
@@ -1241,39 +1476,6 @@ Log::logSuccess() {
   fi
 }
 
-# @description retrieve the collection id
-# associated to the given collection name
-# from the postman collection file
-# @arg $1 collectionFile:String
-# @arg $2 collectionName:String
-# @exitcode 1 if error while parsing the collection file
-# @exitcode 2 if name not found
-# @exitcode 3 if more than one collection matches that name
-# @stderr details, on failure
-# @stdout the collection id associated to a unique collection name
-Postman::Collection::getCollectionIdByName() {
-  local collectionFile="$1"
-  local collectionName="$2"
-  local result
-  local errorCode="0"
-  result="$(
-    jq -cre --arg name "${collectionName}" \
-      '.collections[] | select( .name == $name) | .id' 2>&1 <"${collectionFile}"
-  )" || errorCode="$?"
-  if [[ "${errorCode}" = "4" ]]; then
-    Log::displayWarning "collection name '${collectionName}' not found in '${collectionFile}'"
-    return 2
-  elif [[ "${errorCode}" != "0" ]]; then
-    Log::displayError "Error while parsing '${collectionFile}' - error code ${errorCode} - ${result}"
-    return 1
-  fi
-  if (($(wc -l <<<"${result}") > 1)); then
-    Log::displayError "More than one collection match the collection name '${collectionName}', please clean up your postman workspace"
-    return 3
-  fi
-  echo "${result}"
-}
-
 # @description retrieve the name of the collection file
 # from the postman collection file
 # @arg $1 collectionFile:String
@@ -1283,32 +1485,6 @@ Postman::Collection::getCollectionIdByName() {
 Postman::Collection::getName() {
   local collectionFile="$1"
   jq -cre '.info.name' <"${collectionFile}"
-}
-
-# @description retrieve the file associated to the collection ref
-# @arg $1 configFile:String the config file to parse
-# @arg $2 ref:String the collection reference to get
-# @stdout the file relative to current execution directory
-# @exitcode 1 - if jq parsing error, file not found or any other error
-Postman::Model::getCollectionFileByRef() {
-  local configFile="$1"
-  local ref="$2"
-  local file
-  file="$(jq -cre ".collections.${ref}.file" <"${configFile}")" || return 1
-  echo "$(Postman::Model::getRelativeConfigDirectory "${configFile}")/${file}"
-}
-
-# @description check if postman api key is set in .env file
-# @arg $1 envFile:String .env file that should contain POSTMAN_API_KEY variable
-# @stderr display warning message if postman api key is not filled
-# @exitcode 0 always successful
-Postman::checkApiKey() {
-  local envFile="$1"
-
-  if grep -q '^POSTMAN_API_KEY=$' "${envFile}" 2>/dev/null ||
-    ! grep -q '^POSTMAN_API_KEY=' "${envFile}" 2>/dev/null; then
-    Log::displayWarning "Please update POSTMAN_API_KEY in '${envFile}'"
-  fi
 }
 
 # @description display curl response only if verbose mode is not off

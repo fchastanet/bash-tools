@@ -24,7 +24,13 @@ Postman::Commands::pushCommand() {
     Log::displayError "No collection refs to push"
     return 1
   else
-    Log::displayDebug "Collection refs to push ${refs[*]}"
-    Postman::Commands::pushCollections "${modelFile}" "${refs[@]}" || return 1
+    local writeMode
+    writeMode="$(Postman::Model::getWriteMode "${modelFile}")"
+    Log::displayDebug "Collection refs to push ${refs[*]} - write mode ${writeMode}"
+    if [[ "${writeMode}" = "single" ]]; then
+      Postman::Commands::pushCollectionsSingle "${modelFile}" "${refs[@]}" || return 1
+    else
+      Postman::Commands::pushCollectionsMerge "${modelFile}" "${refs[@]}" || return 1
+    fi
   fi
 }

@@ -14,17 +14,23 @@ Postman::Commands::pullCommand() {
   local -a refs
   # shellcheck disable=SC2154
   Postman::Model::getCollectionRefs "${modelFile}" refs || return 1
+  if ((${#refs} == 0)); then
+    Log::displayError "No collection refs to pull"
+    return 1
+  fi
+
   if (($# > 0)); then
     # shellcheck disable=SC2154
     Postman::Model::checkIfValidCollectionRefs "${modelFile}" refs "$@" || return 1
     refs=("$@")
   fi
 
-  if ((${#refs} == 0)); then
-    Log::displayError "No collection refs to pull"
-    return 1
+  local writeMode
+  writeMode="$(Postman::Model::getWriteMode "${modelFile}")"
+  Log::displayDebug "Collection refs to pull ${refs[*]} - write mode ${writeMode}"
+  if [[ "${writeMode}" = "single" ]]; then
+    Postman::Commands::pullCollectionsSingle "${modelFile}" "${refs[@]}" || return 1
   else
-    Log::displayDebug "Collection refs to pull ${refs[*]}"
-    Postman::Commands::pullCollections "${modelFile}" "${refs[@]}" || return 1
+    Postman::Commands::pullCollectionsMerge "${modelFile}" "${refs[@]}" || return 1
   fi
 }

@@ -41,7 +41,8 @@ Postman::Commands::forEachCollection() {
     collectionName="$(Postman::Collection::getName "${collectionFile}")"
     Log::displayDebug "Deducing postman collection id using ${postmanCollectionsFile} and collection name '${collectionName}'"
     local postmanCollectionIdStatus="0"
-    postmanCollectionId="$(Postman::Collection::getCollectionIdByName "${postmanCollectionsFile}" "${collectionName}")" || status=$?
+    postmanCollectionId="$(Postman::Collection::getCollectionIdByName \
+      "${postmanCollectionsFile}" "${collectionName}")" || postmanCollectionIdStatus=$?
     local status=0
     "${callback}" \
       "${modelFile}" "${postmanCollectionsFile}" \

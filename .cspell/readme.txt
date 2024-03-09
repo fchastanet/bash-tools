@@ -40,3 +40,4 @@ endfunction
 varchar
 datetime
 enduml
+uniformization

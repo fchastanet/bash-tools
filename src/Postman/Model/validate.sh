@@ -37,6 +37,14 @@ Postman::Model::validate() {
     ((++errorCount))
   fi
 
+  # check write mode
+  local writeMode
+  writeMode="$(jq -cre '.writeMode // "single"' 2>/dev/null <"${modelFile}")" || true
+  if ! Array::contains "${writeMode}" "single" "merge"; then
+    Log::displayError "File '${modelFile}' - writeMode '${writeMode}' is invalid"
+    ((++errorCount))
+  fi
+
   # check collections key presence
   local expr='.collections | if type=="object" then "yes" else "no" end'
   if [[ "$(jq -cre "${expr}" <"${modelFile}")" = "no" ]]; then

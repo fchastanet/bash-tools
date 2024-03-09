@@ -1,17 +1,17 @@
 #!/bin/bash
 
-# @description push collections specified by modelFile
+# @description push collections specified by modelFile in write mode single file
 # @arg $1 modelFile:String model file containing the collections to be pushed
 # @arg $@ list of collection references to push (all if not provided)
 # @stderr diagnostic logs
 # @exitcode 2 if no refs specified
 # @exitcode * if one of sub commands fails
-Postman::Commands::pushCollections() {
+Postman::Commands::pushCollectionsSingle() {
   local modelFile="$1"
   shift || true
 
   # shellcheck disable=SC2317
-  pushCollectionsCallback() {
+  pushCollectionsSingleCallback() {
     local modelFile="$1"
     # local postmanCollectionsFile="$2"
     local collectionRef="$3"
@@ -37,5 +37,5 @@ Postman::Commands::pushCollections() {
     fi
   }
 
-  Postman::Commands::forEachCollection "${modelFile}" pushCollectionsCallback "$@"
+  Postman::Commands::forEachCollection "${modelFile}" pushCollectionsSingleCallback "$@"
 }
