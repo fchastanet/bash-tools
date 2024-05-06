@@ -1,6 +1,5 @@
 [1;37mDESCRIPTION:[0m Execute a query on multiple databases in order to gene
 rate a report with tsv format, query can be parallelized on multiple databases
-
 [1;37mUSAGE:[0m dbQueryAllDatabases [OPTIONS] [ARGUMENTS]
 [1;37mUSAGE:[0m dbQueryAllDatabases [--jobs|-j <jobsCount>] [--bar|-b]
   [--separator|-s <separator>] [--from-dsn|-f <String>]

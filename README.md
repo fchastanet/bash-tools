@@ -14,47 +14,21 @@
 > - [Bash Dev Env](https://fchastanet.github.io/bash-dev-env/)
 
 <!-- prettier-ignore-start -->
+
 <!-- markdownlint-capture -->
+
 <!-- markdownlint-disable -->
-[![GitHubLicense](
-  https://img.shields.io/github/license/Naereen/StrapDown.js.svg
-)](
-  https://github.com/fchastanet/bash-tools/blob/master/LICENSE
-)
-[![CI/CD](
-  https://github.com/fchastanet/bash-tools/actions/workflows/lint-test.yml/badge.svg
-)](
-  https://github.com/fchastanet/bash-tools/actions?query=workflow%3A%22Lint+and+test%22+branch%3Amaster
-)
-[![ProjectStatus](
-  http://opensource.box.com/badges/active.svg
-)](
-  http://opensource.box.com/badges
-  'Project Status'
-)
-[![DeepSource](
-  https://deepsource.io/gh/fchastanet/bash-tools.svg/?label=active+issues&show_trend=true
-)](
-  https://deepsource.io/gh/fchastanet/bash-tools/?ref=repository-badge
-)
-[![DeepSource](
-  https://deepsource.io/gh/fchastanet/bash-tools.svg/?label=resolved+issues&show_trend=true
-)](
-  https://deepsource.io/gh/fchastanet/bash-tools/?ref=repository-badge
-)
-[![AverageTimeToResolveAnIssue](
-  http://isitmaintained.com/badge/resolution/fchastanet/bash-tools.svg
-)](
-  http://isitmaintained.com/project/fchastanet/bash-tools
-  'Average time to resolve an issue'
-)
-[![PercentageOfIssuesStillOpen](
-  http://isitmaintained.com/badge/open/fchastanet/bash-tools.svg
-)](
-  http://isitmaintained.com/project/fchastanet/bash-tools
-  'Percentage of issues still open'
-)
+
+[![GitHubLicense](https://img.shields.io/github/license/Naereen/StrapDown.js.svg)](https://github.com/fchastanet/bash-tools/blob/master/LICENSE)
+[![CI/CD](https://github.com/fchastanet/bash-tools/actions/workflows/lint-test.yml/badge.svg)](https://github.com/fchastanet/bash-tools/actions?query=workflow%3A%22Lint+and+test%22+branch%3Amaster)
+[![ProjectStatus](http://opensource.box.com/badges/active.svg)](http://opensource.box.com/badges "Project Status")
+[![DeepSource](https://deepsource.io/gh/fchastanet/bash-tools.svg/?label=active+issues&show_trend=true)](https://deepsource.io/gh/fchastanet/bash-tools/?ref=repository-badge)
+[![DeepSource](https://deepsource.io/gh/fchastanet/bash-tools.svg/?label=resolved+issues&show_trend=true)](https://deepsource.io/gh/fchastanet/bash-tools/?ref=repository-badge)
+[![AverageTimeToResolveAnIssue](http://isitmaintained.com/badge/resolution/fchastanet/bash-tools.svg)](http://isitmaintained.com/project/fchastanet/bash-tools "Average time to resolve an issue")
+[![PercentageOfIssuesStillOpen](http://isitmaintained.com/badge/open/fchastanet/bash-tools.svg)](http://isitmaintained.com/project/fchastanet/bash-tools "Percentage of issues still open")
+
 <!-- markdownlint-restore -->
+
 <!-- prettier-ignore-end -->
 
 - [1. Excerpt](#1-excerpt)
@@ -145,8 +119,8 @@ touch ~/.parallel/will-cite
 
 Dependencies are automatically installed when used.
 
-`vendor/bash-tools-framework/bin/test` script will install the following
-libraries inside `vendor` folder:
+`bin/installRequirements` script will install the following libraries inside
+`vendor` folder:
 
 - [bats-core/bats-core](https://github.com/bats-core/bats-core.git)
 - [bats-core/bats-support](https://github.com/bats-core/bats-support.git)
@@ -182,25 +156,18 @@ All the commands are unit tested, you can run the unit tests using the following
 command
 
 ```bash
-vendor/bash-tools-framework/bin/test -r src
+./test.sh -r src
 ```
 
 Launch UT on different environments:
 
 ```bash
-VENDOR="alpine" BASH_TAR_VERSION=4.4 BASH_IMAGE=bash \
-  SKIP_BUILD=1 SKIP_USER=1 vendor/bash-tools-framework/bin/test -r src -j 16
-VENDOR="alpine" BASH_TAR_VERSION=5.0 BASH_IMAGE=bash \
-  SKIP_BUILD=1 SKIP_USER=1 vendor/bash-tools-framework/bin/test -r src -j 16
-VENDOR="alpine" BASH_TAR_VERSION=5.1 BASH_IMAGE=bash \
-  SKIP_BUILD=1 SKIP_USER=1 vendor/bash-tools-framework/bin/test -r src -j 16
-
-VENDOR="ubuntu" BASH_TAR_VERSION=4.4 BASH_IMAGE=ubuntu:20.04 \
-  SKIP_BUILD=1 SKIP_USER=1 vendor/bash-tools-framework/bin/test -r src -j 2
-VENDOR="ubuntu" BASH_TAR_VERSION=5.0 BASH_IMAGE=ubuntu:20.04 \
-  SKIP_BUILD=1 SKIP_USER=1 vendor/bash-tools-framework/bin/test -r src -j 2
-VENDOR="ubuntu" BASH_TAR_VERSION=5.1 BASH_IMAGE=ubuntu:20.04 \
-  SKIP_BUILD=1 SKIP_USER=1 vendor/bash-tools-framework/bin/test -r src -j 2
+./test.sh scrasnups/build:bash-tools-ubuntu-4.4 -r src -j 30
+./test.sh scrasnups/build:bash-tools-ubuntu-5.0 -r src -j 30
+./test.sh scrasnups/build:bash-tools-ubuntu-5.3 -r src -j 30
+./test.sh scrasnups/build:bash-tools-alpine-4.4 -r src -j 30
+./test.sh scrasnups/build:bash-tools-alpine-5.0 -r src -j 30
+./test.sh scrasnups/build:bash-tools-alpine-5.3 -r src -j 30
 ```
 
 ### 3.4. auto generated bash doc

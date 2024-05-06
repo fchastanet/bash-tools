@@ -1,11 +1,11 @@
 %
-declare versionNumber="1.0"
+declare versionNumber="1.1"
 declare commandFunctionName="docCommand"
 declare help="generate markdown documentation"
 %
 
 .INCLUDE "$(dynamicTemplateDir _binaries/options/options.base.tpl)"
-.INCLUDE "$(dynamicTemplateDir _binaries/options/options.skipDockerBuild.tpl)"
+.INCLUDE "$(dynamicTemplateDir _binaries/options/options.ci.tpl)"
 
 %
 Options::generateCommand "${options[@]}"

@@ -18,54 +18,20 @@ source "${FRAMEWORK_ROOT_DIR}/src/_includes/_mandatoryHeader.sh"
 source "${FRAMEWORK_ROOT_DIR}/src/_standalone/Bats/assert_lines_count.sh"
 # shellcheck source=vendor/bash-tools-framework/src/Env/__all.sh
 source "${FRAMEWORK_ROOT_DIR}/src/Env/__all.sh"
-# shellcheck source=vendor/bash-tools-framework/src/Log/_.sh
-source "${FRAMEWORK_ROOT_DIR}/src/Log/_.sh"
-# shellcheck source=vendor/bash-tools-framework/src/Log/displayDebug.sh
-source "${FRAMEWORK_ROOT_DIR}/src/Log/displayDebug.sh"
-# shellcheck source=vendor/bash-tools-framework/src/Log/displayError.sh
-source "${FRAMEWORK_ROOT_DIR}/src/Log/displayError.sh"
-# shellcheck source=vendor/bash-tools-framework/src/Log/displayHelp.sh
-source "${FRAMEWORK_ROOT_DIR}/src/Log/displayHelp.sh"
-# shellcheck source=vendor/bash-tools-framework/src/Log/displayInfo.sh
-source "${FRAMEWORK_ROOT_DIR}/src/Log/displayInfo.sh"
-# shellcheck source=vendor/bash-tools-framework/src/Log/displaySkipped.sh
-source "${FRAMEWORK_ROOT_DIR}/src/Log/displaySkipped.sh"
-# shellcheck source=vendor/bash-tools-framework/src/Log/displaySuccess.sh
-source "${FRAMEWORK_ROOT_DIR}/src/Log/displaySuccess.sh"
-# shellcheck source=vendor/bash-tools-framework/src/Log/displayWarning.sh
-source "${FRAMEWORK_ROOT_DIR}/src/Log/displayWarning.sh"
-# shellcheck source=vendor/bash-tools-framework/src/Log/logMessage.sh
-source "${FRAMEWORK_ROOT_DIR}/src/Log/logMessage.sh"
-# shellcheck source=vendor/bash-tools-framework/src/Log/fatal.sh
-source "${FRAMEWORK_ROOT_DIR}/src/Log/fatal.sh"
-# shellcheck source=vendor/bash-tools-framework/src/Log/logFatal.sh
-source "${FRAMEWORK_ROOT_DIR}/src/Log/logFatal.sh"
-# shellcheck source=vendor/bash-tools-framework/src/Log/logDebug.sh
-source "${FRAMEWORK_ROOT_DIR}/src/Log/logDebug.sh"
-# shellcheck source=vendor/bash-tools-framework/src/Log/logError.sh
-source "${FRAMEWORK_ROOT_DIR}/src/Log/logError.sh"
-# shellcheck source=vendor/bash-tools-framework/src/Log/logHelp.sh
-source "${FRAMEWORK_ROOT_DIR}/src/Log/logHelp.sh"
-# shellcheck source=vendor/bash-tools-framework/src/Log/logInfo.sh
-source "${FRAMEWORK_ROOT_DIR}/src/Log/logInfo.sh"
-# shellcheck source=vendor/bash-tools-framework/src/Log/logSkipped.sh
-source "${FRAMEWORK_ROOT_DIR}/src/Log/logSkipped.sh"
-# shellcheck source=vendor/bash-tools-framework/src/Log/logSuccess.sh
-source "${FRAMEWORK_ROOT_DIR}/src/Log/logSuccess.sh"
-# shellcheck source=vendor/bash-tools-framework/src/Log/logWarning.sh
-source "${FRAMEWORK_ROOT_DIR}/src/Log/logWarning.sh"
-# shellcheck source=vendor/bash-tools-framework/src/Log/rotate.sh
-source "${FRAMEWORK_ROOT_DIR}/src/Log/rotate.sh"
-# shellcheck source=vendor/bash-tools-framework/src/Log/requireLoad.sh
-source "${FRAMEWORK_ROOT_DIR}/src/Log/requireLoad.sh"
+# shellcheck source=vendor/bash-tools-framework/src/Log/__all.sh
+source "${FRAMEWORK_ROOT_DIR}/src/Log/__all.sh"
 # shellcheck source=vendor/bash-tools-framework/src/UI/theme.sh
 source "${FRAMEWORK_ROOT_DIR}/src/UI/theme.sh"
 # shellcheck source=vendor/bash-tools-framework/src/Assert/tty.sh
 source "${FRAMEWORK_ROOT_DIR}/src/Assert/tty.sh"
 
+export DISPLAY_DURATION=0
 export BASH_FRAMEWORK_LOG_FILE="${BATS_TEST_TMPDIR}/logFile"
 export BASH_FRAMEWORK_DISPLAY_LEVEL="${__LEVEL_INFO}"
-Env::requireLoad
+export BASH_FRAMEWORK_LOG_LEVEL=${__LEVEL_OFF}
+export SKIP_REQUIREMENTS_CHECKS=1
+
+Env::requireLoad "${rootDir}/conf/.env"
 Log::requireLoad
 
 # @description test command help
@@ -91,7 +57,7 @@ testCommand() {
 
   output=$(echo -e "${output}" | sed -E "s#${HOME}#home#g")
   # shellcheck disable=SC2154
-  diff <(echo -e "${output}") "${BATS_TEST_DIRNAME}/testsData/${expectedOutputFile}" >&3 || {
+  diff <(echo -e "${output}") "${BATS_TEST_DIRNAME}/testsData/${expectedOutputFile}" || {
     if [[ "${BATS_FIX_TEST}" = "1" ]]; then
       echo -e "${output}" >"${BATS_TEST_DIRNAME}/testsData/${expectedOutputFile}"
     fi

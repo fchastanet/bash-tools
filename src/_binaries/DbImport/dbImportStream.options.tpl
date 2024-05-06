@@ -52,6 +52,8 @@ options+=(
 Options::generateCommand "${options[@]}"
 %
 
+.INCLUDE "$(dynamicTemplateDir _includes/dbTools.requirements.tpl)"
+
 optionHelpCallback() {
   local profilesList=""
   local dsnList=""
@@ -59,6 +61,7 @@ optionHelpCallback() {
   profilesList="$(Conf::getMergedList "dbImportProfiles" "sh" || true)"
 
   <% ${commandFunctionName} %> help | envsubst
+  checkRequirements
   exit 0
 }
 

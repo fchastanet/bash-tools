@@ -1,12 +1,13 @@
 {
   "search.useIgnoreFiles": true,
   "search.exclude": {
-    "/report": true,
-    "/backup": true,
-    "/megalinter-reports": true,
-    "/bin": true,
-    "/vendor": true,
-    "/logs": true,
+    "report": true,
+    "bin": true,
+    "logs": true,
+    "node_modules": true,
+    "backup": true,
+    "megalinter-reports": true,
+    "vendor": true,
     "pages/assets": true,
     "pages/**/*.md": true,
     "pages/_navbar.md": false,
@@ -15,16 +16,25 @@
     "/install": true,
     "/conf/dbScripts": true
   },
-  "files.exclude": {
-    "**/.git": true
-  },
-  "workbench.editorAssociations": {
-    "*.md": "default"
-  },
   "explorer.autoReveal": false,
+  "files.exclude": {
+    "**/.git": true,
+    "node_modules": true
+  },
   "markdown.extension.toc.omittedFromToc": {
     "*.md": ["# %%"]
   },
+  "editor.detectIndentation": false,
+  "editor.insertSpaces": true,
+  "editor.indentSize": "tabSize",
+  "editor.tabSize": 2,
+  "files.trimTrailingWhitespace": true,
+  "workbench.editorAssociations": {
+    "*.md": "default"
+  },
   "markdown.extension.toc.levels": "2..6",
-  "shellcheck.customArgs": ["--source-path=SCRIPTDIR", "--external-sources"]
+  "shellcheck.customArgs": ["--source-path=SCRIPTDIR", "--external-sources"],
+  "shellcheck.ignorePatterns": {
+    "**/*.tpl": true
+  }
 }

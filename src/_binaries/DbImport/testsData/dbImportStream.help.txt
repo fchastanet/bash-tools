@@ -1,5 +1,4 @@
 [1;37mDESCRIPTION:[0m stream tar.gz file or gz file through mysql
-
 [1;37mUSAGE:[0m dbImportStream [OPTIONS] [ARGUMENTS]
 [1;37mUSAGE:[0m dbImportStream [--profile|-p <String>]
   [--tables <tablesSeparatedByComma>] [--target-dsn|-t <targetDsn>]

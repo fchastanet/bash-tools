@@ -1,6 +1,5 @@
 [1;37mDESCRIPTION:[0m
 rename git local branch, push new branch and delete old branch
-
 [1;37mUSAGE:[0m gitRenameBranch [OPTIONS] [ARGUMENTS]
 [1;37mUSAGE:[0m gitRenameBranch [--assume-yes|--yes|-y] [--push|-p]
   [--delete|-d] [--bash-framework-config <String>] [--config] [--verbose|-v]

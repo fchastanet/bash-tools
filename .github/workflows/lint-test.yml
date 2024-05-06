@@ -1,26 +1,213 @@
 ---
-# kics-scan disable=555ab8f9-2001-455e-a077-f2d0f41e2fb9
 # Lint the code base and launch unit test at each push or pull request
 name: Lint and test
 on: # yamllint disable-line rule:truthy
   push:
     # execute when pushing only branches, not tags
     branches:
-      - '**'
+      - "**"
+      # avoid infinite loop for auto created PRs
+      - "!update/pre-commit-*"
+    tags:
+      - "*"
   workflow_dispatch:
 
-permissions: read-all
+# cancel previous build if several pushes
+concurrency:
+  group: >-
+    ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  # Apply linter fixes configuration
+  # When active, APPLY_FIXES must also be defined as
+  # environment variable (in github/workflows/mega-linter.yml
+  # or other CI tool)
+  APPLY_FIXES: all
+  # Decide which event triggers application of fixes in a
+  # commit or a PR (pull_request, push, all)
+  APPLY_FIXES_EVENT: all
+  # If APPLY_FIXES is used, defines if the fixes are
+  # directly committed (commit) or posted in a PR (pull_request)
+  APPLY_FIXES_MODE: pull_request
+  # variables to compute complex conditions
+  COND_UPDATED_SOURCES: false
+  COND_APPLY_FIXES_NEEDED: false
 
 jobs:
-  build:
+  # -------------------------------------------------------
+  # Pre-commit
+  # -------------------------------------------------------
+
+  pre-commit:
     runs-on: ubuntu-22.04
     permissions:
       # needed by ouzi-dev/commit-status-updater@v2
       statuses: write
-      # needed by peter-evans/create-pull-request@v5
+      # needed by megalinter
+      issues: write
+      # needed by megalinter
       pull-requests: write
-      # needed by peter-evans/create-pull-request@v5
-      contents: write
+    steps:
+      - uses: akatov/commit-status-updater@a9e988ec5454692ff7745a509452422a35172ad6
+        with:
+          name: build-bash-tools
+          status: pending
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to DockerHub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - uses: crazy-max/ghaction-import-gpg@v6
+        if: ${{ success() }}
+        with:
+          gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
+          passphrase: ${{ secrets.GPG_PASSPHRASE }}
+          git_user_signingkey: true
+          git_commit_gpgsign: true
+
+      - uses: tibdex/github-app-token@v1
+        if: ${{ success() }}
+        id: generate-token
+        with:
+          app_id: ${{ secrets.APP_ID }}
+          private_key: ${{ secrets.APP_PRIVATE_KEY }}
+
+      - uses: akatov/commit-status-updater@a9e988ec5454692ff7745a509452422a35172ad6
+        with:
+          name: pre-commit-megalinter
+          status: pending
+
+      - name: Set env vars
+        id: vars
+        # shellcheck disable=SC2129
+        run: |
+          (
+            echo "branch_name=${GITHUB_REF##*/}"
+          ) >> "${GITHUB_ENV}"
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: 3.9
+
+      - uses: fchastanet/github-action-setup-shfmt@v4.0.0
+
+      - name: Install requirements
+        run: |
+          set -exo pipefail
+
+          bin/installRequirements
+          vendor/bash-tools-framework/bin/installRequirements
+          vendor/bash-tools-framework/bin/installRequirements
+          docker pull scrasnups/build:bash-tools-ubuntu-5.3
+
+      - name: Run pre-commit
+        uses: pre-commit/action@v3.0.1
+        id: preCommit
+        with:
+          extra_args: >-
+            -c .pre-commit-config-github.yaml -a --hook-stage manual
+
+      - name: MegaLinter
+        id: ml
+        if: ${{ always() }}
+        # You can override MegaLinter flavor used to have faster performances
+        # More info at https://megalinter.io/flavors/
+        uses: oxsecurity/megalinter/flavors/terraform@v7
+        # All available variables are described in documentation
+        # https://megalinter.io/configuration/
+        env:
+          # Validates all source when push on master,
+          # else just the git diff with master.
+          # Override with true if you always want to lint all sources
+          VALIDATE_ALL_CODEBASE: true
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          MEGALINTER_CONFIG: .mega-linter-githubAction.yml
+          CI_MODE: 1
+
+      - name: Upload MegaLinter artifacts
+        if: success() || failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: MegaLinter reports
+          path: |
+            megalinter-reports
+            mega-linter.log
+
+      - name: MegaLinter/Precommit has updated sources
+        if: >
+          steps.preCommit.outcome == 'failure' || (
+            steps.ml.outputs.has_updated_sources == 1 && (
+              env.APPLY_FIXES_EVENT == 'all' ||
+              env.APPLY_FIXES_EVENT == github.event_name
+            )
+          )
+        run: |
+          echo "COND_UPDATED_SOURCES=true" >> "${GITHUB_ENV}"
+
+      - name: is apply fixes needed ?
+        if: >
+          env.APPLY_FIXES_MODE == 'pull_request' && (
+            github.event_name == 'push' ||
+            github.event.pull_request.head.repo.full_name ==
+            github.repository
+          )
+        run: |
+          echo "COND_APPLY_FIXES_NEEDED=true" >> "${GITHUB_ENV}"
+
+      - name: Create Pull Request
+        id: cpr
+        # prettier-ignore
+        if: >
+          env.COND_UPDATED_SOURCES == 'true' &&
+          env.COND_APPLY_FIXES_NEEDED == 'true' &&
+          !contains(github.event.head_commit.message, 'skip fix')
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ steps.generate-token.outputs.token }}
+          committer: fchastanet <fchastanet@gmail.com>
+          branch: update/pre-commit-fixes-${{ env.branch_name }}
+          delete-branch: true
+          title: lint fixes
+          commit-message: Auto-update lint fixes
+          body: |
+            some auto fixes have been generated during pre-commit run
+          labels: pre-commit-fixes
+
+      - name: Print Pull request created
+        if: |
+          steps.cpr.outputs.pull-request-number &&
+          steps.cpr.outcome == 'success'
+        run: |
+          echo "Pull Request Number - ${{ steps.cpr.outputs.pull-request-number }}"
+          echo "Pull Request URL - ${{ steps.cpr.outputs.pull-request-url }}"
+
+      - uses: akatov/commit-status-updater@a9e988ec5454692ff7745a509452422a35172ad6
+        if: ${{ always() }}
+        with:
+          name: pre-commit-megalinter
+          status: ${{ job.status }}
+
+  # -------------------------------------------------------
+  # Unit tests
+  # -------------------------------------------------------
+
+  unit-tests:
+    runs-on: ubuntu-22.04
+    permissions:
+      # needed by ouzi-dev/commit-status-updater@v2
+      statuses: write
+      # needed by mikepenz/action-junit-report@v4
+      checks: write
     strategy:
       fail-fast: true
       matrix:
@@ -28,182 +215,127 @@ jobs:
           - ubuntu
           - alpine
         bashTarVersion:
-          - '4.4'
-          - '5.0'
-          - '5.1'
-        include:
-          - vendor: ubuntu
-            bashImage: ubuntu:20.04
-            batsOptions: -j 30
-            bashTarVersion: 4.4
-            runPrecommitTests: false
-          - vendor: ubuntu
-            bashImage: ubuntu:20.04
-            bashTarVersion: 5.0
-            batsOptions: -j 30
-            runPrecommitTests: false
-          - vendor: ubuntu
-            bashImage: ubuntu:20.04
-            bashTarVersion: 5.1
-            batsOptions: -j 30
-            runPrecommitTests: true
-          - vendor: alpine
-            bashTarVersion: 4.4
-            bashImage: amd64/bash:4.4-alpine3.18
-            batsOptions: -j 30
-            runPrecommitTests: false
-          - vendor: alpine
-            bashTarVersion: 5.0
-            bashImage: amd64/bash:5.0-alpine3.18
-            batsOptions: -j 30
-            runPrecommitTests: false
-          - vendor: alpine
-            bashTarVersion: 5.1
-            bashImage: amd64/bash:5.1-alpine3.18
-            batsOptions: -j 30
-            runPrecommitTests: false
+          - "4.4"
+          - "5.0"
+          - "5.3"
     steps:
       - name: Checkout
-        # kics-scan ignore-line
         uses: actions/checkout@v4
 
       - name: Set up Docker Buildx
-        # kics-scan ignore-line
         uses: docker/setup-buildx-action@v3
 
       - name: Login to DockerHub
-        # kics-scan ignore-line
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      # kics-scan ignore-line
-      - uses: ouzi-dev/commit-status-updater@v2
+      - uses: crazy-max/ghaction-import-gpg@v6
+        if: ${{ success() }}
         with:
-          name: build bash-tools-${{matrix.vendor}}-${{matrix.bashTarVersion}}
+          gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
+          passphrase: ${{ secrets.GPG_PASSPHRASE }}
+          git_user_signingkey: true
+          git_commit_gpgsign: true
+
+      - uses: tibdex/github-app-token@v1
+        if: ${{ success() }}
+        id: generate-token
+        with:
+          app_id: ${{ secrets.APP_ID }}
+          private_key: ${{ secrets.APP_PRIVATE_KEY }}
+
+      - uses: akatov/commit-status-updater@a9e988ec5454692ff7745a509452422a35172ad6
+        with:
+          name: unit-tests-${{matrix.vendor}}-${{matrix.bashTarVersion}}
           status: pending
 
-      # only if pre-commit
-      - name: Set up Python
-        if: matrix.runPrecommitTests
-        # kics-scan ignore-line
-        uses: actions/setup-python@v5
-        with:
-          python-version: 3.9
+      - name: Set env vars
+        id: vars
+        # shellcheck disable=SC2129
+        run: |
+          (
+            echo "job_tag=${{github.run_id}}-${{matrix.vendor}}-${{matrix.bashTarVersion}}"
+            echo "image_tag=bash-tools-${{matrix.vendor}}-${{matrix.bashTarVersion}}"
+            echo "image_name=scrasnups/build"
+            echo "branch_name=${GITHUB_REF##*/}"
+            if [[ "${{ matrix.vendor }}" = "ubuntu" ]]; then
+              echo "bashImage=ubuntu:20.04"
+              echo "batsOptions=-j 30"
+            else
+              echo "bashImage=amd64/bash:${{ matrix.bashTarVersion }}-alpine3.19"
+              echo "batsOptions=-j 30 --filter-tags '!ubuntu_only'"
+            fi
+          ) >> "${GITHUB_ENV}"
 
-      - name: Install pre-commit
-        if: matrix.runPrecommitTests
-        run: pip install pre-commit
+      - name: install requirements
+        run: |
+          set -exo pipefail
+          chmod 777 logs
+          bin/installRequirements
+          vendor/bash-tools-framework/bin/installRequirements
 
-      # kics-scan ignore-line
-      - uses: ouzi-dev/commit-status-updater@v2
-        if: matrix.runPrecommitTests
-        with:
-          name: lint
-          status: pending
-
-      - name: Run pre-commit
-        if: matrix.runPrecommitTests
-        run: pre-commit run -a --hook-stage manual
-
-      - name: Archive results
-        if: matrix.runPrecommitTests && always()
-        continue-on-error: true
-        # kics-scan ignore-line
-        uses: actions/upload-artifact@v4
-        with:
-          name: linter-reports
-          path: |
-            megalinter-reports/**
-            bin/**
-
-      - name: Create Pull Request
-        if: matrix.runPrecommitTests && failure()
-        # kics-scan ignore-line
-        uses: peter-evans/create-pull-request@v5
-        with:
-          branch: update/pre-commit-fixes
-          title: lint fixes
-          commit-message: Auto-update lint fixes
-          body: |
-            some auto fixes have been generated during pre-commit run
-          labels: updates
-
-      # kics-scan ignore-line
-      - uses: ouzi-dev/commit-status-updater@v2
-        if: matrix.runPrecommitTests && always()
-        with:
-          name: lint
-          status: ${{ job.status }}
-
-      # Run unit tests
       - name: run unit tests
+        id: unitTests
         run: |
           set -exo pipefail
 
-          bin/installRequirements
+          status=0
+          CI_MODE=1 ./test.sh "scrasnups/build:${{env.image_tag}}" \
+            ${{env.batsOptions}} \
+            --formatter junit -o logs -r src 2>&1 |
+            tee "logs/bats-${{ env.job_tag }}.log" || status=$?
 
-          chmod -R 777 logs
-          # shellcheck disable=SC2266
-          USER_ID=1000 \
-          GROUP_ID=1000 \
-          vendor/bash-tools-framework/bin/test \
-            --vendor "${{matrix.vendor}}" \
-            --bash-version "${{matrix.bashTarVersion}}" \
-            --bash-base-image "${{matrix.bashImage}}" \
-            --branch-name "${GITHUB_REF##*/}" \
-            ${{matrix.batsOptions}} --report-formatter junit -o logs -r src --ci
+          awk '/xml version="1.0"/{flag=1} flag; /<\/testsuites>/{flag=0}' \
+            "logs/bats-${{ env.job_tag }}.log" >"logs/junit-${{ env.job_tag }}.xml"
+          exit "${status}"
+
+      - name: Publish Test Report
+        uses: mikepenz/action-junit-report@v4
+        if: ${{ always()}}
+        with:
+          token: ${{ github.token }}
+          check_name: JUnit ${{ env.image_tag }}
+          fail_on_failure: true
+          require_tests: true
+          require_passed_tests: true
+          report_paths: "logs/**.xml"
+
+      - name: Checkstyle aggregation
+        uses: lcollins/checkstyle-github-action@v3.0.0
+        with:
+          path: "logs/*.xml"
 
       - name: Upload Test Results
-        if: always()
-        # kics-scan ignore-line
+        if: ${{ always() }}
         uses: actions/upload-artifact@v4
         with:
-          name: Test Results ${{matrix.vendor}} ${{matrix.bashTarVersion}}
-          path: logs/report.xml
+          name: Test Results ${{ env.image_tag }}
+          path: |
+            logs/**
 
-      # kics-scan ignore-line
-      - uses: ouzi-dev/commit-status-updater@v2
-        if: always()
+      - uses: akatov/commit-status-updater@a9e988ec5454692ff7745a509452422a35172ad6
         with:
-          name: build bash-tools-${{matrix.vendor}}-${{matrix.bashTarVersion}}
+          name: unit-tests-${{matrix.vendor}}-${{matrix.bashTarVersion}}
           status: ${{ job.status }}
 
-  publishTestResults:
-    name: 'Publish Tests Results'
+  overallTestResults:
+    name: "Overall Tests Results"
     if: ${{ always() }}
-    needs: [build]
-    runs-on: ubuntu-latest
+    needs: [unit-tests]
+    runs-on: ubuntu-22.04
     permissions:
-      checks: write
-
       # needed by ouzi-dev/commit-status-updater@v2
       statuses: write
 
-      # only needed unless run with comment_mode: off
-      pull-requests: write
     steps:
-      - name: Download Artifacts
-        # kics-scan ignore-line
-        uses: actions/download-artifact@v3
-        with:
-          path: artifacts
-
-      - name: Checkstyle aggregation
-        # kics-scan ignore-line
-        uses: lcollins/checkstyle-github-action@v2.0.0
-        with:
-          path: 'artifacts/**/*.xml'
-
       # run this action to get the workflow conclusion
       # You can get the conclusion via env (env.WORKFLOW_CONCLUSION)
-      # kics-scan ignore-line
-      - uses: technote-space/workflow-conclusion-action@v3
+      - uses: AbsoLouie/workflow-conclusion-status@v1.0.2
 
-      # kics-scan ignore-line
-      - uses: ouzi-dev/commit-status-updater@v2
+      - uses: akatov/commit-status-updater@a9e988ec5454692ff7745a509452422a35172ad6
         with:
-          name: build
+          name: build-bash-tools
           # neutral, success, skipped, cancelled, timed_out, action_required, failure
           status: ${{ env.WORKFLOW_CONCLUSION }}

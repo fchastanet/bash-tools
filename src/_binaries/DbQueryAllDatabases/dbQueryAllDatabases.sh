@@ -36,14 +36,6 @@ EOF
 # @require Linux::requireExecutedAsUser
 run() {
 
-  # check dependencies
-  Assert::commandExists mysql "sudo apt-get install -y mysql-client"
-  Assert::commandExists mysqlshow "sudo apt-get install -y mysql-client"
-  Assert::commandExists parallel "sudo apt-get install -y parallel"
-  Assert::commandExists gawk "sudo apt-get install -y gawk"
-  Assert::commandExists awk "sudo apt-get install -y gawk"
-  Version::checkMinimal "gawk" "--version" "5.0.1"
-
   # query contains the sql from argQuery or from query string if -q option is provided
   declare query="${argQuery}"
   if [[ "${queryIsFile}" = "1" ]]; then

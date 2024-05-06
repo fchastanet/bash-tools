@@ -1,5 +1,4 @@
 [1;37mDESCRIPTION:[0m check if commit is inside a given branch
-
 [1;37mUSAGE:[0m gitIsAncestorOf [OPTIONS] [ARGUMENTS]
 [1;37mUSAGE:[0m gitIsAncestorOf [--bash-framework-config <String>]
   [--config] [--verbose|-v] [-vv] [-vvv] [--env-file <String>] [--no-color]

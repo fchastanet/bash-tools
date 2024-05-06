@@ -1,5 +1,4 @@
 [1;37mDESCRIPTION:[0m generate optimized profiles to be used by dbImport
-
 [1;37mUSAGE:[0m dbImportProfile [OPTIONS] [ARGUMENTS]
 [1;37mUSAGE:[0m dbImportProfile [--profile|-p <String>]
   [--from-dsn|-f <String>] [--ratio|-r <String>]
