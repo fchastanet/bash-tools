@@ -1,5 +1,4 @@
 [1;37mDESCRIPTION:[0m easy connection to docker container
-
 [1;37mUSAGE:[0m cli [OPTIONS] [ARGUMENTS]
 [1;37mUSAGE:[0m cli [--bash-framework-config <String>] [--config]
   [--verbose|-v] [-vv] [-vvv] [--env-file <String>] [--no-color]

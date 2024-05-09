@@ -1,5 +1,4 @@
 [1;37mDESCRIPTION:[0m wait for host:port to be available
-
 [1;37mUSAGE:[0m waitForIt [OPTIONS] [ARGUMENTS]
 [1;37mUSAGE:[0m waitForIt [--timeout|-t <timeout>] --host|-i <hostOrIp>
   --port|-p <port> [--algorithm|--algo <algorithm>]

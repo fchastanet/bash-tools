@@ -1,5 +1,4 @@
 [1;37mDESCRIPTION:[0m wait for mysql to be ready
-
 [1;37mUSAGE:[0m waitForMysql [OPTIONS] [ARGUMENTS]
 [1;37mUSAGE:[0m waitForMysql [--timeout|-t <timeout>]
   [--bash-framework-config <String>] [--config] [--verbose|-v] [-vv] [-vvv]

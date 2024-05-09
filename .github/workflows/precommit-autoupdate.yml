@@ -1,27 +1,18 @@
 ---
-# kics-scan disable=555ab8f9-2001-455e-a077-f2d0f41e2fb9
 # Check if precommit packages need to be updated and create PR if this is the case
 name: Pre-commit auto-update
-on:
+on: # yamllint disable-line rule:truthy
   workflow_dispatch:
   schedule:
     # https://crontab.cronhub.io/
-    - cron: '30 10 * * *'
-
-permissions: read-all
-
+    - cron: "30 10 * * *"
 jobs:
   auto-update:
     runs-on: ubuntu-22.04
-    permissions:
-      pull-requests: write
-      contents: write
     steps:
-      # kics-scan ignore-line
       - uses: actions/checkout@v4
 
       - name: Set up Python
-        # kics-scan ignore-line
         uses: actions/setup-python@v5
         with:
           python-version: 3.9
@@ -32,10 +23,24 @@ jobs:
       - name: Run pre-commit autoupdate
         run: pre-commit autoupdate
 
-      - name: Create Pull Request
-        # kics-scan ignore-line
-        uses: peter-evans/create-pull-request@v5
+      - uses: crazy-max/ghaction-import-gpg@v6
         with:
+          gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
+          passphrase: ${{ secrets.GPG_PASSPHRASE }}
+          git_user_signingkey: true
+          git_commit_gpgsign: true
+
+      - uses: tibdex/github-app-token@v1
+        id: generate-token
+        with:
+          app_id: ${{ secrets.APP_ID }}
+          private_key: ${{ secrets.APP_PRIVATE_KEY }}
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ steps.generate-token.outputs.token }}
+          committer: fchastanet <fchastanet@gmail.com>
           branch: update/pre-commit-autoupdate
           title: Auto-update pre-commit hooks
           commit-message: Auto-update pre-commit hooks

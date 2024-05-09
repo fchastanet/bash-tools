@@ -72,12 +72,15 @@ options+=(
 Options::generateCommand "${options[@]}"
 %
 
+.INCLUDE "$(dynamicTemplateDir _includes/dbTools.requirements.tpl)"
+
 optionHelpCallback() {
   local dsnList queriesList
   dsnList="$(Conf::getMergedList "dsn" "env")"
   queriesList="$(Conf::getMergedList "dbQueries" "sql" || true)"
 
   <% ${commandFunctionName} %> help | envsubst
+  checkRequirements
   exit 0
 }
 

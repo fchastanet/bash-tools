@@ -12,6 +12,8 @@ useDefault = true
     '''.automation/test''',
     '''megalinter-reports''',
     '''.github/linters''',
+    '''node_modules''',
+    '''.mypy_cache''',
     '''(.*?)/testsData/''',
     '''(.*?)tests/data/''',
     '''(.*?)tests/tools/data/''',

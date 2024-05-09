@@ -2,7 +2,12 @@ version = 1
 
 test_patterns = ["tests/**"]
 
-exclude_patterns = ["doc/**", "jekyll/**", "bin/deepsource"]
+exclude_patterns = [
+  "doc/**",
+  "jekyll/**",
+  "bin/deepsource",
+  "**/testsData/**"
+]
 
 [[analyzers]]
 name = "test-coverage"
@@ -13,13 +18,3 @@ name = "shell"
 enabled = true
   [analyzers.meta]
     dialect = "bash"
-
-[[analyzers]]
-name = "docker"
-enabled = true
-  [analyzers.meta]
-    dockerfile_paths = [
-      ".docker/Dockerfile.alpine",
-      ".docker/Dockerfile.ubuntu",
-      ".docker/DockerfileUser"
-    ]

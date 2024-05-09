@@ -77,21 +77,6 @@ source <(
 
   # shellcheck disable=SC2116,SC2016
   Options::generateOption \
-    --help-value-name "minimalVersion" \
-    --help $'if provided and currently installed binary is below this \n
-      minimalVersion, a new version of the binary will be installed. \n
-      If this argument is not provided, the latest binary is unconditionally \n
-      downloaded from github. \n
-      See options constraints below.' \
-    --group groupVersionManagementFunction \
-    --alt "--minimal-version" \
-    --alt "-m" \
-    --variable-type "String" \
-    --variable-name "optionMinimalVersion" \
-    --function-name optionMinimalVersionFunction
-
-  # shellcheck disable=SC2116,SC2016
-  Options::generateOption \
     --help-value-name "exactVersion" \
     --help $'if provided and currently installed binary is not this exactVersion,\n
       This exact version of the binary will be installed.\n
@@ -109,17 +94,9 @@ options+=(
   optionVersionArgFunction
   optionCurrentVersionFunction
   optionExactVersionFunction
-  optionMinimalVersionFunction
-  --callback upgradeGithubReleaseCommandCallback
 )
 Options::generateCommand "${options[@]}"
 %
-
-upgradeGithubReleaseCommandCallback() {
-  if [[ -n "${optionExactVersion}" && -n "${optionMinimalVersion}" ]]; then
-    Log::fatal "--exact-version|-e and --minimal-version|-m are mutually exclusive, you cannot use both argument at the same time."
-  fi
-}
 
 githubUrlPatternArgCallback() {
   if [[ ! "${githubUrlPatternArg}" =~ ^https://github.com/ ]]; then

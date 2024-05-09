@@ -80,8 +80,8 @@ mysqldump --skip-add-drop-table --skip-add-locks \
   --host=127.0.0.1 --port=3345 --user=root --password=root \
   --no-data skills \
   $(mysql --host=127.0.0.1 --port=3345 --user=root --password=root skills \
-    -Bse "show tables like 'core\_%'") \
-  | grep -v '^\/\*![0-9]\{5\}.*\/;$' > doc/schema.sql
+    -Bse "show tables like 'core\_%'") |
+  grep -v '^\/\*![0-9]\{5\}.*\/;$' >doc/schema.sql
 ```
 
 Transform mysql dump to plant uml format
@@ -89,7 +89,7 @@ Transform mysql dump to plant uml format
 ```bash
 mysql2puml \
   src/_binaries/Converters/testsData/mysql2puml.dump.sql \
-  -s default > src/_binaries/Converters/testsData/mysql2puml.dump.puml
+  -s default >src/_binaries/Converters/testsData/mysql2puml.dump.puml
 ```
 
 Plantuml diagram generated

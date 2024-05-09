@@ -1,5 +1,4 @@
 [1;37mDESCRIPTION:[0m convert mysql dump sql schema to plantuml format
-
 [1;37mUSAGE:[0m mysql2puml [OPTIONS] [ARGUMENTS]
 [1;37mUSAGE:[0m mysql2puml [--skin <String>]
   [--bash-framework-config <String>] [--config] [--verbose|-v] [-vv] [-vvv]

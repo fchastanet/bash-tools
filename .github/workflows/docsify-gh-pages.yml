@@ -6,34 +6,27 @@ name: Deploy Docsify
 on:
   # Runs on pushes targeting the default branch
   push:
-    branches: ['master']
+    branches: ["master"]
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
-# Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
-permissions:
-  contents: read
-  pages: write
-  id-token: write
-  # actions: read needed by actions/deploy-pages
-  actions: read
-
 # Allow one concurrent deployment
 concurrency:
-  group: 'pages'
+  group: "pages"
   cancel-in-progress: true
 
 jobs:
   # Build job
   build:
     runs-on: ubuntu-22.04
+    permissions:
+      contents: read
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
       - name: Set up Docker Buildx
-        # kics-scan ignore-line
         uses: docker/setup-buildx-action@v3
 
       - name: docker pull image
@@ -46,16 +39,15 @@ jobs:
 
       - name: Check if doc up to date
         run: |
-          ./bin/doc
+          ./bin/doc --ci
 
       - name: Setup Pages
-        uses: actions/configure-pages@v2
+        uses: actions/configure-pages@v4
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: 'pages'
-          if-no-files-found: error
+          path: "pages"
 
   # Deployment job
   deploy:
@@ -64,7 +56,12 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-22.04
     needs: build
+    permissions: # Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
+      pages: write # to deploy to Pages
+      id-token: write # to verify the deployment originates from an appropriate source
+      actions: read # actions: read needed by actions/deploy-pages
+
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v1
+        uses: actions/deploy-pages@v4

@@ -67,7 +67,7 @@ REAL_SCRIPT_FILE="$(readlink -e "$(realpath "${BASH_SOURCE[0]}")")"
 if [[ -n "${EMBED_CURRENT_DIR}" ]]; then
   CURRENT_DIR="${EMBED_CURRENT_DIR}"
 else
-  CURRENT_DIR="$(cd "$(readlink -e "${REAL_SCRIPT_FILE%/*}")" && pwd -P)"
+  CURRENT_DIR="${REAL_SCRIPT_FILE%/*}"
 fi
 
 ################################################
@@ -80,7 +80,9 @@ export KEEP_TEMP_FILES
 # PERSISTENT_TMPDIR is not deleted by traps
 PERSISTENT_TMPDIR="${TMPDIR:-/tmp}/bash-framework"
 export PERSISTENT_TMPDIR
-mkdir -p "${PERSISTENT_TMPDIR}"
+if [[ ! -d "${PERSISTENT_TMPDIR}" ]]; then
+  mkdir -p "${PERSISTENT_TMPDIR}"
+fi
 
 # shellcheck disable=SC2034
 TMPDIR="$(mktemp -d -p "${PERSISTENT_TMPDIR:-/tmp}" -t bash-framework-$$-XXXXXX)"
@@ -89,32 +91,290 @@ export TMPDIR
 # temp dir cleaning
 # shellcheck disable=SC2317
 cleanOnExit() {
+  local rc=$?
   if [[ "${KEEP_TEMP_FILES:-0}" = "1" ]]; then
     Log::displayInfo "KEEP_TEMP_FILES=1 temp files kept here '${TMPDIR}'"
   elif [[ -n "${TMPDIR+xxx}" ]]; then
     Log::displayDebug "KEEP_TEMP_FILES=0 removing temp files '${TMPDIR}'"
     rm -Rf "${TMPDIR:-/tmp/fake}" >/dev/null 2>&1
   fi
+  exit "${rc}"
 }
 trap cleanOnExit EXIT HUP QUIT ABRT TERM
 
-# @description check if an element is contained in an array
-#
-# @arg $1 needle:String
-# @arg $@ array:String[]
-# @exitcode 0 if found
-# @exitcode 1 otherwise
-# @example
-#   Array::contains "${libPath}" "${__BASH_FRAMEWORK_IMPORTED_FILES[@]}"
-Array::contains() {
-  local element
-  for element in "${@:2}"; do
-    [[ "${element}" = "$1" ]] && return 0
-  done
-  return 1
+# @description Log namespace provides 2 kind of functions
+# - Log::display* allows to display given message with
+#   given display level
+# - Log::log* allows to log given message with
+#   given log level
+# Log::display* functions automatically log the message too
+# @see Env::requireLoad to load the display and log level from .env file
+
+# @description log level off
+export __LEVEL_OFF=0
+# @description log level error
+export __LEVEL_ERROR=1
+# @description log level warning
+export __LEVEL_WARNING=2
+# @description log level info
+export __LEVEL_INFO=3
+# @description log level success
+export __LEVEL_SUCCESS=3
+# @description log level debug
+export __LEVEL_DEBUG=4
+
+# @description verbose level off
+export __VERBOSE_LEVEL_OFF=0
+# @description verbose level info
+export __VERBOSE_LEVEL_INFO=1
+# @description verbose level info
+export __VERBOSE_LEVEL_DEBUG=2
+# @description verbose level info
+export __VERBOSE_LEVEL_TRACE=3
+
+# @description Display message using info color (bg light blue/fg white)
+# @arg $1 message:String the message to display
+# @env DISPLAY_DURATION int (default 0) if 1 display elapsed time information between 2 info logs
+# @env LOG_CONTEXT String allows to contextualize the log
+Log::displayInfo() {
+  local type="${2:-INFO}"
+  if ((BASH_FRAMEWORK_DISPLAY_LEVEL >= __LEVEL_INFO)); then
+    Log::computeDuration
+    echo -e "${__INFO_COLOR}${type}    - ${LOG_CONTEXT:-}${LOG_LAST_DURATION_STR:-}${1}${__RESET_COLOR}" >&2
+  fi
+  Log::logInfo "$1" "${type}"
 }
 
-# @description concat each element of an array with a separator
+# @description Display message using debug color (gray)
+# @arg $1 message:String the message to display
+# @env DISPLAY_DURATION int (default 0) if 1 display elapsed time information between 2 info logs
+# @env LOG_CONTEXT String allows to contextualize the log
+Log::displayDebug() {
+  if ((BASH_FRAMEWORK_DISPLAY_LEVEL >= __LEVEL_DEBUG)); then
+    Log::computeDuration
+    echo -e "${__DEBUG_COLOR}DEBUG   - ${LOG_CONTEXT:-}${LOG_LAST_DURATION_STR:-}${1}${__RESET_COLOR}" >&2
+  fi
+  Log::logDebug "$1"
+}
+
+# @description Display message using warning color (yellow)
+# @arg $1 message:String the message to display
+# @env DISPLAY_DURATION int (default 0) if 1 display elapsed time information between 2 info logs
+# @env LOG_CONTEXT String allows to contextualize the log
+Log::displayWarning() {
+  if ((BASH_FRAMEWORK_DISPLAY_LEVEL >= __LEVEL_WARNING)); then
+    Log::computeDuration
+    echo -e "${__WARNING_COLOR}WARN    - ${LOG_CONTEXT:-}${LOG_LAST_DURATION_STR:-}${1}${__RESET_COLOR}" >&2
+  fi
+  Log::logWarning "$1"
+}
+
+# @description Display message using error color (red)
+# @arg $1 message:String the message to display
+# @env DISPLAY_DURATION int (default 0) if 1 display elapsed time information between 2 info logs
+# @env LOG_CONTEXT String allows to contextualize the log
+Log::displayError() {
+  if ((BASH_FRAMEWORK_DISPLAY_LEVEL >= __LEVEL_ERROR)); then
+    Log::computeDuration
+    echo -e "${__ERROR_COLOR}ERROR   - ${LOG_CONTEXT:-}${LOG_LAST_DURATION_STR:-}${1}${__RESET_COLOR}" >&2
+  fi
+  Log::logError "$1"
+}
+
+# @description load colors theme constants
+# @warning if tty not opened, noColor theme will be chosen
+# @arg $1 theme:String the theme to use (default, noColor)
+# @arg $@ args:String[]
+# @set __ERROR_COLOR String indicate error status
+# @set __INFO_COLOR String indicate info status
+# @set __SUCCESS_COLOR String indicate success status
+# @set __WARNING_COLOR String indicate warning status
+# @set __SKIPPED_COLOR String indicate skipped status
+# @set __DEBUG_COLOR String indicate debug status
+# @set __HELP_COLOR String indicate help status
+# @set __TEST_COLOR String not used
+# @set __TEST_ERROR_COLOR String not used
+# @set __HELP_TITLE_COLOR String used to display help title in help strings
+# @set __HELP_OPTION_COLOR String used to display highlight options in help strings
+#
+# @set __RESET_COLOR String reset default color
+#
+# @set __HELP_EXAMPLE String to remove
+# @set __HELP_TITLE String to remove
+# @set __HELP_NORMAL String to remove
+# shellcheck disable=SC2034
+UI::theme() {
+  local theme="${1-default}"
+  if [[ ! "${theme}" =~ -force$ ]] && ! Assert::tty; then
+    theme="noColor"
+  fi
+  case "${theme}" in
+    default | default-force)
+      theme="default"
+      ;;
+    noColor) ;;
+    *)
+      Log::fatal "invalid theme provided"
+      ;;
+  esac
+  if [[ "${theme}" = "default" ]]; then
+    BASH_FRAMEWORK_THEME="default"
+    # check colors applicable https://misc.flogisoft.com/bash/tip_colors_and_formatting
+    __ERROR_COLOR='\e[31m'         # Red
+    __INFO_COLOR='\e[44m'          # white on lightBlue
+    __SUCCESS_COLOR='\e[32m'       # Green
+    __WARNING_COLOR='\e[33m'       # Yellow
+    __SKIPPED_COLOR='\e[33m'       # Yellow
+    __DEBUG_COLOR='\e[37m'         # Gray
+    __HELP_COLOR='\e[7;49;33m'     # Black on Gold
+    __TEST_COLOR='\e[100m'         # Light magenta
+    __TEST_ERROR_COLOR='\e[41m'    # white on red
+    __HELP_TITLE_COLOR="\e[1;37m"  # Bold
+    __HELP_OPTION_COLOR="\e[1;34m" # Blue
+    # Internal: reset color
+    __RESET_COLOR='\e[0m' # Reset Color
+    # shellcheck disable=SC2155,SC2034
+    __HELP_EXAMPLE="$(echo -e "\e[2;97m")"
+    # shellcheck disable=SC2155,SC2034
+    __HELP_TITLE="$(echo -e "\e[1;37m")"
+    # shellcheck disable=SC2155,SC2034
+    __HELP_NORMAL="$(echo -e "\033[0m")"
+  else
+    BASH_FRAMEWORK_THEME="noColor"
+    # check colors applicable https://misc.flogisoft.com/bash/tip_colors_and_formatting
+    __ERROR_COLOR=''
+    __INFO_COLOR=''
+    __SUCCESS_COLOR=''
+    __WARNING_COLOR=''
+    __SKIPPED_COLOR=''
+    __DEBUG_COLOR=''
+    __HELP_COLOR=''
+    __TEST_COLOR=''
+    __TEST_ERROR_COLOR=''
+    __HELP_TITLE_COLOR=''
+    __HELP_OPTION_COLOR=''
+    # Internal: reset color
+    __RESET_COLOR=''
+    __HELP_EXAMPLE=''
+    __HELP_TITLE=''
+    __HELP_NORMAL=''
+  fi
+}
+
+# @description draw a line with the character passed in parameter repeated depending on terminal width
+# @arg $1 character:String character to use as separator (default value #)
+UI::drawLine() {
+  local character="${1:-#}"
+  local -i width=${COLUMNS:-0}
+  if ((width == 0)) && [[ -t 1 ]]; then
+    width=$(tput cols)
+  fi
+  if ((width == 0)); then
+    width=80
+  fi
+  printf -- "${character}%.0s" $(seq "${COLUMNS:-$([[ -t 1 ]] && tput cols || echo '80')}")
+  echo
+}
+
+# @description Display message using error color (red) and exit immediately with error status 1
+# @arg $1 message:String the message to display
+# @env DISPLAY_DURATION int (default 0) if 1 display elapsed time information between 2 info logs
+# @env LOG_CONTEXT String allows to contextualize the log
+Log::fatal() {
+  Log::computeDuration
+  echo -e "${__ERROR_COLOR}FATAL   - ${LOG_CONTEXT:-}${LOG_LAST_DURATION_STR:-}${1}${__RESET_COLOR}" >&2
+  Log::logFatal "$1"
+  exit 1
+}
+
+# @description create a temp file using default TMPDIR variable
+# initialized in _includes/_commonHeader.sh
+# @env TMPDIR String (default value /tmp)
+# @arg $1 templateName:String template name to use(optional)
+Framework::createTempFile() {
+  mktemp -p "${TMPDIR:-/tmp}" -t "${1:-}.XXXXXXXXXXXX"
+}
+
+# @description ensure env files are loaded
+# @arg $@ list of default files to load at the end
+# @exitcode 1 if one of env files fails to load
+# @stderr diagnostics information is displayed
+# shellcheck disable=SC2120
+Env::requireLoad() {
+  local -a defaultFiles=("$@")
+  # get list of possible config files
+  local -a configFiles=()
+  if [[ -n "${BASH_FRAMEWORK_ENV_FILES[0]+1}" ]]; then
+    # BASH_FRAMEWORK_ENV_FILES is an array
+    configFiles+=("${BASH_FRAMEWORK_ENV_FILES[@]}")
+  fi
+  local localFrameworkConfigFile
+  localFrameworkConfigFile="$(pwd)/.framework-config"
+  if [[ -f "${localFrameworkConfigFile}" ]]; then
+    configFiles+=("${localFrameworkConfigFile}")
+  fi
+  if [[ -f "${FRAMEWORK_ROOT_DIR}/.framework-config" ]]; then
+    configFiles+=("${FRAMEWORK_ROOT_DIR}/.framework-config")
+  fi
+  configFiles+=("${optionEnvFiles[@]}")
+  configFiles+=("${defaultFiles[@]}")
+
+  for file in "${configFiles[@]}"; do
+    # shellcheck source=/.framework-config
+    CURRENT_LOADED_ENV_FILE="${file}" source "${file}" || {
+      Log::displayError "while loading config file: ${file}"
+      return 1
+    }
+  done
+}
+
+# @description activate or not Log::display* and Log::log* functions
+# based on BASH_FRAMEWORK_DISPLAY_LEVEL and BASH_FRAMEWORK_LOG_LEVEL
+# environment variables loaded by Env::requireLoad
+# try to create log file and rotate it if necessary
+# @noargs
+# @set BASH_FRAMEWORK_LOG_LEVEL int to OFF level if BASH_FRAMEWORK_LOG_FILE is empty or not writable
+# @env BASH_FRAMEWORK_DISPLAY_LEVEL int
+# @env BASH_FRAMEWORK_LOG_LEVEL int
+# @env BASH_FRAMEWORK_LOG_FILE String
+# @env BASH_FRAMEWORK_LOG_FILE_MAX_ROTATION int do log rotation if > 0
+# @exitcode 0 always successful
+# @stderr diagnostics information about log file is displayed
+# @require Env::requireLoad
+# @require UI::requireTheme
+Log::requireLoad() {
+  if [[ -z "${BASH_FRAMEWORK_LOG_FILE:-}" ]]; then
+    BASH_FRAMEWORK_LOG_LEVEL=${__LEVEL_OFF}
+    export BASH_FRAMEWORK_LOG_LEVEL
+  fi
+
+  if ((BASH_FRAMEWORK_LOG_LEVEL > __LEVEL_OFF)); then
+    if [[ ! -f "${BASH_FRAMEWORK_LOG_FILE}" ]]; then
+      if [[ ! -d "${BASH_FRAMEWORK_LOG_FILE%/*}" ]]; then
+        if ! mkdir -p "${BASH_FRAMEWORK_LOG_FILE%/*}" 2>/dev/null; then
+          BASH_FRAMEWORK_LOG_LEVEL=${__LEVEL_OFF}
+          echo -e "${__ERROR_COLOR}ERROR   - directory ${BASH_FRAMEWORK_LOG_FILE%/*} is not writable${__RESET_COLOR}" >&2
+        fi
+      elif ! touch --no-create "${BASH_FRAMEWORK_LOG_FILE}" 2>/dev/null; then
+        BASH_FRAMEWORK_LOG_LEVEL=${__LEVEL_OFF}
+        echo -e "${__ERROR_COLOR}ERROR   - File ${BASH_FRAMEWORK_LOG_FILE} is not writable${__RESET_COLOR}" >&2
+      fi
+    elif [[ ! -w "${BASH_FRAMEWORK_LOG_FILE}" ]]; then
+      BASH_FRAMEWORK_LOG_LEVEL=${__LEVEL_OFF}
+      echo -e "${__ERROR_COLOR}ERROR   - File ${BASH_FRAMEWORK_LOG_FILE} is not writable${__RESET_COLOR}" >&2
+    fi
+  fi
+
+  if ((BASH_FRAMEWORK_LOG_LEVEL > __LEVEL_OFF)); then
+    # will always be created even if not in info level
+    Log::logMessage "INFO" "Logging to file ${BASH_FRAMEWORK_LOG_FILE} - Log level ${BASH_FRAMEWORK_LOG_LEVEL}"
+    if ((BASH_FRAMEWORK_LOG_FILE_MAX_ROTATION > 0)); then
+      Log::rotate "${BASH_FRAMEWORK_LOG_FILE}" "${BASH_FRAMEWORK_LOG_FILE_MAX_ROTATION}"
+    fi
+  fi
+}
+
+# @description concatenate each element of an array with a separator
 # but wrapping text when line length is more than provided argument
 # The algorithm will try not to cut the array element if it can.
 # - if an arg can be placed on current line it will be,
@@ -242,6 +502,52 @@ Array::wrap2() {
   ) | sed -E -e 's/[[:blank:]]+$//'
 }
 
+# @description list the conf files list available in bash-tools/conf/<conf> folder
+# and those overridden in ${HOME}/.bash-tools/<conf> folder
+#
+# @arg $1 confFolder:String the directory name (not the path) to list
+# @arg $2 extension:String the extension (.sh by default)
+# @arg $3 indentStr:String the indentation ('       - ' by default) can be any string compatible with sed not containing any /
+#
+# @stdout list of files without extension/directory
+# @example text
+#       - default.local
+#       - default.remote
+#       - localhost-root
+Conf::getMergedList() {
+  local confFolder="$1"
+  local extension="${2-sh}"
+  local indentStr="${3-       - }"
+
+  local DEFAULT_CONF_DIR="${FRAMEWORK_ROOT_DIR}/conf/${confFolder}"
+  local HOME_CONF_DIR="${HOME}/.bash-tools/${confFolder}"
+
+  (
+    if [[ -d "${DEFAULT_CONF_DIR}" ]]; then
+      Conf::list "${DEFAULT_CONF_DIR}" "" "${extension}" "-type f" "${indentStr}"
+    fi
+    if [[ -d "${HOME_CONF_DIR}" ]]; then
+      Conf::list "${HOME_CONF_DIR}" "" "${extension}" "-type f" "${indentStr}"
+    fi
+  ) | sort | uniq
+}
+
+# @description check if an element is contained in an array
+#
+# @arg $1 needle:String
+# @arg $@ array:String[]
+# @exitcode 0 if found
+# @exitcode 1 otherwise
+# @example
+#   Array::contains "${libPath}" "${__BASH_FRAMEWORK_IMPORTED_FILES[@]}"
+Array::contains() {
+  local element
+  for element in "${@:2}"; do
+    [[ "${element}" = "$1" ]] && return 0
+  done
+  return 1
+}
+
 # @description get absolute conf file from specified conf folder deduced using these rules
 #   * from absolute file (ignores <confFolder> and <extension>)
 #   * relative to where script is executed (ignores <confFolder> and <extension>)
@@ -303,67 +609,6 @@ Conf::getAbsoluteFile() {
   return 1
 }
 
-# @description list the conf files list available in bash-tools/conf/<conf> folder
-# and those overridden in ${HOME}/.bash-tools/<conf> folder
-#
-# @arg $1 confFolder:String the directory name (not the path) to list
-# @arg $2 extension:String the extension (.sh by default)
-# @arg $3 indentStr:String the indentation ('       - ' by default) can be any string compatible with sed not containing any /
-#
-# @stdout list of files without extension/directory
-# @example text
-#       - default.local
-#       - default.remote
-#       - localhost-root
-Conf::getMergedList() {
-  local confFolder="$1"
-  local extension="${2-sh}"
-  local indentStr="${3-       - }"
-
-  local DEFAULT_CONF_DIR="${FRAMEWORK_ROOT_DIR}/conf/${confFolder}"
-  local HOME_CONF_DIR="${HOME}/.bash-tools/${confFolder}"
-
-  (
-    if [[ -d "${DEFAULT_CONF_DIR}" ]]; then
-      Conf::list "${DEFAULT_CONF_DIR}" "" "${extension}" "-type f" "${indentStr}"
-    fi
-    if [[ -d "${HOME_CONF_DIR}" ]]; then
-      Conf::list "${HOME_CONF_DIR}" "" "${extension}" "-type f" "${indentStr}"
-    fi
-  ) | sort | uniq
-}
-
-# @description ensure env files are loaded
-# @arg $@ list of default files to load at the end
-# @exitcode 1 if one of env files fails to load
-# @stderr diagnostics information is displayed
-# shellcheck disable=SC2120
-Env::requireLoad() {
-  local -a defaultFiles=("$@")
-  # get list of possible config files
-  local -a configFiles=()
-  if [[ -n "${BASH_FRAMEWORK_ENV_FILES[0]+1}" ]]; then
-    # BASH_FRAMEWORK_ENV_FILES is an array
-    configFiles+=("${BASH_FRAMEWORK_ENV_FILES[@]}")
-  fi
-  if [[ -f "$(pwd)/.framework-config" ]]; then
-    configFiles+=("$(pwd)/.framework-config")
-  fi
-  if [[ -f "${FRAMEWORK_ROOT_DIR}/.framework-config" ]]; then
-    configFiles+=("${FRAMEWORK_ROOT_DIR}/.framework-config")
-  fi
-  configFiles+=("${optionEnvFiles[@]}")
-  configFiles+=("${defaultFiles[@]}")
-
-  for file in "${configFiles[@]}"; do
-    # shellcheck source=/.framework-config
-    CURRENT_LOADED_ENV_FILE="${file}" source "${file}" || {
-      Log::displayError "while loading config file: ${file}"
-      return 1
-    }
-  done
-}
-
 # @description remove all empty lines
 # - at the beginning of the file before non empty line
 # - at the end of the file after last non empty line
@@ -380,238 +625,12 @@ Filters::trimEmptyLines() {
   ' "$@"
 }
 
-# @description create a temp file using default TMPDIR variable
-# initialized in _includes/_commonHeader.sh
-# @env TMPDIR String (default value /tmp)
-# @arg $1 templateName:String template name to use(optional)
-Framework::createTempFile() {
-  mktemp -p "${TMPDIR:-/tmp}" -t "${1:-}.XXXXXXXXXXXX"
-}
-
-# @description Log namespace provides 2 kind of functions
-# - Log::display* allows to display given message with
-#   given display level
-# - Log::log* allows to log given message with
-#   given log level
-# Log::display* functions automatically log the message too
-# @see Env::requireLoad to load the display and log level from .env file
-
-# @description log level off
-export __LEVEL_OFF=0
-# @description log level error
-export __LEVEL_ERROR=1
-# @description log level warning
-export __LEVEL_WARNING=2
-# @description log level info
-export __LEVEL_INFO=3
-# @description log level success
-export __LEVEL_SUCCESS=3
-# @description log level debug
-export __LEVEL_DEBUG=4
-
-# @description verbose level off
-export __VERBOSE_LEVEL_OFF=0
-# @description verbose level info
-export __VERBOSE_LEVEL_INFO=1
-# @description verbose level info
-export __VERBOSE_LEVEL_DEBUG=2
-# @description verbose level info
-export __VERBOSE_LEVEL_TRACE=3
-
-# @description Display message using debug color (grey)
-# @arg $1 message:String the message to display
-Log::displayDebug() {
-  if ((BASH_FRAMEWORK_DISPLAY_LEVEL >= __LEVEL_DEBUG)); then
-    echo -e "${__DEBUG_COLOR}DEBUG   - ${1}${__RESET_COLOR}" >&2
-  fi
-  Log::logDebug "$1"
-}
-
-# @description Display message using error color (red)
-# @arg $1 message:String the message to display
-Log::displayError() {
-  if ((BASH_FRAMEWORK_DISPLAY_LEVEL >= __LEVEL_ERROR)); then
-    echo -e "${__ERROR_COLOR}ERROR   - ${1}${__RESET_COLOR}" >&2
-  fi
-  Log::logError "$1"
-}
-
-# @description Display message using info color (bg light blue/fg white)
-# @arg $1 message:String the message to display
-Log::displayInfo() {
-  local type="${2:-INFO}"
-  if ((BASH_FRAMEWORK_DISPLAY_LEVEL >= __LEVEL_INFO)); then
-    echo -e "${__INFO_COLOR}${type}    - ${1}${__RESET_COLOR}" >&2
-  fi
-  Log::logInfo "$1" "${type}"
-}
-
-# @description Display message using warning color (yellow)
-# @arg $1 message:String the message to display
-Log::displayWarning() {
-  if ((BASH_FRAMEWORK_DISPLAY_LEVEL >= __LEVEL_WARNING)); then
-    echo -e "${__WARNING_COLOR}WARN    - ${1}${__RESET_COLOR}" >&2
-  fi
-  Log::logWarning "$1"
-}
-
-# @description Display message using error color (red) and exit immediately with error status 1
-# @arg $1 message:String the message to display
-Log::fatal() {
-  echo -e "${__ERROR_COLOR}FATAL   - ${1}${__RESET_COLOR}" >&2
-  Log::logFatal "$1"
-  exit 1
-}
-
-# @description activate or not Log::display* and Log::log* functions
-# based on BASH_FRAMEWORK_DISPLAY_LEVEL and BASH_FRAMEWORK_LOG_LEVEL
-# environment variables loaded by Env::requireLoad
-# try to create log file and rotate it if necessary
-# @noargs
-# @set BASH_FRAMEWORK_LOG_LEVEL int to OFF level if BASH_FRAMEWORK_LOG_FILE is empty or not writable
-# @env BASH_FRAMEWORK_DISPLAY_LEVEL int
-# @env BASH_FRAMEWORK_LOG_LEVEL int
-# @env BASH_FRAMEWORK_LOG_FILE String
-# @env BASH_FRAMEWORK_LOG_FILE_MAX_ROTATION int do log rotation if > 0
-# @exitcode 0 always successful
-# @stderr diagnostics information about log file is displayed
-# @require Env::requireLoad
-# @require UI::requireTheme
-Log::requireLoad() {
-  if [[ -z "${BASH_FRAMEWORK_LOG_FILE:-}" ]]; then
-    BASH_FRAMEWORK_LOG_LEVEL=${__LEVEL_OFF}
-    export BASH_FRAMEWORK_LOG_LEVEL
-  fi
-
-  if ((BASH_FRAMEWORK_LOG_LEVEL > __LEVEL_OFF)); then
-    if [[ ! -f "${BASH_FRAMEWORK_LOG_FILE}" ]]; then
-      if
-        ! mkdir -p "$(dirname "${BASH_FRAMEWORK_LOG_FILE}")" 2>/dev/null ||
-          ! touch --no-create "${BASH_FRAMEWORK_LOG_FILE}" 2>/dev/null
-      then
-        BASH_FRAMEWORK_LOG_LEVEL=${__LEVEL_OFF}
-        echo -e "${__ERROR_COLOR}ERROR   - File ${BASH_FRAMEWORK_LOG_FILE} is not writable${__RESET_COLOR}" >&2
-      fi
-    elif [[ ! -w "${BASH_FRAMEWORK_LOG_FILE}" ]]; then
-      BASH_FRAMEWORK_LOG_LEVEL=${__LEVEL_OFF}
-      echo -e "${__ERROR_COLOR}ERROR   - File ${BASH_FRAMEWORK_LOG_FILE} is not writable${__RESET_COLOR}" >&2
-    fi
-
-  fi
-
-  if ((BASH_FRAMEWORK_LOG_LEVEL > __LEVEL_OFF)); then
-    # will always be created even if not in info level
-    Log::logMessage "INFO" "Logging to file ${BASH_FRAMEWORK_LOG_FILE} - Log level ${BASH_FRAMEWORK_LOG_LEVEL}"
-    if ((BASH_FRAMEWORK_LOG_FILE_MAX_ROTATION > 0)); then
-      Log::rotate "${BASH_FRAMEWORK_LOG_FILE}" "${BASH_FRAMEWORK_LOG_FILE_MAX_ROTATION}"
-    fi
-  fi
-}
-
-# @description draw a line with the character passed in parameter repeated depending on terminal width
-# @arg $1 character:String character to use as separator (default value #)
-UI::drawLine() {
-  local character="${1:-#}"
-  printf '%*s\n' "${COLUMNS:-$([[ -t 0 ]] && tput cols || echo)}" '' | tr ' ' "${character}"
-}
-
-# @description load colors theme constants
-# @warning if tty not opened, noColor theme will be chosen
-# @arg $1 theme:String the theme to use (default, noColor)
-# @arg $@ args:String[]
-# @set __ERROR_COLOR String indicate error status
-# @set __INFO_COLOR String indicate info status
-# @set __SUCCESS_COLOR String indicate success status
-# @set __WARNING_COLOR String indicate warning status
-# @set __SKIPPED_COLOR String indicate skipped status
-# @set __DEBUG_COLOR String indicate debug status
-# @set __HELP_COLOR String indicate help status
-# @set __TEST_COLOR String not used
-# @set __TEST_ERROR_COLOR String not used
-# @set __HELP_TITLE_COLOR String used to display help title in help strings
-# @set __HELP_OPTION_COLOR String used to display highlight options in help strings
-#
-# @set __RESET_COLOR String reset default color
-#
-# @set __HELP_EXAMPLE String to remove
-# @set __HELP_TITLE String to remove
-# @set __HELP_NORMAL String to remove
-# shellcheck disable=SC2034
-UI::theme() {
-  local theme="${1-default}"
-  if [[ ! "${theme}" =~ -force$ ]] && ! Assert::tty; then
-    theme="noColor"
-  fi
-  case "${theme}" in
-    default | default-force)
-      theme="default"
-      ;;
-    noColor) ;;
-    *)
-      Log::fatal "invalid theme provided"
-      ;;
-  esac
-  if [[ "${theme}" = "default" ]]; then
-    BASH_FRAMEWORK_THEME="default"
-    # check colors applicable https://misc.flogisoft.com/bash/tip_colors_and_formatting
-    __ERROR_COLOR='\e[31m'         # Red
-    __INFO_COLOR='\e[44m'          # white on lightBlue
-    __SUCCESS_COLOR='\e[32m'       # Green
-    __WARNING_COLOR='\e[33m'       # Yellow
-    __SKIPPED_COLOR='\e[33m'       # Yellow
-    __DEBUG_COLOR='\e[37m'         # Grey
-    __HELP_COLOR='\e[7;49;33m'     # Black on Gold
-    __TEST_COLOR='\e[100m'         # Light magenta
-    __TEST_ERROR_COLOR='\e[41m'    # white on red
-    __HELP_TITLE_COLOR="\e[1;37m"  # Bold
-    __HELP_OPTION_COLOR="\e[1;34m" # Blue
-    # Internal: reset color
-    __RESET_COLOR='\e[0m' # Reset Color
-    # shellcheck disable=SC2155,SC2034
-    __HELP_EXAMPLE="$(echo -e "\e[2;97m")"
-    # shellcheck disable=SC2155,SC2034
-    __HELP_TITLE="$(echo -e "\e[1;37m")"
-    # shellcheck disable=SC2155,SC2034
-    __HELP_NORMAL="$(echo -e "\033[0m")"
-  else
-    BASH_FRAMEWORK_THEME="noColor"
-    # check colors applicable https://misc.flogisoft.com/bash/tip_colors_and_formatting
-    __ERROR_COLOR=''
-    __INFO_COLOR=''
-    __SUCCESS_COLOR=''
-    __WARNING_COLOR=''
-    __SKIPPED_COLOR=''
-    __DEBUG_COLOR=''
-    __HELP_COLOR=''
-    __TEST_COLOR=''
-    __TEST_ERROR_COLOR=''
-    __HELP_TITLE_COLOR=''
-    __HELP_OPTION_COLOR=''
-    # Internal: reset color
-    __RESET_COLOR=''
-    __HELP_EXAMPLE=''
-    __HELP_TITLE=''
-    __HELP_NORMAL=''
-  fi
-}
-
 bashToolsDefaultConfigTemplate="${bashToolsDefaultConfigTemplate:-$(
   cat <<'EOF'
 # shellcheck disable=SC2034
 
 # Default settings
 # you can override these settings by creating ${HOME}/.bash-tools/.env file
-###
-### LOG Level
-### minimum level of the messages that will be logged into LOG_FILE
-###
-### 0: NO LOG
-### 1: ERROR
-### 2: WARNING
-### 3: INFO
-### 4: DEBUG
-###
-BASH_FRAMEWORK_LOG_LEVEL=${BASH_FRAMEWORK_LOG_LEVEL:-0}
 
 ###
 ### DISPLAY Level
@@ -626,12 +645,32 @@ BASH_FRAMEWORK_LOG_LEVEL=${BASH_FRAMEWORK_LOG_LEVEL:-0}
 BASH_FRAMEWORK_DISPLAY_LEVEL=${BASH_FRAMEWORK_DISPLAY_LEVEL:-3}
 
 ###
+### DISPLAY duration
+### 0: no duration is displayed on the messages
+### 1: duration between previous message and current is displayed
+### with the message
+###
+DISPLAY_DURATION=${DISPLAY_DURATION:0}
+
+###
 ### Log to file
 ###
 ### all log messages will be redirected to log file specified
 ### this same path will be used inside and outside of the container
 ###
 BASH_FRAMEWORK_LOG_FILE=${BASH_FRAMEWORK_LOG_FILE:-${FRAMEWORK_ROOT_DIR}/logs/bash.log}
+
+###
+### LOG Level
+### minimum level of the messages that will be logged into LOG_FILE
+###
+### 0: NO LOG
+### 1: ERROR
+### 2: WARNING
+### 3: INFO
+### 4: DEBUG
+###
+BASH_FRAMEWORK_LOG_LEVEL=${BASH_FRAMEWORK_LOG_LEVEL:-0}
 
 # absolute directory containing db import sql dumps
 DB_IMPORT_DUMP_DIR=${DB_IMPORT_DUMP_DIR:-${HOME}/.bash-tools/dbImportDumps}
@@ -695,12 +734,81 @@ Compiler::Facade::requireCommandBinDir() {
   Env::pathPrepend "${COMMAND_BIN_DIR}"
 }
 
+declare -g FIRST_LOG_DATE LOG_LAST_LOG_DATE LOG_LAST_LOG_DATE_INIT LOG_LAST_DURATION_STR
+FIRST_LOG_DATE="${EPOCHREALTIME/[^0-9]/}"
+LOG_LAST_LOG_DATE="${FIRST_LOG_DATE}"
+LOG_LAST_LOG_DATE_INIT=1
+LOG_LAST_DURATION_STR=""
+
+# @description compute duration since last call to this function
+# the result is set in following env variables.
+# in ss.sss (seconds followed by milliseconds precision 3 decimals)
+# @noargs
+# @env DISPLAY_DURATION int (default 0) if 1 display elapsed time information between 2 info logs
+# @set LOG_LAST_LOG_DATE_INIT int (default 1) set to 0 at first call, allows to detect reference log
+# @set LOG_LAST_DURATION_STR String the last duration displayed
+# @set LOG_LAST_LOG_DATE String the last log date that will be used to compute next diff
+Log::computeDuration() {
+  if ((${DISPLAY_DURATION:-0} == 1)); then
+    local -i duration=0
+    local -i delta=0
+    local -i currentLogDate
+    currentLogDate="${EPOCHREALTIME/[^0-9]/}"
+    if ((LOG_LAST_LOG_DATE_INIT == 1)); then
+      LOG_LAST_LOG_DATE_INIT=0
+      LOG_LAST_DURATION_STR="Ref"
+    else
+      duration=$(((currentLogDate - FIRST_LOG_DATE) / 1000000))
+      delta=$(((currentLogDate - LOG_LAST_LOG_DATE) / 1000000))
+      LOG_LAST_DURATION_STR="${duration}s/+${delta}s"
+    fi
+    LOG_LAST_LOG_DATE="${currentLogDate}"
+    # shellcheck disable=SC2034
+    local microSeconds="${EPOCHREALTIME#*.}"
+    LOG_LAST_DURATION_STR="$(printf '%(%T)T.%03.0f\n' "${EPOCHSECONDS}" "${microSeconds:0:3}")(${LOG_LAST_DURATION_STR}) - "
+  else
+    # shellcheck disable=SC2034
+    LOG_LAST_DURATION_STR=""
+  fi
+}
+
+# @description log message to file
+# @arg $1 message:String the message to display
+Log::logInfo() {
+  if ((BASH_FRAMEWORK_LOG_LEVEL >= __LEVEL_INFO)); then
+    Log::logMessage "${2:-INFO}" "$1"
+  fi
+}
+
+# @description log message to file
+# @arg $1 message:String the message to display
+Log::logDebug() {
+  if ((BASH_FRAMEWORK_LOG_LEVEL >= __LEVEL_DEBUG)); then
+    Log::logMessage "${2:-DEBUG}" "$1"
+  fi
+}
+
+# @description log message to file
+# @arg $1 message:String the message to display
+Log::logWarning() {
+  if ((BASH_FRAMEWORK_LOG_LEVEL >= __LEVEL_WARNING)); then
+    Log::logMessage "${2:-WARNING}" "$1"
+  fi
+}
+
+# @description log message to file
+# @arg $1 message:String the message to display
+Log::logError() {
+  if ((BASH_FRAMEWORK_LOG_LEVEL >= __LEVEL_ERROR)); then
+    Log::logMessage "${2:-ERROR}" "$1"
+  fi
+}
+
 # @description check if tty (interactive mode) is active
 # @noargs
 # @exitcode 1 if tty not active
 # @env NON_INTERACTIVE if 1 consider as not interactive even if environment is interactive
 # @env INTERACTIVE if 1 consider as interactive even if environment is not interactive
-# @stderr diagnostic information + help if second argument is provided
 Assert::tty() {
   if [[ "${NON_INTERACTIVE:-0}" = "1" ]]; then
     return 1
@@ -708,7 +816,62 @@ Assert::tty() {
   if [[ "${INTERACTIVE:-0}" = "1" ]]; then
     return 0
   fi
-  [[ -t 1 || -t 2 ]]
+  tty -s
+}
+
+# @description log message to file
+# @arg $1 message:String the message to display
+Log::logFatal() {
+  Log::logMessage "${2:-FATAL}" "$1"
+}
+
+# @description Internal: common log message
+# @example text
+#   [date]|[levelMsg]|message
+#
+# @example text
+#   2020-01-19 19:20:21|ERROR  |log error
+#   2020-01-19 19:20:21|SKIPPED|log skipped
+#
+# @arg $1 levelMsg:String message's level description (eg: STATUS, ERROR, ...)
+# @arg $2 msg:String the message to display
+# @env BASH_FRAMEWORK_LOG_FILE String log file to use, do nothing if empty
+# @env BASH_FRAMEWORK_LOG_LEVEL int log level log only if > OFF or fatal messages
+# @stderr diagnostics information is displayed
+# @require Env::requireLoad
+# @require Log::requireLoad
+Log::logMessage() {
+  local levelMsg="$1"
+  local msg="$2"
+  local date
+
+  if [[ -n "${BASH_FRAMEWORK_LOG_FILE}" ]] && ((BASH_FRAMEWORK_LOG_LEVEL > __LEVEL_OFF)); then
+    date="$(date '+%Y-%m-%d %H:%M:%S')"
+    touch "${BASH_FRAMEWORK_LOG_FILE}"
+    printf "%s|%7s|%s\n" "${date}" "${levelMsg}" "${msg}" >>"${BASH_FRAMEWORK_LOG_FILE}"
+  fi
+}
+
+# @description To be called before logging in the log file
+# @arg $1 file:string log file name
+# @arg $2 maxLogFilesCount:int maximum number of log files
+Log::rotate() {
+  local file="$1"
+  local maxLogFilesCount="${2:-5}"
+
+  if [[ ! -f "${file}" ]]; then
+    Log::displayDebug "Log file ${file} doesn't exist yet"
+    return 0
+  fi
+  local i
+  for ((i = maxLogFilesCount - 1; i > 0; i--)); do
+    Log::displayInfo "Log rotation ${file}.${i} to ${file}.$((i + 1))"
+    mv "${file}."{"${i}","$((i + 1))"} &>/dev/null || true
+  done
+  if cp "${file}" "${file}.1" &>/dev/null; then
+    echo >"${file}" # reset log file
+    Log::displayInfo "Log rotation ${file} to ${file}.1"
+  fi
 }
 
 # @description list files of dir with given extension and display it as a list one by line
@@ -746,18 +909,6 @@ Conf::list() {
   )
 }
 
-# @description prepend directories to the PATH environment variable
-# @arg $@ args:String[] list of directories to prepend
-# @set PATH update PATH with the directories prepended
-Env::pathPrepend() {
-  local arg
-  for arg in "$@"; do
-    if [[ -d "${arg}" && ":${PATH}:" != *":${arg}:"* ]]; then
-      PATH="$(realpath "${arg}"):${PATH}"
-    fi
-  done
-}
-
 # @description concatenate 2 paths and ensure the path is correct using realpath -m
 # @arg $1 basePath:String
 # @arg $2 subPath:String
@@ -770,107 +921,27 @@ File::concatenatePath() {
   realpath -m "${fullPath}" 2>/dev/null
 }
 
-# @description log message to file
-# @arg $1 message:String the message to display
-Log::logDebug() {
-  if ((BASH_FRAMEWORK_LOG_LEVEL >= __LEVEL_DEBUG)); then
-    Log::logMessage "${2:-DEBUG}" "$1"
-  fi
-}
-
-# @description log message to file
-# @arg $1 message:String the message to display
-Log::logError() {
-  if ((BASH_FRAMEWORK_LOG_LEVEL >= __LEVEL_ERROR)); then
-    Log::logMessage "${2:-ERROR}" "$1"
-  fi
-}
-
-# @description log message to file
-# @arg $1 message:String the message to display
-Log::logFatal() {
-  Log::logMessage "${2:-FATAL}" "$1"
-}
-
-# @description log message to file
-# @arg $1 message:String the message to display
-Log::logInfo() {
-  if ((BASH_FRAMEWORK_LOG_LEVEL >= __LEVEL_INFO)); then
-    Log::logMessage "${2:-INFO}" "$1"
-  fi
-}
-
-# @description Internal: common log message
-# @example text
-#   [date]|[levelMsg]|message
-#
-# @example text
-#   2020-01-19 19:20:21|ERROR  |log error
-#   2020-01-19 19:20:21|SKIPPED|log skipped
-#
-# @arg $1 levelMsg:String message's level description (eg: STATUS, ERROR, ...)
-# @arg $2 msg:String the message to display
-# @env BASH_FRAMEWORK_LOG_FILE String log file to use, do nothing if empty
-# @env BASH_FRAMEWORK_LOG_LEVEL int log level log only if > OFF or fatal messages
-# @stderr diagnostics information is displayed
-# @require Env::requireLoad
-# @require Log::requireLoad
-Log::logMessage() {
-  local levelMsg="$1"
-  local msg="$2"
-  local date
-
-  if [[ -n "${BASH_FRAMEWORK_LOG_FILE}" ]] && ((BASH_FRAMEWORK_LOG_LEVEL > __LEVEL_OFF)); then
-    date="$(date '+%Y-%m-%d %H:%M:%S')"
-    touch "${BASH_FRAMEWORK_LOG_FILE}"
-    printf "%s|%7s|%s\n" "${date}" "${levelMsg}" "${msg}" >>"${BASH_FRAMEWORK_LOG_FILE}"
-  fi
-}
-
-# @description log message to file
-# @arg $1 message:String the message to display
-Log::logWarning() {
-  if ((BASH_FRAMEWORK_LOG_LEVEL >= __LEVEL_WARNING)); then
-    Log::logMessage "${2:-WARNING}" "$1"
-  fi
-}
-
-# @description To be called before logging in the log file
-# @arg $1 file:string log file name
-# @arg $2 maxLogFilesCount:int maximum number of log files
-Log::rotate() {
-  local file="$1"
-  local maxLogFilesCount="${2:-5}"
-
-  if [[ ! -f "${file}" ]]; then
-    Log::displaySkipped "Log file ${file} doesn't exist yet"
-    return 0
-  fi
-  for i in $(seq $((maxLogFilesCount - 1)) -1 1); do
-    Log::displayInfo "Log rotation ${file}.${i} to ${file}.$((i + 1))"
-    mv "${file}."{"${i}","$((i + 1))"} &>/dev/null || true
+# @description prepend directories to the PATH environment variable
+# @arg $@ args:String[] list of directories to prepend
+# @set PATH update PATH with the directories prepended
+Env::pathPrepend() {
+  local arg
+  for arg in "$@"; do
+    if [[ -d "${arg}" && ":${PATH}:" != *":${arg}:"* ]]; then
+      PATH="$(realpath "${arg}"):${PATH}"
+    fi
   done
-  if cp "${file}" "${file}.1" &>/dev/null; then
-    echo >"${file}" # reset log file
-    Log::displayInfo "Log rotation ${file} to ${file}.1"
-  fi
 }
 
 # @description load color theme
 # @noargs
 # @env BASH_FRAMEWORK_THEME String theme to use
+# @env LOAD_THEME int 0 to avoid loading theme
 # @exitcode 0 always successful
 UI::requireTheme() {
-  UI::theme "${BASH_FRAMEWORK_THEME-default}"
-}
-
-# @description Display message using skip color (yellow)
-# @arg $1 message:String the message to display
-Log::displaySkipped() {
-  if ((BASH_FRAMEWORK_DISPLAY_LEVEL >= __LEVEL_INFO)); then
-    echo -e "${__SKIPPED_COLOR}SKIPPED - ${1}${__RESET_COLOR}" >&2
+  if [[ "${LOAD_THEME:-1}" = "1" ]]; then
+    UI::theme "${BASH_FRAMEWORK_THEME-default}"
   fi
-  Log::logSkipped "$1"
 }
 
 # @description ensure command realpath is available
@@ -902,14 +973,6 @@ Assert::commandExists() {
   return 0
 }
 
-# @description log message to file
-# @arg $1 message:String the message to display
-Log::logSkipped() {
-  if ((BASH_FRAMEWORK_LOG_LEVEL >= __LEVEL_INFO)); then
-    Log::logMessage "${2:-SKIPPED}" "$1"
-  fi
-}
-
 # FUNCTIONS
 
 facade_main_mysql2pumlsh() {
@@ -932,8 +995,8 @@ fi
 # REQUIRES
 Env::requireLoad
 UI::requireTheme
-Linux::requireRealpathCommand
 Log::requireLoad
+Linux::requireRealpathCommand
 BashTools::Conf::requireLoad
 Compiler::Facade::requireCommandBinDir
 
@@ -1131,7 +1194,7 @@ defaultFrameworkConfig="$(
 # shellcheck disable=SC2034
 
 REAL_SCRIPT_FILE="${REAL_SCRIPT_FILE:-$(readlink -e "$(realpath "${BASH_SOURCE[0]}")")}"
-FRAMEWORK_ROOT_DIR="${FRAMEWORK_ROOT_DIR:-$(cd "$(readlink -e "${REAL_SCRIPT_FILE%/*}")/../.." && pwd -P)}"
+FRAMEWORK_ROOT_DIR="${FRAMEWORK_ROOT_DIR:-${REAL_SCRIPT_FILE%/*/*}}"
 FRAMEWORK_SRC_DIR="${FRAMEWORK_SRC_DIR:-${FRAMEWORK_ROOT_DIR}/src}"
 FRAMEWORK_BIN_DIR="${FRAMEWORK_BIN_DIR:-${FRAMEWORK_ROOT_DIR}/bin}"
 FRAMEWORK_VENDOR_DIR="${FRAMEWORK_VENDOR_DIR:-${FRAMEWORK_ROOT_DIR}/vendor}"
@@ -1158,7 +1221,7 @@ export REPOSITORY_URL="${REPOSITORY_URL:-https://github.com/fchastanet/bash-tool
 BASH_FRAMEWORK_THEME="${BASH_FRAMEWORK_THEME:-default}"
 BASH_FRAMEWORK_LOG_LEVEL="${BASH_FRAMEWORK_LOG_LEVEL:-0}"
 BASH_FRAMEWORK_DISPLAY_LEVEL="${BASH_FRAMEWORK_DISPLAY_LEVEL:-3}"
-BASH_FRAMEWORK_LOG_FILE="${BASH_FRAMEWORK_LOG_FILE:-${FRAMEWORK_ROOT_DIR}/logs/$(basename "$0").log}"
+BASH_FRAMEWORK_LOG_FILE="${BASH_FRAMEWORK_LOG_FILE:-${FRAMEWORK_ROOT_DIR}/logs/${0##*/}.log}"
 BASH_FRAMEWORK_LOG_FILE_MAX_ROTATION="${BASH_FRAMEWORK_LOG_FILE_MAX_ROTATION:-5}"
 EOF
 )"
@@ -1504,7 +1567,7 @@ mysql2pumlCommand() {
     Log::displayDebug "Command ${SCRIPT_NAME} - parse arguments: ${BASH_FRAMEWORK_ARGV[*]}"
     Log::displayDebug "Command ${SCRIPT_NAME} - parse filtered arguments: ${BASH_FRAMEWORK_ARGV_FILTERED[*]}"
   elif [[ "${options_parse_cmd}" = "help" ]]; then
-    echo -e "$(Array::wrap2 " " 80 0 "${__HELP_TITLE_COLOR}DESCRIPTION:${__RESET_COLOR}" "convert mysql dump sql schema to plantuml format")"
+    Array::wrap2 " " 80 0 "${__HELP_TITLE_COLOR}DESCRIPTION:${__RESET_COLOR}" "convert mysql dump sql schema to plantuml format"
     echo
 
     echo -e "$(Array::wrap2 " " 80 2 "${__HELP_TITLE_COLOR}USAGE:${__RESET_COLOR}" "${SCRIPT_NAME}" "[OPTIONS]" "[ARGUMENTS]")"

@@ -49,16 +49,6 @@ EOF
 
 # @require Linux::requireExecutedAsUser
 run() {
-
-  # check dependencies
-  Assert::commandExists mysql "sudo apt-get install -y mysql-client"
-  Assert::commandExists mysqlshow "sudo apt-get install -y mysql-client"
-  Assert::commandExists mysqldump "sudo apt-get install -y mysql-client"
-  Assert::commandExists pv "sudo apt-get install -y pv"
-  Assert::commandExists gawk "sudo apt-get install -y gawk"
-  Assert::commandExists awk "sudo apt-get install -y gawk"
-  Version::checkMinimal "gawk" "--version" "5.0.1"
-
   # create db instances
   declare -Agx dbFromInstance dbTargetDatabase
 

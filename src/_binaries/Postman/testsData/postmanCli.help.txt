@@ -1,6 +1,5 @@
 [1;37mDESCRIPTION:[0m
 Push/Pull postman collections of all the configured repositories
-
 [1;37mUSAGE:[0m postmanCli [OPTIONS] [ARGUMENTS]
 [1;37mUSAGE:[0m postmanCli [--postman-model|-m <String>]
   [--bash-framework-config <String>] [--config] [--verbose|-v] [-vv] [-vvv]

@@ -1,6 +1,5 @@
 [1;37mDESCRIPTION:[0m
 Import source db into target db using eventual table filter
-
 [1;37mUSAGE:[0m dbImport [OPTIONS] [ARGUMENTS]
 [1;37mUSAGE:[0m dbImport [--profile|-p <String>]
   [--tables <tablesSeparatedByComma>] [--from-dsn|-f <String>]

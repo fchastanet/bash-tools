@@ -1,0 +1,166 @@
+---
+$schema: https://raw.githubusercontent.com/streetsidesoftware/cspell/main/cspell.schema.json
+version: "0.2"
+language: en
+noConfigSearch: true
+caseSensitive: true
+useGitignore: true
+enableGlobDot: true
+ignorePaths:
+  - "**/testsData/**"
+  - package-lock.json
+  - "**/*/svg"
+  - .vscode
+  - ".cspell/**"
+  - .git/**
+  - "**/.git/**"
+  - ".history/**"
+  - "**/node_modules/**"
+  - "**/vscode-extension/**"
+  - "**/logs/**"
+  - "**/*.svg"
+  - megalinter-reports
+  - report
+  - .jscpd.json
+  - "*-megalinter_file_names_cspell.txt"
+  - "**/*megalinter_file_names_cspell.txt"
+  - .shellcheckrc
+  - "**/bin/**"
+  - "vendor/**"
+  - "**/backup/**"
+  - commit-msg.md
+  - ".mega-linter*.yml"
+  - ".env"
+  - "**/*.help.txt"
+  - "conf/dbScripts/**"
+  - "install"
+dictionaryDefinitions:
+  - name: myBash
+    path: ".cspell/bash.txt"
+    addWords: true
+  - name: loremIpsum
+    path: ".cspell/loremIpsum.txt"
+    addWords: true
+  - name: config
+    path: ".cspell/config.txt"
+    addWords: true
+  - name: mySoftwares
+    path: ".cspell/softwares.txt"
+    addWords: true
+  - name: readme
+    path: ".cspell/readme.txt"
+    addWords: true
+  - name: dirColors
+    path: ".cspell/dirColors.txt"
+    addWords: false
+  - name: plantUml
+    path: ".cspell/plantUml.txt"
+    addWords: false
+  - name: myAwk
+    path: ".cspell/myAwk.txt"
+    addWords: false
+  - name: postman
+    path: ".cspell/postman.txt"
+    addWords: false
+
+# https://github.com/streetsidesoftware/cspell/blob/main/packages/cspell/README.md#languagesettings
+languageSettings:
+  - languageId: dirColors
+    locale: "*"
+    dictionaries:
+      - dirColors
+
+  - languageId: shellscript
+    locale: "*"
+    dictionaries:
+      - bash
+      - myBash
+      - mySoftwares
+      - software
+
+  - languageId: markdown
+    locale: "*"
+    dictionaries:
+      - readme
+      - mySoftwares
+      - softwareTerms
+
+  - languageId: plantUml
+    locale: "*"
+    dictionaries:
+      - bash
+      - plantUml
+      - mySoftwares
+      - software
+
+# OVERRIDES
+overrides:
+  - filename:
+      - "**/*.{bats,tpl}"
+      - "**/*.env"
+      - "src/Array/wrap.sh"
+    languageId: shellscript
+    dictionaries:
+      - loremIpsum
+
+  - filename: "*.yml"
+    dictionaries:
+      - lintersConfig
+
+  - filename: "**/*.puml"
+    languageId: plantUml
+
+  - filename: "**/*.html"
+    dictionaries:
+      - mySoftwares
+      - software
+
+  - filename:
+      - "**/*.md"
+      - "LICENSE"
+    languageId: markdown
+
+  - filename: LICENSE
+    dictionaries:
+      - readme
+
+  - filename:
+      - .github/**
+      - .*
+      - "*.{yaml,yml}"
+    languageId: shellscript
+    dictionaries:
+      - config
+
+  - filename: "**/*.awk"
+    dictionaries:
+      - myAwk
+      - mySoftwares
+      - software
+
+  - filename:
+      - "conf/postmanCli/GithubAPI/*.json"
+      - "conf/postmanCli/MongoDbData/*.json"
+    dictionaries:
+      - postman
+      - mySoftwares
+      - software
+
+patterns:
+  - name: urls
+    pattern: "/https?://([^ \t\"'()]+)/g"
+  - name: packages
+    pattern: "/[-A-Za-z0-9.]+/[-A-Za-z0-9.]+/g"
+  - name: markdownToc
+    pattern: "\\]\\(#[^)]+\\)$"
+
+ignoreRegExpList:
+  - urls
+  - packages
+  - markdownToc
+
+enableFiletypes:
+  - shellscript
+  - dirColors
+  - markdown
+  - plantUml

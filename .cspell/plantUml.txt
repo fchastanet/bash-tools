@@ -1,3 +1,6 @@
-startuml
-skinparam
 endfunction
+endfunction
+enduml
+nullable
+skinparam
+startuml

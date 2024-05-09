@@ -4,38 +4,62 @@
 # FACADE
 # shellcheck disable=SC2034
 
-DOC_DIR="${BASH_TOOLS_ROOT_DIR}/pages"
 declare copyrightBeginYear="2020"
 
 .INCLUDE "$(dynamicTemplateDir _binaries/build/doc.options.tpl)"
 
-run() {
-  if [[ "${IN_BASH_DOCKER:-}" != "You're in docker" ]]; then
-    local -a dockerRunCmd=(
-      "/bash/bin/doc"
-      "${BASH_FRAMEWORK_ARGV_FILTERED[@]}"
-    )
-    # shellcheck disable=SC2034
-    local -a dockerArgvFiltered=(
-      -e ORIGINAL_DOC_DIR="${DOC_DIR}"
-    )
-    # shellcheck disable=SC2154
-    Docker::runBuildContainer \
-      "${optionVendor:-ubuntu}" \
-      "${optionBashVersion:-5.1}" \
-      "${optionBashBaseImage:-ubuntu:20.04}" \
-      "${optionSkipDockerBuild}" \
-      "${optionTraceVerbose}" \
-      "${optionContinuousIntegrationMode}" \
-      dockerRunCmd \
-      dockerArgvFiltered
+installRequirements() {
+  ShellDoc::installRequirementsIfNeeded
+}
 
-    return $?
+runContainer() {
+  local image="scrasnups/build:bash-tools-ubuntu-5.3"
+  local -a dockerRunCmd=(
+    "/bash/bin/doc"
+    "${BASH_FRAMEWORK_ARGV_FILTERED[@]}"
+  )
+
+  if ! docker inspect --type=image "${image}" &>/dev/null; then
+    docker pull "${image}"
+  fi
+  # run docker image
+  local -a localDockerRunArgs=(
+    --rm
+    -e KEEP_TEMP_FILES="${KEEP_TEMP_FILES:-0}"
+    -e BATS_FIX_TEST="${BATS_FIX_TEST:-0}"
+    -e ORIGINAL_DOC_DIR="${BASH_TOOLS_ROOT_DIR}/pages"
+    -e SKIP_REQUIREMENTS_CHECKS=1
+    --user "www-data:www-data"
+    -w /bash
+    -v "${BASH_TOOLS_ROOT_DIR}:/bash"
+    --entrypoint /usr/local/bin/bash
+  )
+
+  # shellcheck disable=SC2154
+  if [[ "${optionContinuousIntegrationMode}" = "0" ]]; then
+    localDockerRunArgs+=(
+      -v "/tmp:/tmp"
+      -it
+    )
+  fi
+  if [[ -d "${FRAMEWORK_ROOT_DIR}" ]]; then
+    localDockerRunArgs+=(
+      -v "$(cd "${FRAMEWORK_ROOT_DIR}" && pwd -P):/bash/vendor/bash-tools-framework"
+    )
   fi
 
-  #-----------------------------
-  # configure docker environment
-  #-----------------------------
+  # shellcheck disable=SC2154
+  if [[ "${optionTraceVerbose}" = "1" ]]; then
+    set -x
+  fi
+  docker run \
+    "${localDockerRunArgs[@]}" \
+    "${image}" \
+    "${dockerRunCmd[@]}"
+  set +x
+}
+
+configureContainer() {
   mkdir -p "${HOME}/.bash-tools"
 
   (
@@ -49,11 +73,11 @@ run() {
     chmod 755 /tmp/docker
   )
   export PATH=/tmp:${PATH}
+}
 
-  #-----------------------------
-  # doc generation
-  #-----------------------------
-
+generateDoc() {
+  local ROOT_DIR=/bash
+  local DOC_DIR="${ROOT_DIR}/pages"
   Log::displayInfo 'generate Commands.md'
   ((TOKEN_NOT_FOUND_COUNT = 0)) || true
   ShellDoc::generateMdFileFromTemplate \
@@ -61,7 +85,7 @@ run() {
     "${DOC_DIR}/Commands.md" \
     "${BASH_TOOLS_ROOT_DIR}/bin" \
     TOKEN_NOT_FOUND_COUNT \
-    '(test)$'
+    '(test|buildBinFiles)$'
 
   # inject plantuml diagram source code into command
   sed -E -i \
@@ -88,6 +112,24 @@ run() {
   fi
 
   Log::displayStatus "Doc generated in ${ORIGINAL_DOC_DIR} folder"
+}
+
+run() {
+  if [[ "${IN_BASH_DOCKER:-}" != "You're in docker" ]]; then
+    installRequirements
+    if [[ "${optionContinuousIntegrationMode}" = "1" ]]; then
+      chmod -R 777 pages
+    fi
+    runContainer
+    if [[ "${optionContinuousIntegrationMode}" = "1" ]]; then
+      # restore previous rights
+      find pages -type d -exec chmod 755 {} ';'
+      find pages -type f -exec chmod 644 {} ';'
+    fi
+  else
+    configureContainer
+    generateDoc
+  fi
 }
 
 if [[ "${BASH_FRAMEWORK_QUIET_MODE:-0}" = "1" ]]; then

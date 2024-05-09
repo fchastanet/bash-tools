@@ -1,11 +1,7 @@
 
 ${__HELP_TITLE}OPTIONS CONSTRAINTS:${__HELP_NORMAL}
 
-${__HELP_OPTION_COLOR}--version-arg${__HELP_NORMAL} parameter is needed if ${__HELP_OPTION_COLOR}--minimal-version${__HELP_NORMAL} argument is used and is different than default value.
-
 ${__HELP_OPTION_COLOR}--current-version${__HELP_NORMAL}|${__HELP_OPTION_COLOR}-c${__HELP_NORMAL} and ${__HELP_OPTION_COLOR}--version-arg${__HELP_NORMAL} are mutually exclusive, you cannot use both argument at the same time.
-
-${__HELP_OPTION_COLOR}--exact-version${__HELP_NORMAL}|${__HELP_OPTION_COLOR}-e${__HELP_NORMAL} and ${__HELP_OPTION_COLOR}--minimal-version${__HELP_NORMAL}|${__HELP_OPTION_COLOR}-m${__HELP_NORMAL} are mutually exclusive, you cannot use both argument at the same time.
 
 ${__HELP_TITLE}GITHUB TEMPLATE URLS EXAMPLES:${__HELP_NORMAL}
 
