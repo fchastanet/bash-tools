@@ -1,0 +1,26 @@
+extends:
+  - "${FRAMEWORK_ROOT_DIR}/src/_binaries/commandDefinitions/defaultCommand.yaml"
+  - "${FRAMEWORK_ROOT_DIR}/src/_binaries/commandDefinitions/frameworkConfig.yaml"
+
+vars:
+  SRC_FILE_PATH: src/_binaries/build/installRequirements/binary-installRequirements.yaml
+
+compilerConfig:
+  targetFile: "${BASH_TOOLS_ROOT_DIR}/bin/installRequirements"
+  relativeRootDirBasedOnTargetDir: ..
+binData:
+  commands:
+    default:
+      functionName: installRequirementsCommand
+      version: "1.0"
+      commandName: installRequirements
+      beforeParseCallbacks:
+        - beforeParseCallback
+      definitionFiles:
+        20: ${BASH_TOOLS_ROOT_DIR}/src/_binaries/build/installRequirements/installRequirements-options.sh
+      mainFile: ${BASH_TOOLS_ROOT_DIR}/src/_binaries/build/installRequirements/installRequirements-main.sh
+      help: Installs requirements.
+      longDescription: |
+        Installs requirements:
+
+        - fchastanet/bash-tools-framework
