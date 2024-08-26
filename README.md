@@ -36,6 +36,7 @@
 - [3. Development Environment](#3-development-environment)
   - [3.1. build dependencies](#31-build-dependencies)
   - [3.2. Precommit hook](#32-precommit-hook)
+  - [Compile binaries](#compile-binaries)
   - [3.3. UT](#33-ut)
   - [3.4. auto generated bash doc](#34-auto-generated-bash-doc)
   - [3.5. github page](#35-github-page)
@@ -148,6 +149,14 @@ You also have to execute the following command to enable it:
 
 ```bash
 pre-commit install --hook-type pre-commit --hook-type pre-push
+```
+
+### Compile binaries
+
+```bash
+export FRAMEWORK_ROOT_DIR=/home/wsl/fchastanet/bash-tools/vendor/bash-tools-framework
+export BASH_TOOLS_ROOT_DIR=/home/wsl/fchastanet/bash-tools
+go run ./cmd/bash-compiler $(find "${BASH_TOOLS_ROOT_DIR}/src/_binaries" -name 'binary-*.yaml' -print)
 ```
 
 ### 3.3. UT

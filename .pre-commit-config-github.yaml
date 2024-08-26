@@ -161,12 +161,10 @@ repos:
         exclude: /testsData/
 
   - repo: https://github.com/fchastanet/bash-tools-framework
-    rev: 4.0.0
+    rev: 5.0.0
     hooks:
       - id: fixShebangExecutionBit
       - id: awkLint
-      - id: buildShFiles
-      - id: buildShFilesGithubAction
       - id: shellcheckLint
       - id: shellcheckLintGithubAction
       - id: frameworkLint
@@ -205,3 +203,8 @@ repos:
         pass_filenames: false
         require_serial: true
         stages: [manual] # GITHUB
+
+  - repo: https://github.com/fchastanet/bash-compiler
+    rev: 0.2.9
+    hooks:
+      - id: buildBashBinaries
