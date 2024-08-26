@@ -1,0 +1,44 @@
+extends:
+  - "${FRAMEWORK_ROOT_DIR}/src/_binaries/commandDefinitions/defaultCommand.yaml"
+  - "${FRAMEWORK_ROOT_DIR}/src/_binaries/commandDefinitions/frameworkConfig.yaml"
+
+vars:
+  SRC_FILE_PATH: src/_binaries/Converters/mysql2puml/binary-mysql2puml.yaml
+
+compilerConfig:
+  targetFile: "${BASH_TOOLS_ROOT_DIR}/bin/mysql2puml"
+  relativeRootDirBasedOnTargetDir: ..
+binData:
+  commands:
+    default:
+      functionName: mysql2pumlCommand
+      version: "1.0"
+      commandName: mysql2puml
+      beforeParseCallbacks:
+        - beforeParseCallback
+      definitionFiles:
+        20: ${BASH_TOOLS_ROOT_DIR}/src/_binaries/Converters/mysql2puml/mysql2puml-options.sh
+      mainFile: ${BASH_TOOLS_ROOT_DIR}/src/_binaries/Converters/mysql2puml/mysql2puml-main.sh
+      help: Converts mysql dump sql schema to plantuml format.
+      longDescription: longDescriptionFunction
+      options:
+        - alts:
+            - "--skin"
+          group: OptionsGroup
+          type: String
+          defaultValue: default
+          help: Header configuration of the plantuml file.
+          helpValueName: <Skin>
+          callbacks:
+            - optionSkinCallback
+          variableName: optionSkin
+
+      args:
+        - type: String
+          min: 0
+          max: 1
+          help: Sql filepath to parse (read from stdin if not provided).
+          callbacks:
+            - optionSkinCallback
+          name: sqlFile
+          variableName: inputSqlFile
