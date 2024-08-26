@@ -1,0 +1,34 @@
+extends:
+  - "${FRAMEWORK_ROOT_DIR}/src/_binaries/commandDefinitions/defaultCommand.yaml"
+  - "${FRAMEWORK_ROOT_DIR}/src/_binaries/commandDefinitions/frameworkConfig.yaml"
+
+vars:
+  SRC_FILE_PATH: src/_binaries/build/install/binary-install.yaml
+
+compilerConfig:
+  targetFile: "${BASH_TOOLS_ROOT_DIR}/bin/install"
+  relativeRootDirBasedOnTargetDir: ..
+binData:
+  commands:
+    default:
+      functionName: installCommand
+      version: "1.1"
+      commandName: install
+      beforeParseCallbacks:
+        - beforeParseCallback
+      definitionFiles:
+        20: ${BASH_TOOLS_ROOT_DIR}/src/_binaries/build/install/install-options.sh
+      mainFile: ${BASH_TOOLS_ROOT_DIR}/src/_binaries/build/install/install-main.sh
+      help: Installs bash-tools.
+      longDescription: |
+        Installs dependent softwares and configuration needed to use bash-tools:
+        - GNU parallel
+        - Installs or updates default configuration files
+          If ~/.bash-tools directory already exists, a backup will be done before
+      options:
+        - alts:
+            - "--skip-backup"
+          group: OptionsGroup
+          type: Boolean
+          help: skip backup of ~/bash-tools.
+          variableName: optionSkipBackup
