@@ -1,13 +1,12 @@
 #!/usr/bin/env bash
 ###############################################################################
-# GENERATED FACADE FROM https://github.com/fchastanet/bash-tools/tree/master/src/_binaries/Converters/mysql2puml.sh
+# GENERATED FROM https://github.com/fchastanet/bash-tools-framework/tree/master/src/_binaries/Converters/mysql2puml/binary-mysql2puml.yaml
 # DO NOT EDIT IT
 # @generated
 ###############################################################################
 # shellcheck disable=SC2288,SC2034
-# BIN_FILE=${BASH_TOOLS_ROOT_DIR}/bin/mysql2puml
-# VAR_RELATIVE_FRAMEWORK_DIR_TO_CURRENT_DIR=..
-# FACADE
+
+
 
 # ensure that no user aliases could interfere with
 # commands used in this script
@@ -62,13 +61,6 @@ interruptManagement() {
   kill -s INT "$$"
 }
 trap interruptManagement INT
-SCRIPT_NAME=${0##*/}
-REAL_SCRIPT_FILE="$(readlink -e "$(realpath "${BASH_SOURCE[0]}")")"
-if [[ -n "${EMBED_CURRENT_DIR}" ]]; then
-  CURRENT_DIR="${EMBED_CURRENT_DIR}"
-else
-  CURRENT_DIR="${REAL_SCRIPT_FILE%/*}"
-fi
 
 ################################################
 # Temp dir management
@@ -102,6 +94,20 @@ cleanOnExit() {
 }
 trap cleanOnExit EXIT HUP QUIT ABRT TERM
 
+
+SCRIPT_NAME=${0##*/}
+REAL_SCRIPT_FILE="$(readlink -e "$(realpath "${BASH_SOURCE[0]}")")"
+if [[ -n "${EMBED_CURRENT_DIR}" ]]; then
+  CURRENT_DIR="${EMBED_CURRENT_DIR}"
+else
+  CURRENT_DIR="${REAL_SCRIPT_FILE%/*}"
+fi
+FRAMEWORK_ROOT_DIR="$(cd "${CURRENT_DIR}/.." && pwd -P)"
+FRAMEWORK_SRC_DIR="${FRAMEWORK_ROOT_DIR}/src"
+FRAMEWORK_BIN_DIR="${FRAMEWORK_ROOT_DIR}/bin"
+FRAMEWORK_VENDOR_DIR="${FRAMEWORK_ROOT_DIR}/vendor"
+FRAMEWORK_VENDOR_BIN_DIR="${FRAMEWORK_ROOT_DIR}/vendor/bin"
+
 # @description Log namespace provides 2 kind of functions
 # - Log::display* allows to display given message with
 #   given display level
@@ -132,247 +138,23 @@ export __VERBOSE_LEVEL_DEBUG=2
 # @description verbose level info
 export __VERBOSE_LEVEL_TRACE=3
 
-# @description Display message using info color (bg light blue/fg white)
-# @arg $1 message:String the message to display
-# @env DISPLAY_DURATION int (default 0) if 1 display elapsed time information between 2 info logs
-# @env LOG_CONTEXT String allows to contextualize the log
-Log::displayInfo() {
-  local type="${2:-INFO}"
-  if ((BASH_FRAMEWORK_DISPLAY_LEVEL >= __LEVEL_INFO)); then
-    Log::computeDuration
-    echo -e "${__INFO_COLOR}${type}    - ${LOG_CONTEXT:-}${LOG_LAST_DURATION_STR:-}${1}${__RESET_COLOR}" >&2
-  fi
-  Log::logInfo "$1" "${type}"
-}
 
-# @description Display message using debug color (gray)
-# @arg $1 message:String the message to display
-# @env DISPLAY_DURATION int (default 0) if 1 display elapsed time information between 2 info logs
-# @env LOG_CONTEXT String allows to contextualize the log
-Log::displayDebug() {
-  if ((BASH_FRAMEWORK_DISPLAY_LEVEL >= __LEVEL_DEBUG)); then
-    Log::computeDuration
-    echo -e "${__DEBUG_COLOR}DEBUG   - ${LOG_CONTEXT:-}${LOG_LAST_DURATION_STR:-}${1}${__RESET_COLOR}" >&2
-  fi
-  Log::logDebug "$1"
-}
-
-# @description Display message using warning color (yellow)
-# @arg $1 message:String the message to display
-# @env DISPLAY_DURATION int (default 0) if 1 display elapsed time information between 2 info logs
-# @env LOG_CONTEXT String allows to contextualize the log
-Log::displayWarning() {
-  if ((BASH_FRAMEWORK_DISPLAY_LEVEL >= __LEVEL_WARNING)); then
-    Log::computeDuration
-    echo -e "${__WARNING_COLOR}WARN    - ${LOG_CONTEXT:-}${LOG_LAST_DURATION_STR:-}${1}${__RESET_COLOR}" >&2
-  fi
-  Log::logWarning "$1"
-}
-
-# @description Display message using error color (red)
-# @arg $1 message:String the message to display
-# @env DISPLAY_DURATION int (default 0) if 1 display elapsed time information between 2 info logs
-# @env LOG_CONTEXT String allows to contextualize the log
-Log::displayError() {
-  if ((BASH_FRAMEWORK_DISPLAY_LEVEL >= __LEVEL_ERROR)); then
-    Log::computeDuration
-    echo -e "${__ERROR_COLOR}ERROR   - ${LOG_CONTEXT:-}${LOG_LAST_DURATION_STR:-}${1}${__RESET_COLOR}" >&2
-  fi
-  Log::logError "$1"
-}
-
-# @description load colors theme constants
-# @warning if tty not opened, noColor theme will be chosen
-# @arg $1 theme:String the theme to use (default, noColor)
-# @arg $@ args:String[]
-# @set __ERROR_COLOR String indicate error status
-# @set __INFO_COLOR String indicate info status
-# @set __SUCCESS_COLOR String indicate success status
-# @set __WARNING_COLOR String indicate warning status
-# @set __SKIPPED_COLOR String indicate skipped status
-# @set __DEBUG_COLOR String indicate debug status
-# @set __HELP_COLOR String indicate help status
-# @set __TEST_COLOR String not used
-# @set __TEST_ERROR_COLOR String not used
-# @set __HELP_TITLE_COLOR String used to display help title in help strings
-# @set __HELP_OPTION_COLOR String used to display highlight options in help strings
+# @description check if an element is contained in an array
 #
-# @set __RESET_COLOR String reset default color
-#
-# @set __HELP_EXAMPLE String to remove
-# @set __HELP_TITLE String to remove
-# @set __HELP_NORMAL String to remove
-# shellcheck disable=SC2034
-UI::theme() {
-  local theme="${1-default}"
-  if [[ ! "${theme}" =~ -force$ ]] && ! Assert::tty; then
-    theme="noColor"
-  fi
-  case "${theme}" in
-    default | default-force)
-      theme="default"
-      ;;
-    noColor) ;;
-    *)
-      Log::fatal "invalid theme provided"
-      ;;
-  esac
-  if [[ "${theme}" = "default" ]]; then
-    BASH_FRAMEWORK_THEME="default"
-    # check colors applicable https://misc.flogisoft.com/bash/tip_colors_and_formatting
-    __ERROR_COLOR='\e[31m'         # Red
-    __INFO_COLOR='\e[44m'          # white on lightBlue
-    __SUCCESS_COLOR='\e[32m'       # Green
-    __WARNING_COLOR='\e[33m'       # Yellow
-    __SKIPPED_COLOR='\e[33m'       # Yellow
-    __DEBUG_COLOR='\e[37m'         # Gray
-    __HELP_COLOR='\e[7;49;33m'     # Black on Gold
-    __TEST_COLOR='\e[100m'         # Light magenta
-    __TEST_ERROR_COLOR='\e[41m'    # white on red
-    __HELP_TITLE_COLOR="\e[1;37m"  # Bold
-    __HELP_OPTION_COLOR="\e[1;34m" # Blue
-    # Internal: reset color
-    __RESET_COLOR='\e[0m' # Reset Color
-    # shellcheck disable=SC2155,SC2034
-    __HELP_EXAMPLE="$(echo -e "\e[2;97m")"
-    # shellcheck disable=SC2155,SC2034
-    __HELP_TITLE="$(echo -e "\e[1;37m")"
-    # shellcheck disable=SC2155,SC2034
-    __HELP_NORMAL="$(echo -e "\033[0m")"
-  else
-    BASH_FRAMEWORK_THEME="noColor"
-    # check colors applicable https://misc.flogisoft.com/bash/tip_colors_and_formatting
-    __ERROR_COLOR=''
-    __INFO_COLOR=''
-    __SUCCESS_COLOR=''
-    __WARNING_COLOR=''
-    __SKIPPED_COLOR=''
-    __DEBUG_COLOR=''
-    __HELP_COLOR=''
-    __TEST_COLOR=''
-    __TEST_ERROR_COLOR=''
-    __HELP_TITLE_COLOR=''
-    __HELP_OPTION_COLOR=''
-    # Internal: reset color
-    __RESET_COLOR=''
-    __HELP_EXAMPLE=''
-    __HELP_TITLE=''
-    __HELP_NORMAL=''
-  fi
-}
-
-# @description draw a line with the character passed in parameter repeated depending on terminal width
-# @arg $1 character:String character to use as separator (default value #)
-UI::drawLine() {
-  local character="${1:-#}"
-  local -i width=${COLUMNS:-0}
-  if ((width == 0)) && [[ -t 1 ]]; then
-    width=$(tput cols)
-  fi
-  if ((width == 0)); then
-    width=80
-  fi
-  printf -- "${character}%.0s" $(seq "${COLUMNS:-$([[ -t 1 ]] && tput cols || echo '80')}")
-  echo
-}
-
-# @description Display message using error color (red) and exit immediately with error status 1
-# @arg $1 message:String the message to display
-# @env DISPLAY_DURATION int (default 0) if 1 display elapsed time information between 2 info logs
-# @env LOG_CONTEXT String allows to contextualize the log
-Log::fatal() {
-  Log::computeDuration
-  echo -e "${__ERROR_COLOR}FATAL   - ${LOG_CONTEXT:-}${LOG_LAST_DURATION_STR:-}${1}${__RESET_COLOR}" >&2
-  Log::logFatal "$1"
-  exit 1
-}
-
-# @description create a temp file using default TMPDIR variable
-# initialized in _includes/_commonHeader.sh
-# @env TMPDIR String (default value /tmp)
-# @arg $1 templateName:String template name to use(optional)
-Framework::createTempFile() {
-  mktemp -p "${TMPDIR:-/tmp}" -t "${1:-}.XXXXXXXXXXXX"
-}
-
-# @description ensure env files are loaded
-# @arg $@ list of default files to load at the end
-# @exitcode 1 if one of env files fails to load
-# @stderr diagnostics information is displayed
-# shellcheck disable=SC2120
-Env::requireLoad() {
-  local -a defaultFiles=("$@")
-  # get list of possible config files
-  local -a configFiles=()
-  if [[ -n "${BASH_FRAMEWORK_ENV_FILES[0]+1}" ]]; then
-    # BASH_FRAMEWORK_ENV_FILES is an array
-    configFiles+=("${BASH_FRAMEWORK_ENV_FILES[@]}")
-  fi
-  local localFrameworkConfigFile
-  localFrameworkConfigFile="$(pwd)/.framework-config"
-  if [[ -f "${localFrameworkConfigFile}" ]]; then
-    configFiles+=("${localFrameworkConfigFile}")
-  fi
-  if [[ -f "${FRAMEWORK_ROOT_DIR}/.framework-config" ]]; then
-    configFiles+=("${FRAMEWORK_ROOT_DIR}/.framework-config")
-  fi
-  configFiles+=("${optionEnvFiles[@]}")
-  configFiles+=("${defaultFiles[@]}")
-
-  for file in "${configFiles[@]}"; do
-    # shellcheck source=/.framework-config
-    CURRENT_LOADED_ENV_FILE="${file}" source "${file}" || {
-      Log::displayError "while loading config file: ${file}"
-      return 1
-    }
+# @arg $1 needle:String
+# @arg $@ array:String[]
+# @exitcode 0 if found
+# @exitcode 1 otherwise
+# @example
+#   Array::contains "${libPath}" "${__BASH_FRAMEWORK_IMPORTED_FILES[@]}"
+Array::contains() {
+  local element
+  for element in "${@:2}"; do
+    [[ "${element}" = "$1" ]] && return 0
   done
+  return 1
 }
 
-# @description activate or not Log::display* and Log::log* functions
-# based on BASH_FRAMEWORK_DISPLAY_LEVEL and BASH_FRAMEWORK_LOG_LEVEL
-# environment variables loaded by Env::requireLoad
-# try to create log file and rotate it if necessary
-# @noargs
-# @set BASH_FRAMEWORK_LOG_LEVEL int to OFF level if BASH_FRAMEWORK_LOG_FILE is empty or not writable
-# @env BASH_FRAMEWORK_DISPLAY_LEVEL int
-# @env BASH_FRAMEWORK_LOG_LEVEL int
-# @env BASH_FRAMEWORK_LOG_FILE String
-# @env BASH_FRAMEWORK_LOG_FILE_MAX_ROTATION int do log rotation if > 0
-# @exitcode 0 always successful
-# @stderr diagnostics information about log file is displayed
-# @require Env::requireLoad
-# @require UI::requireTheme
-Log::requireLoad() {
-  if [[ -z "${BASH_FRAMEWORK_LOG_FILE:-}" ]]; then
-    BASH_FRAMEWORK_LOG_LEVEL=${__LEVEL_OFF}
-    export BASH_FRAMEWORK_LOG_LEVEL
-  fi
-
-  if ((BASH_FRAMEWORK_LOG_LEVEL > __LEVEL_OFF)); then
-    if [[ ! -f "${BASH_FRAMEWORK_LOG_FILE}" ]]; then
-      if [[ ! -d "${BASH_FRAMEWORK_LOG_FILE%/*}" ]]; then
-        if ! mkdir -p "${BASH_FRAMEWORK_LOG_FILE%/*}" 2>/dev/null; then
-          BASH_FRAMEWORK_LOG_LEVEL=${__LEVEL_OFF}
-          echo -e "${__ERROR_COLOR}ERROR   - directory ${BASH_FRAMEWORK_LOG_FILE%/*} is not writable${__RESET_COLOR}" >&2
-        fi
-      elif ! touch --no-create "${BASH_FRAMEWORK_LOG_FILE}" 2>/dev/null; then
-        BASH_FRAMEWORK_LOG_LEVEL=${__LEVEL_OFF}
-        echo -e "${__ERROR_COLOR}ERROR   - File ${BASH_FRAMEWORK_LOG_FILE} is not writable${__RESET_COLOR}" >&2
-      fi
-    elif [[ ! -w "${BASH_FRAMEWORK_LOG_FILE}" ]]; then
-      BASH_FRAMEWORK_LOG_LEVEL=${__LEVEL_OFF}
-      echo -e "${__ERROR_COLOR}ERROR   - File ${BASH_FRAMEWORK_LOG_FILE} is not writable${__RESET_COLOR}" >&2
-    fi
-  fi
-
-  if ((BASH_FRAMEWORK_LOG_LEVEL > __LEVEL_OFF)); then
-    # will always be created even if not in info level
-    Log::logMessage "INFO" "Logging to file ${BASH_FRAMEWORK_LOG_FILE} - Log level ${BASH_FRAMEWORK_LOG_LEVEL}"
-    if ((BASH_FRAMEWORK_LOG_FILE_MAX_ROTATION > 0)); then
-      Log::rotate "${BASH_FRAMEWORK_LOG_FILE}" "${BASH_FRAMEWORK_LOG_FILE_MAX_ROTATION}"
-    fi
-  fi
-}
 
 # @description concatenate each element of an array with a separator
 # but wrapping text when line length is more than provided argument
@@ -502,51 +284,75 @@ Array::wrap2() {
   ) | sed -E -e 's/[[:blank:]]+$//'
 }
 
-# @description list the conf files list available in bash-tools/conf/<conf> folder
-# and those overridden in ${HOME}/.bash-tools/<conf> folder
-#
-# @arg $1 confFolder:String the directory name (not the path) to list
-# @arg $2 extension:String the extension (.sh by default)
-# @arg $3 indentStr:String the indentation ('       - ' by default) can be any string compatible with sed not containing any /
-#
-# @stdout list of files without extension/directory
-# @example text
-#       - default.local
-#       - default.remote
-#       - localhost-root
-Conf::getMergedList() {
-  local confFolder="$1"
-  local extension="${2-sh}"
-  local indentStr="${3-       - }"
 
-  local DEFAULT_CONF_DIR="${FRAMEWORK_ROOT_DIR}/conf/${confFolder}"
-  local HOME_CONF_DIR="${HOME}/.bash-tools/${confFolder}"
+# @description check if command specified exists or return 1
+# with error and message if not
+#
+# @arg $1 commandName:String on which existence must be checked
+# @arg $2 helpIfNotExists:String a help command to display if the command does not exist
+#
+# @exitcode 1 if the command specified does not exist
+# @stderr diagnostic information + help if second argument is provided
+Assert::commandExists() {
+  local commandName="$1"
+  local helpIfNotExists="$2"
 
-  (
-    if [[ -d "${DEFAULT_CONF_DIR}" ]]; then
-      Conf::list "${DEFAULT_CONF_DIR}" "" "${extension}" "-type f" "${indentStr}"
+  "${BASH_FRAMEWORK_COMMAND:-command}" -v "${commandName}" >/dev/null 2>/dev/null || {
+    Log::displayError "${commandName} is not installed, please install it"
+    if [[ -n "${helpIfNotExists}" ]]; then
+      Log::displayInfo "${helpIfNotExists}"
     fi
-    if [[ -d "${HOME_CONF_DIR}" ]]; then
-      Conf::list "${HOME_CONF_DIR}" "" "${extension}" "-type f" "${indentStr}"
-    fi
-  ) | sort | uniq
+    return 1
+  }
+  return 0
 }
 
-# @description check if an element is contained in an array
-#
-# @arg $1 needle:String
-# @arg $@ array:String[]
-# @exitcode 0 if found
-# @exitcode 1 otherwise
-# @example
-#   Array::contains "${libPath}" "${__BASH_FRAMEWORK_IMPORTED_FILES[@]}"
-Array::contains() {
-  local element
-  for element in "${@:2}"; do
-    [[ "${element}" = "$1" ]] && return 0
-  done
-  return 1
+
+# @description check if tty (interactive mode) is active
+# @noargs
+# @exitcode 1 if tty not active
+# @env NON_INTERACTIVE if 1 consider as not interactive even if environment is interactive
+# @env INTERACTIVE if 1 consider as interactive even if environment is not interactive
+Assert::tty() {
+  if [[ "${NON_INTERACTIVE:-0}" = "1" ]]; then
+    return 1
+  fi
+  if [[ "${INTERACTIVE:-0}" = "1" ]]; then
+    return 0
+  fi
+  tty -s
 }
+
+
+# @description convert base64 encoded back to target file
+# if target file is executable prepend dir of target
+# file to PATH to make binary available everywhere
+# it is advised to include in the path of the target file
+# the md5sum of the binFile
+#
+# @arg $1 targetFile:String the file to write
+# @arg $2 binFileBase64:String the base64 encoded file
+# @arg $3 fileMode:String the chmod to set on the file
+# @set PATH String prepend target embedded file binary directory to PATH variable if binary executable
+Compiler::Embed::extractFileFromBase64() {
+  local targetFile="$1"
+  local binFileBase64="$2"
+  local fileMode="${3:-+x}"
+  local targetDir="${targetFile%/*}"
+
+  if [[ ! -f "${targetFile}" ]]; then
+    if [[ ! -d "${targetDir}" ]]; then
+      mkdir -p "${targetDir}"
+    fi
+    base64 -d >"${targetFile}" <<<"${binFileBase64}"
+    chmod "${fileMode}" "${targetFile}"
+  fi
+
+  if [[ -x "${targetFile}" ]]; then
+    Env::pathPrepend "${targetDir}"
+  fi
+}
+
 
 # @description get absolute conf file from specified conf folder deduced using these rules
 #   * from absolute file (ignores <confFolder> and <extension>)
@@ -609,6 +415,141 @@ Conf::getAbsoluteFile() {
   return 1
 }
 
+
+# @description list the conf files list available in bash-tools/conf/<conf> folder
+# and those overridden in ${HOME}/.bash-tools/<conf> folder
+#
+# @arg $1 confFolder:String the directory name (not the path) to list
+# @arg $2 extension:String the extension (.sh by default)
+# @arg $3 indentStr:String the indentation ('       - ' by default) can be any string compatible with sed not containing any /
+#
+# @stdout list of files without extension/directory
+# @example text
+#       - default.local
+#       - default.remote
+#       - localhost-root
+Conf::getMergedList() {
+  local confFolder="$1"
+  local extension="${2-sh}"
+  local indentStr="${3-       - }"
+
+  local DEFAULT_CONF_DIR="${FRAMEWORK_ROOT_DIR}/conf/${confFolder}"
+  local HOME_CONF_DIR="${HOME}/.bash-tools/${confFolder}"
+
+  (
+    if [[ -d "${DEFAULT_CONF_DIR}" ]]; then
+      Conf::list "${DEFAULT_CONF_DIR}" "" "${extension}" "-type f" "${indentStr}"
+    fi
+    if [[ -d "${HOME_CONF_DIR}" ]]; then
+      Conf::list "${HOME_CONF_DIR}" "" "${extension}" "-type f" "${indentStr}"
+    fi
+  ) | sort | uniq
+}
+
+
+# @description list files of dir with given extension and display it as a list one by line
+#
+# @arg $1 dir:String the directory to list
+# @arg $2 prefix:String the profile file prefix (default: "")
+# @arg $3 ext:String the extension
+# @arg $4 findOptions:String find options, eg: -type d (Default value: '-type f')
+# @arg $5 indentStr:String the indentation can be any string compatible with sed not containing any / (Default value: '       - ')
+# @stdout list of files without extension/directory
+# @example text
+#       - default.local
+#       - default.remote
+#       - localhost-root
+# @exitcode 1 if directory does not exists
+Conf::list() {
+  local dir="$1"
+  local prefix="${2:-}"
+  local ext="${3}"
+  local findOptions="${4--type f}"
+  local indentStr="${5-       - }"
+
+  if [[ ! -d "${dir}" ]]; then
+    Log::displayError "Directory ${dir} does not exist"
+  fi
+  if [[ -n "${ext}" && "${ext:0:1}" != "." ]]; then
+    ext=".${ext}"
+  fi
+  (
+    # shellcheck disable=SC2086
+    cd "${dir}" &&
+      find . -maxdepth 1 ${findOptions} -name "${prefix}*${ext}" |
+      sed -E "s#^\./${prefix}##g" |
+        sed -E "s#${ext}\$##g" | sort | sed -E "s#^#${indentStr}#"
+  )
+}
+
+
+# @description prepend directories to the PATH environment variable
+# @arg $@ args:String[] list of directories to prepend
+# @set PATH update PATH with the directories prepended
+Env::pathPrepend() {
+  local arg
+  for arg in "$@"; do
+    if [[ -d "${arg}" && ":${PATH}:" != *":${arg}:"* ]]; then
+      PATH="$(realpath "${arg}"):${PATH}"
+    fi
+  done
+}
+
+
+# @description ensure env files are loaded
+# @arg $@ list of default files to load at the end
+# @exitcode 1 if one of env files fails to load
+# @stderr diagnostics information is displayed
+# shellcheck disable=SC2120
+Env::requireLoad() {
+  REQUIRE_FUNCTION_ENV_REQUIRE_LOAD_LOADED=1
+
+  local -a defaultFiles=("$@")
+  # get list of possible config files
+  local -a configFiles=()
+  if [[ -n "${BASH_FRAMEWORK_ENV_FILES[0]+1}" ]]; then
+    # BASH_FRAMEWORK_ENV_FILES is an array
+    configFiles+=("${BASH_FRAMEWORK_ENV_FILES[@]}")
+  fi
+  local localFrameworkConfigFile
+  localFrameworkConfigFile="$(pwd)/.framework-config"
+  if [[ -f "${localFrameworkConfigFile}" ]]; then
+    configFiles+=("${localFrameworkConfigFile}")
+  fi
+  if [[ -f "${FRAMEWORK_ROOT_DIR}/.framework-config" ]]; then
+    configFiles+=("${FRAMEWORK_ROOT_DIR}/.framework-config")
+  fi
+  configFiles+=("${optionEnvFiles[@]}")
+  configFiles+=("${defaultFiles[@]}")
+
+  for file in "${configFiles[@]}"; do
+    # shellcheck source=/.framework-config
+    CURRENT_LOADED_ENV_FILE="${file}" source "${file}" || {
+      Log::displayError "while loading config file: ${file}"
+      return 1
+    }
+  done
+}
+
+
+# @description concatenate 2 paths and ensure the path is correct using realpath -m
+# @arg $1 basePath:String
+# @arg $2 subPath:String
+File::concatenatePath() {
+
+  if [[ "${REQUIRE_FUNCTION_LINUX_REQUIRE_REALPATH_COMMAND_LOADED:-0}" != 1 ]]; then
+    echo >&2 "Requirement Linux::requireRealpathCommand has not been loaded"
+    exit 1
+  fi
+
+  local basePath="$1"
+  local subPath="$2"
+  local fullPath="${basePath:+${basePath}/}${subPath}"
+
+  realpath -m "${fullPath}" 2>/dev/null
+}
+
+
 # @description remove all empty lines
 # - at the beginning of the file before non empty line
 # - at the end of the file after last non empty line
@@ -625,114 +566,32 @@ Filters::trimEmptyLines() {
   ' "$@"
 }
 
-bashToolsDefaultConfigTemplate="${bashToolsDefaultConfigTemplate:-$(
-  cat <<'EOF'
-# shellcheck disable=SC2034
 
-# Default settings
-# you can override these settings by creating ${HOME}/.bash-tools/.env file
-
-###
-### DISPLAY Level
-### minimum level of the messages that will be displayed on screen
-###
-### 0: NO LOG
-### 1: ERROR
-### 2: WARNING
-### 3: INFO
-### 4: DEBUG
-###
-BASH_FRAMEWORK_DISPLAY_LEVEL=${BASH_FRAMEWORK_DISPLAY_LEVEL:-3}
-
-###
-### DISPLAY duration
-### 0: no duration is displayed on the messages
-### 1: duration between previous message and current is displayed
-### with the message
-###
-DISPLAY_DURATION=${DISPLAY_DURATION:0}
-
-###
-### Log to file
-###
-### all log messages will be redirected to log file specified
-### this same path will be used inside and outside of the container
-###
-BASH_FRAMEWORK_LOG_FILE=${BASH_FRAMEWORK_LOG_FILE:-${FRAMEWORK_ROOT_DIR}/logs/bash.log}
-
-###
-### LOG Level
-### minimum level of the messages that will be logged into LOG_FILE
-###
-### 0: NO LOG
-### 1: ERROR
-### 2: WARNING
-### 3: INFO
-### 4: DEBUG
-###
-BASH_FRAMEWORK_LOG_LEVEL=${BASH_FRAMEWORK_LOG_LEVEL:-0}
-
-# absolute directory containing db import sql dumps
-DB_IMPORT_DUMP_DIR=${DB_IMPORT_DUMP_DIR:-${HOME}/.bash-tools/dbImportDumps}
-
-# garbage collect all files for which modification is greater than eg: 30 days (+30)
-# each time an existing file is used by dbImport/dbImportTable
-# the file modification time is set to now
-DB_IMPORT_GARBAGE_COLLECT_DAYS=${DB_IMPORT_GARBAGE_COLLECT_DAYS:-+30}
-
-# absolute directory containing dbScripts used by dbScriptAllDatabases
-SCRIPTS_FOLDER=${SCRIPTS_FOLDER:-${HOME}/.bash-tools/conf/dbScripts}
-
-# -----------------------------------------------------
-# AWS Parameters
-# -----------------------------------------------------
-S3_BASE_URL=${S3_BASE_URL:-}
-
-# -----------------------------------------------------
-# Postman Parameters
-# -----------------------------------------------------
-POSTMAN_API_KEY=
-EOF
-)}"
-
-# @description loads ~/.bash-tools/.env if available
-# if not creates it from a default template
-# else check if new options need to be added
-BashTools::Conf::requireLoad() {
-  local envFile="${HOME}/.bash-tools/.env"
-  if [[ ! -f "${envFile}" ]]; then
-    mkdir -p "${HOME}/.bash-tools"
-    (
-      echo "#!/usr/bin/env bash"
-      echo "${bashToolsDefaultConfigTemplate}"
-    ) >"${envFile}"
-    Log::displayInfo "Configuration file '${envFile}' created"
-  else
-    if ! grep -q '^POSTMAN_API_KEY=' "${envFile}"; then
-      (
-        echo '# -----------------------------------------------------'
-        echo '# Postman Parameters'
-        echo '# -----------------------------------------------------'
-        echo 'POSTMAN_API_KEY='
-      ) >>"${envFile}"
-    fi
-  fi
-  # shellcheck source=/conf/.env
-  source "${envFile}" || {
-    Log::displayError "impossible to load '${envFile}'"
-    exit 1
-  }
+# @description create a temp file using default TMPDIR variable
+# @env TMPDIR String (default value /tmp)
+# @arg $1 templateName:String template name to use(optional)
+Framework::createTempFile() {
+  mktemp -p "${TMPDIR:-/tmp}" -t "${1:-}.XXXXXXXXXXXX"
 }
 
-# @description ensure COMMAND_BIN_DIR env var is set
-# and PATH correctly prepared
-# @noargs
-# @set COMMAND_BIN_DIR string the directory where to find this command
-# @set PATH string add directory where to find this command binary
-Compiler::Facade::requireCommandBinDir() {
-  COMMAND_BIN_DIR="${CURRENT_DIR}"
-  Env::pathPrepend "${COMMAND_BIN_DIR}"
+
+# @description ensure command realpath is available
+# @exitcode 1 if realpath command not available
+# @stderr diagnostics information is displayed
+Linux::requireRealpathCommand() {
+  REQUIRE_FUNCTION_LINUX_REQUIRE_REALPATH_COMMAND_LOADED=1
+
+  Assert::commandExists realpath
 }
+
+
+# @description ensure command tar is available
+# @exitcode 1 if tar command not available
+# @stderr diagnostics information is displayed
+Linux::requireTarCommand() {
+  Assert::commandExists tar
+}
+
 
 declare -g FIRST_LOG_DATE LOG_LAST_LOG_DATE LOG_LAST_LOG_DATE_INIT LOG_LAST_DURATION_STR
 FIRST_LOG_DATE="${EPOCHREALTIME/[^0-9]/}"
@@ -772,13 +631,71 @@ Log::computeDuration() {
   fi
 }
 
-# @description log message to file
+
+# @description Display message using debug color (gray)
 # @arg $1 message:String the message to display
-Log::logInfo() {
-  if ((BASH_FRAMEWORK_LOG_LEVEL >= __LEVEL_INFO)); then
-    Log::logMessage "${2:-INFO}" "$1"
+# @env DISPLAY_DURATION int (default 0) if 1 display elapsed time information between 2 info logs
+# @env LOG_CONTEXT String allows to contextualize the log
+Log::displayDebug() {
+  if ((BASH_FRAMEWORK_DISPLAY_LEVEL >= __LEVEL_DEBUG)); then
+    Log::computeDuration
+    echo -e "${__DEBUG_COLOR}DEBUG   - ${LOG_CONTEXT:-}${LOG_LAST_DURATION_STR:-}${1}${__RESET_COLOR}" >&2
   fi
+  Log::logDebug "$1"
 }
+
+
+# @description Display message using error color (red)
+# @arg $1 message:String the message to display
+# @env DISPLAY_DURATION int (default 0) if 1 display elapsed time information between 2 info logs
+# @env LOG_CONTEXT String allows to contextualize the log
+Log::displayError() {
+  if ((BASH_FRAMEWORK_DISPLAY_LEVEL >= __LEVEL_ERROR)); then
+    Log::computeDuration
+    echo -e "${__ERROR_COLOR}ERROR   - ${LOG_CONTEXT:-}${LOG_LAST_DURATION_STR:-}${1}${__RESET_COLOR}" >&2
+  fi
+  Log::logError "$1"
+}
+
+
+# @description Display message using info color (bg light blue/fg white)
+# @arg $1 message:String the message to display
+# @env DISPLAY_DURATION int (default 0) if 1 display elapsed time information between 2 info logs
+# @env LOG_CONTEXT String allows to contextualize the log
+Log::displayInfo() {
+  local type="${2:-INFO}"
+  if ((BASH_FRAMEWORK_DISPLAY_LEVEL >= __LEVEL_INFO)); then
+    Log::computeDuration
+    echo -e "${__INFO_COLOR}${type}    - ${LOG_CONTEXT:-}${LOG_LAST_DURATION_STR:-}${1}${__RESET_COLOR}" >&2
+  fi
+  Log::logInfo "$1" "${type}"
+}
+
+
+# @description Display message using warning color (yellow)
+# @arg $1 message:String the message to display
+# @env DISPLAY_DURATION int (default 0) if 1 display elapsed time information between 2 info logs
+# @env LOG_CONTEXT String allows to contextualize the log
+Log::displayWarning() {
+  if ((BASH_FRAMEWORK_DISPLAY_LEVEL >= __LEVEL_WARNING)); then
+    Log::computeDuration
+    echo -e "${__WARNING_COLOR}WARN    - ${LOG_CONTEXT:-}${LOG_LAST_DURATION_STR:-}${1}${__RESET_COLOR}" >&2
+  fi
+  Log::logWarning "$1"
+}
+
+
+# @description Display message using error color (red) and exit immediately with error status 1
+# @arg $1 message:String the message to display
+# @env DISPLAY_DURATION int (default 0) if 1 display elapsed time information between 2 info logs
+# @env LOG_CONTEXT String allows to contextualize the log
+Log::fatal() {
+  Log::computeDuration
+  echo -e "${__ERROR_COLOR}FATAL   - ${LOG_CONTEXT:-}${LOG_LAST_DURATION_STR:-}${1}${__RESET_COLOR}" >&2
+  Log::logFatal "$1"
+  exit 1
+}
+
 
 # @description log message to file
 # @arg $1 message:String the message to display
@@ -788,13 +705,6 @@ Log::logDebug() {
   fi
 }
 
-# @description log message to file
-# @arg $1 message:String the message to display
-Log::logWarning() {
-  if ((BASH_FRAMEWORK_LOG_LEVEL >= __LEVEL_WARNING)); then
-    Log::logMessage "${2:-WARNING}" "$1"
-  fi
-}
 
 # @description log message to file
 # @arg $1 message:String the message to display
@@ -804,26 +714,22 @@ Log::logError() {
   fi
 }
 
-# @description check if tty (interactive mode) is active
-# @noargs
-# @exitcode 1 if tty not active
-# @env NON_INTERACTIVE if 1 consider as not interactive even if environment is interactive
-# @env INTERACTIVE if 1 consider as interactive even if environment is not interactive
-Assert::tty() {
-  if [[ "${NON_INTERACTIVE:-0}" = "1" ]]; then
-    return 1
-  fi
-  if [[ "${INTERACTIVE:-0}" = "1" ]]; then
-    return 0
-  fi
-  tty -s
-}
 
 # @description log message to file
 # @arg $1 message:String the message to display
 Log::logFatal() {
   Log::logMessage "${2:-FATAL}" "$1"
 }
+
+
+# @description log message to file
+# @arg $1 message:String the message to display
+Log::logInfo() {
+  if ((BASH_FRAMEWORK_LOG_LEVEL >= __LEVEL_INFO)); then
+    Log::logMessage "${2:-INFO}" "$1"
+  fi
+}
+
 
 # @description Internal: common log message
 # @example text
@@ -838,9 +744,18 @@ Log::logFatal() {
 # @env BASH_FRAMEWORK_LOG_FILE String log file to use, do nothing if empty
 # @env BASH_FRAMEWORK_LOG_LEVEL int log level log only if > OFF or fatal messages
 # @stderr diagnostics information is displayed
-# @require Env::requireLoad
-# @require Log::requireLoad
 Log::logMessage() {
+
+  if [[ "${REQUIRE_FUNCTION_ENV_REQUIRE_LOAD_LOADED:-0}" != 1 ]]; then
+    echo >&2 "Requirement Env::requireLoad has not been loaded"
+    exit 1
+  fi
+
+  if [[ "${REQUIRE_FUNCTION_LOG_REQUIRE_LOAD_LOADED:-0}" != 1 ]]; then
+    echo >&2 "Requirement Log::requireLoad has not been loaded"
+    exit 1
+  fi
+
   local levelMsg="$1"
   local msg="$2"
   local date
@@ -851,6 +766,74 @@ Log::logMessage() {
     printf "%s|%7s|%s\n" "${date}" "${levelMsg}" "${msg}" >>"${BASH_FRAMEWORK_LOG_FILE}"
   fi
 }
+
+
+# @description log message to file
+# @arg $1 message:String the message to display
+Log::logWarning() {
+  if ((BASH_FRAMEWORK_LOG_LEVEL >= __LEVEL_WARNING)); then
+    Log::logMessage "${2:-WARNING}" "$1"
+  fi
+}
+
+
+# @description activate or not Log::display* and Log::log* functions
+# based on BASH_FRAMEWORK_DISPLAY_LEVEL and BASH_FRAMEWORK_LOG_LEVEL
+# environment variables loaded by Env::requireLoad
+# try to create log file and rotate it if necessary
+# @noargs
+# @set BASH_FRAMEWORK_LOG_LEVEL int to OFF level if BASH_FRAMEWORK_LOG_FILE is empty or not writable
+# @env BASH_FRAMEWORK_DISPLAY_LEVEL int
+# @env BASH_FRAMEWORK_LOG_LEVEL int
+# @env BASH_FRAMEWORK_LOG_FILE String
+# @env BASH_FRAMEWORK_LOG_FILE_MAX_ROTATION int do log rotation if > 0
+# @exitcode 0 always successful
+# @stderr diagnostics information about log file is displayed
+Log::requireLoad() {
+  REQUIRE_FUNCTION_LOG_REQUIRE_LOAD_LOADED=1
+
+
+  if [[ "${REQUIRE_FUNCTION_ENV_REQUIRE_LOAD_LOADED:-0}" != 1 ]]; then
+    echo >&2 "Requirement Env::requireLoad has not been loaded"
+    exit 1
+  fi
+
+  if [[ "${REQUIRE_FUNCTION_UI_REQUIRE_THEME_LOADED:-0}" != 1 ]]; then
+    echo >&2 "Requirement UI::requireTheme has not been loaded"
+    exit 1
+  fi
+
+  if [[ -z "${BASH_FRAMEWORK_LOG_FILE:-}" ]]; then
+    BASH_FRAMEWORK_LOG_LEVEL=${__LEVEL_OFF}
+    export BASH_FRAMEWORK_LOG_LEVEL
+  fi
+
+  if ((BASH_FRAMEWORK_LOG_LEVEL > __LEVEL_OFF)); then
+    if [[ ! -f "${BASH_FRAMEWORK_LOG_FILE}" ]]; then
+      if [[ ! -d "${BASH_FRAMEWORK_LOG_FILE%/*}" ]]; then
+        if ! mkdir -p "${BASH_FRAMEWORK_LOG_FILE%/*}" 2>/dev/null; then
+          BASH_FRAMEWORK_LOG_LEVEL=${__LEVEL_OFF}
+          echo -e "${__ERROR_COLOR}ERROR   - directory ${BASH_FRAMEWORK_LOG_FILE%/*} is not writable${__RESET_COLOR}" >&2
+        fi
+      elif ! touch --no-create "${BASH_FRAMEWORK_LOG_FILE}" 2>/dev/null; then
+        BASH_FRAMEWORK_LOG_LEVEL=${__LEVEL_OFF}
+        echo -e "${__ERROR_COLOR}ERROR   - File ${BASH_FRAMEWORK_LOG_FILE} is not writable${__RESET_COLOR}" >&2
+      fi
+    elif [[ ! -w "${BASH_FRAMEWORK_LOG_FILE}" ]]; then
+      BASH_FRAMEWORK_LOG_LEVEL=${__LEVEL_OFF}
+      echo -e "${__ERROR_COLOR}ERROR   - File ${BASH_FRAMEWORK_LOG_FILE} is not writable${__RESET_COLOR}" >&2
+    fi
+  fi
+
+  if ((BASH_FRAMEWORK_LOG_LEVEL > __LEVEL_OFF)); then
+    # will always be created even if not in info level
+    Log::logMessage "INFO" "Logging to file ${BASH_FRAMEWORK_LOG_FILE} - Log level ${BASH_FRAMEWORK_LOG_LEVEL}"
+    if ((BASH_FRAMEWORK_LOG_FILE_MAX_ROTATION > 0)); then
+      Log::rotate "${BASH_FRAMEWORK_LOG_FILE}" "${BASH_FRAMEWORK_LOG_FILE_MAX_ROTATION}"
+    fi
+  fi
+}
+
 
 # @description To be called before logging in the log file
 # @arg $1 file:string log file name
@@ -874,64 +857,22 @@ Log::rotate() {
   fi
 }
 
-# @description list files of dir with given extension and display it as a list one by line
-#
-# @arg $1 dir:String the directory to list
-# @arg $2 prefix:String the profile file prefix (default: "")
-# @arg $3 ext:String the extension
-# @arg $4 findOptions:String find options, eg: -type d (Default value: '-type f')
-# @arg $5 indentStr:String the indentation can be any string compatible with sed not containing any / (Default value: '       - ')
-# @stdout list of files without extension/directory
-# @example text
-#       - default.local
-#       - default.remote
-#       - localhost-root
-# @exitcode 1 if directory does not exists
-Conf::list() {
-  local dir="$1"
-  local prefix="${2:-}"
-  local ext="${3}"
-  local findOptions="${4--type f}"
-  local indentStr="${5-       - }"
 
-  if [[ ! -d "${dir}" ]]; then
-    Log::displayError "Directory ${dir} does not exist"
+# @description draw a line with the character passed in parameter repeated depending on terminal width
+# @arg $1 character:String character to use as separator (default value #)
+UI::drawLine() {
+  local character="${1:-#}"
+  local -i width=${COLUMNS:-0}
+  if ((width == 0)) && [[ -t 1 ]]; then
+    width=$(tput cols)
   fi
-  if [[ -n "${ext}" && "${ext:0:1}" != "." ]]; then
-    ext=".${ext}"
+  if ((width == 0)); then
+    width=80
   fi
-  (
-    # shellcheck disable=SC2086
-    cd "${dir}" &&
-      find . -maxdepth 1 ${findOptions} -name "${prefix}*${ext}" |
-      sed -E "s#^\./${prefix}##g" |
-        sed -E "s#${ext}\$##g" | sort | sed -E "s#^#${indentStr}#"
-  )
+  printf -- "${character}%.0s" $(seq "${COLUMNS:-$([[ -t 1 ]] && tput cols || echo '80')}")
+  echo
 }
 
-# @description concatenate 2 paths and ensure the path is correct using realpath -m
-# @arg $1 basePath:String
-# @arg $2 subPath:String
-# @require Linux::requireRealpathCommand
-File::concatenatePath() {
-  local basePath="$1"
-  local subPath="$2"
-  local fullPath="${basePath:+${basePath}/}${subPath}"
-
-  realpath -m "${fullPath}" 2>/dev/null
-}
-
-# @description prepend directories to the PATH environment variable
-# @arg $@ args:String[] list of directories to prepend
-# @set PATH update PATH with the directories prepended
-Env::pathPrepend() {
-  local arg
-  for arg in "$@"; do
-    if [[ -d "${arg}" && ":${PATH}:" != *":${arg}:"* ]]; then
-      PATH="$(realpath "${arg}"):${PATH}"
-    fi
-  done
-}
 
 # @description load color theme
 # @noargs
@@ -939,75 +880,103 @@ Env::pathPrepend() {
 # @env LOAD_THEME int 0 to avoid loading theme
 # @exitcode 0 always successful
 UI::requireTheme() {
+  REQUIRE_FUNCTION_UI_REQUIRE_THEME_LOADED=1
+
   if [[ "${LOAD_THEME:-1}" = "1" ]]; then
     UI::theme "${BASH_FRAMEWORK_THEME-default}"
   fi
 }
 
-# @description ensure command realpath is available
-# @exitcode 1 if realpath command not available
-# @stderr diagnostics information is displayed
-Linux::requireRealpathCommand() {
-  Assert::commandExists realpath
-}
 
-# @description check if command specified exists or return 1
-# with error and message if not
+# @description load colors theme constants
+# @warning if tty not opened, noColor theme will be chosen
+# @arg $1 theme:String the theme to use (default, noColor)
+# @arg $@ args:String[]
+# @set __ERROR_COLOR String indicate error status
+# @set __INFO_COLOR String indicate info status
+# @set __SUCCESS_COLOR String indicate success status
+# @set __WARNING_COLOR String indicate warning status
+# @set __SKIPPED_COLOR String indicate skipped status
+# @set __DEBUG_COLOR String indicate debug status
+# @set __HELP_COLOR String indicate help status
+# @set __TEST_COLOR String not used
+# @set __TEST_ERROR_COLOR String not used
+# @set __HELP_TITLE_COLOR String used to display help title in help strings
+# @set __HELP_OPTION_COLOR String used to display highlight options in help strings
 #
-# @arg $1 commandName:String on which existence must be checked
-# @arg $2 helpIfNotExists:String a help command to display if the command does not exist
+# @set __RESET_COLOR String reset default color
 #
-# @exitcode 1 if the command specified does not exist
-# @stderr diagnostic information + help if second argument is provided
-Assert::commandExists() {
-  local commandName="$1"
-  local helpIfNotExists="$2"
-
-  "${BASH_FRAMEWORK_COMMAND:-command}" -v "${commandName}" >/dev/null 2>/dev/null || {
-    Log::displayError "${commandName} is not installed, please install it"
-    if [[ -n "${helpIfNotExists}" ]]; then
-      Log::displayInfo "${helpIfNotExists}"
-    fi
-    return 1
-  }
-  return 0
+# @set __HELP_EXAMPLE String to remove
+# @set __HELP_TITLE String to remove
+# @set __HELP_NORMAL String to remove
+# shellcheck disable=SC2034
+UI::theme() {
+  local theme="${1-default}"
+  if [[ ! "${theme}" =~ -force$ ]] && ! Assert::tty; then
+    theme="noColor"
+  fi
+  case "${theme}" in
+    default | default-force)
+      theme="default"
+      ;;
+    noColor) ;;
+    *)
+      Log::fatal "invalid theme provided"
+      ;;
+  esac
+  if [[ "${theme}" = "default" ]]; then
+    BASH_FRAMEWORK_THEME="default"
+    # check colors applicable https://misc.flogisoft.com/bash/tip_colors_and_formatting
+    __ERROR_COLOR='\e[31m'         # Red
+    __INFO_COLOR='\e[44m'          # white on lightBlue
+    __SUCCESS_COLOR='\e[32m'       # Green
+    __WARNING_COLOR='\e[33m'       # Yellow
+    __SKIPPED_COLOR='\e[33m'       # Yellow
+    __DEBUG_COLOR='\e[37m'         # Gray
+    __HELP_COLOR='\e[7;49;33m'     # Black on Gold
+    __TEST_COLOR='\e[100m'         # Light magenta
+    __TEST_ERROR_COLOR='\e[41m'    # white on red
+    __HELP_TITLE_COLOR="\e[1;37m"  # Bold
+    __HELP_OPTION_COLOR="\e[1;34m" # Blue
+    # Internal: reset color
+    __RESET_COLOR='\e[0m' # Reset Color
+    # shellcheck disable=SC2155,SC2034
+    __HELP_EXAMPLE="$(echo -e "\e[2;97m")"
+    # shellcheck disable=SC2155,SC2034
+    __HELP_TITLE="$(echo -e "\e[1;37m")"
+    # shellcheck disable=SC2155,SC2034
+    __HELP_NORMAL="$(echo -e "\033[0m")"
+  else
+    BASH_FRAMEWORK_THEME="noColor"
+    # check colors applicable https://misc.flogisoft.com/bash/tip_colors_and_formatting
+    __ERROR_COLOR=''
+    __INFO_COLOR=''
+    __SUCCESS_COLOR=''
+    __WARNING_COLOR=''
+    __SKIPPED_COLOR=''
+    __DEBUG_COLOR=''
+    __HELP_COLOR=''
+    __TEST_COLOR=''
+    __TEST_ERROR_COLOR=''
+    __HELP_TITLE_COLOR=''
+    __HELP_OPTION_COLOR=''
+    # Internal: reset color
+    __RESET_COLOR=''
+    __HELP_EXAMPLE=''
+    __HELP_TITLE=''
+    __HELP_NORMAL=''
+  fi
 }
-
 # FUNCTIONS
 
-facade_main_mysql2pumlsh() {
-BASH_TOOLS_ROOT_DIR="$(cd "${CURRENT_DIR}/.." && pwd -P)"
-if [[ -d "${BASH_TOOLS_ROOT_DIR}/vendor/bash-tools-framework/" ]]; then
-  FRAMEWORK_ROOT_DIR="$(cd "${BASH_TOOLS_ROOT_DIR}/vendor/bash-tools-framework" && pwd -P)"
-else
-  # if the directory does not exist yet, give a value to FRAMEWORK_ROOT_DIR
-  FRAMEWORK_ROOT_DIR="${BASH_TOOLS_ROOT_DIR}/vendor/bash-tools-framework"
-fi
-FRAMEWORK_SRC_DIR="${FRAMEWORK_ROOT_DIR}/src"
-FRAMEWORK_BIN_DIR="${FRAMEWORK_ROOT_DIR}/bin"
-FRAMEWORK_VENDOR_DIR="${FRAMEWORK_ROOT_DIR}/vendor"
-FRAMEWORK_VENDOR_BIN_DIR="${FRAMEWORK_ROOT_DIR}/vendor/bin"
-
-# @require BashTools::Conf::requireLoad
-if [[ -f "${HOME}/.bash-tools/.env" ]]; then
-  export BASH_FRAMEWORK_ENV_FILES=("${HOME}/.bash-tools/.env")
-fi
-# REQUIRES
-Env::requireLoad
-UI::requireTheme
-Log::requireLoad
-Linux::requireRealpathCommand
-BashTools::Conf::requireLoad
-Compiler::Facade::requireCommandBinDir
-
-# @require Compiler::Facade::requireCommandBinDir
-# shellcheck disable=SC2034
-
-declare copyrightBeginYear="2020"
-declare optionBashFrameworkConfig="${BASH_TOOLS_ROOT_DIR}/.framework-config"
-declare optionSkin="default"
 
 declare -a BASH_FRAMEWORK_ARGV_FILTERED=()
+
+beforeParseCallback() {
+  Env::requireLoad
+  UI::requireTheme
+  Log::requireLoad
+}
 
 copyrightCallback() {
   if [[ -z "${copyrightBeginYear}" ]]; then
@@ -1045,13 +1014,14 @@ updateArgListQuietCallback() { :; }
 
 # shellcheck disable=SC2317 # if function is overridden
 optionHelpCallback() {
-  mysql2pumlCommand help
+  Log::displayError "optionHelpCallback needs to be overridden"
   exit 0
 }
 
 # shellcheck disable=SC2317 # if function is overridden
 optionVersionCallback() {
-  echo "${SCRIPT_NAME} version 1.0"
+  # shellcheck disable=SC2154
+  echo "${SCRIPT_NAME} version ${versionNumber}"
   exit 0
 }
 
@@ -1069,21 +1039,22 @@ optionEnvFileCallback() {
 optionInfoVerboseCallback() {
   BASH_FRAMEWORK_ARGS_VERBOSE_OPTION='--verbose'
   BASH_FRAMEWORK_ARGS_VERBOSE=${__VERBOSE_LEVEL_INFO}
-  echo "BASH_FRAMEWORK_DISPLAY_LEVEL=${__LEVEL_INFO}" >> "${overrideEnvFile}"
+  echo "BASH_FRAMEWORK_DISPLAY_LEVEL=${__LEVEL_INFO}" >>"${overrideEnvFile}"
 }
 
 # shellcheck disable=SC2317 # if function is overridden
 optionDebugVerboseCallback() {
   BASH_FRAMEWORK_ARGS_VERBOSE_OPTION='-vv'
   BASH_FRAMEWORK_ARGS_VERBOSE=${__VERBOSE_LEVEL_DEBUG}
-  echo "BASH_FRAMEWORK_DISPLAY_LEVEL=${__LEVEL_DEBUG}" >> "${overrideEnvFile}"
+  echo "BASH_FRAMEWORK_DISPLAY_LEVEL=${__LEVEL_DEBUG}" >>"${overrideEnvFile}"
 }
 
 # shellcheck disable=SC2317 # if function is overridden
 optionTraceVerboseCallback() {
+  # shellcheck disable=SC2034
   BASH_FRAMEWORK_ARGS_VERBOSE_OPTION='-vvv'
   BASH_FRAMEWORK_ARGS_VERBOSE=${__VERBOSE_LEVEL_TRACE}
-  echo "BASH_FRAMEWORK_DISPLAY_LEVEL=${__LEVEL_DEBUG}" >> "${overrideEnvFile}"
+  echo "BASH_FRAMEWORK_DISPLAY_LEVEL=${__LEVEL_DEBUG}" >>"${overrideEnvFile}"
 }
 
 getLevel() {
@@ -1107,6 +1078,7 @@ getLevel() {
     *)
       Log::displayError "Command ${SCRIPT_NAME} - Invalid level ${level}"
       return 1
+      ;;
   esac
 }
 
@@ -1128,6 +1100,7 @@ getVerboseLevel() {
     *)
       Log::displayError "Command ${SCRIPT_NAME} - Invalid level ${level}"
       return 1
+      ;;
   esac
 }
 
@@ -1138,7 +1111,7 @@ optionDisplayLevelCallback() {
   logLevel="$(getLevel "${level}")"
   verboseLevel="$(getVerboseLevel "${level}")"
   BASH_FRAMEWORK_ARGS_VERBOSE=${verboseLevel}
-  echo "BASH_FRAMEWORK_DISPLAY_LEVEL=${logLevel}" >> "${overrideEnvFile}"
+  echo "BASH_FRAMEWORK_DISPLAY_LEVEL=${logLevel}" >>"${overrideEnvFile}"
 }
 
 # shellcheck disable=SC2317 # if function is overridden
@@ -1147,19 +1120,20 @@ optionLogLevelCallback() {
   local logLevel verboseLevel
   logLevel="$(getLevel "${level}")"
   verboseLevel="$(getVerboseLevel "${level}")"
+  # shellcheck disable=SC2034
   BASH_FRAMEWORK_ARGS_VERBOSE=${verboseLevel}
-  echo "BASH_FRAMEWORK_LOG_LEVEL=${logLevel}" >> "${overrideEnvFile}"
+  echo "BASH_FRAMEWORK_LOG_LEVEL=${logLevel}" >>"${overrideEnvFile}"
 }
 
 # shellcheck disable=SC2317 # if function is overridden
 optionLogFileCallback() {
   local logFile="$2"
-  echo "BASH_FRAMEWORK_LOG_FILE='${logFile}'" >> "${overrideEnvFile}"
+  echo "BASH_FRAMEWORK_LOG_FILE='${logFile}'" >>"${overrideEnvFile}"
 }
 
 # shellcheck disable=SC2317 # if function is overridden
 optionQuietCallback() {
-  echo "BASH_FRAMEWORK_QUIET_MODE=1" >> "${overrideEnvFile}"
+  echo "BASH_FRAMEWORK_QUIET_MODE=1" >>"${overrideEnvFile}"
 }
 
 # shellcheck disable=SC2317 # if function is overridden
@@ -1190,6 +1164,7 @@ optionBashFrameworkConfigCallback() {
 
 defaultFrameworkConfig="$(
   cat <<'EOF'
+
 # copied from src/_includes/.framework-config.default
 # shellcheck disable=SC2034
 
@@ -1207,7 +1182,7 @@ NON_FRAMEWORK_FILES_REGEXP="${NON_FRAMEWORK_FILES_REGEXP:-(^bin/|.framework-conf
 # describe the files that are allowed to not have an associated bats file
 BATS_FILE_NOT_NEEDED_REGEXP="${BATS_FILE_NOT_NEEDED_REGEXP:-(^bin/|.framework-config|.bats$|/testsData/|^manualTests/|/_.sh$|/ZZZ.sh$|/__all.sh$|^src/batsHeaders.sh$|^src/_includes)}"
 # describe the files that are allowed to not have a function matching the filename
-FRAMEWORK_FILES_FUNCTION_MATCHING_IGNORE_REGEXP="${FRAMEWORK_FILES_FUNCTION_MATCHING_IGNORE_REGEXP:-^bin/|^\.framework-config$|\.tpl$|/testsData/|^manualTests/|\.bats$}"
+FRAMEWORK_FILES_FUNCTION_MATCHING_IGNORE_REGEXP="${FRAMEWORK_FILES_FUNCTION_MATCHING_IGNORE_REGEXP:-^bin/|^\.framework-config$|/testsData/|^manualTests/|\.bats$}"
 # Source directories
 if [[ ! -v FRAMEWORK_SRC_DIRS ]]; then
   FRAMEWORK_SRC_DIRS=(
@@ -1223,6 +1198,7 @@ BASH_FRAMEWORK_LOG_LEVEL="${BASH_FRAMEWORK_LOG_LEVEL:-0}"
 BASH_FRAMEWORK_DISPLAY_LEVEL="${BASH_FRAMEWORK_DISPLAY_LEVEL:-3}"
 BASH_FRAMEWORK_LOG_FILE="${BASH_FRAMEWORK_LOG_FILE:-${FRAMEWORK_ROOT_DIR}/logs/${0##*/}.log}"
 BASH_FRAMEWORK_LOG_FILE_MAX_ROTATION="${BASH_FRAMEWORK_LOG_FILE_MAX_ROTATION:-5}"
+
 EOF
 )"
 
@@ -1231,7 +1207,7 @@ overrideEnvFile="$(Framework::createTempFile "overrideEnvFile")"
 commandOptionParseFinished() {
   # load default template framework config
   defaultEnvFile="${PERSISTENT_TMPDIR}/.framework-config"
-  echo "${defaultFrameworkConfig}" > "${defaultEnvFile}"
+  echo "${defaultFrameworkConfig}" >"${defaultEnvFile}"
   local -a files=("${defaultEnvFile}")
   if [[ -f "${envFile}" ]]; then
     files+=("${envFile}")
@@ -1249,475 +1225,44 @@ commandOptionParseFinished() {
   fi
 }
 
-mysql2pumlCommand() {
-  local options_parse_cmd="$1"
-  shift || true
 
-  if [[ "${options_parse_cmd}" = "parse" ]]; then
-    optionSkin="default"
-    local -i options_parse_optionParsedCountOptionSkin
-    ((options_parse_optionParsedCountOptionSkin = 0)) || true
-    local -i options_parse_optionParsedCountOptionBashFrameworkConfig
-    ((options_parse_optionParsedCountOptionBashFrameworkConfig = 0)) || true
-    optionConfig="0"
-    local -i options_parse_optionParsedCountOptionConfig
-    ((options_parse_optionParsedCountOptionConfig = 0)) || true
-    optionInfoVerbose="0"
-    local -i options_parse_optionParsedCountOptionInfoVerbose
-    ((options_parse_optionParsedCountOptionInfoVerbose = 0)) || true
-    optionDebugVerbose="0"
-    local -i options_parse_optionParsedCountOptionDebugVerbose
-    ((options_parse_optionParsedCountOptionDebugVerbose = 0)) || true
-    optionTraceVerbose="0"
-    local -i options_parse_optionParsedCountOptionTraceVerbose
-    ((options_parse_optionParsedCountOptionTraceVerbose = 0)) || true
-    optionNoColor="0"
-    local -i options_parse_optionParsedCountOptionNoColor
-    ((options_parse_optionParsedCountOptionNoColor = 0)) || true
-    optionTheme="default"
-    local -i options_parse_optionParsedCountOptionTheme
-    ((options_parse_optionParsedCountOptionTheme = 0)) || true
-    optionHelp="0"
-    local -i options_parse_optionParsedCountOptionHelp
-    ((options_parse_optionParsedCountOptionHelp = 0)) || true
-    optionVersion="0"
-    local -i options_parse_optionParsedCountOptionVersion
-    ((options_parse_optionParsedCountOptionVersion = 0)) || true
-    optionQuiet="0"
-    local -i options_parse_optionParsedCountOptionQuiet
-    ((options_parse_optionParsedCountOptionQuiet = 0)) || true
-    local -i options_parse_optionParsedCountOptionLogLevel
-    ((options_parse_optionParsedCountOptionLogLevel = 0)) || true
-    local -i options_parse_optionParsedCountOptionLogFile
-    ((options_parse_optionParsedCountOptionLogFile = 0)) || true
-    local -i options_parse_optionParsedCountOptionDisplayLevel
-    ((options_parse_optionParsedCountOptionDisplayLevel = 0)) || true
-    local -i options_parse_argParsedCountInputSqlFile
-    ((options_parse_argParsedCountInputSqlFile = 0)) || true
-    # shellcheck disable=SC2034
-    local -i options_parse_parsedArgIndex=0
-    while (($# > 0)); do
-      local options_parse_arg="$1"
-      local argOptDefaultBehavior=0
-      case "${options_parse_arg}" in
-        # Option 1/15
-        # Option optionSkin --skin variableType String min 0 max 1 authorizedValues '' regexp ''
-        --skin)
-          shift
-          if (($# == 0)); then
-            Log::displayError "Command ${SCRIPT_NAME} - Option ${options_parse_arg} - a value needs to be specified"
-            return 1
-          fi
-          if ((options_parse_optionParsedCountOptionSkin >= 1)); then
-            Log::displayError "Command ${SCRIPT_NAME} - Option ${options_parse_arg} - Maximum number of option occurrences reached(1)"
-            return 1
-          fi
-          ((++options_parse_optionParsedCountOptionSkin))
-          # shellcheck disable=SC2034
-          optionSkin="$1"
-          optionSkinCallback "${options_parse_arg}" "${optionSkin}"
-          ;;
-        # Option 2/15
-        # Option optionBashFrameworkConfig --bash-framework-config variableType String min 0 max 1 authorizedValues '' regexp ''
-        --bash-framework-config)
-          shift
-          if (($# == 0)); then
-            Log::displayError "Command ${SCRIPT_NAME} - Option ${options_parse_arg} - a value needs to be specified"
-            return 1
-          fi
-          if ((options_parse_optionParsedCountOptionBashFrameworkConfig >= 1)); then
-            Log::displayError "Command ${SCRIPT_NAME} - Option ${options_parse_arg} - Maximum number of option occurrences reached(1)"
-            return 1
-          fi
-          ((++options_parse_optionParsedCountOptionBashFrameworkConfig))
-          # shellcheck disable=SC2034
-          optionBashFrameworkConfig="$1"
-          optionBashFrameworkConfigCallback "${options_parse_arg}" "${optionBashFrameworkConfig}"
-          ;;
-        # Option 3/15
-        # Option optionConfig --config variableType Boolean min 0 max 1 authorizedValues '' regexp ''
-        --config)
-          # shellcheck disable=SC2034
-          optionConfig="1"
-          if ((options_parse_optionParsedCountOptionConfig >= 1)); then
-            Log::displayError "Command ${SCRIPT_NAME} - Option ${options_parse_arg} - Maximum number of option occurrences reached(1)"
-            return 1
-          fi
-          ((++options_parse_optionParsedCountOptionConfig))
-          ;;
-        # Option 4/15
-        # Option optionInfoVerbose --verbose|-v variableType Boolean min 0 max 1 authorizedValues '' regexp ''
-        --verbose | -v)
-          # shellcheck disable=SC2034
-          optionInfoVerbose="1"
-          if ((options_parse_optionParsedCountOptionInfoVerbose >= 1)); then
-            Log::displayError "Command ${SCRIPT_NAME} - Option ${options_parse_arg} - Maximum number of option occurrences reached(1)"
-            return 1
-          fi
-          ((++options_parse_optionParsedCountOptionInfoVerbose))
-          optionInfoVerboseCallback "${options_parse_arg}"
-          updateArgListInfoVerboseCallback "${options_parse_arg}"
-          ;;
-        # Option 5/15
-        # Option optionDebugVerbose -vv variableType Boolean min 0 max 1 authorizedValues '' regexp ''
-        -vv)
-          # shellcheck disable=SC2034
-          optionDebugVerbose="1"
-          if ((options_parse_optionParsedCountOptionDebugVerbose >= 1)); then
-            Log::displayError "Command ${SCRIPT_NAME} - Option ${options_parse_arg} - Maximum number of option occurrences reached(1)"
-            return 1
-          fi
-          ((++options_parse_optionParsedCountOptionDebugVerbose))
-          optionDebugVerboseCallback "${options_parse_arg}"
-          updateArgListDebugVerboseCallback "${options_parse_arg}"
-          ;;
-        # Option 6/15
-        # Option optionTraceVerbose -vvv variableType Boolean min 0 max 1 authorizedValues '' regexp ''
-        -vvv)
-          # shellcheck disable=SC2034
-          optionTraceVerbose="1"
-          if ((options_parse_optionParsedCountOptionTraceVerbose >= 1)); then
-            Log::displayError "Command ${SCRIPT_NAME} - Option ${options_parse_arg} - Maximum number of option occurrences reached(1)"
-            return 1
-          fi
-          ((++options_parse_optionParsedCountOptionTraceVerbose))
-          optionTraceVerboseCallback "${options_parse_arg}"
-          updateArgListTraceVerboseCallback "${options_parse_arg}"
-          ;;
-        # Option 7/15
-        # Option optionEnvFiles --env-file variableType StringArray min 0 max -1 authorizedValues '' regexp ''
-        --env-file)
-          shift
-          if (($# == 0)); then
-            Log::displayError "Command ${SCRIPT_NAME} - Option ${options_parse_arg} - a value needs to be specified"
-            return 1
-          fi
-          ((++options_parse_optionParsedCountOptionEnvFiles))
-          optionEnvFiles+=("$1")
-          optionEnvFileCallback "${options_parse_arg}" "${optionEnvFiles[@]}"
-          updateArgListEnvFileCallback "${options_parse_arg}" "${optionEnvFiles[@]}"
-          ;;
-        # Option 8/15
-        # Option optionNoColor --no-color variableType Boolean min 0 max 1 authorizedValues '' regexp ''
-        --no-color)
-          # shellcheck disable=SC2034
-          optionNoColor="1"
-          if ((options_parse_optionParsedCountOptionNoColor >= 1)); then
-            Log::displayError "Command ${SCRIPT_NAME} - Option ${options_parse_arg} - Maximum number of option occurrences reached(1)"
-            return 1
-          fi
-          ((++options_parse_optionParsedCountOptionNoColor))
-          optionNoColorCallback "${options_parse_arg}"
-          updateArgListNoColorCallback "${options_parse_arg}"
-          ;;
-        # Option 9/15
-        # Option optionTheme --theme variableType String min 0 max 1 authorizedValues 'default|default-force|noColor' regexp ''
-        --theme)
-          shift
-          if (($# == 0)); then
-            Log::displayError "Command ${SCRIPT_NAME} - Option ${options_parse_arg} - a value needs to be specified"
-            return 1
-          fi
-          if [[ ! "$1" =~ default|default-force|noColor ]]; then
-            Log::displayError "Command ${SCRIPT_NAME} - Option ${options_parse_arg} - value '$1' is not part of authorized values(default|default-force|noColor)"
-            return 1
-          fi
-          if ((options_parse_optionParsedCountOptionTheme >= 1)); then
-            Log::displayError "Command ${SCRIPT_NAME} - Option ${options_parse_arg} - Maximum number of option occurrences reached(1)"
-            return 1
-          fi
-          ((++options_parse_optionParsedCountOptionTheme))
-          # shellcheck disable=SC2034
-          optionTheme="$1"
-          optionThemeCallback "${options_parse_arg}" "${optionTheme}"
-          updateArgListThemeCallback "${options_parse_arg}" "${optionTheme}"
-          ;;
-        # Option 10/15
-        # Option optionHelp --help|-h variableType Boolean min 0 max 1 authorizedValues '' regexp ''
-        --help | -h)
-          # shellcheck disable=SC2034
-          optionHelp="1"
-          if ((options_parse_optionParsedCountOptionHelp >= 1)); then
-            Log::displayError "Command ${SCRIPT_NAME} - Option ${options_parse_arg} - Maximum number of option occurrences reached(1)"
-            return 1
-          fi
-          ((++options_parse_optionParsedCountOptionHelp))
-          optionHelpCallback "${options_parse_arg}"
-          ;;
-        # Option 11/15
-        # Option optionVersion --version variableType Boolean min 0 max 1 authorizedValues '' regexp ''
-        --version)
-          # shellcheck disable=SC2034
-          optionVersion="1"
-          if ((options_parse_optionParsedCountOptionVersion >= 1)); then
-            Log::displayError "Command ${SCRIPT_NAME} - Option ${options_parse_arg} - Maximum number of option occurrences reached(1)"
-            return 1
-          fi
-          ((++options_parse_optionParsedCountOptionVersion))
-          optionVersionCallback "${options_parse_arg}"
-          ;;
-        # Option 12/15
-        # Option optionQuiet --quiet|-q variableType Boolean min 0 max 1 authorizedValues '' regexp ''
-        --quiet | -q)
-          # shellcheck disable=SC2034
-          optionQuiet="1"
-          if ((options_parse_optionParsedCountOptionQuiet >= 1)); then
-            Log::displayError "Command ${SCRIPT_NAME} - Option ${options_parse_arg} - Maximum number of option occurrences reached(1)"
-            return 1
-          fi
-          ((++options_parse_optionParsedCountOptionQuiet))
-          optionQuietCallback "${options_parse_arg}"
-          updateArgListQuietCallback "${options_parse_arg}"
-          ;;
-        # Option 13/15
-        # Option optionLogLevel --log-level variableType String min 0 max 1 authorizedValues 'OFF|ERR|ERROR|WARN|WARNING|INFO|DEBUG|TRACE' regexp ''
-        --log-level)
-          shift
-          if (($# == 0)); then
-            Log::displayError "Command ${SCRIPT_NAME} - Option ${options_parse_arg} - a value needs to be specified"
-            return 1
-          fi
-          if [[ ! "$1" =~ OFF|ERR|ERROR|WARN|WARNING|INFO|DEBUG|TRACE ]]; then
-            Log::displayError "Command ${SCRIPT_NAME} - Option ${options_parse_arg} - value '$1' is not part of authorized values(OFF|ERR|ERROR|WARN|WARNING|INFO|DEBUG|TRACE)"
-            return 1
-          fi
-          if ((options_parse_optionParsedCountOptionLogLevel >= 1)); then
-            Log::displayError "Command ${SCRIPT_NAME} - Option ${options_parse_arg} - Maximum number of option occurrences reached(1)"
-            return 1
-          fi
-          ((++options_parse_optionParsedCountOptionLogLevel))
-          # shellcheck disable=SC2034
-          optionLogLevel="$1"
-          optionLogLevelCallback "${options_parse_arg}" "${optionLogLevel}"
-          updateArgListLogLevelCallback "${options_parse_arg}" "${optionLogLevel}"
-          ;;
-        # Option 14/15
-        # Option optionLogFile --log-file variableType String min 0 max 1 authorizedValues '' regexp ''
-        --log-file)
-          shift
-          if (($# == 0)); then
-            Log::displayError "Command ${SCRIPT_NAME} - Option ${options_parse_arg} - a value needs to be specified"
-            return 1
-          fi
-          if ((options_parse_optionParsedCountOptionLogFile >= 1)); then
-            Log::displayError "Command ${SCRIPT_NAME} - Option ${options_parse_arg} - Maximum number of option occurrences reached(1)"
-            return 1
-          fi
-          ((++options_parse_optionParsedCountOptionLogFile))
-          # shellcheck disable=SC2034
-          optionLogFile="$1"
-          optionLogFileCallback "${options_parse_arg}" "${optionLogFile}"
-          updateArgListLogFileCallback "${options_parse_arg}" "${optionLogFile}"
-          ;;
-        # Option 15/15
-        # Option optionDisplayLevel --display-level variableType String min 0 max 1 authorizedValues 'OFF|ERR|ERROR|WARN|WARNING|INFO|DEBUG|TRACE' regexp ''
-        --display-level)
-          shift
-          if (($# == 0)); then
-            Log::displayError "Command ${SCRIPT_NAME} - Option ${options_parse_arg} - a value needs to be specified"
-            return 1
-          fi
-          if [[ ! "$1" =~ OFF|ERR|ERROR|WARN|WARNING|INFO|DEBUG|TRACE ]]; then
-            Log::displayError "Command ${SCRIPT_NAME} - Option ${options_parse_arg} - value '$1' is not part of authorized values(OFF|ERR|ERROR|WARN|WARNING|INFO|DEBUG|TRACE)"
-            return 1
-          fi
-          if ((options_parse_optionParsedCountOptionDisplayLevel >= 1)); then
-            Log::displayError "Command ${SCRIPT_NAME} - Option ${options_parse_arg} - Maximum number of option occurrences reached(1)"
-            return 1
-          fi
-          ((++options_parse_optionParsedCountOptionDisplayLevel))
-          # shellcheck disable=SC2034
-          optionDisplayLevel="$1"
-          optionDisplayLevelCallback "${options_parse_arg}" "${optionDisplayLevel}"
-          updateArgListDisplayLevelCallback "${options_parse_arg}" "${optionDisplayLevel}"
-          ;;
-        -*)
-          if [[ "${argOptDefaultBehavior}" = "0" ]]; then
-            Log::displayError "Command ${SCRIPT_NAME} - Invalid option ${options_parse_arg}"
-            return 1
-          fi
-          ;;
-        *)
-          if ((0)); then
-            # Technical if - never reached
-            :
-          # Argument 1/1
-          # Argument inputSqlFile min 0 max 1 authorizedValues '' regexp ''
-          elif ((options_parse_parsedArgIndex >= 0 && options_parse_parsedArgIndex < 1)); then
-            if ((options_parse_argParsedCountInputSqlFile >= 1)); then
-              Log::displayError "Command ${SCRIPT_NAME} - Argument inputSqlFile - Maximum number of argument occurrences reached(1)"
-              return 1
-            fi
-            ((++options_parse_argParsedCountInputSqlFile))
-            # shellcheck disable=SC2034
-            inputSqlFile="${options_parse_arg}"
-            inputSqlFileCallback "${inputSqlFile}" -- "${@:2}"
-          else
-            if [[ "${argOptDefaultBehavior}" = "0" ]]; then
-              Log::displayError "Command ${SCRIPT_NAME} - Argument - too much arguments provided: $*"
-              return 1
-            fi
-          fi
-          ((++options_parse_parsedArgIndex))
-          ;;
-      esac
-      shift || true
-    done
-    commandOptionParseFinished
-    Log::displayDebug "Command ${SCRIPT_NAME} - parse arguments: ${BASH_FRAMEWORK_ARGV[*]}"
-    Log::displayDebug "Command ${SCRIPT_NAME} - parse filtered arguments: ${BASH_FRAMEWORK_ARGV_FILTERED[*]}"
-  elif [[ "${options_parse_cmd}" = "help" ]]; then
-    Array::wrap2 " " 80 0 "${__HELP_TITLE_COLOR}DESCRIPTION:${__RESET_COLOR}" "convert mysql dump sql schema to plantuml format"
-    echo
 
-    echo -e "$(Array::wrap2 " " 80 2 "${__HELP_TITLE_COLOR}USAGE:${__RESET_COLOR}" "${SCRIPT_NAME}" "[OPTIONS]" "[ARGUMENTS]")"
-    echo -e "$(Array::wrap2 " " 80 2 "${__HELP_TITLE_COLOR}USAGE:${__RESET_COLOR}" \
-      "${SCRIPT_NAME}" \
-      "[--skin <String>]" "[--bash-framework-config <String>]" "[--config]" "[--verbose|-v]" "[-vv]" "[-vvv]" "[--env-file <String>]" "[--no-color]" "[--theme <String>]" "[--help|-h]" "[--version]" "[--quiet|-q]" "[--log-level <String>]" "[--log-file <String>]" "[--display-level <String>]")"
-    echo
-    echo -e "${__HELP_TITLE_COLOR}ARGUMENTS:${__RESET_COLOR}"
-    echo -e "  [${__HELP_OPTION_COLOR}inputSqlFile${__HELP_NORMAL} {single}]"
-    local -a helpArray
-    # shellcheck disable=SC2054
-    helpArray=(sql\ filepath\ to\ parse\ \(read\ from\ stdin\ if\ not\ provided\))
-    echo -e "    $(Array::wrap2 " " 76 4 "${helpArray[@]}")"
-    echo
-    echo -e "${__HELP_TITLE_COLOR}OPTIONS:${__RESET_COLOR}"
-    echo -e "  ${__HELP_OPTION_COLOR}--skin <String>${__HELP_NORMAL} {single}"
-    local -a helpArray
-    # shellcheck disable=SC2054
-    helpArray=(header\ configuration\ of\ the\ plant\ uml\ file)
-    echo -e "    $(Array::wrap2 " " 76 4 "${helpArray[@]}")"
-    echo '    Default value: default'
-    echo
-    echo -e "${__HELP_TITLE_COLOR}GLOBAL OPTIONS:${__RESET_COLOR}"
-    echo -e "  ${__HELP_OPTION_COLOR}--bash-framework-config <String>${__HELP_NORMAL} {single}"
-    local -a helpArray
-    # shellcheck disable=SC2054
-    helpArray=(use\ alternate\ bash\ framework\ configuration.)
-    echo -e "    $(Array::wrap2 " " 76 4 "${helpArray[@]}")"
-    echo -e "  ${__HELP_OPTION_COLOR}--config${__HELP_NORMAL} {single}"
-    local -a helpArray
-    # shellcheck disable=SC2054
-    helpArray=(Display\ configuration)
-    echo -e "    $(Array::wrap2 " " 76 4 "${helpArray[@]}")"
-    echo -e "  ${__HELP_OPTION_COLOR}--verbose${__HELP_NORMAL}, ${__HELP_OPTION_COLOR}-v${__HELP_NORMAL} {single}"
-    local -a helpArray
-    # shellcheck disable=SC2054
-    helpArray=(info\ level\ verbose\ mode\ \(alias\ of\ --display-level\ INFO\))
-    echo -e "    $(Array::wrap2 " " 76 4 "${helpArray[@]}")"
-    echo -e "  ${__HELP_OPTION_COLOR}-vv${__HELP_NORMAL} {single}"
-    local -a helpArray
-    # shellcheck disable=SC2054
-    helpArray=(debug\ level\ verbose\ mode\ \(alias\ of\ --display-level\ DEBUG\))
-    echo -e "    $(Array::wrap2 " " 76 4 "${helpArray[@]}")"
-    echo -e "  ${__HELP_OPTION_COLOR}-vvv${__HELP_NORMAL} {single}"
-    local -a helpArray
-    # shellcheck disable=SC2054
-    helpArray=(trace\ level\ verbose\ mode\ \(alias\ of\ --display-level\ TRACE\))
-    echo -e "    $(Array::wrap2 " " 76 4 "${helpArray[@]}")"
-    echo -e "  ${__HELP_OPTION_COLOR}--env-file <String>${__HELP_NORMAL} {list} (optional)"
-    local -a helpArray
-    # shellcheck disable=SC2054
-    helpArray=(Load\ the\ specified\ env\ file\ \(deprecated\,\ please\ use\ --bash-framework-config\ option\ instead\))
-    echo -e "    $(Array::wrap2 " " 76 4 "${helpArray[@]}")"
-    echo -e "  ${__HELP_OPTION_COLOR}--no-color${__HELP_NORMAL} {single}"
-    local -a helpArray
-    # shellcheck disable=SC2054
-    helpArray=(Produce\ monochrome\ output.\ alias\ of\ --theme\ noColor.)
-    echo -e "    $(Array::wrap2 " " 76 4 "${helpArray[@]}")"
-    echo -e "  ${__HELP_OPTION_COLOR}--theme <String>${__HELP_NORMAL} {single}"
-    local -a helpArray
-    # shellcheck disable=SC2054
-    helpArray=(choose\ color\ theme\ -\ default-force\ means\ colors\ will\ be\ produced\ even\ if\ command\ is\ piped)
-    echo -e "    $(Array::wrap2 " " 76 4 "${helpArray[@]}")"
-    echo '    Default value: default'
-    echo '    Possible values: default|default-force|noColor'
-    echo -e "  ${__HELP_OPTION_COLOR}--help${__HELP_NORMAL}, ${__HELP_OPTION_COLOR}-h${__HELP_NORMAL} {single}"
-    local -a helpArray
-    # shellcheck disable=SC2054
-    helpArray=(Display\ this\ command\ help)
-    echo -e "    $(Array::wrap2 " " 76 4 "${helpArray[@]}")"
-    echo -e "  ${__HELP_OPTION_COLOR}--version${__HELP_NORMAL} {single}"
-    local -a helpArray
-    # shellcheck disable=SC2054
-    helpArray=(Print\ version\ information\ and\ quit)
-    echo -e "    $(Array::wrap2 " " 76 4 "${helpArray[@]}")"
-    echo -e "  ${__HELP_OPTION_COLOR}--quiet${__HELP_NORMAL}, ${__HELP_OPTION_COLOR}-q${__HELP_NORMAL} {single}"
-    local -a helpArray
-    # shellcheck disable=SC2054
-    helpArray=(quiet\ mode\,\ doesn\'t\ display\ any\ output)
-    echo -e "    $(Array::wrap2 " " 76 4 "${helpArray[@]}")"
-    echo -e "  ${__HELP_OPTION_COLOR}--log-level <String>${__HELP_NORMAL} {single}"
-    local -a helpArray
-    # shellcheck disable=SC2054
-    helpArray=(Set\ log\ level)
-    echo -e "    $(Array::wrap2 " " 76 4 "${helpArray[@]}")"
-    echo '    Possible values: OFF|ERR|ERROR|WARN|WARNING|INFO|DEBUG|TRACE'
-    echo -e "  ${__HELP_OPTION_COLOR}--log-file <String>${__HELP_NORMAL} {single}"
-    local -a helpArray
-    # shellcheck disable=SC2054
-    helpArray=(Set\ log\ file)
-    echo -e "    $(Array::wrap2 " " 76 4 "${helpArray[@]}")"
-    echo -e "  ${__HELP_OPTION_COLOR}--display-level <String>${__HELP_NORMAL} {single}"
-    local -a helpArray
-    # shellcheck disable=SC2054
-    helpArray=(set\ display\ level)
-    echo -e "    $(Array::wrap2 " " 76 4 "${helpArray[@]}")"
-    echo '    Possible values: OFF|ERR|ERROR|WARN|WARNING|INFO|DEBUG|TRACE'
-    echo -e """
-${__HELP_TITLE}EXAMPLE 1:${__HELP_NORMAL}
-${__HELP_EXAMPLE}mysql2puml dump.dql${__HELP_NORMAL}
+# shellcheck disable=SC2034
+declare copyrightBeginYear="2020"
+# shellcheck disable=SC2034
+declare versionNumber="1.0"
 
-${__HELP_TITLE}EXAMPLE 2:${__HELP_NORMAL}
-${__HELP_EXAMPLE}mysqldump --skip-add-drop-table \
-  --skip-add-locks \
-  --skip-disable-keys \
-  --skip-set-charset \
-  --user=root \
-  --password=root \
-  --no-data skills | mysql2puml
-${__HELP_NORMAL}
-${__HELP_TITLE}LIST OF AVAILABLE SKINS:${__HELP_NORMAL}
-@@@SKINS_LIST@@@"""
-    echo
-    echo -n -e "${__HELP_TITLE_COLOR}VERSION: ${__RESET_COLOR}"
-    echo '1.0'
-    echo
-    echo -e "${__HELP_TITLE_COLOR}AUTHOR:${__RESET_COLOR}"
-    echo '[François Chastanet](https://github.com/fchastanet)'
-    echo
-    echo -e "${__HELP_TITLE_COLOR}SOURCE FILE:${__RESET_COLOR}"
-    echo 'https://github.com/fchastanet/bash-tools/tree/master/src/_binaries/Converters/mysql2puml.sh'
-    echo
-    echo -e "${__HELP_TITLE_COLOR}LICENSE:${__RESET_COLOR}"
-    echo 'MIT License'
-    echo
-    Array::wrap2 ' ' 76 4 "$(copyrightCallback)"
-  else
-    Log::displayError "Command ${SCRIPT_NAME} - Option command invalid: '${options_parse_cmd}'"
-    return 1
-  fi
-}
+declare optionBashFrameworkConfig="${BASH_TOOLS_ROOT_DIR}/.framework-config"
 
 optionHelpCallback() {
-  local skinListHelpFile
-  skinListHelpFile="$(Framework::createTempFile "shellcheckHelp")"
-  Conf::getMergedList "mysql2pumlSkins" ".puml" "  - " >"${skinListHelpFile}"
-
-  mysql2pumlCommand help |
-    sed -E \
-      -e "/@@@SKINS_LIST@@@/r ${skinListHelpFile}" \
-      -e "/@@@SKINS_LIST@@@/d"
+  mysql2pumlCommandHelp
   exit 0
+}
+
+longDescriptionFunction() {
+  echo -e "${__HELP_TITLE}EXAMPLE 1:${__HELP_NORMAL}"
+  echo -e "${__HELP_EXAMPLE}mysql2puml dump.dql${__HELP_NORMAL}"
+  echo
+  echo -e "${__HELP_TITLE}EXAMPLE 2:${__HELP_NORMAL}"
+  echo -e "${__HELP_EXAMPLE}mysqldump --skip-add-drop-table \\"
+  echo -e "  --skip-add-locks \\"
+  echo -e "  --skip-disable-keys \\"
+  echo -e "  --skip-set-charset \\"
+  echo -e "  --user=root \\"
+  echo -e "  --password=root \\"
+  echo -e "  --no-data skills | mysql2puml"
+  echo -e "${__HELP_NORMAL}"
+  echo -e "${__HELP_TITLE}LIST OF AVAILABLE SKINS:${__HELP_NORMAL}"
+  Conf::getMergedList "mysql2pumlSkins" ".puml" "  - "
 }
 
 optionSkinCallback() {
   declare -a skinList
   readarray -t skinList < <(Conf::getMergedList "mysql2pumlSkins" ".puml" "")
-  if ! Array::contains "$2" "${skinList[@]}"; then
-    Log::displayError "${SCRIPT_NAME} - invalid skin '$2' provided"
-    return 1
+  # shellcheck disable=SC2154
+  if ! Array::contains "${optionSkin}" "${skinList[@]}"; then
+    Log::displayError "${SCRIPT_NAME} - invalid skin '${optionSkin}' provided"
+    exit 1
   fi
 }
 
@@ -1725,253 +1270,650 @@ inputSqlFileCallback() {
   # shellcheck disable=SC2154
   if [[ ! -f "${inputSqlFile}" ]]; then
     Log::displayError "${SCRIPT_NAME} - File '${inputSqlFile}' does not exists"
-    return 1
+    exit 1
   fi
 }
 
-mysql2pumlCommand parse "${BASH_FRAMEWORK_ARGV[@]}"
-declare awkScript
-awkScript="$(
-  cat <<'EOF'
-# =========================================================================
-#
-# mysql2puml - SQL DDL to markdown converter
-#
-# Invocation/Execution:
-#   awk -f mysql2puml.awk skinFile < inputFile > outputFile
-#   DEBUG=1 awk -f mysql2puml.awk skinFile < inputFile > outputFile
-#
-# Supports
-#   PlantUML format
-# =========================================================================
 
-function debug(first, second, third, fourth, fifth, sixth, seventh, eighth, ninth, tenth, eleventh, twelfth) {
-    if (DEBUG == 1) print("DEBUG - ", first, second, third, fourth, fifth, sixth, seventh, eighth, ninth, tenth, eleventh, twelfth) > "/dev/stderr"
-}
+# ------------------------------------------
+# Command mysql2pumlCommand
+# ------------------------------------------
 
-# =========================================================================
+# options variables initialization
+declare optionHelp="0"
+declare optionConfig="0"
+declare optionBashFrameworkConfig=""
+declare optionInfoVerbose="0"
+declare optionDebugVerbose="0"
+declare optionTraceVerbose="0"
+declare -a optionEnvFiles=()
+declare optionLogLevel=""
+declare optionLogFile=""
+declare optionDisplayLevel=""
+declare optionNoColor="0"
+declare optionTheme="default"
+declare optionVersion="0"
+declare optionQuiet="0"
+declare optionSkin="default"
+# arguments variables initialization
+declare inputSqlFile=""
+# @description parse command options and arguments for mysql2pumlCommand
+mysql2pumlCommandParse() {
+  Log::displayDebug "Command ${SCRIPT_NAME} - parse arguments: ${BASH_FRAMEWORK_ARGV[*]}"
+  Log::displayDebug "Command ${SCRIPT_NAME} - parse filtered arguments: ${BASH_FRAMEWORK_ARGV_FILTERED[*]}"
+  optionHelp="0"
+  local -i options_parse_optionParsedCountOptionHelp
+  ((options_parse_optionParsedCountOptionHelp = 0)) || true
+  optionConfig="0"
+  local -i options_parse_optionParsedCountOptionConfig
+  ((options_parse_optionParsedCountOptionConfig = 0)) || true
+  optionBashFrameworkConfig=""
+  local -i options_parse_optionParsedCountOptionBashFrameworkConfig
+  ((options_parse_optionParsedCountOptionBashFrameworkConfig = 0)) || true
+  optionInfoVerbose="0"
+  local -i options_parse_optionParsedCountOptionInfoVerbose
+  ((options_parse_optionParsedCountOptionInfoVerbose = 0)) || true
+  optionDebugVerbose="0"
+  local -i options_parse_optionParsedCountOptionDebugVerbose
+  ((options_parse_optionParsedCountOptionDebugVerbose = 0)) || true
+  optionTraceVerbose="0"
+  local -i options_parse_optionParsedCountOptionTraceVerbose
+  ((options_parse_optionParsedCountOptionTraceVerbose = 0)) || true
 
-function uml_start()
-{
-    if (!skinFile) {
-        print("skinFile parameter missing") > "/dev/stderr"
-        exit 1
-    }
-    while ((getline tmp < skinFile) > 0) {
-        if (match(tmp, /@enduml/)) {
-            break
-        }
-        print(tmp)
-    }
-    print "' entities"
-}
+  optionLogLevel=""
+  local -i options_parse_optionParsedCountOptionLogLevel
+  ((options_parse_optionParsedCountOptionLogLevel = 0)) || true
+  optionLogFile=""
+  local -i options_parse_optionParsedCountOptionLogFile
+  ((options_parse_optionParsedCountOptionLogFile = 0)) || true
+  optionDisplayLevel=""
+  local -i options_parse_optionParsedCountOptionDisplayLevel
+  ((options_parse_optionParsedCountOptionDisplayLevel = 0)) || true
+  optionNoColor="0"
+  local -i options_parse_optionParsedCountOptionNoColor
+  ((options_parse_optionParsedCountOptionNoColor = 0)) || true
+  optionTheme="default"
+  local -i options_parse_optionParsedCountOptionTheme
+  ((options_parse_optionParsedCountOptionTheme = 0)) || true
+  optionVersion="0"
+  local -i options_parse_optionParsedCountOptionVersion
+  ((options_parse_optionParsedCountOptionVersion = 0)) || true
+  optionQuiet="0"
+  local -i options_parse_optionParsedCountOptionQuiet
+  ((options_parse_optionParsedCountOptionQuiet = 0)) || true
+  optionSkin="default"
+  local -i options_parse_optionParsedCountOptionSkin
+  ((options_parse_optionParsedCountOptionSkin = 0)) || true
 
-# =========================================================================
+  inputSqlFile=""
+  local -i options_parse_argParsedCountInputSqlFile
+  ((options_parse_argParsedCountInputSqlFile = 0)) || true
 
-function uml_end()
-{
-    print "@enduml"
-}
 
-# =========================================================================
+  # shellcheck disable=SC2034
+  local -i options_parse_parsedArgIndex=0
+  while (($# > 0)); do
+    local options_parse_arg="$1"
+    local argOptDefaultBehavior=0
+    case "${options_parse_arg}" in
+      # Option 1/15
+      # optionHelp alts --help|-h
+      # type: Boolean min 0 max 1
+      --help | -h)
+        # shellcheck disable=SC2034
+        optionHelp="1"
 
-function ltrim(s) { sub(/^[ \t\r\n]+/, "", s); return s }
-function rtrim(s) { sub(/[ \t\r\n]+$/, "", s); return s }
-function trim(s) { return rtrim(ltrim(s)); }
+        if ((options_parse_optionParsedCountOptionHelp >= 1 )); then
+          Log::displayError "Command ${SCRIPT_NAME} - Option ${options_parse_arg} - Maximum number of option occurrences reached(1)"
+          return 1
+        fi
+        ((++options_parse_optionParsedCountOptionHelp))
+        optionHelpCallback "${options_parse_arg}" "${optionHelp}"
 
-# =========================================================================
+        ;;
 
-function column_weight(column)
-{
-    return (columnsDetails[column ",pk"] == "1" ? 8 : 0) \
-        + (columnsDetails[column ",fk"] == "1" ? 4 : 0) \
-        + (columnsDetails[column ",unique"] == "1" ? 2 : 0) \
-        + (columnsDetails[column ",null"] == "0" ? 1 : 0)
-}
+      # Option 2/15
+      # optionConfig alts --config
+      # type: Boolean min 0 max 1
+      --config)
+        # shellcheck disable=SC2034
+        optionConfig="1"
 
-function column_sort(i1, column1, i2, column2)
-{
-    weight1 = column_weight(column1)
-    weight2 = column_weight(column2)
-    if (weight1 == weight2) {
-        l = tolower(column1)
-        r = tolower(column2)
+        if ((options_parse_optionParsedCountOptionConfig >= 1 )); then
+          Log::displayError "Command ${SCRIPT_NAME} - Option ${options_parse_arg} - Maximum number of option occurrences reached(1)"
+          return 1
+        fi
+        ((++options_parse_optionParsedCountOptionConfig))
+        ;;
 
-        if (l < r) {
-            return -1
-        } else if (l == r) {
-            return 0
-        } else {
+      # Option 3/15
+      # optionBashFrameworkConfig alts --bash-framework-config
+      # type: String min 0 max 1
+      --bash-framework-config)
+        shift
+        if (($# == 0)); then
+          Log::displayError "Command ${SCRIPT_NAME} - Option ${options_parse_arg} - a value needs to be specified"
+          return 1
+        fi
+
+        if ((options_parse_optionParsedCountOptionBashFrameworkConfig >= 1 )); then
+          Log::displayError "Command ${SCRIPT_NAME} - Option ${options_parse_arg} - Maximum number of option occurrences reached(1)"
+          return 1
+        fi
+        ((++options_parse_optionParsedCountOptionBashFrameworkConfig))
+        # shellcheck disable=SC2034
+        optionBashFrameworkConfig="$1"
+        optionBashFrameworkConfigCallback "${options_parse_arg}" "${optionBashFrameworkConfig}"
+
+        ;;
+
+      # Option 4/15
+      # optionInfoVerbose alts --verbose|-v
+      # type: Boolean min 0 max 1
+      --verbose | -v)
+        # shellcheck disable=SC2034
+        optionInfoVerbose="1"
+
+        if ((options_parse_optionParsedCountOptionInfoVerbose >= 1 )); then
+          Log::displayError "Command ${SCRIPT_NAME} - Option ${options_parse_arg} - Maximum number of option occurrences reached(1)"
+          return 1
+        fi
+        ((++options_parse_optionParsedCountOptionInfoVerbose))
+        optionInfoVerboseCallback "${options_parse_arg}" "${optionInfoVerbose}"
+
+        updateArgListInfoVerboseCallback "${options_parse_arg}" "${optionInfoVerbose}"
+
+        ;;
+
+      # Option 5/15
+      # optionDebugVerbose alts -vv
+      # type: Boolean min 0 max 1
+      -vv)
+        # shellcheck disable=SC2034
+        optionDebugVerbose="1"
+
+        if ((options_parse_optionParsedCountOptionDebugVerbose >= 1 )); then
+          Log::displayError "Command ${SCRIPT_NAME} - Option ${options_parse_arg} - Maximum number of option occurrences reached(1)"
+          return 1
+        fi
+        ((++options_parse_optionParsedCountOptionDebugVerbose))
+        optionDebugVerboseCallback "${options_parse_arg}" "${optionDebugVerbose}"
+
+        updateArgListDebugVerboseCallback "${options_parse_arg}" "${optionDebugVerbose}"
+
+        ;;
+
+      # Option 6/15
+      # optionTraceVerbose alts -vvv
+      # type: Boolean min 0 max 1
+      -vvv)
+        # shellcheck disable=SC2034
+        optionTraceVerbose="1"
+
+        if ((options_parse_optionParsedCountOptionTraceVerbose >= 1 )); then
+          Log::displayError "Command ${SCRIPT_NAME} - Option ${options_parse_arg} - Maximum number of option occurrences reached(1)"
+          return 1
+        fi
+        ((++options_parse_optionParsedCountOptionTraceVerbose))
+        optionTraceVerboseCallback "${options_parse_arg}" "${optionTraceVerbose}"
+
+        updateArgListTraceVerboseCallback "${options_parse_arg}" "${optionTraceVerbose}"
+
+        ;;
+
+      # Option 7/15
+      # optionEnvFiles alts --env-file
+      # type: StringArray min 0 max -1
+      --env-file)
+        shift
+        if (($# == 0)); then
+          Log::displayError "Command ${SCRIPT_NAME} - Option ${options_parse_arg} - a value needs to be specified"
+          return 1
+        fi
+
+        ((++options_parse_optionParsedCountOptionEnvFiles))
+        optionEnvFiles+=("$1")
+        optionEnvFileCallback "${options_parse_arg}" "${optionEnvFiles[@]}"
+
+        updateArgListEnvFileCallback "${options_parse_arg}" "${optionEnvFiles[@]}"
+
+        ;;
+
+      # Option 8/15
+      # optionLogLevel alts --log-level
+      # type: String min 0 max 1
+      # authorizedValues: OFF|ERR|ERROR|WARN|WARNING|INFO|DEBUG|TRACE
+      --log-level)
+        shift
+        if (($# == 0)); then
+          Log::displayError "Command ${SCRIPT_NAME} - Option ${options_parse_arg} - a value needs to be specified"
+          return 1
+        fi
+        if [[ ! "$1" =~ OFF|ERR|ERROR|WARN|WARNING|INFO|DEBUG|TRACE ]]; then
+          Log::displayError "Command ${SCRIPT_NAME} - Option ${options_parse_arg} - value '$1' is not part of authorized values([OFF ERR ERROR WARN WARNING INFO DEBUG TRACE])"
+          return 1
+        fi
+
+        if ((options_parse_optionParsedCountOptionLogLevel >= 1 )); then
+          Log::displayError "Command ${SCRIPT_NAME} - Option ${options_parse_arg} - Maximum number of option occurrences reached(1)"
+          return 1
+        fi
+        ((++options_parse_optionParsedCountOptionLogLevel))
+        # shellcheck disable=SC2034
+        optionLogLevel="$1"
+        optionLogLevelCallback "${options_parse_arg}" "${optionLogLevel}"
+
+        updateArgListLogLevelCallback "${options_parse_arg}" "${optionLogLevel}"
+
+        ;;
+
+      # Option 9/15
+      # optionLogFile alts --log-file
+      # type: String min 0 max 1
+      --log-file)
+        shift
+        if (($# == 0)); then
+          Log::displayError "Command ${SCRIPT_NAME} - Option ${options_parse_arg} - a value needs to be specified"
+          return 1
+        fi
+
+        if ((options_parse_optionParsedCountOptionLogFile >= 1 )); then
+          Log::displayError "Command ${SCRIPT_NAME} - Option ${options_parse_arg} - Maximum number of option occurrences reached(1)"
+          return 1
+        fi
+        ((++options_parse_optionParsedCountOptionLogFile))
+        # shellcheck disable=SC2034
+        optionLogFile="$1"
+        optionLogFileCallback "${options_parse_arg}" "${optionLogFile}"
+
+        updateArgListLogFileCallback "${options_parse_arg}" "${optionLogFile}"
+
+        ;;
+
+      # Option 10/15
+      # optionDisplayLevel alts --display-level
+      # type: String min 0 max 1
+      # authorizedValues: OFF|ERR|ERROR|WARN|WARNING|INFO|DEBUG|TRACE
+      --display-level)
+        shift
+        if (($# == 0)); then
+          Log::displayError "Command ${SCRIPT_NAME} - Option ${options_parse_arg} - a value needs to be specified"
+          return 1
+        fi
+        if [[ ! "$1" =~ OFF|ERR|ERROR|WARN|WARNING|INFO|DEBUG|TRACE ]]; then
+          Log::displayError "Command ${SCRIPT_NAME} - Option ${options_parse_arg} - value '$1' is not part of authorized values([OFF ERR ERROR WARN WARNING INFO DEBUG TRACE])"
+          return 1
+        fi
+
+        if ((options_parse_optionParsedCountOptionDisplayLevel >= 1 )); then
+          Log::displayError "Command ${SCRIPT_NAME} - Option ${options_parse_arg} - Maximum number of option occurrences reached(1)"
+          return 1
+        fi
+        ((++options_parse_optionParsedCountOptionDisplayLevel))
+        # shellcheck disable=SC2034
+        optionDisplayLevel="$1"
+        optionDisplayLevelCallback "${options_parse_arg}" "${optionDisplayLevel}"
+
+        updateArgListDisplayLevelCallback "${options_parse_arg}" "${optionDisplayLevel}"
+
+        ;;
+
+      # Option 11/15
+      # optionNoColor alts --no-color
+      # type: Boolean min 0 max 1
+      --no-color)
+        # shellcheck disable=SC2034
+        optionNoColor="1"
+
+        if ((options_parse_optionParsedCountOptionNoColor >= 1 )); then
+          Log::displayError "Command ${SCRIPT_NAME} - Option ${options_parse_arg} - Maximum number of option occurrences reached(1)"
+          return 1
+        fi
+        ((++options_parse_optionParsedCountOptionNoColor))
+        optionNoColorCallback "${options_parse_arg}" "${optionNoColor}"
+
+        updateArgListNoColorCallback "${options_parse_arg}" "${optionNoColor}"
+
+        ;;
+
+      # Option 12/15
+      # optionTheme alts --theme
+      # type: String min 0 max 1
+      # authorizedValues: default|default-force|noColor
+      --theme)
+        shift
+        if (($# == 0)); then
+          Log::displayError "Command ${SCRIPT_NAME} - Option ${options_parse_arg} - a value needs to be specified"
+          return 1
+        fi
+        if [[ ! "$1" =~ default|default-force|noColor ]]; then
+          Log::displayError "Command ${SCRIPT_NAME} - Option ${options_parse_arg} - value '$1' is not part of authorized values([default default-force noColor])"
+          return 1
+        fi
+
+        if ((options_parse_optionParsedCountOptionTheme >= 1 )); then
+          Log::displayError "Command ${SCRIPT_NAME} - Option ${options_parse_arg} - Maximum number of option occurrences reached(1)"
+          return 1
+        fi
+        ((++options_parse_optionParsedCountOptionTheme))
+        # shellcheck disable=SC2034
+        optionTheme="$1"
+        optionThemeCallback "${options_parse_arg}" "${optionTheme}"
+
+        updateArgListThemeCallback "${options_parse_arg}" "${optionTheme}"
+
+        ;;
+
+      # Option 13/15
+      # optionVersion alts --version
+      # type: Boolean min 0 max 1
+      --version)
+        # shellcheck disable=SC2034
+        optionVersion="1"
+
+        if ((options_parse_optionParsedCountOptionVersion >= 1 )); then
+          Log::displayError "Command ${SCRIPT_NAME} - Option ${options_parse_arg} - Maximum number of option occurrences reached(1)"
+          return 1
+        fi
+        ((++options_parse_optionParsedCountOptionVersion))
+        optionVersionCallback "${options_parse_arg}" "${optionVersion}"
+
+        ;;
+
+      # Option 14/15
+      # optionQuiet alts --quiet|-q
+      # type: Boolean min 0 max 1
+      --quiet | -q)
+        # shellcheck disable=SC2034
+        optionQuiet="1"
+
+        if ((options_parse_optionParsedCountOptionQuiet >= 1 )); then
+          Log::displayError "Command ${SCRIPT_NAME} - Option ${options_parse_arg} - Maximum number of option occurrences reached(1)"
+          return 1
+        fi
+        ((++options_parse_optionParsedCountOptionQuiet))
+        optionQuietCallback "${options_parse_arg}" "${optionQuiet}"
+
+        updateArgListQuietCallback "${options_parse_arg}" "${optionQuiet}"
+
+        ;;
+
+      # Option 15/15
+      # optionSkin alts --skin
+      # type: String min 0 max 1
+      --skin)
+        shift
+        if (($# == 0)); then
+          Log::displayError "Command ${SCRIPT_NAME} - Option ${options_parse_arg} - a value needs to be specified"
+          return 1
+        fi
+
+        if ((options_parse_optionParsedCountOptionSkin >= 1 )); then
+          Log::displayError "Command ${SCRIPT_NAME} - Option ${options_parse_arg} - Maximum number of option occurrences reached(1)"
+          return 1
+        fi
+        ((++options_parse_optionParsedCountOptionSkin))
+        # shellcheck disable=SC2034
+        optionSkin="$1"
+        optionSkinCallback "${options_parse_arg}" "${optionSkin}"
+
+        ;;
+
+      -*)
+        if [[ "${argOptDefaultBehavior}" = "0" ]]; then
+          Log::displayError "Command ${SCRIPT_NAME} - Invalid option ${options_parse_arg}"
+          return 1
+        fi
+        ;;
+      *)
+        if ((0)); then
+          # Technical if - never reached
+          :
+
+        # Argument 1/1
+        # inputSqlFile min 0 max 1
+        # authorizedValues:
+        elif (( options_parse_parsedArgIndex >= 0 &&
+          options_parse_parsedArgIndex < 1 )); then
+
+          if ((options_parse_argParsedCountInputSqlFile >= 1 )); then
+            Log::displayError "Command ${SCRIPT_NAME} - Argument sqlFile - Maximum number of argument occurrences reached(1)"
             return 1
-        }
-    } else {
-        return weight2 - weight1
-    }
+          fi
+          ((++options_parse_argParsedCountInputSqlFile))
+          # shellcheck disable=SC2034
+          inputSqlFile="${options_parse_arg}"
+          optionSkinCallback "${inputSqlFile}" -- "${@:2}"
+
+        # else too much args
+        else
+
+          if [[ "${argOptDefaultBehavior}" = "0" ]]; then
+            # too much args and no unknownArgumentCallbacks configured
+            Log::displayError "Command ${SCRIPT_NAME} - Argument - too much arguments provided: $*"
+            return 1
+          fi
+
+        fi
+        ;;
+    esac
+    shift || true
+  done || return $?
+  commandOptionParseFinished
+
 }
 
-# =========================================================================
+# @description display command options and arguments help for mysql2pumlCommand
+mysql2pumlCommandHelp() {
+  Array::wrap2 ' ' 80 0 "${__HELP_TITLE_COLOR}SYNOPSIS:${__RESET_COLOR}" \
+    "Converts mysql dump sql schema to plantuml format."
+  echo
+  echo
 
-function uml_table(createTable)
-# DDL to plantuml
-# CREATE TABLE `core_customer` (`id` int(11) NOT NULL AUTO_INCREMENT, `instance_name` varchar(128) NOT NULL, PRIMARY KEY (`id`), UNIQUE KEY `instance_name` (`instance_name`) ) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8;
-# CREATE TABLE `core_learner_skill` (`id` int(11) NOT NULL AUTO_INCREMENT, `customer_id` int(10) unsigned NOT NULL, PRIMARY KEY (`id`), KEY `customer_id_684f904f_fk_core_learner_id` (`customer_id`), CONSTRAINT `customer_id_684f904f_fk_core_customer_id` FOREIGN KEY (`customer_id`) REFERENCES `core_customer` (`id`)) ENGINE=InnoDB AUTO_INCREMENT=415 DEFAULT CHARSET=utf8;
-#table( user ) {
-#  primary_key( id ): UUID
-#  column( isActive ): BOOLEAN
-#}
-#LearnerSkill "0..*" --> "1" Learner : "learner_id"
-{
-    debug("uml_table", createTable)
-    split(createTable,lines,"\n")
-    columnIdx=0
-    for (line in lines) {
-        debug(lines[line])
-        if (match(lines[line], /CREATE TABLE `([^`]+)` \(/, arr)) {
-            debug("TABLE ", lines[line])
-            tableName = arr[1]
-        } else if (match(lines[line], /PRIMARY KEY \(([^)]+)\)/, arr)) {
-            # PRIMARY KEY (`id`),
-            debug("PK ", lines[line])
-            split(arr[1],primaryKeys,",")
-            for (i in primaryKeys) {
-                if(match(primaryKeys[i], /[ ]?`([^`]+)+`[ ]?/, arr)) {
-                    columnsDetails[arr[1] ",pk"] = "1"
-                }
-            }
-        } else if (match(lines[line], /CONSTRAINT `[^`]+` FOREIGN KEY \(`([^`]+)`\) REFERENCES `([^`]+)` \(`([^`]+)`\)/, arr)) {
-            # CONSTRAINT `core_learner_customer_id_6d356da8_fk_core_customer_id` FOREIGN KEY (`customer_id`) REFERENCES `core_customer` (`id`)
-            debug("Constraint ", lines[line])
-            columnName=arr[1]
-            columnsDetails[columnName ",fk"]="1"
-            columnsDetails[columnName ",fkTable"]=arr[2]
-            columnsDetails[columnName ",fkColumn"]=arr[3]
-        } else if (match(lines[line], /UNIQUE KEY `[^`]+` \(([^)]+)\)/, arr)) {
-            # UNIQUE KEY `unique_learner_by_customer` (`external_id`,`customer_id`),
-            debug("Unique Key ", lines[line])
-            split(arr[1],uniqueKeys,",")
-            for (i in uniqueKeys) {
-                if(match(uniqueKeys[i], /[ ]?`([^`]+)+`[ ]?/, arr)) {
-                    columnsDetails[arr[1] ",unique"] = "1"
-                }
-            }
-        } else if (match(lines[line], /`([^`]+)` (([A-Za-z]+)((\([^)]+\)|)[ ]?(unsigned|)))[ ]?(NOT NULL|NULL|)[ ]?(AUTO_INCREMENT|)/, arr)) {
-            # `id` int(11) NOT NULL AUTO_INCREMENT
-            # `test` int(11) unsigned NULL
-            # `instance_name` varchar(128) NOT NULL
-            debug("Column ", lines[line])
-            columnName = arr[1]
-            columns[columnIdx++] = columnName
-            columnType=arr[2]
-            gsub(/\(|\)/, "", columnType)
-            columnsDetails[columnName ",type"] = columnType  # eg: int(11) unsigned => int11 unsigned
-            columnsDetails[columnName ",null"] = arr[7]=="NOT NULL" ? "0" : "1" # eg: NOT NULL
-            columnsDetails[columnName ",autoIncrement"] = arr[8] # eg: AUTO_INCREMENT
-        }
-    }
+  # ------------------------------------------
+  # usage section
+  # ------------------------------------------
+  Array::wrap2 " " 80 2 "${__HELP_TITLE_COLOR}USAGE:${__RESET_COLOR}" "mysql2puml [OPTIONS] [ARGUMENTS]"
+  echo
+  # ------------------------------------------
+  # usage/options section
+  # ------------------------------------------
+  optionsAltList=("[--help|-h]" "[--config]" "[--bash-framework-config <bash-framework-config>]" "[--verbose|-v]" "[-vv]" "[-vvv]" "[--env-file <env-file>]" "[--log-level <log-level>]" "[--log-file <log-file>]" "[--display-level <display-level>]" "[--no-color]" "[--theme <theme>]" "[--version]" "[--quiet|-q]" "[--skin <<Skin>>]"
+  )
+  Array::wrap2 " " 80 2 "${__HELP_TITLE_COLOR}USAGE:${__RESET_COLOR}" \
+    "mysql2puml" "${optionsAltList[@]}"
+  echo
 
-    if (DEBUG == 1) {
-        debug("Table ", tableName)
-        for (i in columns) debug("column ", i, " ", columns[i])
-        for (i in columnsDetails) debug("match ", i, " ", columnsDetails[i])
-    }
-    asort(columns, columns, "column_sort")
-    if (DEBUG == 1) {
-        debug("***************************************************************")
-        debug("Columns order after sort")
-        for (i in columns) debug("column ", i, " ", columns[i], column_weight(columns[i]))
-    }
-    printf("Table(%s) {\n", tableName )
-    for(i in columns) {
-        columnName=columns[i]
-        # column($name, $type, $null="", $pk="", $fk="", $unique="")
-        printf( \
-            "  column(\"%s\", \"%s\", \"%s\", \"%s\", \"%s\", \"%s\")\n", \
-            columnName, \
-            trim(columnsDetails[columnName ",type"]), \
-            (columnsDetails[columnName ",null"] == "1") ? "NULL" : "NOT NULL", \
-            (columnsDetails[columnName ",pk"] == "1") ? "PK" : "", \
-            (columnsDetails[columnName ",fkTable"] == "1") ? "FK" : "", \
-            (columnsDetails[columnName ",unique"] == "1") ? "UNIQUE" : "" \
-        )
-    }
-    print("}")
+  # ------------------------------------------
+  # usage/arguments section
+  # ------------------------------------------
+  echo
+  echo -e "${__HELP_TITLE_COLOR}ARGUMENTS:${__RESET_COLOR}"
 
-    for(i in columns) {
-        columnName=columns[i]
-        if (columnsDetails[columnName ",fk"] == "1") {
-            #LearnerSkill "0..*" --> "1" Learner : "learner_id"
-            printf("%s \"0..*\" --> \"1\" %s : \"%s\"\n", tableName, columnsDetails[columnName ",fkTable"], columnsDetails[columnName ",fkColumn"] )
-        }
-    }
-    print("")
+    Array::wrap2 " " 80 2 "  [${__HELP_OPTION_COLOR}sqlFile${__HELP_NORMAL}{single}]
+  "
+    Array::wrap2 ' ' 76 4 "    " "Sql filepath to parse (read from stdin if not provided)."
+    echo
+  # ------------------------------------------
+  # options section
+  # ------------------------------------------
+  echo
+  echo -e "${__HELP_TITLE_COLOR}GLOBAL OPTIONS:${__RESET_COLOR}"
+  echo -e "  ${__HELP_OPTION_COLOR}--help${__HELP_NORMAL}, ${__HELP_OPTION_COLOR}-h${__HELP_NORMAL} {single}"
+  Array::wrap2 ' ' 76 4 "    " "Displays this command help"
+  echo
 
-    delete columnsDetails
-    delete columns
+
+
+  echo -e "  ${__HELP_OPTION_COLOR}--config${__HELP_NORMAL} {single}"
+  Array::wrap2 ' ' 76 4 "    " "Displays configuration"
+  echo
+
+
+
+  echo -e "  ${__HELP_OPTION_COLOR}--bash-framework-config bash-framework-config${__HELP_NORMAL} {single}"
+  Array::wrap2 ' ' 76 4 "    " "Use alternate bash framework configuration."
+  echo
+
+
+
+  echo -e "  ${__HELP_OPTION_COLOR}--verbose${__HELP_NORMAL}, ${__HELP_OPTION_COLOR}-v${__HELP_NORMAL} {single}"
+  Array::wrap2 ' ' 76 4 "    " "Info level verbose mode (alias of --display-level INFO)"
+  echo
+
+
+
+  echo -e "  ${__HELP_OPTION_COLOR}-vv${__HELP_NORMAL} {single}"
+  Array::wrap2 ' ' 76 4 "    " "Debug level verbose mode (alias of --display-level DEBUG)"
+  echo
+
+
+
+  echo -e "  ${__HELP_OPTION_COLOR}-vvv${__HELP_NORMAL} {single}"
+  Array::wrap2 ' ' 76 4 "    " "Trace level verbose mode (alias of --display-level TRACE)"
+  echo
+
+
+
+  echo -e "  ${__HELP_OPTION_COLOR}--env-file env-file${__HELP_NORMAL} {list} (optional)"
+  Array::wrap2 ' ' 76 4 "    " "Load the specified env file (deprecated, please use --bash-framework-config option instead)"
+  echo
+
+
+
+  echo -e "  ${__HELP_OPTION_COLOR}--log-level log-level${__HELP_NORMAL} {single}"
+  Array::wrap2 ' ' 76 4 "    " "Set log level"
+  echo
+  Array::wrap2 ' ' 76 6 "    Possible values: " "OFF, "  "ERR, "  "ERROR, "  "WARN, "  "WARNING, "  "INFO, "  "DEBUG, "  "TRACE"
+  echo
+
+
+  echo -e "  ${__HELP_OPTION_COLOR}--log-file log-file${__HELP_NORMAL} {single}"
+  Array::wrap2 ' ' 76 4 "    " "Set log file"
+  echo
+
+
+
+  echo -e "  ${__HELP_OPTION_COLOR}--display-level display-level${__HELP_NORMAL} {single}"
+  Array::wrap2 ' ' 76 4 "    " "Set display level"
+  echo
+  Array::wrap2 ' ' 76 6 "    Possible values: " "OFF, "  "ERR, "  "ERROR, "  "WARN, "  "WARNING, "  "INFO, "  "DEBUG, "  "TRACE"
+  echo
+
+
+  echo -e "  ${__HELP_OPTION_COLOR}--no-color${__HELP_NORMAL} {single}"
+  Array::wrap2 ' ' 76 4 "    " "Produce monochrome output. alias of --theme noColor."
+  echo
+
+
+
+  echo -e "  ${__HELP_OPTION_COLOR}--theme theme${__HELP_NORMAL} {single}"
+  Array::wrap2 ' ' 76 4 "    " "Choose color theme - default-force means colors will be produced even if command is piped."
+  echo
+  Array::wrap2 ' ' 76 6 "    Possible values: " "default, "  "default-force, "  "noColor"
+  echo
+
+  Array::wrap2 ' ' 76 6 "    Default value: " "default"
+  echo
+
+  echo -e "  ${__HELP_OPTION_COLOR}--version${__HELP_NORMAL} {single}"
+  Array::wrap2 ' ' 76 4 "    " "Print version information and quit."
+  echo
+
+
+
+  echo -e "  ${__HELP_OPTION_COLOR}--quiet${__HELP_NORMAL}, ${__HELP_OPTION_COLOR}-q${__HELP_NORMAL} {single}"
+  Array::wrap2 ' ' 76 4 "    " "Quiet mode, doesn't display any output."
+  echo
+
+
+  echo
+  echo -e "${__HELP_TITLE_COLOR}OPTIONS:${__RESET_COLOR}"
+  echo -e "  ${__HELP_OPTION_COLOR}--skin <Skin>${__HELP_NORMAL} {single}"
+  Array::wrap2 ' ' 76 4 "    " "Header configuration of the plantuml file."
+  echo
+
+
+  Array::wrap2 ' ' 76 6 "    Default value: " "default"
+  echo
+  # ------------------------------------------
+  # longDescription section
+  # ------------------------------------------
+  echo
+  echo
+  echo -e "${__HELP_TITLE_COLOR}DESCRIPTION:${__RESET_COLOR}"
+  longDescriptionFunction
+  # ------------------------------------------
+  # version section
+  # ------------------------------------------
+  echo
+  echo -n -e "${__HELP_TITLE_COLOR}VERSION: ${__RESET_COLOR}"
+  echo "1.0"
+  # ------------------------------------------
+  # author section
+  # ------------------------------------------
+  echo
+  echo -n -e "${__HELP_TITLE_COLOR}AUTHOR: ${__RESET_COLOR}"
+  echo "[François Chastanet](https://github.com/fchastanet)"
+  # ------------------------------------------
+  # sourceFile section
+  # ------------------------------------------
+  echo
+  echo -n -e "${__HELP_TITLE_COLOR}SOURCE FILE: ${__RESET_COLOR}"
+  echo "https://github.com/fchastanet/bash-tools-framework/tree/master/src/_binaries/Converters/mysql2puml/binary-mysql2puml.yaml"
+  # ------------------------------------------
+  # license section
+  # ------------------------------------------
+  echo
+  echo -n -e "${__HELP_TITLE_COLOR}LICENSE: ${__RESET_COLOR}"
+  echo "MIT License"
+  # ------------------------------------------
+  # copyright section
+  # ------------------------------------------
+  Array::wrap2 ' ' 76 0 "$(copyrightCallback)"
 }
 
-# =========================================================================
-function uml_parse_line(currentLine)
-{
-    if (length(currentLine) < 2 || match(currentLine, "^--") > 0) {
-        return
-    }
 
-    if (match(currentLine,";")>0) {
-        sqlLine = sqlLine "\n" currentLine
-        debug(sqlLine)
-        if (match(sqlLine,"CREATE TABLE") > 0) {
-            uml_table(sqlLine)
-        }
-        sqlLine=""
-    }
-    else {
-        sqlLine = sqlLine "\n" currentLine
-    }
-}
+beforeParseCallback
 
-# =========================================================================
+mysql2pumlCommandParse "$@"
+MAIN_FUNCTION_NAME="main"
+main() {
 
-BEGIN {
-    DEBUG=ENVIRON["DEBUG"]
-    skinFile=ARGV[1]
-    debug("Skin file", skinFile)
-    uml_start()
-}
+Linux::requireTarCommand
+Compiler::Embed::extractFileFromBase64 \
+  "${PERSISTENT_TMPDIR:-/tmp}/abbc557ccf07f1917f739b75af2fba89/mysql2pumlScript" \
+  "IyEvYmluL2F3ayAtZgojID09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT0KIwojIG15c3FsMnB1bWwgLSBTUUwgRERMIHRvIG1hcmtkb3duIGNvbnZlcnRlcgojCiMgSW52b2NhdGlvbi9FeGVjdXRpb246CiMgICBhd2sgLWYgbXlzcWwycHVtbC5hd2sgc2tpbkZpbGUgPCBpbnB1dEZpbGUgPiBvdXRwdXRGaWxlCiMgICBERUJVRz0xIGF3ayAtZiBteXNxbDJwdW1sLmF3ayBza2luRmlsZSA8IGlucHV0RmlsZSA+IG91dHB1dEZpbGUKIwojIFN1cHBvcnRzCiMgICBQbGFudFVNTCBmb3JtYXQKIyA9PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09CgpmdW5jdGlvbiBkZWJ1ZyhmaXJzdCwgc2Vjb25kLCB0aGlyZCwgZm91cnRoLCBmaWZ0aCwgc2l4dGgsIHNldmVudGgsIGVpZ2h0aCwgbmludGgsIHRlbnRoLCBlbGV2ZW50aCwgdHdlbGZ0aCkgewogICAgaWYgKERFQlVHID09IDEpIHByaW50KCJERUJVRyAtICIsIGZpcnN0LCBzZWNvbmQsIHRoaXJkLCBmb3VydGgsIGZpZnRoLCBzaXh0aCwgc2V2ZW50aCwgZWlnaHRoLCBuaW50aCwgdGVudGgsIGVsZXZlbnRoLCB0d2VsZnRoKSA+ICIvZGV2L3N0ZGVyciIKfQoKIyA9PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09CgpmdW5jdGlvbiB1bWxfc3RhcnQoKQp7CiAgICBpZiAoIXNraW5GaWxlKSB7CiAgICAgICAgcHJpbnQoInNraW5GaWxlIHBhcmFtZXRlciBtaXNzaW5nIikgPiAiL2Rldi9zdGRlcnIiCiAgICAgICAgZXhpdCAxCiAgICB9CiAgICB3aGlsZSAoKGdldGxpbmUgdG1wIDwgc2tpbkZpbGUpID4gMCkgewogICAgICAgIGlmIChtYXRjaCh0bXAsIC9AZW5kdW1sLykpIHsKICAgICAgICAgICAgYnJlYWsKICAgICAgICB9CiAgICAgICAgcHJpbnQodG1wKQogICAgfQogICAgcHJpbnQgIicgZW50aXRpZXMiCn0KCiMgPT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PQoKZnVuY3Rpb24gdW1sX2VuZCgpCnsKICAgIHByaW50ICJAZW5kdW1sIgp9CgojID09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT0KCmZ1bmN0aW9uIGx0cmltKHMpIHsgc3ViKC9eWyBcdFxyXG5dKy8sICIiLCBzKTsgcmV0dXJuIHMgfQpmdW5jdGlvbiBydHJpbShzKSB7IHN1YigvWyBcdFxyXG5dKyQvLCAiIiwgcyk7IHJldHVybiBzIH0KZnVuY3Rpb24gdHJpbShzKSB7IHJldHVybiBydHJpbShsdHJpbShzKSk7IH0KCiMgPT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PQoKZnVuY3Rpb24gY29sdW1uX3dlaWdodChjb2x1bW4pCnsKICAgIHJldHVybiAoY29sdW1uc0RldGFpbHNbY29sdW1uICIscGsiXSA9PSAiMSIgPyA4IDogMCkgXAogICAgICAgICsgKGNvbHVtbnNEZXRhaWxzW2NvbHVtbiAiLGZrIl0gPT0gIjEiID8gNCA6IDApIFwKICAgICAgICArIChjb2x1bW5zRGV0YWlsc1tjb2x1bW4gIix1bmlxdWUiXSA9PSAiMSIgPyAyIDogMCkgXAogICAgICAgICsgKGNvbHVtbnNEZXRhaWxzW2NvbHVtbiAiLG51bGwiXSA9PSAiMCIgPyAxIDogMCkKfQoKZnVuY3Rpb24gY29sdW1uX3NvcnQoaTEsIGNvbHVtbjEsIGkyLCBjb2x1bW4yKQp7CiAgICB3ZWlnaHQxID0gY29sdW1uX3dlaWdodChjb2x1bW4xKQogICAgd2VpZ2h0MiA9IGNvbHVtbl93ZWlnaHQoY29sdW1uMikKICAgIGlmICh3ZWlnaHQxID09IHdlaWdodDIpIHsKICAgICAgICBsID0gdG9sb3dlcihjb2x1bW4xKQogICAgICAgIHIgPSB0b2xvd2VyKGNvbHVtbjIpCgogICAgICAgIGlmIChsIDwgcikgewogICAgICAgICAgICByZXR1cm4gLTEKICAgICAgICB9IGVsc2UgaWYgKGwgPT0gcikgewogICAgICAgICAgICByZXR1cm4gMAogICAgICAgIH0gZWxzZSB7CiAgICAgICAgICAgIHJldHVybiAxCiAgICAgICAgfQogICAgfSBlbHNlIHsKICAgICAgICByZXR1cm4gd2VpZ2h0MiAtIHdlaWdodDEKICAgIH0KfQoKIyA9PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09CgpmdW5jdGlvbiB1bWxfdGFibGUoY3JlYXRlVGFibGUpCiMgRERMIHRvIHBsYW50dW1sCiMgQ1JFQVRFIFRBQkxFIGBjb3JlX2N1c3RvbWVyYCAoYGlkYCBpbnQoMTEpIE5PVCBOVUxMIEFVVE9fSU5DUkVNRU5ULCBgaW5zdGFuY2VfbmFtZWAgdmFyY2hhcigxMjgpIE5PVCBOVUxMLCBQUklNQVJZIEtFWSAoYGlkYCksIFVOSVFVRSBLRVkgYGluc3RhbmNlX25hbWVgIChgaW5zdGFuY2VfbmFtZWApICkgRU5HSU5FPUlubm9EQiBBVVRPX0lOQ1JFTUVOVD01IERFRkFVTFQgQ0hBUlNFVD11dGY4OwojIENSRUFURSBUQUJMRSBgY29yZV9sZWFybmVyX3NraWxsYCAoYGlkYCBpbnQoMTEpIE5PVCBOVUxMIEFVVE9fSU5DUkVNRU5ULCBgY3VzdG9tZXJfaWRgIGludCgxMCkgdW5zaWduZWQgTk9UIE5VTEwsIFBSSU1BUlkgS0VZIChgaWRgKSwgS0VZIGBjdXN0b21lcl9pZF82ODRmOTA0Zl9ma19jb3JlX2xlYXJuZXJfaWRgIChgY3VzdG9tZXJfaWRgKSwgQ09OU1RSQUlOVCBgY3VzdG9tZXJfaWRfNjg0ZjkwNGZfZmtfY29yZV9jdXN0b21lcl9pZGAgRk9SRUlHTiBLRVkgKGBjdXN0b21lcl9pZGApIFJFRkVSRU5DRVMgYGNvcmVfY3VzdG9tZXJgIChgaWRgKSkgRU5HSU5FPUlubm9EQiBBVVRPX0lOQ1JFTUVOVD00MTUgREVGQVVMVCBDSEFSU0VUPXV0Zjg7CiN0YWJsZSggdXNlciApIHsKIyAgcHJpbWFyeV9rZXkoIGlkICk6IFVVSUQKIyAgY29sdW1uKCBpc0FjdGl2ZSApOiBCT09MRUFOCiN9CiNMZWFybmVyU2tpbGwgIjAuLioiIC0tPiAiMSIgTGVhcm5lciA6ICJsZWFybmVyX2lkIgp7CiAgICBkZWJ1ZygidW1sX3RhYmxlIiwgY3JlYXRlVGFibGUpCiAgICBzcGxpdChjcmVhdGVUYWJsZSxsaW5lcywiXG4iKQogICAgY29sdW1uSWR4PTAKICAgIGZvciAobGluZSBpbiBsaW5lcykgewogICAgICAgIGRlYnVnKGxpbmVzW2xpbmVdKQogICAgICAgIGlmIChtYXRjaChsaW5lc1tsaW5lXSwgL0NSRUFURSBUQUJMRSBgKFteYF0rKWAgXCgvLCBhcnIpKSB7CiAgICAgICAgICAgIGRlYnVnKCJUQUJMRSAiLCBsaW5lc1tsaW5lXSkKICAgICAgICAgICAgdGFibGVOYW1lID0gYXJyWzFdCiAgICAgICAgfSBlbHNlIGlmIChtYXRjaChsaW5lc1tsaW5lXSwgL1BSSU1BUlkgS0VZIFwoKFteKV0rKVwpLywgYXJyKSkgewogICAgICAgICAgICAjIFBSSU1BUlkgS0VZIChgaWRgKSwKICAgICAgICAgICAgZGVidWcoIlBLICIsIGxpbmVzW2xpbmVdKQogICAgICAgICAgICBzcGxpdChhcnJbMV0scHJpbWFyeUtleXMsIiwiKQogICAgICAgICAgICBmb3IgKGkgaW4gcHJpbWFyeUtleXMpIHsKICAgICAgICAgICAgICAgIGlmKG1hdGNoKHByaW1hcnlLZXlzW2ldLCAvWyBdP2AoW15gXSspK2BbIF0/LywgYXJyKSkgewogICAgICAgICAgICAgICAgICAgIGNvbHVtbnNEZXRhaWxzW2FyclsxXSAiLHBrIl0gPSAiMSIKICAgICAgICAgICAgICAgIH0KICAgICAgICAgICAgfQogICAgICAgIH0gZWxzZSBpZiAobWF0Y2gobGluZXNbbGluZV0sIC9DT05TVFJBSU5UIGBbXmBdK2AgRk9SRUlHTiBLRVkgXChgKFteYF0rKWBcKSBSRUZFUkVOQ0VTIGAoW15gXSspYCBcKGAoW15gXSspYFwpLywgYXJyKSkgewogICAgICAgICAgICAjIENPTlNUUkFJTlQgYGNvcmVfbGVhcm5lcl9jdXN0b21lcl9pZF82ZDM1NmRhOF9ma19jb3JlX2N1c3RvbWVyX2lkYCBGT1JFSUdOIEtFWSAoYGN1c3RvbWVyX2lkYCkgUkVGRVJFTkNFUyBgY29yZV9jdXN0b21lcmAgKGBpZGApCiAgICAgICAgICAgIGRlYnVnKCJDb25zdHJhaW50ICIsIGxpbmVzW2xpbmVdKQogICAgICAgICAgICBjb2x1bW5OYW1lPWFyclsxXQogICAgICAgICAgICBjb2x1bW5zRGV0YWlsc1tjb2x1bW5OYW1lICIsZmsiXT0iMSIKICAgICAgICAgICAgY29sdW1uc0RldGFpbHNbY29sdW1uTmFtZSAiLGZrVGFibGUiXT1hcnJbMl0KICAgICAgICAgICAgY29sdW1uc0RldGFpbHNbY29sdW1uTmFtZSAiLGZrQ29sdW1uIl09YXJyWzNdCiAgICAgICAgfSBlbHNlIGlmIChtYXRjaChsaW5lc1tsaW5lXSwgL1VOSVFVRSBLRVkgYFteYF0rYCBcKChbXildKylcKS8sIGFycikpIHsKICAgICAgICAgICAgIyBVTklRVUUgS0VZIGB1bmlxdWVfbGVhcm5lcl9ieV9jdXN0b21lcmAgKGBleHRlcm5hbF9pZGAsYGN1c3RvbWVyX2lkYCksCiAgICAgICAgICAgIGRlYnVnKCJVbmlxdWUgS2V5ICIsIGxpbmVzW2xpbmVdKQogICAgICAgICAgICBzcGxpdChhcnJbMV0sdW5pcXVlS2V5cywiLCIpCiAgICAgICAgICAgIGZvciAoaSBpbiB1bmlxdWVLZXlzKSB7CiAgICAgICAgICAgICAgICBpZihtYXRjaCh1bmlxdWVLZXlzW2ldLCAvWyBdP2AoW15gXSspK2BbIF0/LywgYXJyKSkgewogICAgICAgICAgICAgICAgICAgIGNvbHVtbnNEZXRhaWxzW2FyclsxXSAiLHVuaXF1ZSJdID0gIjEiCiAgICAgICAgICAgICAgICB9CiAgICAgICAgICAgIH0KICAgICAgICB9IGVsc2UgaWYgKG1hdGNoKGxpbmVzW2xpbmVdLCAvYChbXmBdKylgICgoW0EtWmEtel0rKSgoXChbXildK1wpfClbIF0/KHVuc2lnbmVkfCkpKVsgXT8oTk9UIE5VTEx8TlVMTHwpWyBdPyhBVVRPX0lOQ1JFTUVOVHwpLywgYXJyKSkgewogICAgICAgICAgICAjIGBpZGAgaW50KDExKSBOT1QgTlVMTCBBVVRPX0lOQ1JFTUVOVAogICAgICAgICAgICAjIGB0ZXN0YCBpbnQoMTEpIHVuc2lnbmVkIE5VTEwKICAgICAgICAgICAgIyBgaW5zdGFuY2VfbmFtZWAgdmFyY2hhcigxMjgpIE5PVCBOVUxMCiAgICAgICAgICAgIGRlYnVnKCJDb2x1bW4gIiwgbGluZXNbbGluZV0pCiAgICAgICAgICAgIGNvbHVtbk5hbWUgPSBhcnJbMV0KICAgICAgICAgICAgY29sdW1uc1tjb2x1bW5JZHgrK10gPSBjb2x1bW5OYW1lCiAgICAgICAgICAgIGNvbHVtblR5cGU9YXJyWzJdCiAgICAgICAgICAgIGdzdWIoL1wofFwpLywgIiIsIGNvbHVtblR5cGUpCiAgICAgICAgICAgIGNvbHVtbnNEZXRhaWxzW2NvbHVtbk5hbWUgIix0eXBlIl0gPSBjb2x1bW5UeXBlICAjIGVnOiBpbnQoMTEpIHVuc2lnbmVkID0+IGludDExIHVuc2lnbmVkCiAgICAgICAgICAgIGNvbHVtbnNEZXRhaWxzW2NvbHVtbk5hbWUgIixudWxsIl0gPSBhcnJbN109PSJOT1QgTlVMTCIgPyAiMCIgOiAiMSIgIyBlZzogTk9UIE5VTEwKICAgICAgICAgICAgY29sdW1uc0RldGFpbHNbY29sdW1uTmFtZSAiLGF1dG9JbmNyZW1lbnQiXSA9IGFycls4XSAjIGVnOiBBVVRPX0lOQ1JFTUVOVAogICAgICAgIH0KICAgIH0KCiAgICBpZiAoREVCVUcgPT0gMSkgewogICAgICAgIGRlYnVnKCJUYWJsZSAiLCB0YWJsZU5hbWUpCiAgICAgICAgZm9yIChpIGluIGNvbHVtbnMpIGRlYnVnKCJjb2x1bW4gIiwgaSwgIiAiLCBjb2x1bW5zW2ldKQogICAgICAgIGZvciAoaSBpbiBjb2x1bW5zRGV0YWlscykgZGVidWcoIm1hdGNoICIsIGksICIgIiwgY29sdW1uc0RldGFpbHNbaV0pCiAgICB9CiAgICBhc29ydChjb2x1bW5zLCBjb2x1bW5zLCAiY29sdW1uX3NvcnQiKQogICAgaWYgKERFQlVHID09IDEpIHsKICAgICAgICBkZWJ1ZygiKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqIikKICAgICAgICBkZWJ1ZygiQ29sdW1ucyBvcmRlciBhZnRlciBzb3J0IikKICAgICAgICBmb3IgKGkgaW4gY29sdW1ucykgZGVidWcoImNvbHVtbiAiLCBpLCAiICIsIGNvbHVtbnNbaV0sIGNvbHVtbl93ZWlnaHQoY29sdW1uc1tpXSkpCiAgICB9CiAgICBwcmludGYoIlRhYmxlKCVzKSB7XG4iLCB0YWJsZU5hbWUgKQogICAgZm9yKGkgaW4gY29sdW1ucykgewogICAgICAgIGNvbHVtbk5hbWU9Y29sdW1uc1tpXQogICAgICAgICMgY29sdW1uKCRuYW1lLCAkdHlwZSwgJG51bGw9IiIsICRwaz0iIiwgJGZrPSIiLCAkdW5pcXVlPSIiKQogICAgICAgIHByaW50ZiggXAogICAgICAgICAgICAiICBjb2x1bW4oXCIlc1wiLCBcIiVzXCIsIFwiJXNcIiwgXCIlc1wiLCBcIiVzXCIsIFwiJXNcIilcbiIsIFwKICAgICAgICAgICAgY29sdW1uTmFtZSwgXAogICAgICAgICAgICB0cmltKGNvbHVtbnNEZXRhaWxzW2NvbHVtbk5hbWUgIix0eXBlIl0pLCBcCiAgICAgICAgICAgIChjb2x1bW5zRGV0YWlsc1tjb2x1bW5OYW1lICIsbnVsbCJdID09ICIxIikgPyAiTlVMTCIgOiAiTk9UIE5VTEwiLCBcCiAgICAgICAgICAgIChjb2x1bW5zRGV0YWlsc1tjb2x1bW5OYW1lICIscGsiXSA9PSAiMSIpID8gIlBLIiA6ICIiLCBcCiAgICAgICAgICAgIChjb2x1bW5zRGV0YWlsc1tjb2x1bW5OYW1lICIsZmtUYWJsZSJdID09ICIxIikgPyAiRksiIDogIiIsIFwKICAgICAgICAgICAgKGNvbHVtbnNEZXRhaWxzW2NvbHVtbk5hbWUgIix1bmlxdWUiXSA9PSAiMSIpID8gIlVOSVFVRSIgOiAiIiBcCiAgICAgICAgKQogICAgfQogICAgcHJpbnQoIn0iKQoKICAgIGZvcihpIGluIGNvbHVtbnMpIHsKICAgICAgICBjb2x1bW5OYW1lPWNvbHVtbnNbaV0KICAgICAgICBpZiAoY29sdW1uc0RldGFpbHNbY29sdW1uTmFtZSAiLGZrIl0gPT0gIjEiKSB7CiAgICAgICAgICAgICNMZWFybmVyU2tpbGwgIjAuLioiIC0tPiAiMSIgTGVhcm5lciA6ICJsZWFybmVyX2lkIgogICAgICAgICAgICBwcmludGYoIiVzIFwiMC4uKlwiIC0tPiBcIjFcIiAlcyA6IFwiJXNcIlxuIiwgdGFibGVOYW1lLCBjb2x1bW5zRGV0YWlsc1tjb2x1bW5OYW1lICIsZmtUYWJsZSJdLCBjb2x1bW5zRGV0YWlsc1tjb2x1bW5OYW1lICIsZmtDb2x1bW4iXSApCiAgICAgICAgfQogICAgfQogICAgcHJpbnQoIiIpCgogICAgZGVsZXRlIGNvbHVtbnNEZXRhaWxzCiAgICBkZWxldGUgY29sdW1ucwp9CgojID09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT0KZnVuY3Rpb24gdW1sX3BhcnNlX2xpbmUoY3VycmVudExpbmUpCnsKICAgIGlmIChsZW5ndGgoY3VycmVudExpbmUpIDwgMiB8fCBtYXRjaChjdXJyZW50TGluZSwgIl4tLSIpID4gMCkgewogICAgICAgIHJldHVybgogICAgfQoKICAgIGlmIChtYXRjaChjdXJyZW50TGluZSwiOyIpPjApIHsKICAgICAgICBzcWxMaW5lID0gc3FsTGluZSAiXG4iIGN1cnJlbnRMaW5lCiAgICAgICAgZGVidWcoc3FsTGluZSkKICAgICAgICBpZiAobWF0Y2goc3FsTGluZSwiQ1JFQVRFIFRBQkxFIikgPiAwKSB7CiAgICAgICAgICAgIHVtbF90YWJsZShzcWxMaW5lKQogICAgICAgIH0KICAgICAgICBzcWxMaW5lPSIiCiAgICB9CiAgICBlbHNlIHsKICAgICAgICBzcWxMaW5lID0gc3FsTGluZSAiXG4iIGN1cnJlbnRMaW5lCiAgICB9Cn0KCiMgPT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PQoKQkVHSU4gewogICAgREVCVUc9RU5WSVJPTlsiREVCVUciXQogICAgc2tpbkZpbGU9QVJHVlsxXQogICAgZGVidWcoIlNraW4gZmlsZSIsIHNraW5GaWxlKQogICAgdW1sX3N0YXJ0KCkKfQoKewogICAgbGluZT0kMAogICAgdW1sX3BhcnNlX2xpbmUobGluZSkKfQoKRU5EIHsKICAgIHVtbF9lbmQoKQogICAgZXhpdCAwCiAgICAjIGZha2UgY2FsbCBvY2N1cnJpbmcgYWZ0ZXIgZXhpdCB0byByZW1vdmUgd2FybmluZyBhYm91dCB1bnVzZWQgZnVuY3Rpb24KICAgIGNvbHVtbl9zb3J0KCkKfQojID09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT0K" \
+  "755"
 
-{
-    line=$0
-    uml_parse_line(line)
-}
+declare -gx embed_file_mysql2pumlScript="${PERSISTENT_TMPDIR:-/tmp}/abbc557ccf07f1917f739b75af2fba89/mysql2pumlScript"
 
-END {
-    uml_end()
-    exit 0
-    # fake call occurring after exit to remove warning about unused function
-    column_sort()
-}
-# =========================================================================
-EOF
-)"
 
-run() {
-  absSkinFile="$(Conf::getAbsoluteFile "mysql2pumlSkins" "${optionSkin}" "puml")" ||
-    Log::fatal "the skin ${optionSkin} does not exist"
+Linux::requireRealpathCommand
 
-  if [[ -n "${inputSqlFile}" ]]; then
-    exec 3<"${inputSqlFile}"
-  elif [[ ! -t 0 ]]; then
-    exec 3<&0
-  fi
+# shellcheck disable=SC2154
+absSkinFile="$(Conf::getAbsoluteFile "mysql2pumlSkins" "${optionSkin}" "puml")" ||
+  Log::fatal "the skin ${optionSkin} does not exist"
 
-  awk --source "${awkScript}" "${absSkinFile}" - <&3 | Filters::trimEmptyLines
-}
-
-if [[ "${BASH_FRAMEWORK_QUIET_MODE:-0}" = "1" ]]; then
-  run &>/dev/null
-else
-  run
+if [[ -n "${inputSqlFile}" ]]; then
+  exec 3<"${inputSqlFile}"
+elif [[ ! -t 0 ]]; then
+  exec 3<&0
 fi
 
+# shellcheck disable=SC2154
+awk -f "${embed_file_mysql2pumlScript}" "${absSkinFile}" - <&3 | Filters::trimEmptyLines
+
 }
 
-facade_main_mysql2pumlsh "$@"
+# if file is sourced avoid calling main function
+# shellcheck disable=SC2178
+BASH_SOURCE=".$0" # cannot be changed in bash
+# shellcheck disable=SC2128
+if test ".$0" == ".${BASH_SOURCE}"; then
+  if [[ "${BASH_FRAMEWORK_QUIET_MODE:-0}" = "1" ]]; then
+    main "$@" &>/dev/null
+  else
+    main "$@"
+  fi
+fi
