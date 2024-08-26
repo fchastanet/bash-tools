@@ -1,12 +1,8 @@
 #!/usr/bin/env bash
-# BIN_FILE=${BASH_TOOLS_ROOT_DIR}/bin/doc
-# VAR_RELATIVE_FRAMEWORK_DIR_TO_CURRENT_DIR=..
-# FACADE
-# shellcheck disable=SC2034
 
-declare copyrightBeginYear="2020"
+# shellcheck disable=SC2034,SC2154
 
-.INCLUDE "$(dynamicTemplateDir _binaries/build/doc.options.tpl)"
+Linux::requireExecutedAsUser
 
 installRequirements() {
   ShellDoc::installRequirementsIfNeeded
@@ -114,26 +110,19 @@ generateDoc() {
   Log::displayStatus "Doc generated in ${ORIGINAL_DOC_DIR} folder"
 }
 
-run() {
-  if [[ "${IN_BASH_DOCKER:-}" != "You're in docker" ]]; then
-    installRequirements
-    if [[ "${optionContinuousIntegrationMode}" = "1" ]]; then
-      chmod -R 777 pages
-    fi
-    runContainer
-    if [[ "${optionContinuousIntegrationMode}" = "1" ]]; then
-      # restore previous rights
-      find pages -type d -exec chmod 755 {} ';'
-      find pages -type f -exec chmod 644 {} ';'
-    fi
-  else
-    configureContainer
-    generateDoc
+if [[ "${IN_BASH_DOCKER:-}" != "You're in docker" ]]; then
+  Git::requireGitCommand
+  installRequirements
+  if [[ "${optionContinuousIntegrationMode}" = "1" ]]; then
+    chmod -R 777 pages
   fi
-}
-
-if [[ "${BASH_FRAMEWORK_QUIET_MODE:-0}" = "1" ]]; then
-  run &>/dev/null
+  runContainer
+  if [[ "${optionContinuousIntegrationMode}" = "1" ]]; then
+    # restore previous rights
+    find pages -type d -exec chmod 755 {} ';'
+    find pages -type f -exec chmod 644 {} ';'
+  fi
 else
-  run
+  configureContainer
+  generateDoc
 fi
