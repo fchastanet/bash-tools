@@ -1,0 +1,46 @@
+extends:
+  - "${BASH_TOOLS_ROOT_DIR}/src/_binaries/commandDefinitions/optionsProfile.yaml"
+  - "${BASH_TOOLS_ROOT_DIR}/src/_binaries/commandDefinitions/optionsVersion.yaml"
+  - "${BASH_TOOLS_ROOT_DIR}/src/_binaries/commandDefinitions/optionsMysqlTarget.yaml"
+  - "${FRAMEWORK_ROOT_DIR}/src/_binaries/commandDefinitions/defaultCommand.yaml"
+  - "${FRAMEWORK_ROOT_DIR}/src/_binaries/commandDefinitions/frameworkConfig.yaml"
+
+vars:
+  SRC_FILE_PATH: src/_binaries/Database/dbImportStream/binary-dbImportStream.yaml
+
+compilerConfig:
+  targetFile: "${BASH_TOOLS_ROOT_DIR}/bin/dbImportStream"
+  relativeRootDirBasedOnTargetDir: ..
+  srcDirs:
+    - ${BASH_TOOLS_ROOT_DIR}/src
+binData:
+  commands:
+    default:
+      functionName: dbImportStreamCommand
+      version: "2.0"
+      commandName: dbImportStream
+      beforeParseCallbacks:
+        - beforeParseCallback
+        - initConf
+      callbacks:
+        - dbImportStreamCommandCallback@100
+      definitionFiles:
+        20: ${BASH_TOOLS_ROOT_DIR}/src/_binaries/Database/dbImportStream/dbImportStream-options.sh
+        99: ${BASH_TOOLS_ROOT_DIR}/src/_binaries/commandDefinitions/optionsDefault.sh
+      mainFile: ${BASH_TOOLS_ROOT_DIR}/src/_binaries/Database/dbImportStream/dbImportStream-main.sh
+      help: Stream tar.gz file or gz file through mysql.
+      longDescription: longDescriptionFunction
+      args:
+        - help: The file that will be streamed through mysql.
+          type: String
+          min: 1
+          max: 1
+          name: argDumpFile
+          variableName: argDumpFile
+
+        - help: The name of the mysql target database.
+          type: String
+          min: 1
+          max: 1
+          name: argTargetDbName
+          variableName: argTargetDbName

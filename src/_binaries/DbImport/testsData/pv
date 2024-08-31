@@ -1,6 +1,0 @@
-#!/usr/bin/env bash
-if [[ "$1" = "--progress" ]]; then
-  cat
-else
-  cat "$1"
-fi

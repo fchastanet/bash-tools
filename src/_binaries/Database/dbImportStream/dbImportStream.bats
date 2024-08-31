@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # shellcheck source=src/batsHeaders.sh
-source "$(cd "${BATS_TEST_DIRNAME}/../.." && pwd)/batsHeaders.sh"
+source "$(cd "${BATS_TEST_DIRNAME}/../../.." && pwd)/batsHeaders.sh"
 
 # shellcheck source=vendor/bash-tools-framework/src/Log/_.sh
 source "${FRAMEWORK_ROOT_DIR}/src/Log/_.sh" || exit 1
