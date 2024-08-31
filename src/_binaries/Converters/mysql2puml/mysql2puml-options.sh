@@ -29,6 +29,15 @@ longDescriptionFunction() {
   Conf::getMergedList "mysql2pumlSkins" ".puml" "  - "
 }
 
+# shellcheck disable=SC2317
+inputSqlFileCallback() {
+  # shellcheck disable=SC2154
+  if [[ ! -f "${inputSqlFile}" ]]; then
+    Log::displayError "${SCRIPT_NAME} - File '${inputSqlFile}' does not exists"
+    return 1
+  fi
+}
+
 optionSkinCallback() {
   declare -a skinList
   readarray -t skinList < <(Conf::getMergedList "mysql2pumlSkins" ".puml" "")

@@ -1256,6 +1256,15 @@ longDescriptionFunction() {
   Conf::getMergedList "mysql2pumlSkins" ".puml" "  - "
 }
 
+# shellcheck disable=SC2317
+inputSqlFileCallback() {
+  # shellcheck disable=SC2154
+  if [[ ! -f "${inputSqlFile}" ]]; then
+    Log::displayError "${SCRIPT_NAME} - File '${inputSqlFile}' does not exists"
+    return 1
+  fi
+}
+
 optionSkinCallback() {
   declare -a skinList
   readarray -t skinList < <(Conf::getMergedList "mysql2pumlSkins" ".puml" "")
@@ -1666,16 +1675,20 @@ mysql2pumlCommandParse() {
         fi
         ;;
       *)
+        ((minParsedArgIndex0 = 0)) || true
+        ((maxParsedArgIndex0 = 0)) || true
+        ((minParsedArgIndex1 = minParsedArgIndex0 + 0)) || true
+        ((maxParsedArgIndex1 = maxParsedArgIndex0 + 1)) || true
+        ((incrementArg = 1 ))
         if ((0)); then
           # Technical if - never reached
           :
 
-        # Argument 1/1
-        # inputSqlFile min 0 max 1
-        # authorizedValues:
-        elif (( options_parse_parsedArgIndex >= 0 &&
-          options_parse_parsedArgIndex < 1 )); then
-
+        # Argument 1/1 - inputSqlFile
+        # Argument inputSqlFile min 0 max 1
+        # Argument inputSqlFile authorizedValues:
+        elif (( options_parse_parsedArgIndex >= minParsedArgIndex0 &&
+          options_parse_parsedArgIndex < maxParsedArgIndex1 )); then
           if ((options_parse_argParsedCountInputSqlFile >= 1 )); then
             Log::displayError "Command ${SCRIPT_NAME} - Argument sqlFile - Maximum number of argument occurrences reached(1)"
             return 1
@@ -1683,10 +1696,12 @@ mysql2pumlCommandParse() {
           ((++options_parse_argParsedCountInputSqlFile))
           # shellcheck disable=SC2034
           inputSqlFile="${options_parse_arg}"
-          optionSkinCallback "${inputSqlFile}" -- "${@:2}"
+          inputSqlFileCallback "${inputSqlFile}" -- "${@:2}"
+
 
         # else too much args
         else
+
 
           if [[ "${argOptDefaultBehavior}" = "0" ]]; then
             # too much args and no unknownArgumentCallbacks configured
@@ -1695,10 +1710,14 @@ mysql2pumlCommandParse() {
           fi
 
         fi
+        if ((incrementArg == 1)); then
+          ((++options_parse_parsedArgIndex))
+        fi
         ;;
     esac
     shift || true
   done || return $?
+
   commandOptionParseFinished
 
 }

@@ -1475,12 +1475,15 @@ installRequirementsCommandParse() {
           Log::displayError "Command ${SCRIPT_NAME} - Argument - too much arguments provided: $*"
           return 1
         fi
-
-        ((++options_parse_parsedArgIndex))
+        ((incrementArg = 0))
+        if ((incrementArg == 1)); then
+          ((++options_parse_parsedArgIndex))
+        fi
         ;;
     esac
     shift || true
   done || return $?
+
   commandOptionParseFinished
 
 }

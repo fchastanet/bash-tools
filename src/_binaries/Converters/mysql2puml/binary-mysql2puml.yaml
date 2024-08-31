@@ -39,6 +39,6 @@ binData:
           max: 1
           help: Sql filepath to parse (read from stdin if not provided).
           callbacks:
-            - optionSkinCallback
+            - inputSqlFileCallback
           name: sqlFile
           variableName: inputSqlFile

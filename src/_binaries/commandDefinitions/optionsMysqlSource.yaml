@@ -1,0 +1,39 @@
+---
+binData:
+  commands:
+    default:
+      definitionFiles:
+        40: "${BASH_TOOLS_ROOT_DIR}/src/_binaries/commandDefinitions/optionsMysqlSource.sh"
+      optionGroups:
+        groupSourceDbOptions:
+          title: "SOURCE OPTIONS:"
+      options:
+        - alts:
+            - --skip-schema
+            - -s
+          group: groupSourceDbOptions
+          help: Avoids to import the schema.
+          type: Boolean
+          variableName: optionSkipSchema
+
+        - variableName: optionFromDsn
+          group: groupSourceDbOptions
+          type: String
+          help: dsnHelpFunction
+          helpValueName: <dsn>
+          alts:
+            - --from-dsn
+            - -f
+
+        - alts:
+            - --from-aws
+            - -a
+          group: groupSourceDbOptions
+          help: |
+            db dump will be downloaded from s3 instead of using remote db.
+            The value <awsFile> is the name of the file without s3 location
+            (Only .gz or tar.gz file are supported).
+            This option is incompatible with -f|--from-dsn option.
+          helpValueName: <awsFile>
+          type: String
+          variableName: optionFromAws

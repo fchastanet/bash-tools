@@ -24,8 +24,6 @@ declare PROFILES_DIR="${BASH_TOOLS_ROOT_DIR}/conf/dbImportProfiles"
 declare HOME_PROFILES_DIR="${HOME}/.bash-tools/dbImportProfiles"
 declare DOWNLOAD_DUMP=0
 
-.INCLUDE "$(dynamicTemplateDir _binaries/DbImport/dbImport.options.tpl)"
-
 # dump header/footer
 read -r -d '\0' DUMP_HEADER <<-EOM
     SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS = 0;
@@ -40,13 +38,7 @@ read -r -d '\0' DUMP_FOOTER <<-EOM2
     SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS;\0
 EOM2
 
-declare DUMP_SIZE_QUERY
-DUMP_SIZE_QUERY="$(
-  cat <<'EOF'
-.INCLUDE "${TEMPLATE_DIR}/_binaries/DbImport/dumpSizeQuery.sql"
-EOF
-)"
-
+# @embed "${BASH_TOOLS_ROOT_DIR}/src/_binaries/DbImport/dumpSizeQuery.sql" AS dumpSizeQuery
 # @require Linux::requireExecutedAsUser
 run() {
   # create db instances
@@ -125,7 +117,8 @@ run() {
 
       Log::displayInfo "Calculate dump size for tables ${listTablesDump}"
       local remoteDbDumpSize
-      remoteDbDumpSize=$(echo "${DUMP_SIZE_QUERY}" | envsubst | Database::query dbFromInstance)
+      # shellcheck disable=SC2154
+      remoteDbDumpSize=$(envsubst <"${embed_file_dumpSizeQuery}" | Database::query dbFromInstance)
       if [[ -z "${remoteDbDumpSize}" ]]; then
         # could occur with the none profile
         remoteDbDumpSize="0"
