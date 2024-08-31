@@ -1,12 +1,6 @@
 #!/usr/bin/env bash
 # @embed "${BASH_TOOLS_ROOT_DIR}/src/_binaries/DbImport/dumpSizeQuery.sql" AS dumpSizeQuery
 
-declare TIMEFORMAT='time spent : %3R'
-declare DB_IMPORT_DUMP_DIR=${DB_IMPORT_DUMP_DIR%/}
-declare PROFILES_DIR="${BASH_TOOLS_ROOT_DIR}/conf/dbImportProfiles"
-declare HOME_PROFILES_DIR="${HOME}/.bash-tools/dbImportProfiles"
-declare DOWNLOAD_DUMP=0
-
 # dump header/footer
 read -r -d '\0' DUMP_HEADER <<-EOM
     SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS = 0;

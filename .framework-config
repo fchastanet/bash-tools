@@ -32,7 +32,7 @@ FRAMEWORK_FUNCTIONS_IGNORE_REGEXP="${FRAMEWORK_FUNCTIONS_IGNORE_REGEXP:-^(Namesp
 # describe the files that do not contain function to be imported
 NON_FRAMEWORK_FILES_REGEXP="${NON_FRAMEWORK_FILES_REGEXP:-(^bin/|\.framework-config|^test\.sh$|^\.github/preCommitGeneration\.sh$|^install$|\.bats$|/testsData/|^manualTests/|/_\.sh$|/ZZZ\.sh$|/__all\.sh$|^src/_binaries|^src/_includes|^src/batsHeaders\.sh$|^conf/)}"
 # describe the files that are allowed to not have an associated bats file
-BATS_FILE_NOT_NEEDED_REGEXP="${BATS_FILE_NOT_NEEDED_REGEXP:-(^conf/|^bin/|^\.github/preCommitGeneration\.sh$|.framework-config|^install$|\.bats$|/testsData/|^manualTests/|/_\.sh$|/ZZZ\.sh$|/__all\.sh$|^src/batsHeaders\.sh$|^src/_includes)}"
+BATS_FILE_NOT_NEEDED_REGEXP="${BATS_FILE_NOT_NEEDED_REGEXP:-(^conf/|^bin/|^\.github/preCommitGeneration\.sh$|.framework-config|^install$|\.bats$|/testsData/|^manualTests/|/_\.sh$|/ZZZ\.sh$|/__all\.sh$|^src/batsHeaders\.sh$|^src/_includes|^src/_binaries/.*-(options|main)\.sh$|^conf/|^src/_binaries/commandDefinitions/options.*\.sh$|/testsData/|^test\.sh$)}"
 # describe the files that are allowed to not have a function matching the filename
 FRAMEWORK_FILES_FUNCTION_MATCHING_IGNORE_REGEXP="${FRAMEWORK_FILES_FUNCTION_MATCHING_IGNORE_REGEXP:-^conf/|^bin/|^\.framework-config$|\.tpl$|testsData/binaryFile$}"
 # Source directories

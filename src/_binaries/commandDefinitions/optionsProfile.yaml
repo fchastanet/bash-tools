@@ -17,7 +17,7 @@ binData:
           callbacks:
             - profileOptionCallback
           defaultValue: default
-          helpValueName: <dsn>
+          helpValueName: profile
           alts:
             - --profile
             - -p
@@ -30,6 +30,6 @@ binData:
             If aws mode, ignore profile option.
           callbacks:
             - optionTablesCallback
-          helpValueName: <tablesSeparatedByComma>
+          helpValueName: tablesSeparatedByComma
           alts:
             - --tables

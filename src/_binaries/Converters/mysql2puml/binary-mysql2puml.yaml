@@ -28,7 +28,7 @@ binData:
           type: String
           defaultValue: default
           help: Header configuration of the plantuml file.
-          helpValueName: <Skin>
+          helpValueName: skin
           callbacks:
             - optionSkinCallback
           variableName: optionSkin

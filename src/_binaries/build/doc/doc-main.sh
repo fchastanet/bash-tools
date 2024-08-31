@@ -90,7 +90,7 @@ generateDoc() {
     "${DOC_DIR}/Commands.md"
 
   mkdir -p "${DOC_DIR}/src/_binaries/Converters/testsData" || true
-  cp "${BASH_TOOLS_ROOT_DIR}/src/_binaries/Converters/testsData/mysql2puml-model.png" "${DOC_DIR}/src/_binaries/Converters/testsData"
+  cp "${BASH_TOOLS_ROOT_DIR}/src/_binaries/Converters/mysql2puml/testsData/mysql2puml-model.png" "${DOC_DIR}/src/_binaries/Converters/testsData"
 
   # copy other files
   cp "${BASH_TOOLS_ROOT_DIR}/README.md" "${DOC_DIR}/README.md"

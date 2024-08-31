@@ -61,7 +61,7 @@ optionHelpCallback() {
   profilesList="$(Conf::getMergedList "dbImportProfiles" "sh" || true)"
 
   <% ${commandFunctionName} %> help | envsubst
-  checkRequirements
+  Db::checkRequirements
   exit 0
 }
 

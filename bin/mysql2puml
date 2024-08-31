@@ -1737,7 +1737,7 @@ mysql2pumlCommandHelp() {
   # ------------------------------------------
   # usage/options section
   # ------------------------------------------
-  optionsAltList=("[--help|-h]" "[--config]" "[--bash-framework-config <bash-framework-config>]" "[--verbose|-v]" "[-vv]" "[-vvv]" "[--env-file <env-file>]" "[--log-level <log-level>]" "[--log-file <log-file>]" "[--display-level <display-level>]" "[--no-color]" "[--theme <theme>]" "[--version]" "[--quiet|-q]" "[--skin <<Skin>>]"
+  optionsAltList=("[--help|-h]" "[--config]" "[--bash-framework-config <bash-framework-config>]" "[--verbose|-v]" "[-vv]" "[-vvv]" "[--env-file <env-file>]" "[--log-level <log-level>]" "[--log-file <log-file>]" "[--display-level <display-level>]" "[--no-color]" "[--theme <theme>]" "[--version]" "[--quiet|-q]" "[--skin <skin>]"
   )
   Array::wrap2 " " 80 2 "${__HELP_TITLE_COLOR}USAGE:${__RESET_COLOR}" \
     "mysql2puml" "${optionsAltList[@]}"
@@ -1749,7 +1749,7 @@ mysql2pumlCommandHelp() {
   echo
   echo -e "${__HELP_TITLE_COLOR}ARGUMENTS:${__RESET_COLOR}"
 
-    Array::wrap2 " " 80 2 "  [${__HELP_OPTION_COLOR}sqlFile${__HELP_NORMAL}{single}]
+    Array::wrap2 " " 80 2 "  [${__HELP_OPTION_COLOR}sqlFile${__HELP_NORMAL} {single}]
   "
     Array::wrap2 ' ' 76 4 "    " "Sql filepath to parse (read from stdin if not provided)."
     echo
@@ -1770,7 +1770,7 @@ mysql2pumlCommandHelp() {
 
 
 
-  echo -e "  ${__HELP_OPTION_COLOR}--bash-framework-config bash-framework-config${__HELP_NORMAL} {single}"
+  echo -e "  ${__HELP_OPTION_COLOR}--bash-framework-config <bash-framework-config>${__HELP_NORMAL} {single}"
   Array::wrap2 ' ' 76 4 "    " "Use alternate bash framework configuration."
   echo
 
@@ -1794,26 +1794,26 @@ mysql2pumlCommandHelp() {
 
 
 
-  echo -e "  ${__HELP_OPTION_COLOR}--env-file env-file${__HELP_NORMAL} {list} (optional)"
+  echo -e "  ${__HELP_OPTION_COLOR}--env-file <env-file>${__HELP_NORMAL} {list} (optional)"
   Array::wrap2 ' ' 76 4 "    " "Load the specified env file (deprecated, please use --bash-framework-config option instead)"
   echo
 
 
 
-  echo -e "  ${__HELP_OPTION_COLOR}--log-level log-level${__HELP_NORMAL} {single}"
+  echo -e "  ${__HELP_OPTION_COLOR}--log-level <log-level>${__HELP_NORMAL} {single}"
   Array::wrap2 ' ' 76 4 "    " "Set log level"
   echo
   Array::wrap2 ' ' 76 6 "    Possible values: " "OFF, "  "ERR, "  "ERROR, "  "WARN, "  "WARNING, "  "INFO, "  "DEBUG, "  "TRACE"
   echo
 
 
-  echo -e "  ${__HELP_OPTION_COLOR}--log-file log-file${__HELP_NORMAL} {single}"
+  echo -e "  ${__HELP_OPTION_COLOR}--log-file <log-file>${__HELP_NORMAL} {single}"
   Array::wrap2 ' ' 76 4 "    " "Set log file"
   echo
 
 
 
-  echo -e "  ${__HELP_OPTION_COLOR}--display-level display-level${__HELP_NORMAL} {single}"
+  echo -e "  ${__HELP_OPTION_COLOR}--display-level <display-level>${__HELP_NORMAL} {single}"
   Array::wrap2 ' ' 76 4 "    " "Set display level"
   echo
   Array::wrap2 ' ' 76 6 "    Possible values: " "OFF, "  "ERR, "  "ERROR, "  "WARN, "  "WARNING, "  "INFO, "  "DEBUG, "  "TRACE"
@@ -1826,7 +1826,7 @@ mysql2pumlCommandHelp() {
 
 
 
-  echo -e "  ${__HELP_OPTION_COLOR}--theme theme${__HELP_NORMAL} {single}"
+  echo -e "  ${__HELP_OPTION_COLOR}--theme <theme>${__HELP_NORMAL} {single}"
   Array::wrap2 ' ' 76 4 "    " "Choose color theme - default-force means colors will be produced even if command is piped."
   echo
   Array::wrap2 ' ' 76 6 "    Possible values: " "default, "  "default-force, "  "noColor"
@@ -1848,7 +1848,7 @@ mysql2pumlCommandHelp() {
 
   echo
   echo -e "${__HELP_TITLE_COLOR}OPTIONS:${__RESET_COLOR}"
-  echo -e "  ${__HELP_OPTION_COLOR}--skin <Skin>${__HELP_NORMAL} {single}"
+  echo -e "  ${__HELP_OPTION_COLOR}--skin <skin>${__HELP_NORMAL} {single}"
   Array::wrap2 ' ' 76 4 "    " "Header configuration of the plantuml file."
   echo
 
