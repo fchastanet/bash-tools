@@ -7,23 +7,8 @@ vendorDir="${rootDir}/vendor"
 FRAMEWORK_ROOT_DIR="$(cd "$(readlink -e "${vendorDir}/bash-tools-framework")" && pwd -P)"
 export FRAMEWORK_ROOT_DIR
 
-load "${FRAMEWORK_ROOT_DIR}/vendor/bats-support/load.bash"
-load "${FRAMEWORK_ROOT_DIR}/vendor/bats-assert/load.bash"
-load "${FRAMEWORK_ROOT_DIR}/vendor/bats-mock-Flamefire/load.bash"
-
-# shellcheck source=vendor/bash-tools-framework/src/_includes/_mandatoryHeader.sh
-source "${FRAMEWORK_ROOT_DIR}/src/_includes/_mandatoryHeader.sh"
-
-# shellcheck source=vendor/bash-tools-framework/src/_standalone/Bats/assert_lines_count.sh
-source "${FRAMEWORK_ROOT_DIR}/src/_standalone/Bats/assert_lines_count.sh"
-# shellcheck source=vendor/bash-tools-framework/src/Env/__all.sh
-source "${FRAMEWORK_ROOT_DIR}/src/Env/__all.sh"
-# shellcheck source=vendor/bash-tools-framework/src/Log/__all.sh
-source "${FRAMEWORK_ROOT_DIR}/src/Log/__all.sh"
-# shellcheck source=vendor/bash-tools-framework/src/UI/theme.sh
-source "${FRAMEWORK_ROOT_DIR}/src/UI/theme.sh"
-# shellcheck source=vendor/bash-tools-framework/src/Assert/tty.sh
-source "${FRAMEWORK_ROOT_DIR}/src/Assert/tty.sh"
+# shellcheck source=vendor/bash-tools-framework/src/batsHeaders.sh
+source "${FRAMEWORK_ROOT_DIR}/src/batsHeaders.sh"
 
 export DISPLAY_DURATION=0
 export BASH_FRAMEWORK_LOG_FILE="${BATS_TEST_TMPDIR}/logFile"

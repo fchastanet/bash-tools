@@ -1,0 +1,18 @@
+---
+binData:
+  commands:
+    default:
+      definitionFiles:
+        25: "${BASH_TOOLS_ROOT_DIR}/src/_binaries/commandDefinitions/optionsMysqlCollationName.sh"
+      optionGroups:
+        groupTargetOptions:
+          title: "TARGET OPTIONS:"
+      options:
+        - variableName: optionCollationName
+          group: groupTargetOptions
+          type: String
+          help: Change the collation name used during database creation.
+          helpValueName: <targetDsn>
+          alts:
+            - --collation-name
+            - -o

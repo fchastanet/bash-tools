@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # shellcheck source=src/batsHeaders.sh
-source "$(cd "${BATS_TEST_DIRNAME}/../.." && pwd)/batsHeaders.sh"
+source "$(cd "${BATS_TEST_DIRNAME}/../../.." && pwd)/batsHeaders.sh"
 
 setup() {
   export TMPDIR="${BATS_TEST_TMPDIR}"
@@ -41,7 +41,7 @@ function Database::dbImport::remoteDbName_not_provided { #@test
   run "${binDir}/dbImport" 2>&1
   assert_failure 1
   assert_lines_count 1
-  assert_output --partial "ERROR   - Command dbImport - Argument 'fromDbName' should be provided at least 1 time(s)"
+  assert_output --partial "ERROR   - Command dbImport - Argument '<fromDbName>' should be provided at least 1 time(s)"
 }
 
 function Database::dbImport::from_aws_and_aws_not_installed { #@test
@@ -163,8 +163,8 @@ function Database::dbImport::remote_db_fully_functional_from_mysql { #@test
   # call 1 (order 7): dump data
   # call 2 (order 8): dump structure
   stub mysqldump \
-    "\* --default-character-set=utf8 --compress --hex-blob --routines --triggers --single-transaction --set-gtid-purged=OFF --column-statistics=0 --ssl-mode=DISABLED --no-create-info --skip-add-drop-table --single-transaction=TRUE fromDb table1 : echo '####data####'" \
-    "\* --default-character-set=utf8 --compress --hex-blob --routines --triggers --single-transaction --set-gtid-purged=OFF --column-statistics=0 --ssl-mode=DISABLED --no-data --skip-add-drop-table --single-transaction=TRUE fromDb : echo '####structure####'"
+    "\* --default-character-set=utf8 --compression-algorithms --hex-blob --routines --triggers --single-transaction --set-gtid-purged=OFF --column-statistics=0 --ssl-mode=DISABLED --no-create-info --skip-add-drop-table --single-transaction=TRUE fromDb table1 : echo '####data####'" \
+    "\* --default-character-set=utf8 --compression-algorithms --hex-blob --routines --triggers --single-transaction --set-gtid-purged=OFF --column-statistics=0 --ssl-mode=DISABLED --no-data --skip-add-drop-table --single-transaction=TRUE fromDb : echo '####structure####'"
 
   stub zcat \
     "\* : echo 'structure'" \

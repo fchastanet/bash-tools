@@ -1,0 +1,27 @@
+---
+binData:
+  commands:
+    default:
+      definitionFiles:
+        23: "${BASH_TOOLS_ROOT_DIR}/src/_binaries/commandDefinitions/optionsMysqlTarget.sh"
+      optionGroups:
+        groupTargetOptions:
+          title: "TARGET OPTIONS:"
+      options:
+        - variableName: optionTargetDsn
+          group: groupTargetOptions
+          type: String
+          help: Dsn to use for target database.
+          helpValueName: <targetDsn>
+          defaultValue: default.local
+          alts:
+            - --target-dsn
+            - -t
+        - variableName: optionCharacterSet
+          group: groupTargetOptions
+          type: String
+          help: Change the character set used during database creation.
+          helpValueName: <targetDsn>
+          alts:
+            - --character-set
+            - -c

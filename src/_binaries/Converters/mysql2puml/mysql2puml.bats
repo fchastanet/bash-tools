@@ -1,14 +1,13 @@
 #!/usr/bin/env bash
 
 # shellcheck source=src/batsHeaders.sh
-source "$(cd "${BATS_TEST_DIRNAME}/../.." && pwd)/batsHeaders.sh"
+source "$(cd "${BATS_TEST_DIRNAME}/../../.." && pwd -P)/batsHeaders.sh"
 
 setup() {
   export TMPDIR="${BATS_TEST_TMPDIR}"
 
   export HOME="${BATS_TEST_TMPDIR}/home"
-  mkdir -p \
-    "${HOME}/.bash-tools/mysql2pumlSkins"
+  mkdir -p "${HOME}/.bash-tools/mysql2pumlSkins"
   cp "${BATS_TEST_DIRNAME}/testsData/mysql2pumlSkins/"* "${HOME}/.bash-tools/mysql2pumlSkins/"
   cp "${BATS_TEST_DIRNAME}/testsData/.env" "${HOME}/.bash-tools/.env"
 

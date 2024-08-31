@@ -1,0 +1,35 @@
+---
+binData:
+  commands:
+    default:
+      definitionFiles:
+        24: "${BASH_TOOLS_ROOT_DIR}/src/_binaries/commandDefinitions/optionsProfile.sh"
+      callbacks:
+        - initProfileCommandCallback
+      optionGroups:
+        groupProfileOptions:
+          title: "PROFILE OPTIONS:"
+      options:
+        - variableName: optionProfile
+          group: groupProfileOptions
+          type: String
+          help: profileOptionHelpFunction
+          callbacks:
+            - profileOptionCallback
+          defaultValue: default
+          helpValueName: <dsn>
+          alts:
+            - --profile
+            - -p
+
+        - variableName: optionTables
+          group: groupProfileOptions
+          type: String
+          help: |
+            Import only table specified in the list.
+            If aws mode, ignore profile option.
+          callbacks:
+            - optionTablesCallback
+          helpValueName: <tablesSeparatedByComma>
+          alts:
+            - --tables

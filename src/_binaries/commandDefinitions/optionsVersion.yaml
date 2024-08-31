@@ -1,0 +1,6 @@
+---
+binData:
+  commands:
+    default:
+      definitionFiles:
+        30: "${BASH_TOOLS_ROOT_DIR}/src/_binaries/commandDefinitions/optionsVersion.sh"

@@ -1,4 +1,8 @@
-checkRequirements() {
+#!/usr/bin/env bash
+
+# @description check if all requirements are satisfied
+# to execute dbImport commands
+Db::checkRequirements() {
   if [[ "${SKIP_REQUIREMENTS_CHECKS:-0}" = "1" ]]; then
     return 0
   fi
@@ -12,10 +16,4 @@ checkRequirements() {
   Assert::commandExists awk "sudo apt-get install -y gawk" || ((++failures))
   Version::checkMinimal "gawk" "--version" "5.0.1" || ((++failures))
   return "${failures}"
-}
-
-optionVersionCallback() {
-  echo "${SCRIPT_NAME} version <% ${versionNumber} %>"
-  checkRequirements
-  exit 0
 }
