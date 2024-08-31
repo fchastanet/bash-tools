@@ -8,6 +8,13 @@ declare versionNumber="2.0"
 declare optionBashFrameworkConfig="${BASH_TOOLS_ROOT_DIR}/.framework-config"
 declare defaultTargetCharacterSet=""
 
+declare TIMEFORMAT='time spent : %3R'
+declare DOWNLOAD_DUMP=0
+
+declare DB_IMPORT_DUMP_DIR
+declare PROFILES_DIR
+declare HOME_PROFILES_DIR
+
 beforeParseCallback() {
   BashTools::Conf::requireLoad
   Env::requireLoad
@@ -15,6 +22,13 @@ beforeParseCallback() {
   Log::requireLoad
   Linux::requireRealpathCommand
   Linux::requireExecutedAsUser
+}
+
+initConf() {
+  # shellcheck disable=SC2034
+  DB_IMPORT_DUMP_DIR=${DB_IMPORT_DUMP_DIR%/}
+  PROFILES_DIR="${BASH_TOOLS_ROOT_DIR}/conf/dbImportProfiles"
+  HOME_PROFILES_DIR="${HOME}/.bash-tools/dbImportProfiles"
 }
 
 optionHelpCallback() {

@@ -1,15 +1,16 @@
-[1;37mSYNOPSIS:[0m Converts mysql dump sql schema to plantuml format.
+[1;37mSYNOPSIS:[0m Generate optimized profiles to be used by dbImport.
 
-[1;37mUSAGE:[0m mysql2puml [OPTIONS] [ARGUMENTS]
-[1;37mUSAGE:[0m mysql2puml [--help|-h] [--config]
+[1;37mUSAGE:[0m dbImportProfile [OPTIONS] [ARGUMENTS]
+[1;37mUSAGE:[0m dbImportProfile [--help|-h] [--config]
   [--bash-framework-config <bash-framework-config>] [--verbose|-v] [-vv] [-vvv]
   [--env-file <env-file>] [--log-level <log-level>] [--log-file <log-file>]
   [--display-level <display-level>] [--no-color] [--theme <theme>] [--version]
-  [--quiet|-q] [--skin <skin>]
+  [--quiet|-q] [--profile|-p <profile>] [--from-dsn|-f <dsn>]
+  [--ratio|-r <ratio>]
 
 [1;37mARGUMENTS:[0m
-  [[1;34msqlFile[0m {single}]
-    Sql filepath to parse (read from stdin if not provided).
+  [1;34mfromDbName[0m {single} (mandatory)
+    The name of the source/remote database.
 
 [1;37mGLOBAL OPTIONS:[0m
   [1;34m--help[0m, [1;34m-h[0m {single}
@@ -48,32 +49,43 @@
     Quiet mode, doesn't display any output.
 
 [1;37mOPTIONS:[0m
-  [1;34m--skin <skin>[0m {single}
-    Header configuration of the plantuml file.
-    Default value: default
+  [1;34m--profile[0m, [1;34m-p <profile>[0m {single}
+    The name of the profile to write in profiles directory.
+    If not provided, the file name pattern will be 'auto_<dsn>_<fromDbName>.sh'
+  [1;34m--from-dsn[0m, [1;34m-f <dsn>[0m {single}
+    dsn to use for source database (Default: default.remote)
+    if not provided, the file name pattern will be 'auto_<dsn>_<fromDbName>.sh'
+    Default value: default.remote
+  [1;34m--ratio[0m, [1;34m-r <ratio>[0m {single}
+    define the ratio to use (0 to 100% - default 70).
+    - 0 means profile will filter out all the tables
+    - 100 means profile will keep all the tables.
+    Eg: 70 means that tables with size(table+index)
+    that are greater than 70% of the max table size will be excluded.
+    Default value: 70
 
 
 [1;37mDESCRIPTION:[0m
-[1;37mEXAMPLE 1:[0m
-[2;97mmysql2puml dump.dql[0m
+[1;37mDefault profiles directory:[0m
+/bash/conf/dbImportProfiles
 
-[1;37mEXAMPLE 2:[0m
-[2;97mmysqldump --skip-add-drop-table \
-  --skip-add-locks \
-  --skip-disable-keys \
-  --skip-set-charset \
-  --user=root \
-  --password=root \
-  --no-data skills | mysql2puml
-[0m
-[1;37mLIST OF AVAILABLE SKINS:[0m
-  - default
+[1;37mUser profiles directory:[0m
+home/.bash-tools/dbImportProfiles
+Allows to override profiles defined in "Default profiles directory"
 
-[1;37mVERSION: [0m1.0
+[1;37mList of available profiles:[0m
+
+
+[1;37mList of available dsn:[0m
+       - default.local
+       - default.remote
+       - localhost-root
+
+[1;37mVERSION: [0m2.0
 
 [1;37mAUTHOR: [0m[François Chastanet](https://github.com/fchastanet)
 
-[1;37mSOURCE FILE: [0mhttps://github.com/fchastanet/bash-tools-framework/tree/master/src/_binaries/Converters/mysql2puml/binary-mysql2puml.yaml
+[1;37mSOURCE FILE: [0mhttps://github.com/fchastanet/bash-tools-framework/tree/master/src/_binaries/Database/dbImportProfile/binary-dbImportProfile.yaml
 
 [1;37mLICENSE: [0mMIT License
 Copyright (c) 2020-now François Chastanet

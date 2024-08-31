@@ -1,10 +1,11 @@
 # The commands
 
 - [1. Build tools](#1-build-tools)
-  - [1.1. bin/installRequirements](#11-bininstallrequirements)
-  - [1.2. bin/waitForIt](#12-binwaitforit)
-  - [1.3. bin/waitForMysql](#13-binwaitformysql)
-  - [1.4. bin/doc](#14-bindoc)
+  - [1.1. bin/install](#11-bininstall)
+  - [1.2. bin/installRequirements](#12-bininstallrequirements)
+  - [1.3. bin/waitForIt](#13-binwaitforit)
+  - [1.4. bin/waitForMysql](#14-binwaitformysql)
+  - [1.5. bin/doc](#15-bindoc)
 - [2. Converter and Generator tools](#2-converter-and-generator-tools)
   - [2.1. bin/mysql2puml](#21-binmysql2puml)
     - [2.1.1. Help](#211-help)
@@ -36,25 +37,31 @@
 
 ## 1. Build tools
 
-### 1.1. bin/installRequirements
+### 1.1. bin/install
+
+```text
+@@@install_help@@@
+```
+
+### 1.2. bin/installRequirements
 
 ```text
 @@@installRequirements_help@@@
 ```
 
-### 1.2. bin/waitForIt
+### 1.3. bin/waitForIt
 
 ```text
 @@@waitForIt_help@@@
 ```
 
-### 1.3. bin/waitForMysql
+### 1.4. bin/waitForMysql
 
 ```text
 @@@waitForMysql_help@@@
 ```
 
-### 1.4. bin/doc
+### 1.5. bin/doc
 
 ```text
 @@@doc_help@@@

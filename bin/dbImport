@@ -1686,6 +1686,13 @@ declare versionNumber="2.0"
 declare optionBashFrameworkConfig="${BASH_TOOLS_ROOT_DIR}/.framework-config"
 declare defaultTargetCharacterSet=""
 
+declare TIMEFORMAT='time spent : %3R'
+declare DOWNLOAD_DUMP=0
+
+declare DB_IMPORT_DUMP_DIR
+declare PROFILES_DIR
+declare HOME_PROFILES_DIR
+
 beforeParseCallback() {
   BashTools::Conf::requireLoad
   Env::requireLoad
@@ -1693,6 +1700,13 @@ beforeParseCallback() {
   Log::requireLoad
   Linux::requireRealpathCommand
   Linux::requireExecutedAsUser
+}
+
+initConf() {
+  # shellcheck disable=SC2034
+  DB_IMPORT_DUMP_DIR=${DB_IMPORT_DUMP_DIR%/}
+  PROFILES_DIR="${BASH_TOOLS_ROOT_DIR}/conf/dbImportProfiles"
+  HOME_PROFILES_DIR="${HOME}/.bash-tools/dbImportProfiles"
 }
 
 optionHelpCallback() {
@@ -2431,7 +2445,7 @@ dbImportCommandParse() {
         elif (( options_parse_parsedArgIndex >= minParsedArgIndex0 &&
           options_parse_parsedArgIndex < maxParsedArgIndex1 )); then
           if ((options_parse_argParsedCountFromDbName >= 1 )); then
-            Log::displayError "Command ${SCRIPT_NAME} - Argument <fromDbName> - Maximum number of argument occurrences reached(1)"
+            Log::displayError "Command ${SCRIPT_NAME} - Argument fromDbName - Maximum number of argument occurrences reached(1)"
             return 1
           fi
           ((++options_parse_argParsedCountFromDbName))
@@ -2494,7 +2508,7 @@ dbImportCommandParse() {
 
 
   if ((options_parse_argParsedCountFromDbName < 1 )); then
-    Log::displayError "Command ${SCRIPT_NAME} - Argument '<fromDbName>' should be provided at least 1 time(s)"
+    Log::displayError "Command ${SCRIPT_NAME} - Argument 'fromDbName' should be provided at least 1 time(s)"
     return 1
   fi || return $?
 
@@ -2521,7 +2535,7 @@ dbImportCommandHelp() {
   # ------------------------------------------
   # usage/options section
   # ------------------------------------------
-  optionsAltList=("[--collation-name|-o <<targetDsn>>]" "[--target-dsn|-t <<targetDsn>>]" "[--character-set|-c <<targetDsn>>]" "[--profile|-p <<dsn>>]" "[--tables <<tablesSeparatedByComma>>]" "[--skip-schema|-s]" "[--from-dsn|-f <<dsn>>]" "[--from-aws|-a <<awsFile>>]" "[--help|-h]" "[--config]" "[--bash-framework-config <bash-framework-config>]" "[--verbose|-v]" "[-vv]" "[-vvv]" "[--env-file <env-file>]" "[--log-level <log-level>]" "[--log-file <log-file>]" "[--display-level <display-level>]" "[--no-color]" "[--theme <theme>]" "[--version]" "[--quiet|-q]"
+  optionsAltList=("[--collation-name|-o <targetDsn>]" "[--target-dsn|-t <targetDsn>]" "[--character-set|-c <characterSet>]" "[--profile|-p <profile>]" "[--tables <tablesSeparatedByComma>]" "[--skip-schema|-s]" "[--from-dsn|-f <dsn>]" "[--from-aws|-a <awsFile>]" "[--help|-h]" "[--config]" "[--bash-framework-config <bash-framework-config>]" "[--verbose|-v]" "[-vv]" "[-vvv]" "[--env-file <env-file>]" "[--log-level <log-level>]" "[--log-file <log-file>]" "[--display-level <display-level>]" "[--no-color]" "[--theme <theme>]" "[--version]" "[--quiet|-q]"
   )
   Array::wrap2 " " 80 2 "${__HELP_TITLE_COLOR}USAGE:${__RESET_COLOR}" \
     "dbImport" "${optionsAltList[@]}"
@@ -2533,11 +2547,11 @@ dbImportCommandHelp() {
   echo
   echo -e "${__HELP_TITLE_COLOR}ARGUMENTS:${__RESET_COLOR}"
 
-    Array::wrap2 " " 80 2 "  ${__HELP_OPTION_COLOR}<fromDbName>${__HELP_NORMAL}{single} (mandatory)
+    Array::wrap2 " " 80 2 "  ${__HELP_OPTION_COLOR}fromDbName${__HELP_NORMAL} {single} (mandatory)
   "
     Array::wrap2 ' ' 76 4 "    " "The name of the source/remote database."
     echo
-    Array::wrap2 " " 80 2 "  [${__HELP_OPTION_COLOR}<targetDbName>${__HELP_NORMAL}{single}]
+    Array::wrap2 " " 80 2 "  [${__HELP_OPTION_COLOR}<targetDbName>${__HELP_NORMAL} {single}]
   "
     Array::wrap2 ' ' 76 4 "    " "The name of the target database" "Default value: <fromDbName>(without extension)" ""
     echo
@@ -2560,14 +2574,14 @@ dbImportCommandHelp() {
   Array::wrap2 ' ' 76 6 "    Default value: " "default.local"
   echo
 
-  echo -e "  ${__HELP_OPTION_COLOR}--character-set${__HELP_NORMAL}, ${__HELP_OPTION_COLOR}-c <targetDsn>${__HELP_NORMAL} {single}"
+  echo -e "  ${__HELP_OPTION_COLOR}--character-set${__HELP_NORMAL}, ${__HELP_OPTION_COLOR}-c <characterSet>${__HELP_NORMAL} {single}"
   Array::wrap2 ' ' 76 4 "    " "Change the character set used during database creation."
   echo
 
 
   echo
   echo -e "${__HELP_TITLE_COLOR}PROFILE OPTIONS:${__RESET_COLOR}"
-  echo -e "  ${__HELP_OPTION_COLOR}--profile${__HELP_NORMAL}, ${__HELP_OPTION_COLOR}-p <dsn>${__HELP_NORMAL} {single}"
+  echo -e "  ${__HELP_OPTION_COLOR}--profile${__HELP_NORMAL}, ${__HELP_OPTION_COLOR}-p <profile>${__HELP_NORMAL} {single}"
   profileOptionHelpFunction
 
 
@@ -2613,7 +2627,7 @@ dbImportCommandHelp() {
 
 
 
-  echo -e "  ${__HELP_OPTION_COLOR}--bash-framework-config bash-framework-config${__HELP_NORMAL} {single}"
+  echo -e "  ${__HELP_OPTION_COLOR}--bash-framework-config <bash-framework-config>${__HELP_NORMAL} {single}"
   Array::wrap2 ' ' 76 4 "    " "Use alternate bash framework configuration."
   echo
 
@@ -2637,26 +2651,26 @@ dbImportCommandHelp() {
 
 
 
-  echo -e "  ${__HELP_OPTION_COLOR}--env-file env-file${__HELP_NORMAL} {list} (optional)"
+  echo -e "  ${__HELP_OPTION_COLOR}--env-file <env-file>${__HELP_NORMAL} {list} (optional)"
   Array::wrap2 ' ' 76 4 "    " "Load the specified env file (deprecated, please use --bash-framework-config option instead)"
   echo
 
 
 
-  echo -e "  ${__HELP_OPTION_COLOR}--log-level log-level${__HELP_NORMAL} {single}"
+  echo -e "  ${__HELP_OPTION_COLOR}--log-level <log-level>${__HELP_NORMAL} {single}"
   Array::wrap2 ' ' 76 4 "    " "Set log level"
   echo
   Array::wrap2 ' ' 76 6 "    Possible values: " "OFF, "  "ERR, "  "ERROR, "  "WARN, "  "WARNING, "  "INFO, "  "DEBUG, "  "TRACE"
   echo
 
 
-  echo -e "  ${__HELP_OPTION_COLOR}--log-file log-file${__HELP_NORMAL} {single}"
+  echo -e "  ${__HELP_OPTION_COLOR}--log-file <log-file>${__HELP_NORMAL} {single}"
   Array::wrap2 ' ' 76 4 "    " "Set log file"
   echo
 
 
 
-  echo -e "  ${__HELP_OPTION_COLOR}--display-level display-level${__HELP_NORMAL} {single}"
+  echo -e "  ${__HELP_OPTION_COLOR}--display-level <display-level>${__HELP_NORMAL} {single}"
   Array::wrap2 ' ' 76 4 "    " "Set display level"
   echo
   Array::wrap2 ' ' 76 6 "    Possible values: " "OFF, "  "ERR, "  "ERROR, "  "WARN, "  "WARNING, "  "INFO, "  "DEBUG, "  "TRACE"
@@ -2669,7 +2683,7 @@ dbImportCommandHelp() {
 
 
 
-  echo -e "  ${__HELP_OPTION_COLOR}--theme theme${__HELP_NORMAL} {single}"
+  echo -e "  ${__HELP_OPTION_COLOR}--theme <theme>${__HELP_NORMAL} {single}"
   Array::wrap2 ' ' 76 4 "    " "Choose color theme - default-force means colors will be produced even if command is piped."
   echo
   Array::wrap2 ' ' 76 6 "    Possible values: " "default, "  "default-force, "  "noColor"
@@ -2721,6 +2735,7 @@ dbImportCommandHelp() {
 
 
 beforeParseCallback
+initConf
 
 dbImportCommandParse "$@"
 MAIN_FUNCTION_NAME="main"
@@ -2734,12 +2749,6 @@ Compiler::Embed::extractFileFromBase64 \
 
 declare -gx embed_file_dumpSizeQuery="${PERSISTENT_TMPDIR:-/tmp}/95e2e89e049fcfcd74a8b75390f067bf/dumpSizeQuery"
 
-
-declare TIMEFORMAT='time spent : %3R'
-declare DB_IMPORT_DUMP_DIR=${DB_IMPORT_DUMP_DIR%/}
-declare PROFILES_DIR="${BASH_TOOLS_ROOT_DIR}/conf/dbImportProfiles"
-declare HOME_PROFILES_DIR="${HOME}/.bash-tools/dbImportProfiles"
-declare DOWNLOAD_DUMP=0
 
 # dump header/footer
 read -r -d '\0' DUMP_HEADER <<-EOM

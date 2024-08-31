@@ -23,11 +23,11 @@ binData:
       commandName: dbImport
       beforeParseCallbacks:
         - beforeParseCallback
+        - initConf
       callbacks:
         - dbImportCommandCallback@100
       definitionFiles:
         20: ${BASH_TOOLS_ROOT_DIR}/src/_binaries/Database/dbImport/dbImport-options.sh
-        #99: ${BASH_TOOLS_ROOT_DIR}/src/_binaries/commandDefinitions/optionsDefault.sh
       mainFile: ${BASH_TOOLS_ROOT_DIR}/src/_binaries/Database/dbImport/dbImport-main.sh
       help: Import source db into target db using eventual table filter.
       args:
@@ -35,7 +35,7 @@ binData:
           type: String
           min: 1
           max: 1
-          name: <fromDbName>
+          name: fromDbName
           variableName: fromDbName
 
         - help: |

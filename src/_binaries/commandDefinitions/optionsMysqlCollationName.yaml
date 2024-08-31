@@ -12,7 +12,7 @@ binData:
           group: groupTargetOptions
           type: String
           help: Change the collation name used during database creation.
-          helpValueName: <targetDsn>
+          helpValueName: targetDsn
           alts:
             - --collation-name
             - -o

@@ -80,7 +80,7 @@ optionHelpCallback() {
   queriesList="$(Conf::getMergedList "dbQueries" "sql" || true)"
 
   <% ${commandFunctionName} %> help | envsubst
-  checkRequirements
+  Db::checkRequirements
   exit 0
 }
 

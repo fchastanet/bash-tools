@@ -41,7 +41,7 @@ function Database::dbImport::remoteDbName_not_provided { #@test
   run "${binDir}/dbImport" 2>&1
   assert_failure 1
   assert_lines_count 1
-  assert_output --partial "ERROR   - Command dbImport - Argument '<fromDbName>' should be provided at least 1 time(s)"
+  assert_output --partial "ERROR   - Command dbImport - Argument 'fromDbName' should be provided at least 1 time(s)"
 }
 
 function Database::dbImport::from_aws_and_aws_not_installed { #@test

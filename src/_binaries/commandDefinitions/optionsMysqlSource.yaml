@@ -20,7 +20,7 @@ binData:
           group: groupSourceDbOptions
           type: String
           help: dsnHelpFunction
-          helpValueName: <dsn>
+          helpValueName: dsn
           alts:
             - --from-dsn
             - -f
@@ -34,6 +34,6 @@ binData:
             The value <awsFile> is the name of the file without s3 location
             (Only .gz or tar.gz file are supported).
             This option is incompatible with -f|--from-dsn option.
-          helpValueName: <awsFile>
+          helpValueName: awsFile
           type: String
           variableName: optionFromAws

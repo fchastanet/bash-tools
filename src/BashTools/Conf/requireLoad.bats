@@ -10,7 +10,6 @@ source "${rootDir}/src/BashTools/Conf/requireLoad.sh"
 setup() {
   export TMPDIR="${BATS_TEST_TMPDIR}"
   export HOME="${BATS_TEST_TMPDIR}/home"
-  export POSTMAN_API_KEY="fake"
   export BASH_FRAMEWORK_THEME="noColor"
   export bashToolsDefaultConfigTemplate="$(cat "${rootDir}/conf/.env")"
 }

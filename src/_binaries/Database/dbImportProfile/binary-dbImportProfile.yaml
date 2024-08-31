@@ -1,0 +1,67 @@
+extends:
+  - "${BASH_TOOLS_ROOT_DIR}/src/_binaries/commandDefinitions/optionsVersion.yaml"
+  - "${FRAMEWORK_ROOT_DIR}/src/_binaries/commandDefinitions/defaultCommand.yaml"
+  - "${FRAMEWORK_ROOT_DIR}/src/_binaries/commandDefinitions/frameworkConfig.yaml"
+
+vars:
+  SRC_FILE_PATH: src/_binaries/Database/dbImportProfile/binary-dbImportProfile.yaml
+
+compilerConfig:
+  targetFile: "${BASH_TOOLS_ROOT_DIR}/bin/dbImportProfile"
+  relativeRootDirBasedOnTargetDir: ..
+  srcDirs:
+    - ${BASH_TOOLS_ROOT_DIR}/src
+binData:
+  commands:
+    default:
+      functionName: dbImportProfileCommand
+      version: "2.0"
+      commandName: dbImportProfile
+      beforeParseCallbacks:
+        - beforeParseCallback
+        - initConf
+      callbacks:
+        - dbImportProfileCommandCallback@100
+      definitionFiles:
+        20: ${BASH_TOOLS_ROOT_DIR}/src/_binaries/Database/dbImportProfile/dbImportProfile-options.sh
+        99: ${BASH_TOOLS_ROOT_DIR}/src/_binaries/commandDefinitions/optionsDefault.sh
+      mainFile: ${BASH_TOOLS_ROOT_DIR}/src/_binaries/Database/dbImportProfile/dbImportProfile-main.sh
+      help: Generate optimized profiles to be used by dbImport.
+      longDescription: longDescriptionFunction
+      options:
+        - variableName: optionProfile
+          group: OptionsGroup
+          type: String
+          help: optionProfileHelpFunction
+          helpValueName: profile
+          alts:
+            - --profile
+            - -p
+
+        - variableName: optionFromDsn
+          group: OptionsGroup
+          type: String
+          defaultValue: default.remote
+          help: optionFromDsnHelpFunction
+          helpValueName: dsn
+          alts:
+            - --from-dsn
+            - -f
+
+        - variableName: optionRatio
+          group: OptionsGroup
+          type: String
+          help: optionRatioHelpFunction
+          helpValueName: ratio
+          defaultValue: 70
+          alts:
+            - --ratio
+            - -r
+
+      args:
+        - help: The name of the source/remote database.
+          type: String
+          min: 1
+          max: 1
+          name: fromDbName
+          variableName: fromDbName

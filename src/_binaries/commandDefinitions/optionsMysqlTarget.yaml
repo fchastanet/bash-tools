@@ -12,7 +12,7 @@ binData:
           group: groupTargetOptions
           type: String
           help: Dsn to use for target database.
-          helpValueName: <targetDsn>
+          helpValueName: targetDsn
           defaultValue: default.local
           alts:
             - --target-dsn
@@ -21,7 +21,7 @@ binData:
           group: groupTargetOptions
           type: String
           help: Change the character set used during database creation.
-          helpValueName: <targetDsn>
+          helpValueName: characterSet
           alts:
             - --character-set
             - -c
