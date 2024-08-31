@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# @embed "${BASH_TOOLS_ROOT_DIR}/src/_binaries/DbImport/dumpSizeQuery.sql" AS dumpSizeQuery
+# @embed "${BASH_TOOLS_ROOT_DIR}/src/_binaries/Database/dbImport/dumpSizeQuery.sql" AS dumpSizeQuery
 
 # dump header/footer
 read -r -d '\0' DUMP_HEADER <<-EOM

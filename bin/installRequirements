@@ -313,7 +313,7 @@ Assert::tty() {
 # @stderr diagnostics information is displayed
 # shellcheck disable=SC2120
 Env::requireLoad() {
-  REQUIRE_FUNCTION_ENV_REQUIRE_LOAD_LOADED=1
+  export REQUIRE_FUNCTION_ENV_REQUIRE_LOAD_LOADED=1
 
   local -a defaultFiles=("$@")
   # get list of possible config files
@@ -446,7 +446,7 @@ Git::pullIfNoChanges() {
 # @exitcode 1 if git command not available
 # @stderr diagnostics information is displayed
 Git::requireGitCommand() {
-  REQUIRE_FUNCTION_GIT_REQUIRE_GIT_COMMAND_LOADED=1
+  export REQUIRE_FUNCTION_GIT_REQUIRE_GIT_COMMAND_LOADED=1
 
   Assert::commandExists git
 }
@@ -659,7 +659,7 @@ Log::logWarning() {
 # @exitcode 0 always successful
 # @stderr diagnostics information about log file is displayed
 Log::requireLoad() {
-  REQUIRE_FUNCTION_LOG_REQUIRE_LOAD_LOADED=1
+  export REQUIRE_FUNCTION_LOG_REQUIRE_LOAD_LOADED=1
 
 
   if [[ "${REQUIRE_FUNCTION_ENV_REQUIRE_LOAD_LOADED:-0}" != 1 ]]; then
@@ -749,7 +749,7 @@ UI::drawLine() {
 # @env LOAD_THEME int 0 to avoid loading theme
 # @exitcode 0 always successful
 UI::requireTheme() {
-  REQUIRE_FUNCTION_UI_REQUIRE_THEME_LOADED=1
+  export REQUIRE_FUNCTION_UI_REQUIRE_THEME_LOADED=1
 
   if [[ "${LOAD_THEME:-1}" = "1" ]]; then
     UI::theme "${BASH_FRAMEWORK_THEME-default}"
