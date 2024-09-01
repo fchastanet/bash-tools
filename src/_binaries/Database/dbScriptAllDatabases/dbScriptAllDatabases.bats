@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # shellcheck source=src/batsHeaders.sh
-source "$(cd "${BATS_TEST_DIRNAME}/../.." && pwd)/batsHeaders.sh"
+source "$(cd "${BATS_TEST_DIRNAME}/../../.." && pwd)/batsHeaders.sh"
 
 setup() {
   export TMPDIR="${BATS_TEST_TMPDIR}"
@@ -59,7 +59,7 @@ function Database::dbScriptAllDatabases::extractData { #@test
 
   # shellcheck disable=SC2016
   stub parallel \
-    '--eta --progress --tag --jobs=1 * * * * * * * * : while IFS= read -r db; do "${@:5}" "${db}"; done'
+    '--bar --eta --progress --tag -j 1 * * * * * * * * : while IFS= read -r db; do "${@:7}" "${db}"; done'
 
   run "${binDir}/dbScriptAllDatabases" \
     -f "${BATS_TEST_DIRNAME}/testsData/databaseSize.envProvided.sh" \

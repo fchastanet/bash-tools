@@ -1,25 +1,21 @@
 [1;37mSYNOPSIS:[0m
-    Execute a query on multiple databases to generate a tsv format report.
+    Allows to execute a script on each database of specified mysql server.
 
-    The query can be parallelized on multiple databases.
-
-[1;37mUSAGE:[0m dbQueryAllDatabases [OPTIONS] [ARGUMENTS]
-[1;37mUSAGE:[0m dbQueryAllDatabases [--jobs|-j <jobsCount>] [--bar|-b]
+[1;37mUSAGE:[0m dbScriptAllDatabases [OPTIONS] [ARGUMENTS]
+[1;37mUSAGE:[0m dbScriptAllDatabases [--jobs|-j <jobsCount>] [--bar|-b]
   [--from-dsn|-f <dsn>] [--help|-h] [--config]
   [--bash-framework-config <bash-framework-config>] [--verbose|-v] [-vv] [-vvv]
   [--env-file <env-file>] [--log-level <log-level>] [--log-file <log-file>]
   [--display-level <display-level>] [--no-color] [--theme <theme>] [--version]
-  [--quiet|-q] [--separator|-s <separator>]
+  [--quiet|-q] [--database <dbName>] [--output|-o <outputDirectory>]
+  [--log-format|-l <logFormat>]
 
 [1;37mARGUMENTS:[0m
-  [1;34margQuery[0m {single} (mandatory)
-    Query to execute
+  [1;34mscriptToExecute[0m {single} (mandatory)
+    The script that will be executed on each databases.
+  [[1;34mscriptArguments[0m {list} (optional)]
+    Optional parameters to pass to the script.
 
-      - <file>, try to execute the mysql query provided by the file
-
-      - <queryFile>, search for query file in queries directory (see below)
-
-      - else the argument is interpreted as query string
 [1;37mJOB OPTIONS:[0m
   [1;34m--jobs[0m, [1;34m-j <jobsCount>[0m {single}
     The number of databases to query in parallel.
@@ -70,35 +66,57 @@
   [1;34m--quiet[0m, [1;34m-q[0m {single}
     Quiet mode, doesn't display any output.
 
-[1;37mQUERY OPTIONS:[0m
-  [1;34m--separator[0m, [1;34m-s <separator>[0m {single}
-    Character to use to separate mysql column.
-    Default value: |
+[1;37mSCRIPTS OPTIONS:[0m
+  [1;34m--database <dbName>[0m {single}
+    If provided will check only this db, otherwise script will be executed o
+    n all dbs of mysql server.
+  [1;34m--output[0m, [1;34m-o <outputDirectory>[0m {single}
+    Output directory, see log-format option.
+  [1;34m--log-format[0m, [1;34m-l <logFormat>[0m {single}
+    If output dir provided, will log each db result to log file.
+    Possible values: none, log
+    Default value: none
 
 
 [1;37mDESCRIPTION:[0m
-[1;37m  LIST OF AVAILABLE DSN:[0m
-    - dsn_local
-    - dsn_valid
+[1;37mNOTE:[0m
+the use of output, log-format, verbose options highly depends on the script used
 
-[1;37m  DEFAULT QUERIES DIRECTORY:[0m
-    /bash/conf/dbQueries
+[1;37mLIST OF AVAILABLE DSN:[0m
+       - dsn_local
+       - dsn_valid
 
-[1;37m  USER QUERIES DIRECTORY:[0m
-    home/.bash-tools/dbQueries
-    Allows to override queries defined in 'Default queries directory'
+[1;37mDEFAULT SCRIPTS DIRECTORY:[0m
+/bash/conf/dbScripts
 
-[1;37m  LIST OF AVAILABLE QUERIES:[0m
+[1;37mUSER SCRIPTS DIRECTORY:[0m
+home/.bash-tools/dbScripts
+Allows to override queries defined in 'Default scripts directory'
+
+[1;37mLIST OF AVAILABLE SCRIPTS:[0m
 
 
-[1;37m  EXAMPLES:[0m
-    [2;97mdbQueryAllDatabases databaseSize -j 12 --separator "|" --bar 2>/dev/null | column -s "|" -t -n -c 40[0m
+[1;37mEXAMPLES:[0m script conf/dbScripts/extractData.sh
+    executes query databaseSize (see conf/dbQueries/databaseSize.sql) on each db and log the result in log file in default output dir, call it using
+    [2;97m/bash/bin/dbScriptAllDatabases -j 10 extractData databaseSize[0m
+
+    executes query databaseSize on each db and display the result on stdout (2>/dev/null hides information messages)
+    [2;97m/bash/bin/dbScriptAllDatabases -j 10 --log-format none extractData databaseSize[0m
+
+    use --verbose to get some debug information
+    [2;97m/bash/bin/dbScriptAllDatabases -j 10 --log-format none --verbose extractData databaseSize[0m
+
+[1;37mUSE CASES:[0m
+    you can use this script in order to check that each db model conforms with your ORM schema
+    simply create a new script in conf/dbQueries that will call your orm schema checker
+
+    update multiple db at once (simple to complex update script)
 
 [1;37mVERSION: [0m2.0
 
 [1;37mAUTHOR: [0m[François Chastanet](https://github.com/fchastanet)
 
-[1;37mSOURCE FILE: [0mhttps://github.com/fchastanet/bash-tools-framework/tree/master/src/_binaries/Database/dbQueryAllDatabases/binary-dbQueryAllDatabases.yaml
+[1;37mSOURCE FILE: [0mhttps://github.com/fchastanet/bash-tools-framework/tree/master/src/_binaries/Database/dbScriptAllDatabases/binary-dbScriptAllDatabases.yaml
 
 [1;37mLICENSE: [0mMIT License
 Copyright (c) 2020-now François Chastanet

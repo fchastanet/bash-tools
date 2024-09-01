@@ -1,0 +1,16 @@
+---
+binData:
+  commands:
+    default:
+      optionGroups:
+        groupSourceDbOptions:
+          title: "SOURCE OPTIONS:"
+      options:
+        - variableName: optionFromDsn
+          group: groupSourceDbOptions
+          type: String
+          help: Target mysql server.
+          helpValueName: dsn
+          alts:
+            - --from-dsn
+            - -f

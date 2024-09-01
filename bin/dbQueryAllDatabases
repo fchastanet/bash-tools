@@ -1644,6 +1644,12 @@ beforeParseCallback() {
 
 
 
+declare -a PARALLEL_OPTIONS
+
+optionProgressBarCallback() {
+  PARALLEL_OPTIONS+=(--bar)
+}
+
 optionJobsCallback() {
   # shellcheck disable=SC2154
   if ! [[ "${optionJobs}" =~ ^[0-9]+$ ]]; then
@@ -1653,14 +1659,6 @@ optionJobsCallback() {
   if [[ ${optionJobs} -lt 1 ]]; then
     Log::fatal "number of jobs must be greater than 0"
   fi
-}
-
-
-
-declare -a PARALLEL_OPTIONS
-
-optionProgressBarCallback() {
-  PARALLEL_OPTIONS+=(--bar)
 }
 
 
@@ -1787,6 +1785,7 @@ dbQueryAllDatabasesCommandCallback() {
 # options variables initialization
 declare optionJobs="1"
 declare optionProgressBar="0"
+declare optionFromDsn=""
 declare optionHelp="0"
 declare optionConfig="0"
 declare optionBashFrameworkConfig=""
@@ -1802,7 +1801,6 @@ declare optionTheme="default"
 declare optionVersion="0"
 declare optionQuiet="0"
 declare optionSeparator="|"
-declare optionFromDsn=""
 # arguments variables initialization
 declare argQuery=""
 # @description parse command options and arguments for dbQueryAllDatabasesCommand
@@ -1815,6 +1813,9 @@ dbQueryAllDatabasesCommandParse() {
   optionProgressBar="0"
   local -i options_parse_optionParsedCountOptionProgressBar
   ((options_parse_optionParsedCountOptionProgressBar = 0)) || true
+  optionFromDsn=""
+  local -i options_parse_optionParsedCountOptionFromDsn
+  ((options_parse_optionParsedCountOptionFromDsn = 0)) || true
   optionHelp="0"
   local -i options_parse_optionParsedCountOptionHelp
   ((options_parse_optionParsedCountOptionHelp = 0)) || true
@@ -1858,9 +1859,6 @@ dbQueryAllDatabasesCommandParse() {
   optionSeparator="|"
   local -i options_parse_optionParsedCountOptionSeparator
   ((options_parse_optionParsedCountOptionSeparator = 0)) || true
-  optionFromDsn=""
-  local -i options_parse_optionParsedCountOptionFromDsn
-  ((options_parse_optionParsedCountOptionFromDsn = 0)) || true
 
   argQuery=""
   local -i options_parse_argParsedCountArgQuery
@@ -1911,6 +1909,25 @@ dbQueryAllDatabasesCommandParse() {
         ;;
 
       # Option 3/18
+      # optionFromDsn alts --from-dsn|-f
+      # type: String min 0 max 1
+      --from-dsn | -f)
+        shift
+        if (($# == 0)); then
+          Log::displayError "Command ${SCRIPT_NAME} - Option ${options_parse_arg} - a value needs to be specified"
+          return 1
+        fi
+
+        if ((options_parse_optionParsedCountOptionFromDsn >= 1 )); then
+          Log::displayError "Command ${SCRIPT_NAME} - Option ${options_parse_arg} - Maximum number of option occurrences reached(1)"
+          return 1
+        fi
+        ((++options_parse_optionParsedCountOptionFromDsn))
+        # shellcheck disable=SC2034
+        optionFromDsn="$1"
+        ;;
+
+      # Option 4/18
       # optionHelp alts --help|-h
       # type: Boolean min 0 max 1
       --help | -h)
@@ -1926,7 +1943,7 @@ dbQueryAllDatabasesCommandParse() {
 
         ;;
 
-      # Option 4/18
+      # Option 5/18
       # optionConfig alts --config
       # type: Boolean min 0 max 1
       --config)
@@ -1940,7 +1957,7 @@ dbQueryAllDatabasesCommandParse() {
         ((++options_parse_optionParsedCountOptionConfig))
         ;;
 
-      # Option 5/18
+      # Option 6/18
       # optionBashFrameworkConfig alts --bash-framework-config
       # type: String min 0 max 1
       --bash-framework-config)
@@ -1961,7 +1978,7 @@ dbQueryAllDatabasesCommandParse() {
 
         ;;
 
-      # Option 6/18
+      # Option 7/18
       # optionInfoVerbose alts --verbose|-v
       # type: Boolean min 0 max 1
       --verbose | -v)
@@ -1979,7 +1996,7 @@ dbQueryAllDatabasesCommandParse() {
 
         ;;
 
-      # Option 7/18
+      # Option 8/18
       # optionDebugVerbose alts -vv
       # type: Boolean min 0 max 1
       -vv)
@@ -1997,7 +2014,7 @@ dbQueryAllDatabasesCommandParse() {
 
         ;;
 
-      # Option 8/18
+      # Option 9/18
       # optionTraceVerbose alts -vvv
       # type: Boolean min 0 max 1
       -vvv)
@@ -2015,7 +2032,7 @@ dbQueryAllDatabasesCommandParse() {
 
         ;;
 
-      # Option 9/18
+      # Option 10/18
       # optionEnvFiles alts --env-file
       # type: StringArray min 0 max -1
       --env-file)
@@ -2033,7 +2050,7 @@ dbQueryAllDatabasesCommandParse() {
 
         ;;
 
-      # Option 10/18
+      # Option 11/18
       # optionLogLevel alts --log-level
       # type: String min 0 max 1
       # authorizedValues: OFF|ERR|ERROR|WARN|WARNING|INFO|DEBUG|TRACE
@@ -2061,7 +2078,7 @@ dbQueryAllDatabasesCommandParse() {
 
         ;;
 
-      # Option 11/18
+      # Option 12/18
       # optionLogFile alts --log-file
       # type: String min 0 max 1
       --log-file)
@@ -2084,7 +2101,7 @@ dbQueryAllDatabasesCommandParse() {
 
         ;;
 
-      # Option 12/18
+      # Option 13/18
       # optionDisplayLevel alts --display-level
       # type: String min 0 max 1
       # authorizedValues: OFF|ERR|ERROR|WARN|WARNING|INFO|DEBUG|TRACE
@@ -2112,7 +2129,7 @@ dbQueryAllDatabasesCommandParse() {
 
         ;;
 
-      # Option 13/18
+      # Option 14/18
       # optionNoColor alts --no-color
       # type: Boolean min 0 max 1
       --no-color)
@@ -2130,7 +2147,7 @@ dbQueryAllDatabasesCommandParse() {
 
         ;;
 
-      # Option 14/18
+      # Option 15/18
       # optionTheme alts --theme
       # type: String min 0 max 1
       # authorizedValues: default|default-force|noColor
@@ -2158,7 +2175,7 @@ dbQueryAllDatabasesCommandParse() {
 
         ;;
 
-      # Option 15/18
+      # Option 16/18
       # optionVersion alts --version
       # type: Boolean min 0 max 1
       --version)
@@ -2174,7 +2191,7 @@ dbQueryAllDatabasesCommandParse() {
 
         ;;
 
-      # Option 16/18
+      # Option 17/18
       # optionQuiet alts --quiet|-q
       # type: Boolean min 0 max 1
       --quiet | -q)
@@ -2192,7 +2209,7 @@ dbQueryAllDatabasesCommandParse() {
 
         ;;
 
-      # Option 17/18
+      # Option 18/18
       # optionSeparator alts --separator|-s
       # type: String min 0 max 1
       --separator | -s)
@@ -2211,25 +2228,6 @@ dbQueryAllDatabasesCommandParse() {
         optionSeparator="$1"
         optionSeparatorCallback "${options_parse_arg}" "${optionSeparator}"
 
-        ;;
-
-      # Option 18/18
-      # optionFromDsn alts --from-dsn|-f
-      # type: String min 0 max 1
-      --from-dsn | -f)
-        shift
-        if (($# == 0)); then
-          Log::displayError "Command ${SCRIPT_NAME} - Option ${options_parse_arg} - a value needs to be specified"
-          return 1
-        fi
-
-        if ((options_parse_optionParsedCountOptionFromDsn >= 1 )); then
-          Log::displayError "Command ${SCRIPT_NAME} - Option ${options_parse_arg} - Maximum number of option occurrences reached(1)"
-          return 1
-        fi
-        ((++options_parse_optionParsedCountOptionFromDsn))
-        # shellcheck disable=SC2034
-        optionFromDsn="$1"
         ;;
 
       -*)
@@ -2329,7 +2327,7 @@ dbQueryAllDatabasesCommandHelp() {
   # ------------------------------------------
   # usage/options section
   # ------------------------------------------
-  optionsAltList=("[--jobs|-j <jobsCount>]" "[--bar|-b]" "[--help|-h]" "[--config]" "[--bash-framework-config <bash-framework-config>]" "[--verbose|-v]" "[-vv]" "[-vvv]" "[--env-file <env-file>]" "[--log-level <log-level>]" "[--log-file <log-file>]" "[--display-level <display-level>]" "[--no-color]" "[--theme <theme>]" "[--version]" "[--quiet|-q]" "[--separator|-s <separator>]" "[--from-dsn|-f <dsn>]"
+  optionsAltList=("[--jobs|-j <jobsCount>]" "[--bar|-b]" "[--from-dsn|-f <dsn>]" "[--help|-h]" "[--config]" "[--bash-framework-config <bash-framework-config>]" "[--verbose|-v]" "[-vv]" "[-vvv]" "[--env-file <env-file>]" "[--log-level <log-level>]" "[--log-file <log-file>]" "[--display-level <display-level>]" "[--no-color]" "[--theme <theme>]" "[--version]" "[--quiet|-q]" "[--separator|-s <separator>]"
   )
   Array::wrap2 " " 80 2 "${__HELP_TITLE_COLOR}USAGE:${__RESET_COLOR}" \
     "dbQueryAllDatabases" "${optionsAltList[@]}"
@@ -2357,10 +2355,16 @@ dbQueryAllDatabasesCommandHelp() {
 
   Array::wrap2 ' ' 76 6 "    Default value: " "1"
   echo
-  echo
-  echo -e "${__HELP_TITLE_COLOR}PROGRESS BAR OPTIONS:${__RESET_COLOR}"
+
   echo -e "  ${__HELP_OPTION_COLOR}--bar${__HELP_NORMAL}, ${__HELP_OPTION_COLOR}-b${__HELP_NORMAL} {single}"
   Array::wrap2 ' ' 76 4 "    " "Show progress as a progress bar. In the bar is shown: % of jobs completed," "estimated seconds left, and number of jobs started." ""
+  echo
+
+
+  echo
+  echo -e "${__HELP_TITLE_COLOR}SOURCE OPTIONS:${__RESET_COLOR}"
+  echo -e "  ${__HELP_OPTION_COLOR}--from-dsn${__HELP_NORMAL}, ${__HELP_OPTION_COLOR}-f <dsn>${__HELP_NORMAL} {single}"
+  Array::wrap2 ' ' 76 4 "    " "Target mysql server."
   echo
 
 
@@ -2463,12 +2467,6 @@ dbQueryAllDatabasesCommandHelp() {
 
   Array::wrap2 ' ' 76 6 "    Default value: " "|"
   echo
-
-  echo -e "  ${__HELP_OPTION_COLOR}--from-dsn${__HELP_NORMAL}, ${__HELP_OPTION_COLOR}-f <dsn>${__HELP_NORMAL} {single}"
-  Array::wrap2 ' ' 76 4 "    " "Target mysql server."
-  echo
-
-
   # ------------------------------------------
   # longDescription section
   # ------------------------------------------
