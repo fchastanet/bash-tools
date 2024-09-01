@@ -113,7 +113,7 @@ Allows to override queries defined in 'Default scripts directory'
 
     update multiple db at once (simple to complex update script)
 
-[1;37mVERSION: [0m2.0
+[1;37mVERSION: [0m3.0
 
 [1;37mAUTHOR: [0m[François Chastanet](https://github.com/fchastanet)
 

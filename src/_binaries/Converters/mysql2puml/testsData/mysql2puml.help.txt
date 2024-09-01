@@ -70,11 +70,11 @@
 [1;37mLIST OF AVAILABLE SKINS:[0m
   - default
 
-[1;37mVERSION: [0m1.0
+[1;37mVERSION: [0m3.0
 
 [1;37mAUTHOR: [0m[François Chastanet](https://github.com/fchastanet)
 
 [1;37mSOURCE FILE: [0mhttps://github.com/fchastanet/bash-tools-framework/tree/master/src/_binaries/Converters/mysql2puml/binary-mysql2puml.yaml
 
 [1;37mLICENSE: [0mMIT License
-Copyright (c) 2020-now François Chastanet
+Copyright (c) 2021-now François Chastanet

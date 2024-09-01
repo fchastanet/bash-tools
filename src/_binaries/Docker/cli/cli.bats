@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # shellcheck source=src/batsHeaders.sh
-source "$(cd "${BATS_TEST_DIRNAME}/../.." && pwd)/batsHeaders.sh"
+source "$(cd "${BATS_TEST_DIRNAME}/../../.." && pwd)/batsHeaders.sh"
 
 setup() {
   export TMPDIR="${BATS_TEST_TMPDIR}"

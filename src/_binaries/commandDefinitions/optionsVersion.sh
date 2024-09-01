@@ -2,7 +2,7 @@
 
 optionVersionCallback() {
   # shellcheck disable=SC2154
-  echo "${SCRIPT_NAME} version ${versionNumber}"
+  echo "${SCRIPT_NAME} version {{ .RootData.binData.commands.default.version }}"
   Db::checkRequirements
   exit 0
 }

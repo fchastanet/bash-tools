@@ -1337,10 +1337,8 @@ beforeParseCallback() {
 }
 
 copyrightCallback() {
-  if [[ -z "${copyrightBeginYear}" ]]; then
-    copyrightBeginYear="$(date +%Y)"
-  fi
-  echo "Copyright (c) ${copyrightBeginYear}-now François Chastanet"
+  #
+  echo "Copyright (c) 2020-now François Chastanet"
 }
 
 # shellcheck disable=SC2317 # if function is overridden
@@ -1379,7 +1377,7 @@ optionHelpCallback() {
 # shellcheck disable=SC2317 # if function is overridden
 optionVersionCallback() {
   # shellcheck disable=SC2154
-  echo "${SCRIPT_NAME} version ${versionNumber}"
+  echo "${SCRIPT_NAME} version 3.0"
   exit 0
 }
 
@@ -1588,10 +1586,6 @@ commandOptionParseFinished() {
 declare PROFILES_DIR
 declare HOME_PROFILES_DIR
 # shellcheck disable=SC2034
-declare versionNumber="2.0"
-# shellcheck disable=SC2034
-declare copyrightBeginYear="2020"
-# shellcheck disable=SC2034
 declare defaultFromDsn="default.remote"
 
 beforeParseCallback() {
@@ -1723,7 +1717,7 @@ optionTablesCallback() {
 
 optionVersionCallback() {
   # shellcheck disable=SC2154
-  echo "${SCRIPT_NAME} version ${versionNumber}"
+  echo "${SCRIPT_NAME} version 3.0"
   Db::checkRequirements
   exit 0
 }
@@ -2469,7 +2463,7 @@ dbImportStreamCommandHelp() {
   # ------------------------------------------
   echo
   echo -n -e "${__HELP_TITLE_COLOR}VERSION: ${__RESET_COLOR}"
-  echo "2.0"
+  echo "3.0"
   # ------------------------------------------
   # author section
   # ------------------------------------------

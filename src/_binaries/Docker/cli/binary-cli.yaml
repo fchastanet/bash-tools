@@ -1,0 +1,51 @@
+extends:
+  - "${BASH_TOOLS_ROOT_DIR}/src/_binaries/commandDefinitions/optionsVersion.yaml"
+  - "${FRAMEWORK_ROOT_DIR}/src/_binaries/commandDefinitions/defaultCommand.yaml"
+  - "${FRAMEWORK_ROOT_DIR}/src/_binaries/commandDefinitions/frameworkConfig.yaml"
+
+vars:
+  SRC_FILE_PATH: src/_binaries/Docker/cli/binary-cli.yaml
+
+compilerConfig:
+  targetFile: "${BASH_TOOLS_ROOT_DIR}/bin/cli"
+  relativeRootDirBasedOnTargetDir: ..
+  srcDirs:
+    - ${BASH_TOOLS_ROOT_DIR}/src
+binData:
+  commands:
+    default:
+      functionName: cliCommand
+      version: "3.0"
+      copyrightBeginYear: 2020
+      commandName: cli
+      beforeParseCallbacks:
+        - beforeParseCallback
+        - initConf
+      unknownOptionCallbacks:
+        - unknownOption
+      unknownArgumentCallbacks:
+        - unknownOption
+      definitionFiles:
+        20: ${BASH_TOOLS_ROOT_DIR}/src/_binaries/Docker/cli/cli-options.sh
+      mainFile: ${BASH_TOOLS_ROOT_DIR}/src/_binaries/Docker/cli/cli-main.sh
+      help: Easy connection to docker container.
+      longDescription: longDescriptionFunction
+      args:
+        - type: String
+          min: 0
+          max: 1
+          help: containerArgHelpFunction
+          name: container
+          variableName: containerArg
+        - type: String
+          min: 0
+          max: 1
+          help: userArgHelpFunction
+          name: user
+          variableName: userArg
+        - type: String
+          min: 0
+          max: 1
+          help: commandArgHelpFunction
+          name: command
+          variableName: commandArg

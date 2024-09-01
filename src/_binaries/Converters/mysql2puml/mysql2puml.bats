@@ -21,7 +21,7 @@ function Converters::mysql2puml::display_help { #@test
 function Converters::mysql2puml::display_version { #@test
   run "${binDir}/mysql2puml" --version 2>&1
   assert_success
-  assert_line --index 0 "mysql2puml version 1.0"
+  assert_line --index 0 "mysql2puml version 3.0"
 }
 
 function Converters::mysql2puml::bad_skin_file { #@test

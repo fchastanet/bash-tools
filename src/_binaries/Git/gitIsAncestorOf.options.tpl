@@ -1,5 +1,5 @@
 %
-declare versionNumber="1.0"
+
 declare commandFunctionName="gitIsAncestorOfCommand"
 declare help="check if commit is inside a given branch"
 declare longDescription='''

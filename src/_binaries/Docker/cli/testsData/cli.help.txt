@@ -1,36 +1,39 @@
 [1;37mSYNOPSIS:[0m
-    Stream tar.gz file or gz file through mysql.
+    Easy connection to docker container.
 
-[1;37mUSAGE:[0m dbImportStream [OPTIONS] [ARGUMENTS]
-[1;37mUSAGE:[0m dbImportStream [--profile|-p <profile>]
-  [--tables <tablesSeparatedByComma>] [--target-dsn|-t <targetDsn>]
-  [--character-set|-c <characterSet>] [--help|-h] [--config]
+[1;37mUSAGE:[0m cli [OPTIONS] [ARGUMENTS]
+[1;37mUSAGE:[0m cli [--help|-h] [--config]
   [--bash-framework-config <bash-framework-config>] [--verbose|-v] [-vv] [-vvv]
   [--env-file <env-file>] [--log-level <log-level>] [--log-file <log-file>]
   [--display-level <display-level>] [--no-color] [--theme <theme>] [--version]
   [--quiet|-q]
 
 [1;37mARGUMENTS:[0m
-  [1;34margDumpFile[0m {single} (mandatory)
-    The file that will be streamed through mysql.
-  [1;34margTargetDbName[0m {single} (mandatory)
-    The name of the mysql target database.
+  [[1;34mcontainer[0m {single}]
+    Container should be the name of a profile from profile list,
+    check containers list below.
+    If not provided, it will load the container specified in default configuration.
+    Default configuration: [1;34m[0m
+    Default container: [1;34mproject-apache2[0m
+  [[1;34muser[0m {single}]
+    user to connect on this container 
 
-[1;37mPROFILE OPTIONS:[0m
-  [1;34m--profile[0m, [1;34m-p <profile>[0m {single}
-    The name of the profile to use in order to include or exclude tables.
-    Default value: default
-  [1;34m--tables <tablesSeparatedByComma>[0m {single}
-    Import only table specified in the list.
-    If aws mode, ignore profile option.
+    Default user: [1;34mwww-data[0m
+      loaded from profile selected as first arg
+      or deduced from default configuration. 
 
+    Default configuration: [1;34m[0m 
 
-[1;37mTARGET OPTIONS:[0m
-  [1;34m--target-dsn[0m, [1;34m-t <targetDsn>[0m {single}
-    Dsn to use for target database.
-    Default value: default.local
-  [1;34m--character-set[0m, [1;34m-c <characterSet>[0m {single}
-    Change the character set used during database creation.
+      if first arg is not a profile
+  [[1;34mcommand[0m {single}]
+The command to execute 
+
+Default command: [1;34m/bin/bash[0m
+  loaded from profile selected as first arg
+  or deduced from default configuration.
+Default configuration: [1;34m[0m 
+
+if first arg is not a profile
 
 [1;37mGLOBAL OPTIONS:[0m
   [1;34m--help[0m, [1;34m-h[0m {single}
@@ -70,26 +73,37 @@
 
 
 [1;37mDESCRIPTION:[0m
-[1;37mDefault profiles directory:[0m
-/bash/conf/dbImportProfiles
+[1;37mAVAILABLE PROFILES (from /bash/conf/cliProfiles)[0m
+This list can be overridden in home/.bash-tools/cliProfiles
 
-[1;37mUser profiles directory:[0m
-home/.bash-tools/dbImportProfiles
-Allows to override profiles defined in 'Default profiles directory'
+  - default
+  - mysql
+  - mysql.remote
+  - node
+  - redis
+  - web
 
-[1;37mList of available profiles:[0m
+[1;37mAVAILABLE CONTAINERS:[0m
 
+[1;37mEXAMPLES:[2;97m
+    to connect to mysql container in bash mode with user mysql
+        cli mysql mysql '/bin/bash'
+    to connect to web container with user root
+        cli web root
+[0m
 
-[1;37mList of available dsn:[0m
-       - default.local
-       - default.remote
-       - localhost-root
+[1;37mCREATE NEW PROFILE:[0m
+You can create new profiles in home/.bash-tools/cliProfiles.
+This script will be called with the
+arguments [1;34muserArg[0m, [1;34mcontainerArg[0m, [1;34mcommandArg[0m
+The script has to compute the following
+variables [1;34mfinalUserArg[0m, [1;34mfinalContainerArg[0m, [1;34mfinalCommandArg[0m
 
 [1;37mVERSION: [0m3.0
 
 [1;37mAUTHOR: [0m[François Chastanet](https://github.com/fchastanet)
 
-[1;37mSOURCE FILE: [0mhttps://github.com/fchastanet/bash-tools-framework/tree/master/src/_binaries/Database/dbImportStream/binary-dbImportStream.yaml
+[1;37mSOURCE FILE: [0mhttps://github.com/fchastanet/bash-tools-framework/tree/master/src/_binaries/Docker/cli/binary-cli.yaml
 
 [1;37mLICENSE: [0mMIT License
 Copyright (c) 2020-now François Chastanet

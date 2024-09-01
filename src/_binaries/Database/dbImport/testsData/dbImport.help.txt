@@ -85,7 +85,7 @@
   [1;34m--quiet[0m, [1;34m-q[0m {single}
     Quiet mode, doesn't display any output.
 
-[1;37mVERSION: [0m2.0
+[1;37mVERSION: [0m3.0
 
 [1;37mAUTHOR: [0m[François Chastanet](https://github.com/fchastanet)
 

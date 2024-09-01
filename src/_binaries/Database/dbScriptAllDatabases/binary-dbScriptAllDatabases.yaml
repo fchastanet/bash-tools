@@ -17,7 +17,8 @@ binData:
   commands:
     default:
       functionName: dbScriptAllDatabasesCommand
-      version: "2.0"
+      version: "3.0"
+      copyrightBeginYear: 2020
       commandName: dbScriptAllDatabases
       beforeParseCallbacks:
         - beforeParseCallback

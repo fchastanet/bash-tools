@@ -17,7 +17,8 @@ binData:
   commands:
     default:
       functionName: dbQueryAllDatabasesCommand
-      version: "2.0"
+      version: "3.0"
+      copyrightBeginYear: 2020
       commandName: dbQueryAllDatabases
       beforeParseCallbacks:
         - beforeParseCallback
