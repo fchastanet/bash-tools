@@ -1,0 +1,27 @@
+extends:
+  - "${BASH_TOOLS_ROOT_DIR}/src/_binaries/commandDefinitions/optionsVersion.yaml"
+  - "${FRAMEWORK_ROOT_DIR}/src/_binaries/commandDefinitions/defaultCommand.yaml"
+  - "${FRAMEWORK_ROOT_DIR}/src/_binaries/commandDefinitions/frameworkConfig.yaml"
+
+vars:
+  SRC_FILE_PATH: src/_binaries/Database/extractData/binary-extractData.yaml
+
+compilerConfig:
+  targetFile: "${BASH_TOOLS_ROOT_DIR}/conf/dbScripts/extractData"
+  relativeRootDirBasedOnTargetDir: ../..
+  srcDirs:
+    - ${BASH_TOOLS_ROOT_DIR}/src
+binData:
+  commands:
+    default:
+      functionName: extractDataCommand
+      version: "2.0"
+      commandName: extractData
+      beforeParseCallbacks:
+        - beforeParseCallback
+      unknownArgumentCallbacks:
+        - unknownArg
+      definitionFiles:
+        11: ${BASH_TOOLS_ROOT_DIR}/src/_binaries/commandDefinitions/optionsDefault.sh
+        99: ${BASH_TOOLS_ROOT_DIR}/src/_binaries/Database/dbScriptAllDatabases/dbScriptOneDatabase.sh
+      mainFile: ${BASH_TOOLS_ROOT_DIR}/src/_binaries/Database/dbScriptAllDatabases/extractData.sh

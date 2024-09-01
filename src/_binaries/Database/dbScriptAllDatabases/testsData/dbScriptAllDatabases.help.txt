@@ -1,6 +1,7 @@
 [1;37mSYNOPSIS:[0m
     Allows to execute a script on each database of specified mysql server.
 
+
 [1;37mUSAGE:[0m dbScriptAllDatabases [OPTIONS] [ARGUMENTS]
 [1;37mUSAGE:[0m dbScriptAllDatabases [--jobs|-j <jobsCount>] [--bar|-b]
   [--from-dsn|-f <dsn>] [--help|-h] [--config]
