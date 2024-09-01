@@ -41,24 +41,24 @@ longDescriptionFunction() {
 
 optionProfileHelpFunction() {
   Array::wrap2 " " 80 4 \
-    "    The name of the profile to write in profiles directory.\r" \
+    "    The name of the profile to write in profiles directory.\n" \
     "If not provided, the file name pattern will be 'auto_<dsn>_<fromDbName>.sh'"
   echo
 }
 
 optionFromDsnHelpFunction() {
   Array::wrap2 " " 80 4 \
-    "    dsn to use for source database (Default: ${defaultFromDsn})\r" \
+    "    dsn to use for source database (Default: ${defaultFromDsn})\n" \
     "if not provided, the file name pattern will be 'auto_<dsn>_<fromDbName>.sh'"
   echo
 }
 
 optionRatioHelpFunction() {
   Array::wrap2 " " 80 4 \
-    "    define the ratio to use (0 to 100% - default 70).\r" \
-    "- 0 means profile will filter out all the tables\r" \
-    "- 100 means profile will keep all the tables.\r" \
-    "Eg: 70 means that tables with size(table+index)\r" \
+    "    define the ratio to use (0 to 100% - default 70).\n" \
+    "- 0 means profile will filter out all the tables\n" \
+    "- 100 means profile will keep all the tables.\n" \
+    "Eg: 70 means that tables with size(table+index)\n" \
     "that are greater than 70% of the max table size will be excluded."
   echo
 }

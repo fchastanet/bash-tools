@@ -1,6 +1,7 @@
 BEGIN{
   headerPrinted=0
 }
+/^$/ {next}
 {
   buffer = substr($0, 0, 35)
   line = $0

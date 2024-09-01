@@ -1,0 +1,68 @@
+extends:
+  - "${BASH_TOOLS_ROOT_DIR}/src/_binaries/commandDefinitions/optionsJobs.yaml"
+  - "${BASH_TOOLS_ROOT_DIR}/src/_binaries/commandDefinitions/optionsProgressBar.yaml"
+  - "${BASH_TOOLS_ROOT_DIR}/src/_binaries/commandDefinitions/optionsVersion.yaml"
+  - "${FRAMEWORK_ROOT_DIR}/src/_binaries/commandDefinitions/defaultCommand.yaml"
+  - "${FRAMEWORK_ROOT_DIR}/src/_binaries/commandDefinitions/frameworkConfig.yaml"
+
+vars:
+  SRC_FILE_PATH: src/_binaries/Database/dbQueryAllDatabases/binary-dbQueryAllDatabases.yaml
+
+compilerConfig:
+  targetFile: "${BASH_TOOLS_ROOT_DIR}/bin/dbQueryAllDatabases"
+  relativeRootDirBasedOnTargetDir: ..
+  srcDirs:
+    - ${BASH_TOOLS_ROOT_DIR}/src
+binData:
+  commands:
+    default:
+      functionName: dbQueryAllDatabasesCommand
+      version: "2.0"
+      commandName: dbQueryAllDatabases
+      beforeParseCallbacks:
+        - beforeParseCallback
+        - initConf
+      callbacks:
+        - dbQueryAllDatabasesCommandCallback@100
+      everyArgumentCallbacks:
+        - dbQueryAllDatabasesEveryArgumentCallback
+      definitionFiles:
+        11: ${BASH_TOOLS_ROOT_DIR}/src/_binaries/commandDefinitions/optionsDefault.sh
+        99: ${BASH_TOOLS_ROOT_DIR}/src/_binaries/Database/dbQueryAllDatabases/dbQueryAllDatabases-options.sh
+      mainFile: ${BASH_TOOLS_ROOT_DIR}/src/_binaries/Database/dbQueryAllDatabases/dbQueryAllDatabases-main.sh
+      optionGroups:
+        groupSourceDbOptions:
+          title: "QUERY OPTIONS:"
+      help:
+        "Execute a query on multiple databases to generate a tsv format
+        report.\\n The query can be parallelized on multiple databases."
+      longDescription: longDescriptionFunction
+      args:
+        - type: String
+          min: 1
+          max: 1
+          name: argQuery
+          variableName: argQuery
+          help: argQueryHelpFunction
+          callbacks:
+            - argQueryCallback
+      options:
+        - variableName: optionSeparator
+          group: groupSourceDbOptions
+          type: String
+          help: Character to use to separate mysql column.
+          helpValueName: separator
+          defaultValue: "|"
+          callbacks:
+            - optionSeparatorCallback
+          alts:
+            - --separator
+            - -s
+        - variableName: optionFromDsn
+          group: groupSourceDbOptions
+          type: String
+          help: Target mysql server.
+          helpValueName: dsn
+          alts:
+            - --from-dsn
+            - -f

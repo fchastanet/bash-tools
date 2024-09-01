@@ -1724,8 +1724,9 @@ mysql2pumlCommandParse() {
 
 # @description display command options and arguments help for mysql2pumlCommand
 mysql2pumlCommandHelp() {
-  Array::wrap2 ' ' 80 0 "${__HELP_TITLE_COLOR}SYNOPSIS:${__RESET_COLOR}" \
-    "Converts mysql dump sql schema to plantuml format."
+  echo -e "${__HELP_TITLE_COLOR}SYNOPSIS:${__RESET_COLOR}"
+  Array::wrap2 ' ' 76 4 "    " "Converts mysql dump sql schema to plantuml format."
+
   echo
   echo
 
@@ -1751,7 +1752,7 @@ mysql2pumlCommandHelp() {
 
     Array::wrap2 " " 80 2 "  [${__HELP_OPTION_COLOR}sqlFile${__HELP_NORMAL} {single}]
   "
-    Array::wrap2 ' ' 76 4 "    " "Sql filepath to parse (read from stdin if not provided)."
+  Array::wrap2 ' ' 76 4 "    " "Sql filepath to parse (read from stdin if not provided)."
     echo
   # ------------------------------------------
   # options section

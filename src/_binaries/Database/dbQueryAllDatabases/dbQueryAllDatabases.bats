@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # shellcheck source=src/batsHeaders.sh
-source "$(cd "${BATS_TEST_DIRNAME}/../.." && pwd)/batsHeaders.sh"
+source "$(cd "${BATS_TEST_DIRNAME}/../../.." && pwd)/batsHeaders.sh"
 
 setup() {
   export TMPDIR="${BATS_TEST_TMPDIR}"
@@ -49,13 +49,13 @@ function Database::dbQueryAllDatabases::query_file_not_provided { #@test
 function Database::dbQueryAllDatabases::providingEnvFileChangeDbConnectionParametersAndRetrieveDbSize { #@test
   # shellcheck disable=SC2016,SC2086
   stub mysql \
-    '\* --batch --raw --default-character-set=utf8 --connect-timeout=5 -s --skip-column-names -e \* : echo "$9" >'" "${HOME}/query1" ; cat "${BATS_TEST_DIRNAME}/testsData/getUserDbList.result"" \
-    '\* --batch --raw --default-character-set=utf8 --connect-timeout=5 db1 -e \* : echo -n "${8}" >'" "${HOME}/query2" ; cat "${BATS_TEST_DIRNAME}/testsData/databaseSize.result_db1"" \
-    '\* --batch --raw --default-character-set=utf8 --connect-timeout=5 db2 -e \* : echo -n "${8}" >'" "${HOME}/query3" ; cat "${BATS_TEST_DIRNAME}/testsData/databaseSize.result_db2""
+    '\* --batch --raw --default-character-set=utf8 --connect-timeout=5 -s --skip-column-names -e \* : echo "$9" >'" '${HOME}/query1' ; cat '${BATS_TEST_DIRNAME}/testsData/getUserDbList.result'" \
+    '\* --batch --raw --default-character-set=utf8 --connect-timeout=5 db1 -e \* : echo -n "${8}" >'" '${HOME}/query2' ; cat '${BATS_TEST_DIRNAME}/testsData/databaseSize.result_db1'" \
+    '\* --batch --raw --default-character-set=utf8 --connect-timeout=5 db2 -e \* : echo -n "${8}" >'" '${HOME}/query3' ; cat '${BATS_TEST_DIRNAME}/testsData/databaseSize.result_db2'"
 
   # shellcheck disable=SC2016
   stub parallel \
-    '--eta --progress -m --linebuffer -j 1 ::: * DbQueryOneDatabase * * : while IFS= read -r db; do "$8" "$9" "${10}" "${db}"; done'
+    '--bar --eta --progress -j 1 * * * : while IFS= read -r db; do export DB_QUERY_ALL_DATABASES_COMMAND="DbQueryOneDatabase"; "$6" "$7" "${db}"; done'
 
   f() {
     # shellcheck disable=SC2317
@@ -88,7 +88,7 @@ function Database::dbQueryAllDatabases::multipleJobs { #@test
 
   # shellcheck disable=SC2016
   stub parallel \
-    '--eta --progress -m --linebuffer -j 8 ::: * DbQueryOneDatabase * * : while IFS= read -r db; do "$8" "$9" "${10}" "${db}"; done'
+    '--bar --eta --progress -j 8 * * : while IFS= read -r db; do export DB_QUERY_ALL_DATABASES_COMMAND="DbQueryOneDatabase"; "$6" "$7" "${db}"; done'
 
   f() {
     # shellcheck disable=SC2317
@@ -100,7 +100,6 @@ function Database::dbQueryAllDatabases::multipleJobs { #@test
   run f
   assert_output "$(cat "${BATS_TEST_DIRNAME}/testsData/dbQueryAllDatabases.result")"
   [[ -f "${HOME}/query1" ]]
-  cat "${HOME}/query1"
   [[ "$(cat "${HOME}/query1")" == "$(cat "${BATS_TEST_DIRNAME}/testsData/getUserDbList.query")" ]]
   [[ -f "${HOME}/query2" ]]
   echo >>"${HOME}/query2" # add a new line as megalinter add a newline at end of file
