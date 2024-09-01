@@ -38,3 +38,16 @@ init() {
   Database::newInstance dbInstance "${DSN}"
   Database::setQueryOptions dbInstance "${dbInstance[QUERY_OPTIONS]} --connect-timeout=5"
 }
+
+unknownArg() {
+  :
+}
+
+beforeParseCallback() {
+  Env::requireLoad
+  UI::requireTheme
+  Log::requireLoad
+  Linux::requireExecutedAsUser
+  Linux::requireRealpathCommand
+  init
+}
