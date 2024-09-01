@@ -1,0 +1,89 @@
+extends:
+  - "${BASH_TOOLS_ROOT_DIR}/src/_binaries/commandDefinitions/optionsJobs.yaml"
+  - "${BASH_TOOLS_ROOT_DIR}/src/_binaries/commandDefinitions/optionsFromDsn.yaml"
+  - "${BASH_TOOLS_ROOT_DIR}/src/_binaries/commandDefinitions/optionsVersion.yaml"
+  - "${FRAMEWORK_ROOT_DIR}/src/_binaries/commandDefinitions/defaultCommand.yaml"
+  - "${FRAMEWORK_ROOT_DIR}/src/_binaries/commandDefinitions/frameworkConfig.yaml"
+
+vars:
+  SRC_FILE_PATH: src/_binaries/Database/dbScriptAllDatabases/binary-dbScriptAllDatabases.yaml
+
+compilerConfig:
+  targetFile: "${BASH_TOOLS_ROOT_DIR}/bin/dbScriptAllDatabases"
+  relativeRootDirBasedOnTargetDir: ..
+  srcDirs:
+    - ${BASH_TOOLS_ROOT_DIR}/src
+binData:
+  commands:
+    default:
+      functionName: dbScriptAllDatabasesCommand
+      version: "2.0"
+      commandName: dbScriptAllDatabases
+      beforeParseCallbacks:
+        - beforeParseCallback
+        - initConf
+      callbacks:
+        - dbScriptAllDatabasesCommandCallback@100
+      definitionFiles:
+        11: ${BASH_TOOLS_ROOT_DIR}/src/_binaries/commandDefinitions/optionsDefault.sh
+        20: ${BASH_TOOLS_ROOT_DIR}/src/_binaries/Database/dbScriptAllDatabases/dbScriptAllDatabases-options.sh
+      mainFile: ${BASH_TOOLS_ROOT_DIR}/src/_binaries/Database/dbScriptAllDatabases/dbScriptAllDatabases-main.sh
+      help: |
+        Allows to execute a script on each database of specified mysql server.
+      longDescription: longDescriptionFunction
+      optionGroups:
+        groupScriptsOptions:
+          title: "SCRIPTS OPTIONS:"
+      args:
+        - help: The script that will be executed on each databases.
+          type: String
+          min: 1
+          max: 1
+          name: scriptToExecute
+          callbacks:
+            - argScriptToExecuteCallback
+          variableName: argScriptToExecute
+
+        - help: Optional parameters to pass to the script.
+          type: StringArray
+          min: 0
+          max: -1
+          name: scriptArguments
+          variableName: scriptArguments
+
+      options:
+        - variableName: optionDatabases
+          group: groupScriptsOptions
+          type: StringArray
+          help:
+            If provided will check only this db, otherwise script will be
+            executed on all dbs of mysql server.
+          helpValueName: dbName
+          alts:
+            - --database
+
+        - variableName: optionOutputDir
+          group: groupScriptsOptions
+          type: String
+          help: Output directory, see log-format option.
+          helpValueName: outputDirectory
+          callbacks:
+            - outputDirectoryCallback
+          alts:
+            - --output
+            - -o
+
+        - variableName: optionLogFormat
+          group: groupScriptsOptions
+          type: String
+          help: If output dir provided, will log each db result to log file.
+          helpValueName: logFormat
+          authorizedValuesList:
+            - none
+            - log
+          defaultValue: none
+          callbacks:
+            - outputDirectoryCallback
+          alts:
+            - --log-format
+            - -l

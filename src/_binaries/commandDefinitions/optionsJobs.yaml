@@ -19,3 +19,15 @@ binData:
           alts:
             - --jobs
             - -j
+
+        - variableName: optionProgressBar
+          group: groupJobOptions
+          type: Boolean
+          help: |
+            Show progress as a progress bar. In the bar is shown: % of jobs completed,
+            estimated seconds left, and number of jobs started.
+          callbacks:
+            - optionProgressBarCallback
+          alts:
+            - --bar
+            - -b

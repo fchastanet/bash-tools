@@ -1698,6 +1698,7 @@ beforeParseCallback() {
 # ------------------------------------------
 
 # options variables initialization
+declare optionFromDsn=""
 declare optionHelp="0"
 declare optionConfig="0"
 declare optionBashFrameworkConfig=""
@@ -1713,7 +1714,6 @@ declare optionTheme="default"
 declare optionVersion="0"
 declare optionQuiet="0"
 declare optionProfile=""
-declare optionFromDsn="default.remote"
 declare optionRatio="70"
 # arguments variables initialization
 declare fromDbName=""
@@ -1721,6 +1721,9 @@ declare fromDbName=""
 dbImportProfileCommandParse() {
   Log::displayDebug "Command ${SCRIPT_NAME} - parse arguments: ${BASH_FRAMEWORK_ARGV[*]}"
   Log::displayDebug "Command ${SCRIPT_NAME} - parse filtered arguments: ${BASH_FRAMEWORK_ARGV_FILTERED[*]}"
+  optionFromDsn=""
+  local -i options_parse_optionParsedCountOptionFromDsn
+  ((options_parse_optionParsedCountOptionFromDsn = 0)) || true
   optionHelp="0"
   local -i options_parse_optionParsedCountOptionHelp
   ((options_parse_optionParsedCountOptionHelp = 0)) || true
@@ -1764,9 +1767,6 @@ dbImportProfileCommandParse() {
   optionProfile=""
   local -i options_parse_optionParsedCountOptionProfile
   ((options_parse_optionParsedCountOptionProfile = 0)) || true
-  optionFromDsn="default.remote"
-  local -i options_parse_optionParsedCountOptionFromDsn
-  ((options_parse_optionParsedCountOptionFromDsn = 0)) || true
   optionRatio="70"
   local -i options_parse_optionParsedCountOptionRatio
   ((options_parse_optionParsedCountOptionRatio = 0)) || true
@@ -1783,6 +1783,25 @@ dbImportProfileCommandParse() {
     local argOptDefaultBehavior=0
     case "${options_parse_arg}" in
       # Option 1/17
+      # optionFromDsn alts --from-dsn|-f
+      # type: String min 0 max 1
+      --from-dsn | -f)
+        shift
+        if (($# == 0)); then
+          Log::displayError "Command ${SCRIPT_NAME} - Option ${options_parse_arg} - a value needs to be specified"
+          return 1
+        fi
+
+        if ((options_parse_optionParsedCountOptionFromDsn >= 1 )); then
+          Log::displayError "Command ${SCRIPT_NAME} - Option ${options_parse_arg} - Maximum number of option occurrences reached(1)"
+          return 1
+        fi
+        ((++options_parse_optionParsedCountOptionFromDsn))
+        # shellcheck disable=SC2034
+        optionFromDsn="$1"
+        ;;
+
+      # Option 2/17
       # optionHelp alts --help|-h
       # type: Boolean min 0 max 1
       --help | -h)
@@ -1798,7 +1817,7 @@ dbImportProfileCommandParse() {
 
         ;;
 
-      # Option 2/17
+      # Option 3/17
       # optionConfig alts --config
       # type: Boolean min 0 max 1
       --config)
@@ -1812,7 +1831,7 @@ dbImportProfileCommandParse() {
         ((++options_parse_optionParsedCountOptionConfig))
         ;;
 
-      # Option 3/17
+      # Option 4/17
       # optionBashFrameworkConfig alts --bash-framework-config
       # type: String min 0 max 1
       --bash-framework-config)
@@ -1833,7 +1852,7 @@ dbImportProfileCommandParse() {
 
         ;;
 
-      # Option 4/17
+      # Option 5/17
       # optionInfoVerbose alts --verbose|-v
       # type: Boolean min 0 max 1
       --verbose | -v)
@@ -1851,7 +1870,7 @@ dbImportProfileCommandParse() {
 
         ;;
 
-      # Option 5/17
+      # Option 6/17
       # optionDebugVerbose alts -vv
       # type: Boolean min 0 max 1
       -vv)
@@ -1869,7 +1888,7 @@ dbImportProfileCommandParse() {
 
         ;;
 
-      # Option 6/17
+      # Option 7/17
       # optionTraceVerbose alts -vvv
       # type: Boolean min 0 max 1
       -vvv)
@@ -1887,7 +1906,7 @@ dbImportProfileCommandParse() {
 
         ;;
 
-      # Option 7/17
+      # Option 8/17
       # optionEnvFiles alts --env-file
       # type: StringArray min 0 max -1
       --env-file)
@@ -1905,7 +1924,7 @@ dbImportProfileCommandParse() {
 
         ;;
 
-      # Option 8/17
+      # Option 9/17
       # optionLogLevel alts --log-level
       # type: String min 0 max 1
       # authorizedValues: OFF|ERR|ERROR|WARN|WARNING|INFO|DEBUG|TRACE
@@ -1933,7 +1952,7 @@ dbImportProfileCommandParse() {
 
         ;;
 
-      # Option 9/17
+      # Option 10/17
       # optionLogFile alts --log-file
       # type: String min 0 max 1
       --log-file)
@@ -1956,7 +1975,7 @@ dbImportProfileCommandParse() {
 
         ;;
 
-      # Option 10/17
+      # Option 11/17
       # optionDisplayLevel alts --display-level
       # type: String min 0 max 1
       # authorizedValues: OFF|ERR|ERROR|WARN|WARNING|INFO|DEBUG|TRACE
@@ -1984,7 +2003,7 @@ dbImportProfileCommandParse() {
 
         ;;
 
-      # Option 11/17
+      # Option 12/17
       # optionNoColor alts --no-color
       # type: Boolean min 0 max 1
       --no-color)
@@ -2002,7 +2021,7 @@ dbImportProfileCommandParse() {
 
         ;;
 
-      # Option 12/17
+      # Option 13/17
       # optionTheme alts --theme
       # type: String min 0 max 1
       # authorizedValues: default|default-force|noColor
@@ -2030,7 +2049,7 @@ dbImportProfileCommandParse() {
 
         ;;
 
-      # Option 13/17
+      # Option 14/17
       # optionVersion alts --version
       # type: Boolean min 0 max 1
       --version)
@@ -2046,7 +2065,7 @@ dbImportProfileCommandParse() {
 
         ;;
 
-      # Option 14/17
+      # Option 15/17
       # optionQuiet alts --quiet|-q
       # type: Boolean min 0 max 1
       --quiet | -q)
@@ -2064,7 +2083,7 @@ dbImportProfileCommandParse() {
 
         ;;
 
-      # Option 15/17
+      # Option 16/17
       # optionProfile alts --profile|-p
       # type: String min 0 max 1
       --profile | -p)
@@ -2081,25 +2100,6 @@ dbImportProfileCommandParse() {
         ((++options_parse_optionParsedCountOptionProfile))
         # shellcheck disable=SC2034
         optionProfile="$1"
-        ;;
-
-      # Option 16/17
-      # optionFromDsn alts --from-dsn|-f
-      # type: String min 0 max 1
-      --from-dsn | -f)
-        shift
-        if (($# == 0)); then
-          Log::displayError "Command ${SCRIPT_NAME} - Option ${options_parse_arg} - a value needs to be specified"
-          return 1
-        fi
-
-        if ((options_parse_optionParsedCountOptionFromDsn >= 1 )); then
-          Log::displayError "Command ${SCRIPT_NAME} - Option ${options_parse_arg} - Maximum number of option occurrences reached(1)"
-          return 1
-        fi
-        ((++options_parse_optionParsedCountOptionFromDsn))
-        # shellcheck disable=SC2034
-        optionFromDsn="$1"
         ;;
 
       # Option 17/17
@@ -2213,7 +2213,7 @@ dbImportProfileCommandHelp() {
   # ------------------------------------------
   # usage/options section
   # ------------------------------------------
-  optionsAltList=("[--help|-h]" "[--config]" "[--bash-framework-config <bash-framework-config>]" "[--verbose|-v]" "[-vv]" "[-vvv]" "[--env-file <env-file>]" "[--log-level <log-level>]" "[--log-file <log-file>]" "[--display-level <display-level>]" "[--no-color]" "[--theme <theme>]" "[--version]" "[--quiet|-q]" "[--profile|-p <profile>]" "[--from-dsn|-f <dsn>]" "[--ratio|-r <ratio>]"
+  optionsAltList=("[--from-dsn|-f <dsn>]" "[--help|-h]" "[--config]" "[--bash-framework-config <bash-framework-config>]" "[--verbose|-v]" "[-vv]" "[-vvv]" "[--env-file <env-file>]" "[--log-level <log-level>]" "[--log-file <log-file>]" "[--display-level <display-level>]" "[--no-color]" "[--theme <theme>]" "[--version]" "[--quiet|-q]" "[--profile|-p <profile>]" "[--ratio|-r <ratio>]"
   )
   Array::wrap2 " " 80 2 "${__HELP_TITLE_COLOR}USAGE:${__RESET_COLOR}" \
     "dbImportProfile" "${optionsAltList[@]}"
@@ -2232,6 +2232,13 @@ dbImportProfileCommandHelp() {
   # ------------------------------------------
   # options section
   # ------------------------------------------
+  echo
+  echo -e "${__HELP_TITLE_COLOR}SOURCE OPTIONS:${__RESET_COLOR}"
+  echo -e "  ${__HELP_OPTION_COLOR}--from-dsn${__HELP_NORMAL}, ${__HELP_OPTION_COLOR}-f <dsn>${__HELP_NORMAL} {single}"
+  Array::wrap2 ' ' 76 4 "    " "Target mysql server."
+  echo
+
+
   echo
   echo -e "${__HELP_TITLE_COLOR}GLOBAL OPTIONS:${__RESET_COLOR}"
   echo -e "  ${__HELP_OPTION_COLOR}--help${__HELP_NORMAL}, ${__HELP_OPTION_COLOR}-h${__HELP_NORMAL} {single}"
@@ -2329,14 +2336,6 @@ dbImportProfileCommandHelp() {
 
 
 
-
-  echo -e "  ${__HELP_OPTION_COLOR}--from-dsn${__HELP_NORMAL}, ${__HELP_OPTION_COLOR}-f <dsn>${__HELP_NORMAL} {single}"
-  optionFromDsnHelpFunction
-
-
-
-  Array::wrap2 ' ' 76 6 "    Default value: " "default.remote"
-  echo
 
   echo -e "  ${__HELP_OPTION_COLOR}--ratio${__HELP_NORMAL}, ${__HELP_OPTION_COLOR}-r <ratio>${__HELP_NORMAL} {single}"
   optionRatioHelpFunction

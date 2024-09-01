@@ -1,5 +1,11 @@
 #!/usr/bin/env bash
 
+declare -a PARALLEL_OPTIONS
+
+optionProgressBarCallback() {
+  PARALLEL_OPTIONS+=(--bar)
+}
+
 optionJobsCallback() {
   # shellcheck disable=SC2154
   if ! [[ "${optionJobs}" =~ ^[0-9]+$ ]]; then

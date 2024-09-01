@@ -1,5 +1,6 @@
 extends:
   - "${BASH_TOOLS_ROOT_DIR}/src/_binaries/commandDefinitions/optionsVersion.yaml"
+  - "${BASH_TOOLS_ROOT_DIR}/src/_binaries/commandDefinitions/optionsFromDsn.yaml"
   - "${FRAMEWORK_ROOT_DIR}/src/_binaries/commandDefinitions/defaultCommand.yaml"
   - "${FRAMEWORK_ROOT_DIR}/src/_binaries/commandDefinitions/frameworkConfig.yaml"
 
@@ -37,16 +38,6 @@ binData:
           alts:
             - --profile
             - -p
-
-        - variableName: optionFromDsn
-          group: OptionsGroup
-          type: String
-          defaultValue: default.remote
-          help: optionFromDsnHelpFunction
-          helpValueName: dsn
-          alts:
-            - --from-dsn
-            - -f
 
         - variableName: optionRatio
           group: OptionsGroup
