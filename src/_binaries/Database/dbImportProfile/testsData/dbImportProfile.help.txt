@@ -86,11 +86,11 @@ Allows to override profiles defined in "Default profiles directory"
        - default.remote
        - localhost-root
 
-[1;37mVERSION: [0m2.0
+[1;37mVERSION: [0m3.0
 
 [1;37mAUTHOR: [0m[François Chastanet](https://github.com/fchastanet)
 
 [1;37mSOURCE FILE: [0mhttps://github.com/fchastanet/bash-tools-framework/tree/master/src/_binaries/Database/dbImportProfile/binary-dbImportProfile.yaml
 
 [1;37mLICENSE: [0mMIT License
-Copyright (c) 2020-now François Chastanet
+Copyright (c) 2021-now François Chastanet

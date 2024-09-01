@@ -12,7 +12,8 @@ binData:
   commands:
     default:
       functionName: installRequirementsCommand
-      version: "1.0"
+      version: "3.0"
+      copyrightBeginYear: 2022
       commandName: installRequirements
       beforeParseCallbacks:
         - beforeParseCallback

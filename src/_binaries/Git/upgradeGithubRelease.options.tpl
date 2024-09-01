@@ -1,6 +1,7 @@
 %
 declare versionNumber="2.0"
 declare commandFunctionName="upgradeGithubReleaseCommand"
+declare copyrightBeginYear="2023"
 declare help="retrieve latest binary release from github and install it"
 # shellcheck disable=SC2016
 declare longDescription

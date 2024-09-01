@@ -3,10 +3,6 @@
 declare SCRIPTS_DIR
 declare HOME_SCRIPTS_DIR
 # shellcheck disable=SC2034
-declare versionNumber="2.0"
-# shellcheck disable=SC2034
-declare copyrightBeginYear="2020"
-# shellcheck disable=SC2034
 declare defaultFromDsn="default.remote"
 # shellcheck disable=SC2034
 declare outputDirectory="${HOME}/.bash-tools/output"

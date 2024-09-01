@@ -6,13 +6,14 @@ vars:
   SRC_FILE_PATH: src/_binaries/build/install/binary-install.yaml
 
 compilerConfig:
-  targetFile: "${BASH_TOOLS_ROOT_DIR}/bin/install"
-  relativeRootDirBasedOnTargetDir: ..
+  targetFile: "${BASH_TOOLS_ROOT_DIR}/install"
+  relativeRootDirBasedOnTargetDir: .
 binData:
   commands:
     default:
       functionName: installCommand
-      version: "1.1"
+      version: "3.0"
+      copyrightBeginYear: 2022
       commandName: install
       beforeParseCallbacks:
         - beforeParseCallback

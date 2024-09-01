@@ -16,7 +16,8 @@ binData:
   commands:
     default:
       functionName: dbImportProfileCommand
-      version: "2.0"
+      version: "3.0"
+      copyrightBeginYear: 2021
       commandName: dbImportProfile
       beforeParseCallbacks:
         - beforeParseCallback

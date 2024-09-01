@@ -58,7 +58,7 @@ options+=(
 Options::generateCommand "${options[@]}"
 %
 declare optionPostmanModelConfig="$(pwd -P)/postmanCli.collections.json"
-declare copyrightBeginYear="2023"
+declare copyrightBeginYear="2024"
 
 argCommandHelp() {
   echo "${__HELP_OPTION_COLOR}pull${__HELP_NORMAL}" $'\r'

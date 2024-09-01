@@ -1,10 +1,6 @@
 #!/usr/bin/env bash
 declare defaultFromDsn="default.remote"
 # shellcheck disable=SC2034
-declare versionNumber="2.0"
-# shellcheck disable=SC2034
-declare copyrightBeginYear="2020"
-# shellcheck disable=SC2034
 declare PROFILES_DIR
 declare HOME_PROFILES_DIR
 

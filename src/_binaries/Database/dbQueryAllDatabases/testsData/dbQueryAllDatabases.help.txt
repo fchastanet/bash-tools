@@ -94,7 +94,7 @@
 [1;37m  EXAMPLES:[0m
     [2;97mdbQueryAllDatabases databaseSize -j 12 --separator "|" --bar 2>/dev/null | column -s "|" -t -n -c 40[0m
 
-[1;37mVERSION: [0m2.0
+[1;37mVERSION: [0m3.0
 
 [1;37mAUTHOR: [0m[François Chastanet](https://github.com/fchastanet)
 
