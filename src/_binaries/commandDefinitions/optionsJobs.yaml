@@ -1,0 +1,21 @@
+---
+binData:
+  commands:
+    default:
+      definitionFiles:
+        26: "${BASH_TOOLS_ROOT_DIR}/src/_binaries/commandDefinitions/optionsJobs.sh"
+      optionGroups:
+        groupJobOptions:
+          title: "JOB OPTIONS:"
+      options:
+        - variableName: optionJobs
+          group: groupJobOptions
+          type: String
+          help: The number of databases to query in parallel.
+          helpValueName: jobsCount
+          defaultValue: 1
+          callbacks:
+            - optionJobsCallback
+          alts:
+            - --jobs
+            - -j

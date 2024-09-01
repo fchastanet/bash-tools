@@ -1,0 +1,102 @@
+[1;37mSYNOPSIS:[0m
+    Execute a query on multiple databases to generate a tsv format report.
+    The query can be parallelized on multiple databases.
+
+[1;37mUSAGE:[0m dbQueryAllDatabases [OPTIONS] [ARGUMENTS]
+[1;37mUSAGE:[0m dbQueryAllDatabases [--jobs|-j <jobsCount>] [--bar|-b]
+  [--help|-h] [--config] [--bash-framework-config <bash-framework-config>]
+  [--verbose|-v] [-vv] [-vvv] [--env-file <env-file>] [--log-level <log-level>]
+  [--log-file <log-file>] [--display-level <display-level>] [--no-color]
+  [--theme <theme>] [--version] [--quiet|-q] [--separator|-s <separator>]
+  [--from-dsn|-f <dsn>]
+
+[1;37mARGUMENTS:[0m
+  [1;34margQuery[0m {single} (mandatory)
+    Query to execute 
+      - <file>, try to execute the mysql query provided by the file
+
+      - <queryFile>, search for query file in queries directory (see below)
+
+      - else the argument is interpreted as query string
+[1;37mJOB OPTIONS:[0m
+  [1;34m--jobs[0m, [1;34m-j <jobsCount>[0m {single}
+    The number of databases to query in parallel.
+    Default value: 1
+
+[1;37mPROGRESS BAR OPTIONS:[0m
+  [1;34m--bar[0m, [1;34m-b[0m {single}
+
+    Show progress as a progress bar. In the bar is shown: % of jobs completed,
+    estimated seconds left, and number of jobs started.
+
+
+[1;37mGLOBAL OPTIONS:[0m
+  [1;34m--help[0m, [1;34m-h[0m {single}
+    Displays this command help
+  [1;34m--config[0m {single}
+    Displays configuration
+  [1;34m--bash-framework-config <bash-framework-config>[0m {single}
+    Use alternate bash framework configuration.
+  [1;34m--verbose[0m, [1;34m-v[0m {single}
+    Info level verbose mode (alias of --display-level INFO)
+  [1;34m-vv[0m {single}
+    Debug level verbose mode (alias of --display-level DEBUG)
+  [1;34m-vvv[0m {single}
+    Trace level verbose mode (alias of --display-level TRACE)
+  [1;34m--env-file <env-file>[0m {list} (optional)
+    Load the specified env file (deprecated, please use --bash-framework-con
+    fig option instead)
+  [1;34m--log-level <log-level>[0m {single}
+    Set log level
+    Possible values: OFF, ERR, ERROR, WARN, WARNING, INFO, DEBUG, TRACE
+  [1;34m--log-file <log-file>[0m {single}
+    Set log file
+  [1;34m--display-level <display-level>[0m {single}
+    Set display level
+    Possible values: OFF, ERR, ERROR, WARN, WARNING, INFO, DEBUG, TRACE
+  [1;34m--no-color[0m {single}
+    Produce monochrome output. alias of --theme noColor.
+  [1;34m--theme <theme>[0m {single}
+    Choose color theme - default-force means colors will be produced even if
+    command is piped.
+    Possible values: default, default-force, noColor
+    Default value: default
+  [1;34m--version[0m {single}
+    Print version information and quit.
+  [1;34m--quiet[0m, [1;34m-q[0m {single}
+    Quiet mode, doesn't display any output.
+
+[1;37mQUERY OPTIONS:[0m
+  [1;34m--separator[0m, [1;34m-s <separator>[0m {single}
+    Character to use to separate mysql column.
+    Default value: |
+  [1;34m--from-dsn[0m, [1;34m-f <dsn>[0m {single}
+    Target mysql server.
+
+
+[1;37mDESCRIPTION:[0m
+[1;37m  LIST OF AVAILABLE DSN:[0m
+    - dsn_local
+    - dsn_valid
+
+[1;37m  DEFAULT QUERIES DIRECTORY:[0m
+    /bash/conf/dbQueries
+
+[1;37m  USER QUERIES DIRECTORY:[0m
+    home/.bash-tools/dbQueries
+    Allows to override queries defined in 'Default queries directory'
+
+[1;37m  LIST OF AVAILABLE QUERIES:[0m
+
+
+[1;37m  EXAMPLES:[0m
+    [2;97mdbQueryAllDatabases databaseSize -j 12 --separator "|" --bar 2>/dev/null | column -s "|" -t -n -c 40[0m
+
+[1;37mVERSION: [0m2.0
+
+[1;37mAUTHOR: [0m[François Chastanet](https://github.com/fchastanet)
+
+[1;37mSOURCE FILE: [0mhttps://github.com/fchastanet/bash-tools-framework/tree/master/src/_binaries/Database/dbQueryAllDatabases/binary-dbQueryAllDatabases.yaml
+
+[1;37mLICENSE: [0mMIT License
+Copyright (c) 2020-now François Chastanet

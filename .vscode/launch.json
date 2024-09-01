@@ -13,6 +13,13 @@
     {
       "type": "bashdb",
       "request": "launch",
+      "name": "dbQueryAllDatabases",
+      "program": "bin/dbQueryAllDatabases",
+      "args": ["-f", "ckls.local"]
+    },
+    {
+      "type": "bashdb",
+      "request": "launch",
       "name": "Bash-Debug (mysql2puml)",
       "program": "bin/mysql2puml",
       "args": ["src/_binaries/DbImport/testsData/dump.sql"]

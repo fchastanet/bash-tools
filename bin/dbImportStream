@@ -2300,8 +2300,9 @@ dbImportStreamCommandParse() {
 
 # @description display command options and arguments help for dbImportStreamCommand
 dbImportStreamCommandHelp() {
-  Array::wrap2 ' ' 80 0 "${__HELP_TITLE_COLOR}SYNOPSIS:${__RESET_COLOR}" \
-    "Stream tar.gz file or gz file through mysql."
+  echo -e "${__HELP_TITLE_COLOR}SYNOPSIS:${__RESET_COLOR}"
+  Array::wrap2 ' ' 76 4 "    " "Stream tar.gz file or gz file through mysql."
+
   echo
   echo
 
@@ -2327,11 +2328,11 @@ dbImportStreamCommandHelp() {
 
     Array::wrap2 " " 80 2 "  ${__HELP_OPTION_COLOR}argDumpFile${__HELP_NORMAL} {single} (mandatory)
   "
-    Array::wrap2 ' ' 76 4 "    " "The file that will be streamed through mysql."
+  Array::wrap2 ' ' 76 4 "    " "The file that will be streamed through mysql."
     echo
     Array::wrap2 " " 80 2 "  ${__HELP_OPTION_COLOR}argTargetDbName${__HELP_NORMAL} {single} (mandatory)
   "
-    Array::wrap2 ' ' 76 4 "    " "The name of the mysql target database."
+  Array::wrap2 ' ' 76 4 "    " "The name of the mysql target database."
     echo
   # ------------------------------------------
   # options section

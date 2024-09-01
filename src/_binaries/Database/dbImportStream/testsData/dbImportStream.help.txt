@@ -1,4 +1,5 @@
-[1;37mSYNOPSIS:[0m Stream tar.gz file or gz file through mysql.
+[1;37mSYNOPSIS:[0m
+    Stream tar.gz file or gz file through mysql.
 
 [1;37mUSAGE:[0m dbImportStream [OPTIONS] [ARGUMENTS]
 [1;37mUSAGE:[0m dbImportStream [--profile|-p <profile>]

@@ -1490,8 +1490,9 @@ installRequirementsCommandParse() {
 
 # @description display command options and arguments help for installRequirementsCommand
 installRequirementsCommandHelp() {
-  Array::wrap2 ' ' 80 0 "${__HELP_TITLE_COLOR}SYNOPSIS:${__RESET_COLOR}" \
-    "Installs requirements."
+  echo -e "${__HELP_TITLE_COLOR}SYNOPSIS:${__RESET_COLOR}"
+  Array::wrap2 ' ' 76 4 "    " "Installs requirements."
+
   echo
   echo
 

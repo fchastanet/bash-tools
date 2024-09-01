@@ -1,4 +1,5 @@
-[1;37mSYNOPSIS:[0m Converts mysql dump sql schema to plantuml format.
+[1;37mSYNOPSIS:[0m
+    Converts mysql dump sql schema to plantuml format.
 
 [1;37mUSAGE:[0m mysql2puml [OPTIONS] [ARGUMENTS]
 [1;37mUSAGE:[0m mysql2puml [--help|-h] [--config]

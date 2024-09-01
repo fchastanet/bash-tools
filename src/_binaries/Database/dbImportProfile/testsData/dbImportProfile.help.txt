@@ -1,4 +1,5 @@
-[1;37mSYNOPSIS:[0m Generate optimized profiles to be used by dbImport.
+[1;37mSYNOPSIS:[0m
+    Generate optimized profiles to be used by dbImport.
 
 [1;37mUSAGE:[0m dbImportProfile [OPTIONS] [ARGUMENTS]
 [1;37mUSAGE:[0m dbImportProfile [--help|-h] [--config]
@@ -51,16 +52,22 @@
 [1;37mOPTIONS:[0m
   [1;34m--profile[0m, [1;34m-p <profile>[0m {single}
     The name of the profile to write in profiles directory.
+
     If not provided, the file name pattern will be 'auto_<dsn>_<fromDbName>.sh'
   [1;34m--from-dsn[0m, [1;34m-f <dsn>[0m {single}
     dsn to use for source database (Default: default.remote)
+
     if not provided, the file name pattern will be 'auto_<dsn>_<fromDbName>.sh'
     Default value: default.remote
   [1;34m--ratio[0m, [1;34m-r <ratio>[0m {single}
     define the ratio to use (0 to 100% - default 70).
+
     - 0 means profile will filter out all the tables
+
     - 100 means profile will keep all the tables.
+
     Eg: 70 means that tables with size(table+index)
+
     that are greater than 70% of the max table size will be excluded.
     Default value: 70
 

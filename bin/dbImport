@@ -2522,8 +2522,9 @@ dbImportCommandParse() {
 
 # @description display command options and arguments help for dbImportCommand
 dbImportCommandHelp() {
-  Array::wrap2 ' ' 80 0 "${__HELP_TITLE_COLOR}SYNOPSIS:${__RESET_COLOR}" \
-    "Import source db into target db using eventual table filter."
+  echo -e "${__HELP_TITLE_COLOR}SYNOPSIS:${__RESET_COLOR}"
+  Array::wrap2 ' ' 76 4 "    " "Import source db into target db using eventual table filter."
+
   echo
   echo
 
@@ -2549,11 +2550,11 @@ dbImportCommandHelp() {
 
     Array::wrap2 " " 80 2 "  ${__HELP_OPTION_COLOR}fromDbName${__HELP_NORMAL} {single} (mandatory)
   "
-    Array::wrap2 ' ' 76 4 "    " "The name of the source/remote database."
+  Array::wrap2 ' ' 76 4 "    " "The name of the source/remote database."
     echo
     Array::wrap2 " " 80 2 "  [${__HELP_OPTION_COLOR}<targetDbName>${__HELP_NORMAL} {single}]
   "
-    Array::wrap2 ' ' 76 4 "    " "The name of the target database" "Default value: <fromDbName>(without extension)" ""
+  Array::wrap2 ' ' 76 4 "    " "The name of the target database" "Default value: <fromDbName>(without extension)" ""
     echo
   # ------------------------------------------
   # options section
