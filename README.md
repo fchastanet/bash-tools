@@ -156,7 +156,7 @@ pre-commit install --hook-type pre-commit --hook-type pre-push
 ```bash
 export FRAMEWORK_ROOT_DIR=/home/wsl/fchastanet/bash-tools/vendor/bash-tools-framework
 export BASH_TOOLS_ROOT_DIR=/home/wsl/fchastanet/bash-tools
-go run ./cmd/bash-compiler $(find "${BASH_TOOLS_ROOT_DIR}/src/_binaries" -name 'binary-*.yaml' -print)
+go run ./cmd/bash-compiler $(find "${BASH_TOOLS_ROOT_DIR}/src/_binaries" -name '*-binary.yaml' -print)
 ```
 
 ### 3.3. UT

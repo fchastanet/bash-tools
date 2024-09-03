@@ -3,7 +3,7 @@ extends:
   - "${FRAMEWORK_ROOT_DIR}/src/_binaries/commandDefinitions/frameworkConfig.yaml"
 
 vars:
-  SRC_FILE_PATH: src/_binaries/Converters/mysql2puml/binary-mysql2puml.yaml
+  SRC_FILE_PATH: src/_binaries/Converters/mysql2puml/mysql2puml-binary.yaml
 
 compilerConfig:
   targetFile: "${BASH_TOOLS_ROOT_DIR}/bin/mysql2puml"

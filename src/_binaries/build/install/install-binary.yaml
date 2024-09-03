@@ -3,7 +3,7 @@ extends:
   - "${FRAMEWORK_ROOT_DIR}/src/_binaries/commandDefinitions/frameworkConfig.yaml"
 
 vars:
-  SRC_FILE_PATH: src/_binaries/build/install/binary-install.yaml
+  SRC_FILE_PATH: src/_binaries/build/install/install-binary.yaml
 
 compilerConfig:
   targetFile: "${BASH_TOOLS_ROOT_DIR}/install"

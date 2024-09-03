@@ -4,7 +4,7 @@ extends:
   - "${FRAMEWORK_ROOT_DIR}/src/_binaries/commandDefinitions/frameworkConfig.yaml"
 
 vars:
-  SRC_FILE_PATH: src/_binaries/Database/extractData/binary-extractData.yaml
+  SRC_FILE_PATH: src/_binaries/Database/extractData/extractData-binary.yaml
 
 compilerConfig:
   targetFile: "${BASH_TOOLS_ROOT_DIR}/conf/dbScripts/extractData"

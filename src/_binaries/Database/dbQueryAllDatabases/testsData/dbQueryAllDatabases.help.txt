@@ -98,7 +98,7 @@
 
 [1;37mAUTHOR: [0m[François Chastanet](https://github.com/fchastanet)
 
-[1;37mSOURCE FILE: [0mhttps://github.com/fchastanet/bash-tools-framework/tree/master/src/_binaries/Database/dbQueryAllDatabases/binary-dbQueryAllDatabases.yaml
+[1;37mSOURCE FILE: [0mhttps://github.com/fchastanet/bash-tools-framework/tree/master/src/_binaries/Database/dbQueryAllDatabases/dbQueryAllDatabases-binary.yaml
 
 [1;37mLICENSE: [0mMIT License
 Copyright (c) 2020-now François Chastanet

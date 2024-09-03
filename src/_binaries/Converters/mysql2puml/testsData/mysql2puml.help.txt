@@ -74,7 +74,7 @@
 
 [1;37mAUTHOR: [0m[François Chastanet](https://github.com/fchastanet)
 
-[1;37mSOURCE FILE: [0mhttps://github.com/fchastanet/bash-tools-framework/tree/master/src/_binaries/Converters/mysql2puml/binary-mysql2puml.yaml
+[1;37mSOURCE FILE: [0mhttps://github.com/fchastanet/bash-tools-framework/tree/master/src/_binaries/Converters/mysql2puml/mysql2puml-binary.yaml
 
 [1;37mLICENSE: [0mMIT License
 Copyright (c) 2021-now François Chastanet

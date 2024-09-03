@@ -16,22 +16,22 @@
     Default configuration: [1;34m[0m
     Default container: [1;34mproject-apache2[0m
   [[1;34muser[0m {single}]
-    user to connect on this container 
+    user to connect on this container
 
     Default user: [1;34mwww-data[0m
       loaded from profile selected as first arg
-      or deduced from default configuration. 
+      or deduced from default configuration.
 
-    Default configuration: [1;34m[0m 
+    Default configuration: [1;34m[0m
 
       if first arg is not a profile
   [[1;34mcommand[0m {single}]
-The command to execute 
+The command to execute
 
 Default command: [1;34m/bin/bash[0m
   loaded from profile selected as first arg
   or deduced from default configuration.
-Default configuration: [1;34m[0m 
+Default configuration: [1;34m[0m
 
 if first arg is not a profile
 
@@ -103,7 +103,7 @@ variables [1;34mfinalUserArg[0m, [1;34mfinalContainerArg[0m, [1;34mfinalCom
 
 [1;37mAUTHOR: [0m[François Chastanet](https://github.com/fchastanet)
 
-[1;37mSOURCE FILE: [0mhttps://github.com/fchastanet/bash-tools-framework/tree/master/src/_binaries/Docker/cli/binary-cli.yaml
+[1;37mSOURCE FILE: [0mhttps://github.com/fchastanet/bash-tools-framework/tree/master/src/_binaries/Docker/cli/cli-binary.yaml
 
 [1;37mLICENSE: [0mMIT License
 Copyright (c) 2020-now François Chastanet
