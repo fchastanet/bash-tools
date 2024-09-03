@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 ###############################################################################
-# GENERATED FROM https://github.com/fchastanet/bash-tools-framework/tree/master/src/_binaries/Database/dbImport/binary-dbImport.yaml
+# GENERATED FROM https://github.com/fchastanet/bash-tools-framework/tree/master/src/_binaries/Database/dbImport/dbImport-binary.yaml
 # DO NOT EDIT IT
 # @generated
 ###############################################################################
@@ -2715,7 +2715,7 @@ dbImportCommandHelp() {
   # ------------------------------------------
   echo
   echo -n -e "${__HELP_TITLE_COLOR}SOURCE FILE: ${__RESET_COLOR}"
-  echo "https://github.com/fchastanet/bash-tools-framework/tree/master/src/_binaries/Database/dbImport/binary-dbImport.yaml"
+  echo "https://github.com/fchastanet/bash-tools-framework/tree/master/src/_binaries/Database/dbImport/dbImport-binary.yaml"
   # ------------------------------------------
   # license section
   # ------------------------------------------

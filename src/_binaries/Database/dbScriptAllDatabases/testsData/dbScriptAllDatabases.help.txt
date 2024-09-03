@@ -117,7 +117,7 @@ Allows to override queries defined in 'Default scripts directory'
 
 [1;37mAUTHOR: [0m[François Chastanet](https://github.com/fchastanet)
 
-[1;37mSOURCE FILE: [0mhttps://github.com/fchastanet/bash-tools-framework/tree/master/src/_binaries/Database/dbScriptAllDatabases/binary-dbScriptAllDatabases.yaml
+[1;37mSOURCE FILE: [0mhttps://github.com/fchastanet/bash-tools-framework/tree/master/src/_binaries/Database/dbScriptAllDatabases/dbScriptAllDatabases-binary.yaml
 
 [1;37mLICENSE: [0mMIT License
 Copyright (c) 2020-now François Chastanet

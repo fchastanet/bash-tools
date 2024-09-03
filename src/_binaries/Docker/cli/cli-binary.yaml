@@ -4,7 +4,7 @@ extends:
   - "${FRAMEWORK_ROOT_DIR}/src/_binaries/commandDefinitions/frameworkConfig.yaml"
 
 vars:
-  SRC_FILE_PATH: src/_binaries/Docker/cli/binary-cli.yaml
+  SRC_FILE_PATH: src/_binaries/Docker/cli/cli-binary.yaml
 
 compilerConfig:
   targetFile: "${BASH_TOOLS_ROOT_DIR}/bin/cli"

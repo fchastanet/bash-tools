@@ -8,7 +8,7 @@ extends:
   - "${FRAMEWORK_ROOT_DIR}/src/_binaries/commandDefinitions/frameworkConfig.yaml"
 
 vars:
-  SRC_FILE_PATH: src/_binaries/Database/dbImport/binary-dbImport.yaml
+  SRC_FILE_PATH: src/_binaries/Database/dbImport/dbImport-binary.yaml
 
 compilerConfig:
   targetFile: "${BASH_TOOLS_ROOT_DIR}/bin/dbImport"
