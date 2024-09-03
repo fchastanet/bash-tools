@@ -1502,6 +1502,7 @@ declare containerArg="default"
 declare finalUserArg="${defaultUserArg}"
 declare finalCommandArg=("${defaultCommandArg[@]}")
 
+declare defaultConfiguration="default"
 declare defaultUserArg="root"
 declare -a defaultCommandArg=("//bin/sh")
 declare PROFILES_DIR
@@ -1532,7 +1533,7 @@ initConf() {
   PROFILES_DIR="${BASH_TOOLS_ROOT_DIR}/conf/cliProfiles"
   HOME_PROFILES_DIR="${HOME}/.bash-tools/cliProfiles"
   # load default conf file
-  Conf::load "cliProfiles" "default"
+  Conf::load "cliProfiles" "${defaultConfiguration}"
 }
 
 optionHelpCallback() {
@@ -1565,36 +1566,37 @@ longDescriptionFunction() {
 }
 
 containerArgHelpFunction() {
-  Conf::load "cliProfiles" "default"
-  echo "    Container should be the name of a profile from profile list,"
-  echo "    check containers list below."
-  echo "    If not provided, it will load the container specified in default configuration."
+  Conf::load "cliProfiles" "${defaultConfiguration}"
+  echo -e "    Container should be the name of a profile from profile list,"
+  echo -e "    check containers list below."
+  echo
+  echo -e "    If no value provided, it will load the container"
+  echo -e "    specified in ${__HELP_OPTION_COLOR}${defaultConfiguration}${__HELP_NORMAL} configuration."
   # shellcheck disable=SC2154
-  echo -e "    Default configuration: ${__HELP_OPTION_COLOR}${containerArg}${__HELP_NORMAL}"
-  # shellcheck disable=SC2154
-  echo -e "    Default container: ${__HELP_OPTION_COLOR}${finalContainerArg}${__HELP_NORMAL}"
+  echo -e "    Default: ${__HELP_OPTION_COLOR}${finalContainerArg}${__HELP_NORMAL}"
+  echo
 }
 
 userArgHelpFunction() {
-  Conf::load "cliProfiles" "default"
-  echo "    user to connect on this container" $'\n'
+  Conf::load "cliProfiles" "${defaultConfiguration}"
+  echo -e "    user to connect on this container"
+  echo
+  echo -e "    If no value provided, it will load the user"
+  echo -e "    specified in ${__HELP_OPTION_COLOR}${defaultConfiguration}${__HELP_NORMAL} configuration."
   # shellcheck disable=SC2154
-  echo -e "    Default user: ${__HELP_OPTION_COLOR}${finalUserArg}${__HELP_NORMAL}"
-  echo "      loaded from profile selected as first arg"
-  echo "      or deduced from default configuration." $'\n'
-  echo -e "    Default configuration: ${__HELP_OPTION_COLOR}${containerArg}${__HELP_NORMAL}" $'\n'
-  echo "      if first arg is not a profile"
+  echo -e "    Default: ${__HELP_OPTION_COLOR}${finalUserArg}${__HELP_NORMAL}"
+  echo
 }
 
 commandArgHelpFunction() {
-  Conf::load "cliProfiles" "default"
-  echo "The command to execute" $'\n'
+  Conf::load "cliProfiles" "${defaultConfiguration}"
+  echo -e "    The command to execute"
+  echo
+  echo -e "    If no value provided, it will load the command"
+  echo -e "    specified in ${__HELP_OPTION_COLOR}${defaultConfiguration}${__HELP_NORMAL} configuration."
   # shellcheck disable=SC2154
-  echo -e "Default command: ${__HELP_OPTION_COLOR}${finalCommandArg[*]}${__HELP_NORMAL}"
-  echo "  loaded from profile selected as first arg"
-  echo "  or deduced from default configuration."
-  echo -e "Default configuration: ${__HELP_OPTION_COLOR}${containerArg}${__HELP_NORMAL}" $'\n'
-  echo "if first arg is not a profile"
+  echo -e "    Default: ${__HELP_OPTION_COLOR}${finalCommandArg[*]}${__HELP_NORMAL}"
+  echo
 }
 
 # shellcheck disable=SC2317 # if function is overridden

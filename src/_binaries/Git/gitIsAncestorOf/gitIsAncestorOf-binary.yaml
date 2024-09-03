@@ -1,0 +1,40 @@
+extends:
+  - "${BASH_TOOLS_ROOT_DIR}/src/_binaries/commandDefinitions/optionsVersion.yaml"
+  - "${FRAMEWORK_ROOT_DIR}/src/_binaries/commandDefinitions/defaultCommand.yaml"
+  - "${FRAMEWORK_ROOT_DIR}/src/_binaries/commandDefinitions/frameworkConfig.yaml"
+
+vars:
+  SRC_FILE_PATH: src/_binaries/Git/gitIsAncestorOf/gitIsAncestorOf-binary.yaml
+
+compilerConfig:
+  targetFile: "${BASH_TOOLS_ROOT_DIR}/bin/gitIsAncestorOf"
+  relativeRootDirBasedOnTargetDir: ..
+  srcDirs:
+    - ${BASH_TOOLS_ROOT_DIR}/src
+binData:
+  commands:
+    default:
+      functionName: gitIsAncestorOfCommand
+      version: "3.0"
+      copyrightBeginYear: 2020
+      commandName: gitIsAncestorOf
+      beforeParseCallbacks:
+        - beforeParseCallback
+      definitionFiles:
+        20: ${BASH_TOOLS_ROOT_DIR}/src/_binaries/Git/gitIsAncestorOf/gitIsAncestorOf-options.sh
+      mainFile: ${BASH_TOOLS_ROOT_DIR}/src/_binaries/Git/gitIsAncestorOf/gitIsAncestorOf-main.sh
+      help: check if ref is inside a given branch.
+      longDescription: longDescriptionFunction
+      args:
+        - type: String
+          min: 1
+          max: 1
+          help: The branch in which the ref will be searched.
+          name: claimedBranch
+          variableName: claimedBranchArg
+        - type: String
+          min: 1
+          max: 1
+          help: The ref to check.
+          name: ref
+          variableName: refArg
