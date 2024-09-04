@@ -1,0 +1,70 @@
+extends:
+  - "${BASH_TOOLS_ROOT_DIR}/src/_binaries/Git/gitToolsDefaultOptions.yaml"
+  - "${BASH_TOOLS_ROOT_DIR}/src/_binaries/commandDefinitions/optionsVersion.yaml"
+  - "${FRAMEWORK_ROOT_DIR}/src/_binaries/commandDefinitions/defaultCommand.yaml"
+  - "${FRAMEWORK_ROOT_DIR}/src/_binaries/commandDefinitions/frameworkConfig.yaml"
+
+vars:
+  SRC_FILE_PATH: src/_binaries/Git/gitRenameBranch/gitRenameBranch-binary.yaml
+
+compilerConfig:
+  targetFile: "${BASH_TOOLS_ROOT_DIR}/bin/gitRenameBranch"
+  relativeRootDirBasedOnTargetDir: ..
+  srcDirs:
+    - ${BASH_TOOLS_ROOT_DIR}/src
+binData:
+  commands:
+    default:
+      functionName: gitRenameBranchCommand
+      version: "3.0"
+      copyrightBeginYear: 2020
+      commandName: gitRenameBranch
+      beforeParseCallbacks:
+        - beforeParseCallback
+      callbacks:
+        - commandCallback
+      definitionFiles:
+        20: ${BASH_TOOLS_ROOT_DIR}/src/_binaries/Git/gitRenameBranch/gitRenameBranch-options.sh
+      mainFile: ${BASH_TOOLS_ROOT_DIR}/src/_binaries/Git/gitRenameBranch/gitRenameBranch-main.sh
+      help: Rename git local branch, push new branch and delete old branch.
+      longDescription: longDescriptionFunction
+      args:
+        - type: String
+          min: 1
+          max: 1
+          help: The new branch name.
+          name: newBranchName
+          variableName: newBranchNameArg
+
+        - type: String
+          min: 0
+          max: 1
+          help: The name of the old branch if not current one.
+          name: oldBranchName
+          variableName: oldBranchNameArg
+
+      options:
+        - alts:
+            - --assume-yes
+            - --yes
+            - -y
+          group: OptionsGroup
+          type: Boolean
+          help: assumeYesHelpFunction
+          variableName: optionAssumeYes
+
+        - alts:
+            - --push
+            - -p
+          group: OptionsGroup
+          type: Boolean
+          help: Push the new branch.
+          variableName: optionPush
+
+        - alts:
+            - --delete
+            - -d
+          group: OptionsGroup
+          type: Boolean
+          help: Delete the old remote branch.
+          variableName: optionDelete

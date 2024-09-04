@@ -31,7 +31,7 @@ function PostmanCli::config { #@test
   assert_line --index 6 "BASH_FRAMEWORK_LOG_FILE                  = \"${TMPDIR}/logFile\""
   assert_line --index 7 'BASH_FRAMEWORK_LOG_FILE_MAX_ROTATION     = "5"'
   assert_line --index 8 'BASH_FRAMEWORK_LOG_LEVEL                 = "0"'
-  assert_line --index 9 'BASH_FRAMEWORK_THEME                     = "noColor"'
+  assert_line --index 9 'BASH_FRAMEWORK_THEME                     = "default"'
   assert_line --index 10 "--------------------------------------------------------------------------------"
   assert_line --index 11 'POSTMAN_API_KEY                          = ...(truncated)'
   assert_lines_count 12

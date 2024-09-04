@@ -1,0 +1,7 @@
+binData:
+  commands:
+    default:
+      definitionFiles:
+        19: ${BASH_TOOLS_ROOT_DIR}/src/_binaries/Git/gitToolsDefaultOptions.sh
+      callbacks:
+        - optionRedirectCmdOutputs

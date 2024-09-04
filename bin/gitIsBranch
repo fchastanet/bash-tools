@@ -338,14 +338,74 @@ Bash::handlePipelineFailure() {
 }
 
 
+# @description loads ~/.bash-tools/.env if available
+# if not creates it from a default template
+# else check if new options need to be added
+BashTools::Conf::requireLoad() {
+Linux::requireTarCommand
+Compiler::Embed::extractFileFromBase64 \
+  "${PERSISTENT_TMPDIR:-/tmp}/db87222729e0f1ed9c597a486a61a08c/bashToolsDefaultConfigTemplate" \
+  "IyEvdXNyL2Jpbi9lbnYgYmFzaAojIHNoZWxsY2hlY2sgZGlzYWJsZT1TQzIwMzQKCiMgRGVmYXVsdCBzZXR0aW5ncwojIHlvdSBjYW4gb3ZlcnJpZGUgdGhlc2Ugc2V0dGluZ3MgYnkgY3JlYXRpbmcgJHtIT01FfS8uYmFzaC10b29scy8uZW52IGZpbGUKCiMjIwojIyMgRElTUExBWSBMZXZlbAojIyMgbWluaW11bSBsZXZlbCBvZiB0aGUgbWVzc2FnZXMgdGhhdCB3aWxsIGJlIGRpc3BsYXllZCBvbiBzY3JlZW4KIyMjCiMjIyAwOiBOTyBMT0cKIyMjIDE6IEVSUk9SCiMjIyAyOiBXQVJOSU5HCiMjIyAzOiBJTkZPCiMjIyA0OiBERUJVRwojIyMKQkFTSF9GUkFNRVdPUktfRElTUExBWV9MRVZFTD0ke0JBU0hfRlJBTUVXT1JLX0RJU1BMQVlfTEVWRUw6LTN9CgojIyMKIyMjIERJU1BMQVkgZHVyYXRpb24KIyMjIDA6IG5vIGR1cmF0aW9uIGlzIGRpc3BsYXllZCBvbiB0aGUgbWVzc2FnZXMKIyMjIDE6IGR1cmF0aW9uIGJldHdlZW4gcHJldmlvdXMgbWVzc2FnZSBhbmQgY3VycmVudCBpcyBkaXNwbGF5ZWQKIyMjIHdpdGggdGhlIG1lc3NhZ2UKIyMjCkRJU1BMQVlfRFVSQVRJT049JHtESVNQTEFZX0RVUkFUSU9OOjB9CgojIyMKIyMjIExvZyB0byBmaWxlCiMjIwojIyMgYWxsIGxvZyBtZXNzYWdlcyB3aWxsIGJlIHJlZGlyZWN0ZWQgdG8gbG9nIGZpbGUgc3BlY2lmaWVkCiMjIyB0aGlzIHNhbWUgcGF0aCB3aWxsIGJlIHVzZWQgaW5zaWRlIGFuZCBvdXRzaWRlIG9mIHRoZSBjb250YWluZXIKIyMjCkJBU0hfRlJBTUVXT1JLX0xPR19GSUxFPSR7QkFTSF9GUkFNRVdPUktfTE9HX0ZJTEU6LSR7RlJBTUVXT1JLX1JPT1RfRElSfS9sb2dzL2Jhc2gubG9nfQoKIyMjCiMjIyBMT0cgTGV2ZWwKIyMjIG1pbmltdW0gbGV2ZWwgb2YgdGhlIG1lc3NhZ2VzIHRoYXQgd2lsbCBiZSBsb2dnZWQgaW50byBMT0dfRklMRQojIyMKIyMjIDA6IE5PIExPRwojIyMgMTogRVJST1IKIyMjIDI6IFdBUk5JTkcKIyMjIDM6IElORk8KIyMjIDQ6IERFQlVHCiMjIwpCQVNIX0ZSQU1FV09SS19MT0dfTEVWRUw9JHtCQVNIX0ZSQU1FV09SS19MT0dfTEVWRUw6LTB9CgojIGFic29sdXRlIGRpcmVjdG9yeSBjb250YWluaW5nIGRiIGltcG9ydCBzcWwgZHVtcHMKREJfSU1QT1JUX0RVTVBfRElSPSR7REJfSU1QT1JUX0RVTVBfRElSOi0ke0hPTUV9Ly5iYXNoLXRvb2xzL2RiSW1wb3J0RHVtcHN9CgojIGdhcmJhZ2UgY29sbGVjdCBhbGwgZmlsZXMgZm9yIHdoaWNoIG1vZGlmaWNhdGlvbiBpcyBncmVhdGVyIHRoYW4gZWc6IDMwIGRheXMgKCszMCkKIyBlYWNoIHRpbWUgYW4gZXhpc3RpbmcgZmlsZSBpcyB1c2VkIGJ5IGRiSW1wb3J0L2RiSW1wb3J0VGFibGUKIyB0aGUgZmlsZSBtb2RpZmljYXRpb24gdGltZSBpcyBzZXQgdG8gbm93CkRCX0lNUE9SVF9HQVJCQUdFX0NPTExFQ1RfREFZUz0ke0RCX0lNUE9SVF9HQVJCQUdFX0NPTExFQ1RfREFZUzotKzMwfQoKIyBhYnNvbHV0ZSBkaXJlY3RvcnkgY29udGFpbmluZyBkYlNjcmlwdHMgdXNlZCBieSBkYlNjcmlwdEFsbERhdGFiYXNlcwpTQ1JJUFRTX0ZPTERFUj0ke1NDUklQVFNfRk9MREVSOi0ke0hPTUV9Ly5iYXNoLXRvb2xzL2NvbmYvZGJTY3JpcHRzfQoKIyAtLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLQojIEFXUyBQYXJhbWV0ZXJzCiMgLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0KUzNfQkFTRV9VUkw9JHtTM19CQVNFX1VSTDotfQoKIyAtLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLQojIFBvc3RtYW4gUGFyYW1ldGVycwojIC0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tClBPU1RNQU5fQVBJX0tFWT0K" \
+  "755"
+
+declare -gx embed_file_bashToolsDefaultConfigTemplate="${PERSISTENT_TMPDIR:-/tmp}/db87222729e0f1ed9c597a486a61a08c/bashToolsDefaultConfigTemplate"
+
+  BASH_TOOLS_ROOT_DIR="$(cd "${CURRENT_DIR}/${RELATIVE_FRAMEWORK_DIR_TO_CURRENT_DIR}" && pwd -P)"
+  if [[ -d "${BASH_TOOLS_ROOT_DIR}/vendor/bash-tools-framework/" ]]; then
+    FRAMEWORK_ROOT_DIR="$(cd "${BASH_TOOLS_ROOT_DIR}/vendor/bash-tools-framework" && pwd -P)"
+  else
+    # if the directory does not exist yet, give a value to FRAMEWORK_ROOT_DIR
+    FRAMEWORK_ROOT_DIR="${BASH_TOOLS_ROOT_DIR}/vendor/bash-tools-framework"
+  fi
+  # shellcheck disable=SC2034
+  FRAMEWORK_SRC_DIR="${FRAMEWORK_ROOT_DIR}/src"
+  # shellcheck disable=SC2034
+  FRAMEWORK_BIN_DIR="${FRAMEWORK_ROOT_DIR}/bin"
+  # shellcheck disable=SC2034
+  FRAMEWORK_VENDOR_DIR="${FRAMEWORK_ROOT_DIR}/vendor"
+  # shellcheck disable=SC2034
+  FRAMEWORK_VENDOR_BIN_DIR="${FRAMEWORK_ROOT_DIR}/vendor/bin"
+
+  if [[ -f "${HOME}/.bash-tools/.env" ]]; then
+    # shellcheck disable=SC2034
+    BASH_FRAMEWORK_ENV_FILES=("${HOME}/.bash-tools/.env")
+  fi
+
+  local envFile="${HOME}/.bash-tools/.env"
+  if [[ ! -f "${envFile}" ]]; then
+    mkdir -p "${HOME}/.bash-tools"
+    (
+      echo "#!/usr/bin/env bash"
+      # shellcheck disable=SC2154
+      echo "${embed_file_bashToolsDefaultConfigTemplate}"
+    ) >"${envFile}"
+    Log::displayInfo "Configuration file '${envFile}' created"
+  else
+    if ! grep -q '^POSTMAN_API_KEY=' "${envFile}"; then
+      (
+        echo '# -----------------------------------------------------'
+        echo '# Postman Parameters'
+        echo '# -----------------------------------------------------'
+        echo 'POSTMAN_API_KEY='
+      ) >>"${envFile}"
+    fi
+  fi
+  # shellcheck source=/conf/.env
+  source "${envFile}" || {
+    Log::displayError "impossible to load '${envFile}'"
+    exit 1
+  }
+}
+
+
 # @description run command specified
 # @arg $@ array:String[] the command to run
-# @env optionTraceVerbose int - if 1 displays the command specified before running it
+# @env optionInfoVerbose int - if 1 displays the command specified before running it
 # @env optionRedirectCmdOutputs String - if set redirect command outputs to file specified
 # @exitcode command's exit code
 BashTools::runVerboseIfNeeded() {
   # shellcheck disable=SC2154
-  if [[ "${optionTraceVerbose}" = "1" ]]; then
+  if [[ "${optionInfoVerbose}" = "1" ]]; then
     echo >&2 "+ $*"
   fi
   (
@@ -356,6 +416,36 @@ BashTools::runVerboseIfNeeded() {
     fi
     "$@"
   )
+}
+
+
+# @description convert base64 encoded back to target file
+# if target file is executable prepend dir of target
+# file to PATH to make binary available everywhere
+# it is advised to include in the path of the target file
+# the md5sum of the binFile
+#
+# @arg $1 targetFile:String the file to write
+# @arg $2 binFileBase64:String the base64 encoded file
+# @arg $3 fileMode:String the chmod to set on the file
+# @set PATH String prepend target embedded file binary directory to PATH variable if binary executable
+Compiler::Embed::extractFileFromBase64() {
+  local targetFile="$1"
+  local binFileBase64="$2"
+  local fileMode="${3:-+x}"
+  local targetDir="${targetFile%/*}"
+
+  if [[ ! -f "${targetFile}" ]]; then
+    if [[ ! -d "${targetDir}" ]]; then
+      mkdir -p "${targetDir}"
+    fi
+    base64 -d >"${targetFile}" <<<"${binFileBase64}"
+    chmod "${fileMode}" "${targetFile}"
+  fi
+
+  if [[ -x "${targetFile}" ]]; then
+    Env::pathPrepend "${targetDir}"
+  fi
 }
 
 
@@ -375,6 +465,19 @@ Db::checkRequirements() {
   Assert::commandExists awk "sudo apt-get install -y gawk" || ((++failures))
   Version::checkMinimal "gawk" "--version" "5.0.1" || ((++failures))
   return "${failures}"
+}
+
+
+# @description prepend directories to the PATH environment variable
+# @arg $@ args:String[] list of directories to prepend
+# @set PATH update PATH with the directories prepended
+Env::pathPrepend() {
+  local arg
+  for arg in "$@"; do
+    if [[ -d "${arg}" && ":${PATH}:" != *":${arg}:"* ]]; then
+      PATH="$(realpath "${arg}"):${PATH}"
+    fi
+  done
 }
 
 
@@ -419,6 +522,24 @@ Env::requireLoad() {
 # @arg $1 templateName:String template name to use(optional)
 Framework::createTempFile() {
   mktemp -p "${TMPDIR:-/tmp}" -t "${1:-}.XXXXXXXXXXXX"
+}
+
+
+# @description ensure running user is not root
+# @exitcode 1 if current user is root
+# @stderr diagnostics information is displayed
+Linux::requireExecutedAsUser() {
+  if [[ "$(id -u)" = "0" ]]; then
+    Log::fatal "this script should be executed as normal user"
+  fi
+}
+
+
+# @description ensure command tar is available
+# @exitcode 1 if tar command not available
+# @stderr diagnostics information is displayed
+Linux::requireTarCommand() {
+  Assert::commandExists tar
 }
 
 
@@ -1146,6 +1267,26 @@ commandOptionParseFinished() {
 
 
 
+beforeParseCallback() {
+  Linux::requireExecutedAsUser
+  BashTools::Conf::requireLoad
+  Env::requireLoad
+  UI::requireTheme
+  Log::requireLoad
+}
+
+declare optionRedirectCmdOutputs=""
+optionRedirectCmdOutputs() {
+  export optionTraceVerbose
+  # shellcheck disable=SC2154
+  if [[ "${optionTraceVerbose}" != "1" ]]; then
+    # shellcheck disable=SC2034 # used by BashTools::runVerboseIfNeeded
+    optionRedirectCmdOutputs="/dev/null"
+  fi
+}
+
+
+
 longDescriptionFunction() {
   echo -e "  ${__HELP_TITLE}EXIT CODES:${__HELP_NORMAL}"
   echo -e "    ${__HELP_OPTION_COLOR}1${__HELP_NORMAL}: if commit does not exists"
@@ -1594,7 +1735,9 @@ gitIsBranchCommandParse() {
     return 1
   fi || return $?
 
+
   commandOptionParseFinished
+  optionRedirectCmdOutputs
 
 }
 
@@ -1769,11 +1912,6 @@ main() {
 
 # shellcheck disable=SC2154
 
-declare optionRedirectCmdOutputs=""
-if [[ "${optionTraceVerbose}" != "1" ]]; then
-  # shellcheck disable=SC2034 # used by BashTools::runVerboseIfNeeded
-  optionRedirectCmdOutputs="/dev/null"
-fi
 BashTools::runVerboseIfNeeded git show-ref --verify refs/heads/"${branchNameArg}" ||
   BashTools::runVerboseIfNeeded git show-ref --verify refs/remotes/"${branchNameArg}" ||
   Log::fatal "not a branch name: ${branchNameArg}"
