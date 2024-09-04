@@ -6,7 +6,7 @@ source "$(cd "${BATS_TEST_DIRNAME}/.." && pwd)/batsHeaders.sh"
 source "${rootDir}/src/BashTools/runVerboseIfNeeded.sh"
 
 teardown() {
-  unset optionTraceVerbose
+  unset optionInfoVerbose
 }
 
 function BashTools::runVerboseIfNeeded::noTrace { #@test
@@ -16,9 +16,9 @@ function BashTools::runVerboseIfNeeded::noTrace { #@test
 }
 
 function BashTools::runVerboseIfNeeded::trace { #@test
-  export optionTraceVerbose="1"
+  export optionInfoVerbose="1"
   cmdTest() {
-    optionTraceVerbose="1" BashTools::runVerboseIfNeeded echo "coucou"
+    optionInfoVerbose="1" BashTools::runVerboseIfNeeded echo "coucou"
   }
   run cmdTest
   assert_lines_count 2
@@ -30,7 +30,7 @@ function BashTools::runVerboseIfNeeded::trace { #@test
 function BashTools::runVerboseIfNeeded::redirectCmdOutputs { #@test
   export
   cmdTest() {
-    optionTraceVerbose="1" optionRedirectCmdOutputs="/dev/null" BashTools::runVerboseIfNeeded echo "coucou"
+    optionInfoVerbose="1" optionRedirectCmdOutputs="/dev/null" BashTools::runVerboseIfNeeded echo "coucou"
   }
   run cmdTest
   assert_output '+ echo coucou'
