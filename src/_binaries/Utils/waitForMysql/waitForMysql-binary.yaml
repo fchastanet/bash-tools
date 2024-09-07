@@ -1,0 +1,71 @@
+extends:
+  - "${BASH_TOOLS_ROOT_DIR}/src/_binaries/commandDefinitions/optionsTimeout.yaml"
+  - "${BASH_TOOLS_ROOT_DIR}/src/_binaries/commandDefinitions/optionsVersion.yaml"
+  - "${FRAMEWORK_ROOT_DIR}/src/_binaries/commandDefinitions/defaultCommand.yaml"
+  - "${FRAMEWORK_ROOT_DIR}/src/_binaries/commandDefinitions/frameworkConfig.yaml"
+
+vars:
+  SRC_FILE_PATH: src/_binaries/Utils/waitForMysql/waitForMysql-binary.yaml
+
+compilerConfig:
+  targetFile: "${BASH_TOOLS_ROOT_DIR}/bin/waitForMysql"
+  relativeRootDirBasedOnTargetDir: ..
+  srcDirs:
+    - ${BASH_TOOLS_ROOT_DIR}/src
+binData:
+  commands:
+    default:
+      functionName: waitForMysqlCommand
+      version: "3.0"
+      copyrightBeginYear: 2020
+      commandName: waitForMysql
+      beforeParseCallbacks:
+        - beforeParseCallback
+      unknownOptionCallbacks:
+        - unknownOption
+      unknownArgumentCallbacks:
+        - unknownOption
+      definitionFiles:
+        20: ${BASH_TOOLS_ROOT_DIR}/src/_binaries/Utils/waitForMysql/waitForMysql-options.sh
+      mainFile: ${BASH_TOOLS_ROOT_DIR}/src/_binaries/Utils/waitForMysql/waitForMysql-main.sh
+      help: Wait for mysql to be ready.
+      longDescription: longDescriptionFunction
+      args:
+        - type: String
+          min: 1
+          max: 1
+          help: Mysql host name.
+          name: mysqlHost
+          variableName: mysqlHostArg
+
+        - type: String
+          min: 1
+          max: 1
+          help: Mysql port.
+          name: mysqlPort
+          variableName: mysqlPortArg
+          callbacks:
+            - mysqlPortArgCallback
+
+        - type: String
+          min: 1
+          max: 1
+          help: Mysql user name.
+          name: mysqlUser
+          variableName: mysqlUserArg
+
+        - type: String
+          min: 1
+          max: 1
+          help: Mysql user password.
+          name: mysqlPassword
+          variableName: mysqlPasswordArg
+
+        - type: StringArray
+          min: 0
+          max: -1
+          help:
+            Execute command with args after the test finishes or exit with
+            status code if no command provided.
+          name: commandArgs
+          variableName: commandArgs

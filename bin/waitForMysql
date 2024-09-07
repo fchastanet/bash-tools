@@ -1,13 +1,12 @@
 #!/usr/bin/env bash
 ###############################################################################
-# GENERATED FACADE FROM https://github.com/fchastanet/bash-tools/tree/master/src/_binaries/Utils/waitForMysql.sh
+# GENERATED FROM https://github.com/fchastanet/bash-tools-framework/tree/master/src/_binaries/Utils/waitForMysql/waitForMysql-binary.yaml
 # DO NOT EDIT IT
 # @generated
 ###############################################################################
 # shellcheck disable=SC2288,SC2034
-# BIN_FILE=${BASH_TOOLS_ROOT_DIR}/bin/waitForMysql
-# VAR_RELATIVE_FRAMEWORK_DIR_TO_CURRENT_DIR=..
-# FACADE
+
+
 
 # ensure that no user aliases could interfere with
 # commands used in this script
@@ -62,13 +61,6 @@ interruptManagement() {
   kill -s INT "$$"
 }
 trap interruptManagement INT
-SCRIPT_NAME=${0##*/}
-REAL_SCRIPT_FILE="$(readlink -e "$(realpath "${BASH_SOURCE[0]}")")"
-if [[ -n "${EMBED_CURRENT_DIR}" ]]; then
-  CURRENT_DIR="${EMBED_CURRENT_DIR}"
-else
-  CURRENT_DIR="${REAL_SCRIPT_FILE%/*}"
-fi
 
 ################################################
 # Temp dir management
@@ -102,6 +94,20 @@ cleanOnExit() {
 }
 trap cleanOnExit EXIT HUP QUIT ABRT TERM
 
+
+SCRIPT_NAME=${0##*/}
+REAL_SCRIPT_FILE="$(readlink -e "$(realpath "${BASH_SOURCE[0]}")")"
+if [[ -n "${EMBED_CURRENT_DIR}" ]]; then
+  CURRENT_DIR="${EMBED_CURRENT_DIR}"
+else
+  CURRENT_DIR="${REAL_SCRIPT_FILE%/*}"
+fi
+FRAMEWORK_ROOT_DIR="$(cd "${CURRENT_DIR}/.." && pwd -P)"
+FRAMEWORK_SRC_DIR="${FRAMEWORK_ROOT_DIR}/src"
+FRAMEWORK_BIN_DIR="${FRAMEWORK_ROOT_DIR}/bin"
+FRAMEWORK_VENDOR_DIR="${FRAMEWORK_ROOT_DIR}/vendor"
+FRAMEWORK_VENDOR_BIN_DIR="${FRAMEWORK_ROOT_DIR}/vendor/bin"
+
 # @description Log namespace provides 2 kind of functions
 # - Log::display* allows to display given message with
 #   given display level
@@ -132,247 +138,6 @@ export __VERBOSE_LEVEL_DEBUG=2
 # @description verbose level info
 export __VERBOSE_LEVEL_TRACE=3
 
-# @description Display message using info color (bg light blue/fg white)
-# @arg $1 message:String the message to display
-# @env DISPLAY_DURATION int (default 0) if 1 display elapsed time information between 2 info logs
-# @env LOG_CONTEXT String allows to contextualize the log
-Log::displayInfo() {
-  local type="${2:-INFO}"
-  if ((BASH_FRAMEWORK_DISPLAY_LEVEL >= __LEVEL_INFO)); then
-    Log::computeDuration
-    echo -e "${__INFO_COLOR}${type}    - ${LOG_CONTEXT:-}${LOG_LAST_DURATION_STR:-}${1}${__RESET_COLOR}" >&2
-  fi
-  Log::logInfo "$1" "${type}"
-}
-
-# @description Display message using debug color (gray)
-# @arg $1 message:String the message to display
-# @env DISPLAY_DURATION int (default 0) if 1 display elapsed time information between 2 info logs
-# @env LOG_CONTEXT String allows to contextualize the log
-Log::displayDebug() {
-  if ((BASH_FRAMEWORK_DISPLAY_LEVEL >= __LEVEL_DEBUG)); then
-    Log::computeDuration
-    echo -e "${__DEBUG_COLOR}DEBUG   - ${LOG_CONTEXT:-}${LOG_LAST_DURATION_STR:-}${1}${__RESET_COLOR}" >&2
-  fi
-  Log::logDebug "$1"
-}
-
-# @description Display message using warning color (yellow)
-# @arg $1 message:String the message to display
-# @env DISPLAY_DURATION int (default 0) if 1 display elapsed time information between 2 info logs
-# @env LOG_CONTEXT String allows to contextualize the log
-Log::displayWarning() {
-  if ((BASH_FRAMEWORK_DISPLAY_LEVEL >= __LEVEL_WARNING)); then
-    Log::computeDuration
-    echo -e "${__WARNING_COLOR}WARN    - ${LOG_CONTEXT:-}${LOG_LAST_DURATION_STR:-}${1}${__RESET_COLOR}" >&2
-  fi
-  Log::logWarning "$1"
-}
-
-# @description Display message using error color (red)
-# @arg $1 message:String the message to display
-# @env DISPLAY_DURATION int (default 0) if 1 display elapsed time information between 2 info logs
-# @env LOG_CONTEXT String allows to contextualize the log
-Log::displayError() {
-  if ((BASH_FRAMEWORK_DISPLAY_LEVEL >= __LEVEL_ERROR)); then
-    Log::computeDuration
-    echo -e "${__ERROR_COLOR}ERROR   - ${LOG_CONTEXT:-}${LOG_LAST_DURATION_STR:-}${1}${__RESET_COLOR}" >&2
-  fi
-  Log::logError "$1"
-}
-
-# @description load colors theme constants
-# @warning if tty not opened, noColor theme will be chosen
-# @arg $1 theme:String the theme to use (default, noColor)
-# @arg $@ args:String[]
-# @set __ERROR_COLOR String indicate error status
-# @set __INFO_COLOR String indicate info status
-# @set __SUCCESS_COLOR String indicate success status
-# @set __WARNING_COLOR String indicate warning status
-# @set __SKIPPED_COLOR String indicate skipped status
-# @set __DEBUG_COLOR String indicate debug status
-# @set __HELP_COLOR String indicate help status
-# @set __TEST_COLOR String not used
-# @set __TEST_ERROR_COLOR String not used
-# @set __HELP_TITLE_COLOR String used to display help title in help strings
-# @set __HELP_OPTION_COLOR String used to display highlight options in help strings
-#
-# @set __RESET_COLOR String reset default color
-#
-# @set __HELP_EXAMPLE String to remove
-# @set __HELP_TITLE String to remove
-# @set __HELP_NORMAL String to remove
-# shellcheck disable=SC2034
-UI::theme() {
-  local theme="${1-default}"
-  if [[ ! "${theme}" =~ -force$ ]] && ! Assert::tty; then
-    theme="noColor"
-  fi
-  case "${theme}" in
-    default | default-force)
-      theme="default"
-      ;;
-    noColor) ;;
-    *)
-      Log::fatal "invalid theme provided"
-      ;;
-  esac
-  if [[ "${theme}" = "default" ]]; then
-    BASH_FRAMEWORK_THEME="default"
-    # check colors applicable https://misc.flogisoft.com/bash/tip_colors_and_formatting
-    __ERROR_COLOR='\e[31m'         # Red
-    __INFO_COLOR='\e[44m'          # white on lightBlue
-    __SUCCESS_COLOR='\e[32m'       # Green
-    __WARNING_COLOR='\e[33m'       # Yellow
-    __SKIPPED_COLOR='\e[33m'       # Yellow
-    __DEBUG_COLOR='\e[37m'         # Gray
-    __HELP_COLOR='\e[7;49;33m'     # Black on Gold
-    __TEST_COLOR='\e[100m'         # Light magenta
-    __TEST_ERROR_COLOR='\e[41m'    # white on red
-    __HELP_TITLE_COLOR="\e[1;37m"  # Bold
-    __HELP_OPTION_COLOR="\e[1;34m" # Blue
-    # Internal: reset color
-    __RESET_COLOR='\e[0m' # Reset Color
-    # shellcheck disable=SC2155,SC2034
-    __HELP_EXAMPLE="$(echo -e "\e[2;97m")"
-    # shellcheck disable=SC2155,SC2034
-    __HELP_TITLE="$(echo -e "\e[1;37m")"
-    # shellcheck disable=SC2155,SC2034
-    __HELP_NORMAL="$(echo -e "\033[0m")"
-  else
-    BASH_FRAMEWORK_THEME="noColor"
-    # check colors applicable https://misc.flogisoft.com/bash/tip_colors_and_formatting
-    __ERROR_COLOR=''
-    __INFO_COLOR=''
-    __SUCCESS_COLOR=''
-    __WARNING_COLOR=''
-    __SKIPPED_COLOR=''
-    __DEBUG_COLOR=''
-    __HELP_COLOR=''
-    __TEST_COLOR=''
-    __TEST_ERROR_COLOR=''
-    __HELP_TITLE_COLOR=''
-    __HELP_OPTION_COLOR=''
-    # Internal: reset color
-    __RESET_COLOR=''
-    __HELP_EXAMPLE=''
-    __HELP_TITLE=''
-    __HELP_NORMAL=''
-  fi
-}
-
-# @description draw a line with the character passed in parameter repeated depending on terminal width
-# @arg $1 character:String character to use as separator (default value #)
-UI::drawLine() {
-  local character="${1:-#}"
-  local -i width=${COLUMNS:-0}
-  if ((width == 0)) && [[ -t 1 ]]; then
-    width=$(tput cols)
-  fi
-  if ((width == 0)); then
-    width=80
-  fi
-  printf -- "${character}%.0s" $(seq "${COLUMNS:-$([[ -t 1 ]] && tput cols || echo '80')}")
-  echo
-}
-
-# @description Display message using error color (red) and exit immediately with error status 1
-# @arg $1 message:String the message to display
-# @env DISPLAY_DURATION int (default 0) if 1 display elapsed time information between 2 info logs
-# @env LOG_CONTEXT String allows to contextualize the log
-Log::fatal() {
-  Log::computeDuration
-  echo -e "${__ERROR_COLOR}FATAL   - ${LOG_CONTEXT:-}${LOG_LAST_DURATION_STR:-}${1}${__RESET_COLOR}" >&2
-  Log::logFatal "$1"
-  exit 1
-}
-
-# @description create a temp file using default TMPDIR variable
-# initialized in _includes/_commonHeader.sh
-# @env TMPDIR String (default value /tmp)
-# @arg $1 templateName:String template name to use(optional)
-Framework::createTempFile() {
-  mktemp -p "${TMPDIR:-/tmp}" -t "${1:-}.XXXXXXXXXXXX"
-}
-
-# @description ensure env files are loaded
-# @arg $@ list of default files to load at the end
-# @exitcode 1 if one of env files fails to load
-# @stderr diagnostics information is displayed
-# shellcheck disable=SC2120
-Env::requireLoad() {
-  local -a defaultFiles=("$@")
-  # get list of possible config files
-  local -a configFiles=()
-  if [[ -n "${BASH_FRAMEWORK_ENV_FILES[0]+1}" ]]; then
-    # BASH_FRAMEWORK_ENV_FILES is an array
-    configFiles+=("${BASH_FRAMEWORK_ENV_FILES[@]}")
-  fi
-  local localFrameworkConfigFile
-  localFrameworkConfigFile="$(pwd)/.framework-config"
-  if [[ -f "${localFrameworkConfigFile}" ]]; then
-    configFiles+=("${localFrameworkConfigFile}")
-  fi
-  if [[ -f "${FRAMEWORK_ROOT_DIR}/.framework-config" ]]; then
-    configFiles+=("${FRAMEWORK_ROOT_DIR}/.framework-config")
-  fi
-  configFiles+=("${optionEnvFiles[@]}")
-  configFiles+=("${defaultFiles[@]}")
-
-  for file in "${configFiles[@]}"; do
-    # shellcheck source=/.framework-config
-    CURRENT_LOADED_ENV_FILE="${file}" source "${file}" || {
-      Log::displayError "while loading config file: ${file}"
-      return 1
-    }
-  done
-}
-
-# @description activate or not Log::display* and Log::log* functions
-# based on BASH_FRAMEWORK_DISPLAY_LEVEL and BASH_FRAMEWORK_LOG_LEVEL
-# environment variables loaded by Env::requireLoad
-# try to create log file and rotate it if necessary
-# @noargs
-# @set BASH_FRAMEWORK_LOG_LEVEL int to OFF level if BASH_FRAMEWORK_LOG_FILE is empty or not writable
-# @env BASH_FRAMEWORK_DISPLAY_LEVEL int
-# @env BASH_FRAMEWORK_LOG_LEVEL int
-# @env BASH_FRAMEWORK_LOG_FILE String
-# @env BASH_FRAMEWORK_LOG_FILE_MAX_ROTATION int do log rotation if > 0
-# @exitcode 0 always successful
-# @stderr diagnostics information about log file is displayed
-# @require Env::requireLoad
-# @require UI::requireTheme
-Log::requireLoad() {
-  if [[ -z "${BASH_FRAMEWORK_LOG_FILE:-}" ]]; then
-    BASH_FRAMEWORK_LOG_LEVEL=${__LEVEL_OFF}
-    export BASH_FRAMEWORK_LOG_LEVEL
-  fi
-
-  if ((BASH_FRAMEWORK_LOG_LEVEL > __LEVEL_OFF)); then
-    if [[ ! -f "${BASH_FRAMEWORK_LOG_FILE}" ]]; then
-      if [[ ! -d "${BASH_FRAMEWORK_LOG_FILE%/*}" ]]; then
-        if ! mkdir -p "${BASH_FRAMEWORK_LOG_FILE%/*}" 2>/dev/null; then
-          BASH_FRAMEWORK_LOG_LEVEL=${__LEVEL_OFF}
-          echo -e "${__ERROR_COLOR}ERROR   - directory ${BASH_FRAMEWORK_LOG_FILE%/*} is not writable${__RESET_COLOR}" >&2
-        fi
-      elif ! touch --no-create "${BASH_FRAMEWORK_LOG_FILE}" 2>/dev/null; then
-        BASH_FRAMEWORK_LOG_LEVEL=${__LEVEL_OFF}
-        echo -e "${__ERROR_COLOR}ERROR   - File ${BASH_FRAMEWORK_LOG_FILE} is not writable${__RESET_COLOR}" >&2
-      fi
-    elif [[ ! -w "${BASH_FRAMEWORK_LOG_FILE}" ]]; then
-      BASH_FRAMEWORK_LOG_LEVEL=${__LEVEL_OFF}
-      echo -e "${__ERROR_COLOR}ERROR   - File ${BASH_FRAMEWORK_LOG_FILE} is not writable${__RESET_COLOR}" >&2
-    fi
-  fi
-
-  if ((BASH_FRAMEWORK_LOG_LEVEL > __LEVEL_OFF)); then
-    # will always be created even if not in info level
-    Log::logMessage "INFO" "Logging to file ${BASH_FRAMEWORK_LOG_FILE} - Log level ${BASH_FRAMEWORK_LOG_LEVEL}"
-    if ((BASH_FRAMEWORK_LOG_FILE_MAX_ROTATION > 0)); then
-      Log::rotate "${BASH_FRAMEWORK_LOG_FILE}" "${BASH_FRAMEWORK_LOG_FILE_MAX_ROTATION}"
-    fi
-  fi
-}
 
 # @description concatenate each element of an array with a separator
 # but wrapping text when line length is more than provided argument
@@ -502,6 +267,7 @@ Array::wrap2() {
   ) | sed -E -e 's/[[:blank:]]+$//'
 }
 
+
 # @description check if command specified exists or return 1
 # with error and message if not
 #
@@ -524,114 +290,137 @@ Assert::commandExists() {
   return 0
 }
 
-bashToolsDefaultConfigTemplate="${bashToolsDefaultConfigTemplate:-$(
-  cat <<'EOF'
-# shellcheck disable=SC2034
 
-# Default settings
-# you can override these settings by creating ${HOME}/.bash-tools/.env file
-
-###
-### DISPLAY Level
-### minimum level of the messages that will be displayed on screen
-###
-### 0: NO LOG
-### 1: ERROR
-### 2: WARNING
-### 3: INFO
-### 4: DEBUG
-###
-BASH_FRAMEWORK_DISPLAY_LEVEL=${BASH_FRAMEWORK_DISPLAY_LEVEL:-3}
-
-###
-### DISPLAY duration
-### 0: no duration is displayed on the messages
-### 1: duration between previous message and current is displayed
-### with the message
-###
-DISPLAY_DURATION=${DISPLAY_DURATION:0}
-
-###
-### Log to file
-###
-### all log messages will be redirected to log file specified
-### this same path will be used inside and outside of the container
-###
-BASH_FRAMEWORK_LOG_FILE=${BASH_FRAMEWORK_LOG_FILE:-${FRAMEWORK_ROOT_DIR}/logs/bash.log}
-
-###
-### LOG Level
-### minimum level of the messages that will be logged into LOG_FILE
-###
-### 0: NO LOG
-### 1: ERROR
-### 2: WARNING
-### 3: INFO
-### 4: DEBUG
-###
-BASH_FRAMEWORK_LOG_LEVEL=${BASH_FRAMEWORK_LOG_LEVEL:-0}
-
-# absolute directory containing db import sql dumps
-DB_IMPORT_DUMP_DIR=${DB_IMPORT_DUMP_DIR:-${HOME}/.bash-tools/dbImportDumps}
-
-# garbage collect all files for which modification is greater than eg: 30 days (+30)
-# each time an existing file is used by dbImport/dbImportTable
-# the file modification time is set to now
-DB_IMPORT_GARBAGE_COLLECT_DAYS=${DB_IMPORT_GARBAGE_COLLECT_DAYS:-+30}
-
-# absolute directory containing dbScripts used by dbScriptAllDatabases
-SCRIPTS_FOLDER=${SCRIPTS_FOLDER:-${HOME}/.bash-tools/conf/dbScripts}
-
-# -----------------------------------------------------
-# AWS Parameters
-# -----------------------------------------------------
-S3_BASE_URL=${S3_BASE_URL:-}
-
-# -----------------------------------------------------
-# Postman Parameters
-# -----------------------------------------------------
-POSTMAN_API_KEY=
-EOF
-)}"
-
-# @description loads ~/.bash-tools/.env if available
-# if not creates it from a default template
-# else check if new options need to be added
-BashTools::Conf::requireLoad() {
-  local envFile="${HOME}/.bash-tools/.env"
-  if [[ ! -f "${envFile}" ]]; then
-    mkdir -p "${HOME}/.bash-tools"
-    (
-      echo "#!/usr/bin/env bash"
-      echo "${bashToolsDefaultConfigTemplate}"
-    ) >"${envFile}"
-    Log::displayInfo "Configuration file '${envFile}' created"
-  else
-    if ! grep -q '^POSTMAN_API_KEY=' "${envFile}"; then
-      (
-        echo '# -----------------------------------------------------'
-        echo '# Postman Parameters'
-        echo '# -----------------------------------------------------'
-        echo 'POSTMAN_API_KEY='
-      ) >>"${envFile}"
-    fi
-  fi
-  # shellcheck source=/conf/.env
-  source "${envFile}" || {
-    Log::displayError "impossible to load '${envFile}'"
-    exit 1
-  }
-}
-
-# @description ensure COMMAND_BIN_DIR env var is set
-# and PATH correctly prepared
+# @description check if tty (interactive mode) is active
 # @noargs
-# @set COMMAND_BIN_DIR string the directory where to find this command
-# @set PATH string add directory where to find this command binary
-Compiler::Facade::requireCommandBinDir() {
-  COMMAND_BIN_DIR="${CURRENT_DIR}"
-  Env::pathPrepend "${COMMAND_BIN_DIR}"
+# @exitcode 1 if tty not active
+# @env NON_INTERACTIVE if 1 consider as not interactive even if environment is interactive
+# @env INTERACTIVE if 1 consider as interactive even if environment is not interactive
+Assert::tty() {
+  if [[ "${NON_INTERACTIVE:-0}" = "1" ]]; then
+    return 1
+  fi
+  if [[ "${INTERACTIVE:-0}" = "1" ]]; then
+    return 0
+  fi
+  tty -s
 }
+
+
+# @description ignore exit code 141 from simple command pipes
+# @example use with:
+#   local resultingStatus=0
+#   local -a originalPipeStatus=()
+#   cmd1 | cmd2 || Bash::handlePipelineFailure resultingStatus originalPipeStatus || true
+#   [[ "${resultingStatus}" = "0" ]]
+# @arg $1 resultingStatusCode:&int (passed by reference) (optional) resulting status code
+# @arg $2 originalStatus:int[] (passed by reference) (optional) copy of original PIPESTATUS array
+# @env PIPESTATUS assuming that this function is called like in the example provided
+# @see https://unix.stackexchange.com/a/709880/582856
+Bash::handlePipelineFailure() {
+  local -a pipeStatusBackup=("${PIPESTATUS[@]}")
+  local -n handlePipelineFailure_resultingStatusCode=$1
+  local -n handlePipelineFailure_originalStatus=$2
+  # shellcheck disable=SC2034
+  handlePipelineFailure_originalStatus=("${pipeStatusBackup[@]}")
+  handlePipelineFailure_resultingStatusCode=0
+  local statusCode
+  for statusCode in "${pipeStatusBackup[@]}"; do
+    if ((statusCode == 141)); then
+      return 0
+    elif ((statusCode > 0)); then
+      # shellcheck disable=SC2034
+      handlePipelineFailure_resultingStatusCode="${statusCode}"
+      break
+    fi
+  done
+  return "${handlePipelineFailure_resultingStatusCode}"
+}
+
+
+# @description run command specified
+# @arg $@ array:String[] the command to run
+# @env optionInfoVerbose int - if 1 displays the command specified before running it
+# @env optionRedirectCmdOutputs String - if set redirect command outputs to file specified
+# @exitcode command's exit code
+BashTools::runVerboseIfNeeded() {
+  # shellcheck disable=SC2154
+  if ((BASH_FRAMEWORK_ARGS_VERBOSE >= __VERBOSE_LEVEL_INFO)); then
+    echo >&2 "+ $*"
+  fi
+  (
+    # shellcheck disable=SC2154
+    if [[ -n "${optionRedirectCmdOutputs:-}" ]]; then
+      exec >"${optionRedirectCmdOutputs:-}"
+      exec 2>"${optionRedirectCmdOutputs:-}"
+    fi
+    "$@"
+  )
+}
+
+
+# @description check if all requirements are satisfied
+# to execute dbImport commands
+Db::checkRequirements() {
+  if [[ "${SKIP_REQUIREMENTS_CHECKS:-0}" = "1" ]]; then
+    return 0
+  fi
+  local -i failures=0
+  echo
+  Assert::commandExists mysql "sudo apt-get install -y mysql-client" || ((++failures))
+  Assert::commandExists mysqlshow "sudo apt-get install -y mysql-client" || ((++failures))
+  Assert::commandExists mysqldump "sudo apt-get install -y mysql-client" || ((++failures))
+  Assert::commandExists pv "sudo apt-get install -y pv" || ((++failures))
+  Assert::commandExists gawk "sudo apt-get install -y gawk" || ((++failures))
+  Assert::commandExists awk "sudo apt-get install -y gawk" || ((++failures))
+  Version::checkMinimal "gawk" "--version" "5.0.1" || ((++failures))
+  return "${failures}"
+}
+
+
+# @description ensure env files are loaded
+# @arg $@ list of default files to load at the end
+# @exitcode 1 if one of env files fails to load
+# @stderr diagnostics information is displayed
+# shellcheck disable=SC2120
+Env::requireLoad() {
+  export REQUIRE_FUNCTION_ENV_REQUIRE_LOAD_LOADED=1
+
+  local -a defaultFiles=("$@")
+  # get list of possible config files
+  local -a configFiles=()
+  if [[ -n "${BASH_FRAMEWORK_ENV_FILES[0]+1}" ]]; then
+    # BASH_FRAMEWORK_ENV_FILES is an array
+    configFiles+=("${BASH_FRAMEWORK_ENV_FILES[@]}")
+  fi
+  local localFrameworkConfigFile
+  localFrameworkConfigFile="$(pwd)/.framework-config"
+  if [[ -f "${localFrameworkConfigFile}" ]]; then
+    configFiles+=("${localFrameworkConfigFile}")
+  fi
+  if [[ -f "${FRAMEWORK_ROOT_DIR}/.framework-config" ]]; then
+    configFiles+=("${FRAMEWORK_ROOT_DIR}/.framework-config")
+  fi
+  configFiles+=("${optionEnvFiles[@]}")
+  configFiles+=("${defaultFiles[@]}")
+
+  for file in "${configFiles[@]}"; do
+    # shellcheck source=/.framework-config
+    CURRENT_LOADED_ENV_FILE="${file}" source "${file}" || {
+      Log::displayError "while loading config file: ${file}"
+      return 1
+    }
+  done
+}
+
+
+# @description create a temp file using default TMPDIR variable
+# @env TMPDIR String (default value /tmp)
+# @arg $1 templateName:String template name to use(optional)
+Framework::createTempFile() {
+  mktemp -p "${TMPDIR:-/tmp}" -t "${1:-}.XXXXXXXXXXXX"
+}
+
 
 declare -g FIRST_LOG_DATE LOG_LAST_LOG_DATE LOG_LAST_LOG_DATE_INIT LOG_LAST_DURATION_STR
 FIRST_LOG_DATE="${EPOCHREALTIME/[^0-9]/}"
@@ -671,13 +460,71 @@ Log::computeDuration() {
   fi
 }
 
-# @description log message to file
+
+# @description Display message using debug color (gray)
 # @arg $1 message:String the message to display
-Log::logInfo() {
-  if ((BASH_FRAMEWORK_LOG_LEVEL >= __LEVEL_INFO)); then
-    Log::logMessage "${2:-INFO}" "$1"
+# @env DISPLAY_DURATION int (default 0) if 1 display elapsed time information between 2 info logs
+# @env LOG_CONTEXT String allows to contextualize the log
+Log::displayDebug() {
+  if ((BASH_FRAMEWORK_DISPLAY_LEVEL >= __LEVEL_DEBUG)); then
+    Log::computeDuration
+    echo -e "${__DEBUG_COLOR}DEBUG   - ${LOG_CONTEXT:-}${LOG_LAST_DURATION_STR:-}${1}${__RESET_COLOR}" >&2
   fi
+  Log::logDebug "$1"
 }
+
+
+# @description Display message using error color (red)
+# @arg $1 message:String the message to display
+# @env DISPLAY_DURATION int (default 0) if 1 display elapsed time information between 2 info logs
+# @env LOG_CONTEXT String allows to contextualize the log
+Log::displayError() {
+  if ((BASH_FRAMEWORK_DISPLAY_LEVEL >= __LEVEL_ERROR)); then
+    Log::computeDuration
+    echo -e "${__ERROR_COLOR}ERROR   - ${LOG_CONTEXT:-}${LOG_LAST_DURATION_STR:-}${1}${__RESET_COLOR}" >&2
+  fi
+  Log::logError "$1"
+}
+
+
+# @description Display message using info color (bg light blue/fg white)
+# @arg $1 message:String the message to display
+# @env DISPLAY_DURATION int (default 0) if 1 display elapsed time information between 2 info logs
+# @env LOG_CONTEXT String allows to contextualize the log
+Log::displayInfo() {
+  local type="${2:-INFO}"
+  if ((BASH_FRAMEWORK_DISPLAY_LEVEL >= __LEVEL_INFO)); then
+    Log::computeDuration
+    echo -e "${__INFO_COLOR}${type}    - ${LOG_CONTEXT:-}${LOG_LAST_DURATION_STR:-}${1}${__RESET_COLOR}" >&2
+  fi
+  Log::logInfo "$1" "${type}"
+}
+
+
+# @description Display message using warning color (yellow)
+# @arg $1 message:String the message to display
+# @env DISPLAY_DURATION int (default 0) if 1 display elapsed time information between 2 info logs
+# @env LOG_CONTEXT String allows to contextualize the log
+Log::displayWarning() {
+  if ((BASH_FRAMEWORK_DISPLAY_LEVEL >= __LEVEL_WARNING)); then
+    Log::computeDuration
+    echo -e "${__WARNING_COLOR}WARN    - ${LOG_CONTEXT:-}${LOG_LAST_DURATION_STR:-}${1}${__RESET_COLOR}" >&2
+  fi
+  Log::logWarning "$1"
+}
+
+
+# @description Display message using error color (red) and exit immediately with error status 1
+# @arg $1 message:String the message to display
+# @env DISPLAY_DURATION int (default 0) if 1 display elapsed time information between 2 info logs
+# @env LOG_CONTEXT String allows to contextualize the log
+Log::fatal() {
+  Log::computeDuration
+  echo -e "${__ERROR_COLOR}FATAL   - ${LOG_CONTEXT:-}${LOG_LAST_DURATION_STR:-}${1}${__RESET_COLOR}" >&2
+  Log::logFatal "$1"
+  exit 1
+}
+
 
 # @description log message to file
 # @arg $1 message:String the message to display
@@ -687,13 +534,6 @@ Log::logDebug() {
   fi
 }
 
-# @description log message to file
-# @arg $1 message:String the message to display
-Log::logWarning() {
-  if ((BASH_FRAMEWORK_LOG_LEVEL >= __LEVEL_WARNING)); then
-    Log::logMessage "${2:-WARNING}" "$1"
-  fi
-}
 
 # @description log message to file
 # @arg $1 message:String the message to display
@@ -703,26 +543,22 @@ Log::logError() {
   fi
 }
 
-# @description check if tty (interactive mode) is active
-# @noargs
-# @exitcode 1 if tty not active
-# @env NON_INTERACTIVE if 1 consider as not interactive even if environment is interactive
-# @env INTERACTIVE if 1 consider as interactive even if environment is not interactive
-Assert::tty() {
-  if [[ "${NON_INTERACTIVE:-0}" = "1" ]]; then
-    return 1
-  fi
-  if [[ "${INTERACTIVE:-0}" = "1" ]]; then
-    return 0
-  fi
-  tty -s
-}
 
 # @description log message to file
 # @arg $1 message:String the message to display
 Log::logFatal() {
   Log::logMessage "${2:-FATAL}" "$1"
 }
+
+
+# @description log message to file
+# @arg $1 message:String the message to display
+Log::logInfo() {
+  if ((BASH_FRAMEWORK_LOG_LEVEL >= __LEVEL_INFO)); then
+    Log::logMessage "${2:-INFO}" "$1"
+  fi
+}
+
 
 # @description Internal: common log message
 # @example text
@@ -737,9 +573,18 @@ Log::logFatal() {
 # @env BASH_FRAMEWORK_LOG_FILE String log file to use, do nothing if empty
 # @env BASH_FRAMEWORK_LOG_LEVEL int log level log only if > OFF or fatal messages
 # @stderr diagnostics information is displayed
-# @require Env::requireLoad
-# @require Log::requireLoad
 Log::logMessage() {
+
+  if [[ "${REQUIRE_FUNCTION_ENV_REQUIRE_LOAD_LOADED:-0}" != 1 ]]; then
+    echo >&2 "Requirement Env::requireLoad has not been loaded"
+    exit 1
+  fi
+
+  if [[ "${REQUIRE_FUNCTION_LOG_REQUIRE_LOAD_LOADED:-0}" != 1 ]]; then
+    echo >&2 "Requirement Log::requireLoad has not been loaded"
+    exit 1
+  fi
+
   local levelMsg="$1"
   local msg="$2"
   local date
@@ -750,6 +595,74 @@ Log::logMessage() {
     printf "%s|%7s|%s\n" "${date}" "${levelMsg}" "${msg}" >>"${BASH_FRAMEWORK_LOG_FILE}"
   fi
 }
+
+
+# @description log message to file
+# @arg $1 message:String the message to display
+Log::logWarning() {
+  if ((BASH_FRAMEWORK_LOG_LEVEL >= __LEVEL_WARNING)); then
+    Log::logMessage "${2:-WARNING}" "$1"
+  fi
+}
+
+
+# @description activate or not Log::display* and Log::log* functions
+# based on BASH_FRAMEWORK_DISPLAY_LEVEL and BASH_FRAMEWORK_LOG_LEVEL
+# environment variables loaded by Env::requireLoad
+# try to create log file and rotate it if necessary
+# @noargs
+# @set BASH_FRAMEWORK_LOG_LEVEL int to OFF level if BASH_FRAMEWORK_LOG_FILE is empty or not writable
+# @env BASH_FRAMEWORK_DISPLAY_LEVEL int
+# @env BASH_FRAMEWORK_LOG_LEVEL int
+# @env BASH_FRAMEWORK_LOG_FILE String
+# @env BASH_FRAMEWORK_LOG_FILE_MAX_ROTATION int do log rotation if > 0
+# @exitcode 0 always successful
+# @stderr diagnostics information about log file is displayed
+Log::requireLoad() {
+  export REQUIRE_FUNCTION_LOG_REQUIRE_LOAD_LOADED=1
+
+
+  if [[ "${REQUIRE_FUNCTION_ENV_REQUIRE_LOAD_LOADED:-0}" != 1 ]]; then
+    echo >&2 "Requirement Env::requireLoad has not been loaded"
+    exit 1
+  fi
+
+  if [[ "${REQUIRE_FUNCTION_UI_REQUIRE_THEME_LOADED:-0}" != 1 ]]; then
+    echo >&2 "Requirement UI::requireTheme has not been loaded"
+    exit 1
+  fi
+
+  if [[ -z "${BASH_FRAMEWORK_LOG_FILE:-}" ]]; then
+    BASH_FRAMEWORK_LOG_LEVEL=${__LEVEL_OFF}
+    export BASH_FRAMEWORK_LOG_LEVEL
+  fi
+
+  if ((BASH_FRAMEWORK_LOG_LEVEL > __LEVEL_OFF)); then
+    if [[ ! -f "${BASH_FRAMEWORK_LOG_FILE}" ]]; then
+      if [[ ! -d "${BASH_FRAMEWORK_LOG_FILE%/*}" ]]; then
+        if ! mkdir -p "${BASH_FRAMEWORK_LOG_FILE%/*}" 2>/dev/null; then
+          BASH_FRAMEWORK_LOG_LEVEL=${__LEVEL_OFF}
+          echo -e "${__ERROR_COLOR}ERROR   - directory ${BASH_FRAMEWORK_LOG_FILE%/*} is not writable${__RESET_COLOR}" >&2
+        fi
+      elif ! touch --no-create "${BASH_FRAMEWORK_LOG_FILE}" 2>/dev/null; then
+        BASH_FRAMEWORK_LOG_LEVEL=${__LEVEL_OFF}
+        echo -e "${__ERROR_COLOR}ERROR   - File ${BASH_FRAMEWORK_LOG_FILE} is not writable${__RESET_COLOR}" >&2
+      fi
+    elif [[ ! -w "${BASH_FRAMEWORK_LOG_FILE}" ]]; then
+      BASH_FRAMEWORK_LOG_LEVEL=${__LEVEL_OFF}
+      echo -e "${__ERROR_COLOR}ERROR   - File ${BASH_FRAMEWORK_LOG_FILE} is not writable${__RESET_COLOR}" >&2
+    fi
+  fi
+
+  if ((BASH_FRAMEWORK_LOG_LEVEL > __LEVEL_OFF)); then
+    # will always be created even if not in info level
+    Log::logMessage "INFO" "Logging to file ${BASH_FRAMEWORK_LOG_FILE} - Log level ${BASH_FRAMEWORK_LOG_LEVEL}"
+    if ((BASH_FRAMEWORK_LOG_FILE_MAX_ROTATION > 0)); then
+      Log::rotate "${BASH_FRAMEWORK_LOG_FILE}" "${BASH_FRAMEWORK_LOG_FILE_MAX_ROTATION}"
+    fi
+  fi
+}
+
 
 # @description To be called before logging in the log file
 # @arg $1 file:string log file name
@@ -773,17 +686,22 @@ Log::rotate() {
   fi
 }
 
-# @description prepend directories to the PATH environment variable
-# @arg $@ args:String[] list of directories to prepend
-# @set PATH update PATH with the directories prepended
-Env::pathPrepend() {
-  local arg
-  for arg in "$@"; do
-    if [[ -d "${arg}" && ":${PATH}:" != *":${arg}:"* ]]; then
-      PATH="$(realpath "${arg}"):${PATH}"
-    fi
-  done
+
+# @description draw a line with the character passed in parameter repeated depending on terminal width
+# @arg $1 character:String character to use as separator (default value #)
+UI::drawLine() {
+  local character="${1:-#}"
+  local -i width=${COLUMNS:-0}
+  if ((width == 0)) && [[ -t 1 ]]; then
+    width=$(tput cols)
+  fi
+  if ((width == 0)); then
+    width=80
+  fi
+  printf -- "${character}%.0s" $(seq "${COLUMNS:-$([[ -t 1 ]] && tput cols || echo '80')}")
+  echo
 }
+
 
 # @description load color theme
 # @noargs
@@ -791,58 +709,199 @@ Env::pathPrepend() {
 # @env LOAD_THEME int 0 to avoid loading theme
 # @exitcode 0 always successful
 UI::requireTheme() {
+  export REQUIRE_FUNCTION_UI_REQUIRE_THEME_LOADED=1
+
   if [[ "${LOAD_THEME:-1}" = "1" ]]; then
     UI::theme "${BASH_FRAMEWORK_THEME-default}"
   fi
 }
 
+
+# @description load colors theme constants
+# @warning if tty not opened, noColor theme will be chosen
+# @arg $1 theme:String the theme to use (default, noColor)
+# @arg $@ args:String[]
+# @set __ERROR_COLOR String indicate error status
+# @set __INFO_COLOR String indicate info status
+# @set __SUCCESS_COLOR String indicate success status
+# @set __WARNING_COLOR String indicate warning status
+# @set __SKIPPED_COLOR String indicate skipped status
+# @set __DEBUG_COLOR String indicate debug status
+# @set __HELP_COLOR String indicate help status
+# @set __TEST_COLOR String not used
+# @set __TEST_ERROR_COLOR String not used
+# @set __HELP_TITLE_COLOR String used to display help title in help strings
+# @set __HELP_OPTION_COLOR String used to display highlight options in help strings
+#
+# @set __RESET_COLOR String reset default color
+#
+# @set __HELP_EXAMPLE String to remove
+# @set __HELP_TITLE String to remove
+# @set __HELP_NORMAL String to remove
+# shellcheck disable=SC2034
+UI::theme() {
+  local theme="${1-default}"
+  if [[ ! "${theme}" =~ -force$ ]] && ! Assert::tty; then
+    theme="noColor"
+  fi
+  case "${theme}" in
+    default | default-force)
+      theme="default"
+      ;;
+    noColor) ;;
+    *)
+      Log::fatal "invalid theme provided"
+      ;;
+  esac
+  if [[ "${theme}" = "default" ]]; then
+    BASH_FRAMEWORK_THEME="default"
+    # check colors applicable https://misc.flogisoft.com/bash/tip_colors_and_formatting
+    __ERROR_COLOR='\e[31m'         # Red
+    __INFO_COLOR='\e[44m'          # white on lightBlue
+    __SUCCESS_COLOR='\e[32m'       # Green
+    __WARNING_COLOR='\e[33m'       # Yellow
+    __SKIPPED_COLOR='\e[33m'       # Yellow
+    __DEBUG_COLOR='\e[37m'         # Gray
+    __HELP_COLOR='\e[7;49;33m'     # Black on Gold
+    __TEST_COLOR='\e[100m'         # Light magenta
+    __TEST_ERROR_COLOR='\e[41m'    # white on red
+    __HELP_TITLE_COLOR="\e[1;37m"  # Bold
+    __HELP_OPTION_COLOR="\e[1;34m" # Blue
+    # Internal: reset color
+    __RESET_COLOR='\e[0m' # Reset Color
+    # shellcheck disable=SC2155,SC2034
+    __HELP_EXAMPLE="$(echo -e "\e[2;97m")"
+    # shellcheck disable=SC2155,SC2034
+    __HELP_TITLE="$(echo -e "\e[1;37m")"
+    # shellcheck disable=SC2155,SC2034
+    __HELP_NORMAL="$(echo -e "\033[0m")"
+  else
+    BASH_FRAMEWORK_THEME="noColor"
+    # check colors applicable https://misc.flogisoft.com/bash/tip_colors_and_formatting
+    __ERROR_COLOR=''
+    __INFO_COLOR=''
+    __SUCCESS_COLOR=''
+    __WARNING_COLOR=''
+    __SKIPPED_COLOR=''
+    __DEBUG_COLOR=''
+    __HELP_COLOR=''
+    __TEST_COLOR=''
+    __TEST_ERROR_COLOR=''
+    __HELP_TITLE_COLOR=''
+    __HELP_OPTION_COLOR=''
+    # Internal: reset color
+    __RESET_COLOR=''
+    __HELP_EXAMPLE=''
+    __HELP_TITLE=''
+    __HELP_NORMAL=''
+  fi
+}
+
+
+# @description Check that command version is greater than expected minimal version
+# display warning if command version greater than expected minimal version
+# display error if command version less than expected minimal version and exit 1
+# @arg $1 commandName:String command path
+# @arg $2 argVersion:String command line parameters to launch to get command version
+# @arg $3 minimalVersion:String expected minimal command version
+# @arg $4 parseVersionCallback:Function
+# @arg $5 help:String optional help message to display if command does not exist
+# @exitcode 0 if command version greater or equal to expected minimal version
+# @exitcode 1 if command version less than expected minimal version
+# @exitcode 2 if command does not exist
+Version::checkMinimal() {
+  local commandName="$1"
+  local argVersion="$2"
+  local minimalVersion="$3"
+  local parseVersionCallback=${4:-Version::parse}
+  local help="${5:-}"
+
+  Assert::commandExists "${commandName}" "${help}" || return 2
+
+  # shellcheck disable=SC2034
+  local status=0
+  # shellcheck disable=SC2034
+  local -a pipeStatus=()
+  local version
+  version="$("${commandName}" "${argVersion}" 2>&1 | ${parseVersionCallback} || Bash::handlePipelineFailure status pipeStatus)"
+
+  Log::displayDebug "check ${commandName} version ${version} against minimal ${minimalVersion}"
+
+  Version::compare "${version}" "${minimalVersion}" || {
+    local result=$?
+    if [[ "${result}" = "1" ]]; then
+      Log::displayInfo "${commandName} version is ${version} greater than ${minimalVersion}"
+    elif [[ "${result}" = "2" ]]; then
+      Log::displayError "${commandName} minimal version is ${minimalVersion}, your version is ${version}"
+      return 1
+    fi
+    return 0
+  }
+
+}
+
+
+# @description compare 2 version numbers
+# @arg $1 version1:String version 1
+# @arg $2 version2:String version 2
+# @exitcode 0 if equal
+# @exitcode 1 if version1 > version2
+# @exitcode 2 else
+Version::compare() {
+  if [[ "$1" = "$2" ]]; then
+    return 0
+  fi
+  local IFS=.
+  # shellcheck disable=2206
+  local i ver1=($1) ver2=($2)
+  # fill empty fields in ver1 with zeros
+  for ((i = ${#ver1[@]}; i < ${#ver2[@]}; i++)); do
+    ver1[i]=0
+  done
+  for ((i = 0; i < ${#ver1[@]}; i++)); do
+    if [[ -z "${ver2[i]+unset}" ]] || [[ -z ${ver2[i]} ]]; then
+      # fill empty fields in ver2 with zeros
+      ver2[i]=0
+    fi
+    if ((10#${ver1[i]} > 10#${ver2[i]})); then
+      return 1
+    fi
+    if ((10#${ver1[i]} < 10#${ver2[i]})); then
+      return 2
+    fi
+  done
+  return 0
+}
+
+
+# @description filter to keep only version number from a string
+# @arg $@ files:String[] the files to filter
+# @exitcode * if one of the filter command fails
+# @stdin you can use stdin as alternative to files argument
+# @stdout the filtered content
+# shellcheck disable=SC2120
+Version::parse() {
+  # match anything, print(p), exit on first match(Q)
+  sed -En \
+    -e 's/\x1b\[[0-9;]*[mGKHF]//g' \
+    -e 's/[^0-9]*(([0-9]+\.)*[0-9]+).*/\1/' \
+    -e '//{p;Q}' \
+    "$@"
+}
 # FUNCTIONS
 
-facade_main_waitForMysqlsh() {
-BASH_TOOLS_ROOT_DIR="$(cd "${CURRENT_DIR}/.." && pwd -P)"
-if [[ -d "${BASH_TOOLS_ROOT_DIR}/vendor/bash-tools-framework/" ]]; then
-  FRAMEWORK_ROOT_DIR="$(cd "${BASH_TOOLS_ROOT_DIR}/vendor/bash-tools-framework" && pwd -P)"
-else
-  # if the directory does not exist yet, give a value to FRAMEWORK_ROOT_DIR
-  FRAMEWORK_ROOT_DIR="${BASH_TOOLS_ROOT_DIR}/vendor/bash-tools-framework"
-fi
-FRAMEWORK_SRC_DIR="${FRAMEWORK_ROOT_DIR}/src"
-FRAMEWORK_BIN_DIR="${FRAMEWORK_ROOT_DIR}/bin"
-FRAMEWORK_VENDOR_DIR="${FRAMEWORK_ROOT_DIR}/vendor"
-FRAMEWORK_VENDOR_BIN_DIR="${FRAMEWORK_ROOT_DIR}/vendor/bin"
-
-# @require BashTools::Conf::requireLoad
-if [[ -f "${HOME}/.bash-tools/.env" ]]; then
-  export BASH_FRAMEWORK_ENV_FILES=("${HOME}/.bash-tools/.env")
-fi
-# REQUIRES
-Env::requireLoad
-UI::requireTheme
-Log::requireLoad
-BashTools::Conf::requireLoad
-Compiler::Facade::requireCommandBinDir
-
-# @require Compiler::Facade::requireCommandBinDir
-# shellcheck disable=SC2034
-
-# default values
-declare defaultTimeout="15"
-# option values
-declare optionTimeout="${defaultTimeout}"
-declare mysqlHostArg=""
-declare mysqlPortArg=""
-declare mysqlUserArg=""
-declare mysqlPasswordArg=""
-# default values
-declare copyrightBeginYear="2020"
 
 declare -a BASH_FRAMEWORK_ARGV_FILTERED=()
 
+beforeParseCallback() {
+  Env::requireLoad
+  UI::requireTheme
+  Log::requireLoad
+}
+
 copyrightCallback() {
-  if [[ -z "${copyrightBeginYear}" ]]; then
-    copyrightBeginYear="$(date +%Y)"
-  fi
-  echo "Copyright (c) ${copyrightBeginYear}-now François Chastanet"
+  #
+  echo "Copyright (c) 2020-now François Chastanet"
 }
 
 # shellcheck disable=SC2317 # if function is overridden
@@ -874,13 +933,14 @@ updateArgListQuietCallback() { :; }
 
 # shellcheck disable=SC2317 # if function is overridden
 optionHelpCallback() {
-  waitForMysqlCommand help
+  Log::displayError "optionHelpCallback needs to be overridden"
   exit 0
 }
 
 # shellcheck disable=SC2317 # if function is overridden
 optionVersionCallback() {
-  echo "${SCRIPT_NAME} version 2.0"
+  # shellcheck disable=SC2154
+  echo "${SCRIPT_NAME} version 3.0"
   exit 0
 }
 
@@ -898,21 +958,22 @@ optionEnvFileCallback() {
 optionInfoVerboseCallback() {
   BASH_FRAMEWORK_ARGS_VERBOSE_OPTION='--verbose'
   BASH_FRAMEWORK_ARGS_VERBOSE=${__VERBOSE_LEVEL_INFO}
-  echo "BASH_FRAMEWORK_DISPLAY_LEVEL=${__LEVEL_INFO}" >> "${overrideEnvFile}"
+  echo "BASH_FRAMEWORK_DISPLAY_LEVEL=${__LEVEL_INFO}" >>"${overrideEnvFile}"
 }
 
 # shellcheck disable=SC2317 # if function is overridden
 optionDebugVerboseCallback() {
   BASH_FRAMEWORK_ARGS_VERBOSE_OPTION='-vv'
   BASH_FRAMEWORK_ARGS_VERBOSE=${__VERBOSE_LEVEL_DEBUG}
-  echo "BASH_FRAMEWORK_DISPLAY_LEVEL=${__LEVEL_DEBUG}" >> "${overrideEnvFile}"
+  echo "BASH_FRAMEWORK_DISPLAY_LEVEL=${__LEVEL_DEBUG}" >>"${overrideEnvFile}"
 }
 
 # shellcheck disable=SC2317 # if function is overridden
 optionTraceVerboseCallback() {
+  # shellcheck disable=SC2034
   BASH_FRAMEWORK_ARGS_VERBOSE_OPTION='-vvv'
   BASH_FRAMEWORK_ARGS_VERBOSE=${__VERBOSE_LEVEL_TRACE}
-  echo "BASH_FRAMEWORK_DISPLAY_LEVEL=${__LEVEL_DEBUG}" >> "${overrideEnvFile}"
+  echo "BASH_FRAMEWORK_DISPLAY_LEVEL=${__LEVEL_DEBUG}" >>"${overrideEnvFile}"
 }
 
 getLevel() {
@@ -936,6 +997,7 @@ getLevel() {
     *)
       Log::displayError "Command ${SCRIPT_NAME} - Invalid level ${level}"
       return 1
+      ;;
   esac
 }
 
@@ -957,6 +1019,7 @@ getVerboseLevel() {
     *)
       Log::displayError "Command ${SCRIPT_NAME} - Invalid level ${level}"
       return 1
+      ;;
   esac
 }
 
@@ -967,7 +1030,7 @@ optionDisplayLevelCallback() {
   logLevel="$(getLevel "${level}")"
   verboseLevel="$(getVerboseLevel "${level}")"
   BASH_FRAMEWORK_ARGS_VERBOSE=${verboseLevel}
-  echo "BASH_FRAMEWORK_DISPLAY_LEVEL=${logLevel}" >> "${overrideEnvFile}"
+  echo "BASH_FRAMEWORK_DISPLAY_LEVEL=${logLevel}" >>"${overrideEnvFile}"
 }
 
 # shellcheck disable=SC2317 # if function is overridden
@@ -976,19 +1039,20 @@ optionLogLevelCallback() {
   local logLevel verboseLevel
   logLevel="$(getLevel "${level}")"
   verboseLevel="$(getVerboseLevel "${level}")"
+  # shellcheck disable=SC2034
   BASH_FRAMEWORK_ARGS_VERBOSE=${verboseLevel}
-  echo "BASH_FRAMEWORK_LOG_LEVEL=${logLevel}" >> "${overrideEnvFile}"
+  echo "BASH_FRAMEWORK_LOG_LEVEL=${logLevel}" >>"${overrideEnvFile}"
 }
 
 # shellcheck disable=SC2317 # if function is overridden
 optionLogFileCallback() {
   local logFile="$2"
-  echo "BASH_FRAMEWORK_LOG_FILE='${logFile}'" >> "${overrideEnvFile}"
+  echo "BASH_FRAMEWORK_LOG_FILE='${logFile}'" >>"${overrideEnvFile}"
 }
 
 # shellcheck disable=SC2317 # if function is overridden
 optionQuietCallback() {
-  echo "BASH_FRAMEWORK_QUIET_MODE=1" >> "${overrideEnvFile}"
+  echo "BASH_FRAMEWORK_QUIET_MODE=1" >>"${overrideEnvFile}"
 }
 
 # shellcheck disable=SC2317 # if function is overridden
@@ -1019,6 +1083,7 @@ optionBashFrameworkConfigCallback() {
 
 defaultFrameworkConfig="$(
   cat <<'EOF'
+
 # copied from src/_includes/.framework-config.default
 # shellcheck disable=SC2034
 
@@ -1036,7 +1101,7 @@ NON_FRAMEWORK_FILES_REGEXP="${NON_FRAMEWORK_FILES_REGEXP:-(^bin/|.framework-conf
 # describe the files that are allowed to not have an associated bats file
 BATS_FILE_NOT_NEEDED_REGEXP="${BATS_FILE_NOT_NEEDED_REGEXP:-(^bin/|.framework-config|.bats$|/testsData/|^manualTests/|/_.sh$|/ZZZ.sh$|/__all.sh$|^src/batsHeaders.sh$|^src/_includes)}"
 # describe the files that are allowed to not have a function matching the filename
-FRAMEWORK_FILES_FUNCTION_MATCHING_IGNORE_REGEXP="${FRAMEWORK_FILES_FUNCTION_MATCHING_IGNORE_REGEXP:-^bin/|^\.framework-config$|\.tpl$|/testsData/|^manualTests/|\.bats$}"
+FRAMEWORK_FILES_FUNCTION_MATCHING_IGNORE_REGEXP="${FRAMEWORK_FILES_FUNCTION_MATCHING_IGNORE_REGEXP:-^bin/|^\.framework-config$|/testsData/|^manualTests/|\.bats$}"
 # Source directories
 if [[ ! -v FRAMEWORK_SRC_DIRS ]]; then
   FRAMEWORK_SRC_DIRS=(
@@ -1052,6 +1117,7 @@ BASH_FRAMEWORK_LOG_LEVEL="${BASH_FRAMEWORK_LOG_LEVEL:-0}"
 BASH_FRAMEWORK_DISPLAY_LEVEL="${BASH_FRAMEWORK_DISPLAY_LEVEL:-3}"
 BASH_FRAMEWORK_LOG_FILE="${BASH_FRAMEWORK_LOG_FILE:-${FRAMEWORK_ROOT_DIR}/logs/${0##*/}.log}"
 BASH_FRAMEWORK_LOG_FILE_MAX_ROTATION="${BASH_FRAMEWORK_LOG_FILE_MAX_ROTATION:-5}"
+
 EOF
 )"
 
@@ -1060,7 +1126,7 @@ overrideEnvFile="$(Framework::createTempFile "overrideEnvFile")"
 commandOptionParseFinished() {
   # load default template framework config
   defaultEnvFile="${PERSISTENT_TMPDIR}/.framework-config"
-  echo "${defaultFrameworkConfig}" > "${defaultEnvFile}"
+  echo "${defaultFrameworkConfig}" >"${defaultEnvFile}"
   local -a files=("${defaultEnvFile}")
   if [[ -f "${envFile}" ]]; then
     files+=("${envFile}")
@@ -1078,557 +1144,872 @@ commandOptionParseFinished() {
   fi
 }
 
+
+
+longDescriptionFunction() {
+  echo -e "  ${__HELP_TITLE}EXIT STATUS CODES:${__HELP_NORMAL}"
+  echo -e "    ${__HELP_OPTION_COLOR}0${__HELP_NORMAL}: mysql is available"
+  echo -e "    ${__HELP_OPTION_COLOR}1${__HELP_NORMAL}: indicates mysql is not available or argument error"
+  echo -e "    ${__HELP_OPTION_COLOR}2${__HELP_NORMAL}: timeout reached"
+}
+
+optionHelpCallback() {
+  waitForMysqlCommandHelp
+  exit 0
+}
+
+mysqlPortArgCallback() {
+  # shellcheck disable=SC2154
+  if [[ ! "${mysqlPortArg}" =~ ^[0-9]+$ ]] || ((mysqlPortArg == 0)); then
+    Log::fatal "${SCRIPT_NAME} - invalid port option - must be greater than to 0"
+  fi
+}
+
+# shellcheck disable=SC2317 # if function is overridden
+unknownOption() {
+  commandArgs+=("$1")
+}
+
+
+
 optionTimeoutCallback() {
+  # shellcheck disable=SC2154
   if [[ ! "${optionTimeout}" =~ ^[0-9]+$ ]]; then
     Log::fatal "${SCRIPT_NAME} - invalid timeout option - must be greater or equal to 0"
   fi
 }
 
-waitForMysqlCommand() {
-  local options_parse_cmd="$1"
-  shift || true
 
-  if [[ "${options_parse_cmd}" = "parse" ]]; then
-    optionTimeout="15"
-    local -i options_parse_optionParsedCountOptionTimeout
-    ((options_parse_optionParsedCountOptionTimeout = 0)) || true
-    local -i options_parse_optionParsedCountOptionBashFrameworkConfig
-    ((options_parse_optionParsedCountOptionBashFrameworkConfig = 0)) || true
-    optionConfig="0"
-    local -i options_parse_optionParsedCountOptionConfig
-    ((options_parse_optionParsedCountOptionConfig = 0)) || true
-    optionInfoVerbose="0"
-    local -i options_parse_optionParsedCountOptionInfoVerbose
-    ((options_parse_optionParsedCountOptionInfoVerbose = 0)) || true
-    optionDebugVerbose="0"
-    local -i options_parse_optionParsedCountOptionDebugVerbose
-    ((options_parse_optionParsedCountOptionDebugVerbose = 0)) || true
-    optionTraceVerbose="0"
-    local -i options_parse_optionParsedCountOptionTraceVerbose
-    ((options_parse_optionParsedCountOptionTraceVerbose = 0)) || true
-    optionNoColor="0"
-    local -i options_parse_optionParsedCountOptionNoColor
-    ((options_parse_optionParsedCountOptionNoColor = 0)) || true
-    optionTheme="default"
-    local -i options_parse_optionParsedCountOptionTheme
-    ((options_parse_optionParsedCountOptionTheme = 0)) || true
-    optionHelp="0"
-    local -i options_parse_optionParsedCountOptionHelp
-    ((options_parse_optionParsedCountOptionHelp = 0)) || true
-    optionVersion="0"
-    local -i options_parse_optionParsedCountOptionVersion
-    ((options_parse_optionParsedCountOptionVersion = 0)) || true
-    optionQuiet="0"
-    local -i options_parse_optionParsedCountOptionQuiet
-    ((options_parse_optionParsedCountOptionQuiet = 0)) || true
-    local -i options_parse_optionParsedCountOptionLogLevel
-    ((options_parse_optionParsedCountOptionLogLevel = 0)) || true
-    local -i options_parse_optionParsedCountOptionLogFile
-    ((options_parse_optionParsedCountOptionLogFile = 0)) || true
-    local -i options_parse_optionParsedCountOptionDisplayLevel
-    ((options_parse_optionParsedCountOptionDisplayLevel = 0)) || true
-    local -i options_parse_argParsedCountMysqlHostArg
-    ((options_parse_argParsedCountMysqlHostArg = 0)) || true
-    local -i options_parse_argParsedCountMysqlPortArg
-    ((options_parse_argParsedCountMysqlPortArg = 0)) || true
-    local -i options_parse_argParsedCountMysqlUserArg
-    ((options_parse_argParsedCountMysqlUserArg = 0)) || true
-    local -i options_parse_argParsedCountMysqlPasswordArg
-    ((options_parse_argParsedCountMysqlPasswordArg = 0)) || true
-    # shellcheck disable=SC2034
-    local -i options_parse_parsedArgIndex=0
-    while (($# > 0)); do
-      local options_parse_arg="$1"
-      local argOptDefaultBehavior=0
-      case "${options_parse_arg}" in
-        # Option 1/15
-        # Option optionTimeout --timeout|-t variableType String min 0 max 1 authorizedValues '' regexp ''
-        --timeout | -t)
-          shift
-          if (($# == 0)); then
-            Log::displayError "Command ${SCRIPT_NAME} - Option ${options_parse_arg} - a value needs to be specified"
+
+optionVersionCallback() {
+  # shellcheck disable=SC2154
+  echo "${SCRIPT_NAME} version 3.0"
+  Db::checkRequirements
+  exit 0
+}
+
+
+# ------------------------------------------
+# Command waitForMysqlCommand
+# ------------------------------------------
+
+# options variables initialization
+declare optionTimeout="15"
+declare optionExecIfTimedOut="0"
+declare optionHelp="0"
+declare optionConfig="0"
+declare optionBashFrameworkConfig=""
+declare optionInfoVerbose="0"
+declare optionDebugVerbose="0"
+declare optionTraceVerbose="0"
+declare -a optionEnvFiles=()
+declare optionLogLevel=""
+declare optionLogFile=""
+declare optionDisplayLevel=""
+declare optionNoColor="0"
+declare optionTheme="default"
+declare optionVersion="0"
+declare optionQuiet="0"
+# arguments variables initialization
+declare mysqlHostArg=""
+declare mysqlPortArg=""
+declare mysqlUserArg=""
+declare mysqlPasswordArg=""
+declare -a commandArgs=()
+# @description parse command options and arguments for waitForMysqlCommand
+waitForMysqlCommandParse() {
+  Log::displayDebug "Command ${SCRIPT_NAME} - parse arguments: ${BASH_FRAMEWORK_ARGV[*]}"
+  Log::displayDebug "Command ${SCRIPT_NAME} - parse filtered arguments: ${BASH_FRAMEWORK_ARGV_FILTERED[*]}"
+  optionTimeout="15"
+  local -i options_parse_optionParsedCountOptionTimeout
+  ((options_parse_optionParsedCountOptionTimeout = 0)) || true
+  optionExecIfTimedOut="0"
+  local -i options_parse_optionParsedCountOptionExecIfTimedOut
+  ((options_parse_optionParsedCountOptionExecIfTimedOut = 0)) || true
+  optionHelp="0"
+  local -i options_parse_optionParsedCountOptionHelp
+  ((options_parse_optionParsedCountOptionHelp = 0)) || true
+  optionConfig="0"
+  local -i options_parse_optionParsedCountOptionConfig
+  ((options_parse_optionParsedCountOptionConfig = 0)) || true
+  optionBashFrameworkConfig=""
+  local -i options_parse_optionParsedCountOptionBashFrameworkConfig
+  ((options_parse_optionParsedCountOptionBashFrameworkConfig = 0)) || true
+  optionInfoVerbose="0"
+  local -i options_parse_optionParsedCountOptionInfoVerbose
+  ((options_parse_optionParsedCountOptionInfoVerbose = 0)) || true
+  optionDebugVerbose="0"
+  local -i options_parse_optionParsedCountOptionDebugVerbose
+  ((options_parse_optionParsedCountOptionDebugVerbose = 0)) || true
+  optionTraceVerbose="0"
+  local -i options_parse_optionParsedCountOptionTraceVerbose
+  ((options_parse_optionParsedCountOptionTraceVerbose = 0)) || true
+
+  optionLogLevel=""
+  local -i options_parse_optionParsedCountOptionLogLevel
+  ((options_parse_optionParsedCountOptionLogLevel = 0)) || true
+  optionLogFile=""
+  local -i options_parse_optionParsedCountOptionLogFile
+  ((options_parse_optionParsedCountOptionLogFile = 0)) || true
+  optionDisplayLevel=""
+  local -i options_parse_optionParsedCountOptionDisplayLevel
+  ((options_parse_optionParsedCountOptionDisplayLevel = 0)) || true
+  optionNoColor="0"
+  local -i options_parse_optionParsedCountOptionNoColor
+  ((options_parse_optionParsedCountOptionNoColor = 0)) || true
+  optionTheme="default"
+  local -i options_parse_optionParsedCountOptionTheme
+  ((options_parse_optionParsedCountOptionTheme = 0)) || true
+  optionVersion="0"
+  local -i options_parse_optionParsedCountOptionVersion
+  ((options_parse_optionParsedCountOptionVersion = 0)) || true
+  optionQuiet="0"
+  local -i options_parse_optionParsedCountOptionQuiet
+  ((options_parse_optionParsedCountOptionQuiet = 0)) || true
+
+  mysqlHostArg=""
+  local -i options_parse_argParsedCountMysqlHostArg
+  ((options_parse_argParsedCountMysqlHostArg = 0)) || true
+
+  mysqlPortArg=""
+  local -i options_parse_argParsedCountMysqlPortArg
+  ((options_parse_argParsedCountMysqlPortArg = 0)) || true
+
+  mysqlUserArg=""
+  local -i options_parse_argParsedCountMysqlUserArg
+  ((options_parse_argParsedCountMysqlUserArg = 0)) || true
+
+  mysqlPasswordArg=""
+  local -i options_parse_argParsedCountMysqlPasswordArg
+  ((options_parse_argParsedCountMysqlPasswordArg = 0)) || true
+
+  commandArgs=()
+
+
+  # shellcheck disable=SC2034
+  local -i options_parse_parsedArgIndex=0
+  while (($# > 0)); do
+    local options_parse_arg="$1"
+    local argOptDefaultBehavior=0
+    case "${options_parse_arg}" in
+      # Option 1/16
+      # optionTimeout alts --timeout|-t
+      # type: String min 0 max 1
+      --timeout | -t)
+        shift
+        if (($# == 0)); then
+          Log::displayError "Command ${SCRIPT_NAME} - Option ${options_parse_arg} - a value needs to be specified"
+          return 1
+        fi
+
+        if ((options_parse_optionParsedCountOptionTimeout >= 1 )); then
+          Log::displayError "Command ${SCRIPT_NAME} - Option ${options_parse_arg} - Maximum number of option occurrences reached(1)"
+          return 1
+        fi
+        ((++options_parse_optionParsedCountOptionTimeout))
+        # shellcheck disable=SC2034
+        optionTimeout="$1"
+        optionTimeoutCallback "${options_parse_arg}" "${optionTimeout}"
+
+        ;;
+
+      # Option 2/16
+      # optionExecIfTimedOut alts --exec-command-on-timeout|--lax|-l
+      # type: Boolean min 0 max 1
+      --exec-command-on-timeout | --lax | -l)
+        # shellcheck disable=SC2034
+        optionExecIfTimedOut="1"
+
+        if ((options_parse_optionParsedCountOptionExecIfTimedOut >= 1 )); then
+          Log::displayError "Command ${SCRIPT_NAME} - Option ${options_parse_arg} - Maximum number of option occurrences reached(1)"
+          return 1
+        fi
+        ((++options_parse_optionParsedCountOptionExecIfTimedOut))
+        ;;
+
+      # Option 3/16
+      # optionHelp alts --help|-h
+      # type: Boolean min 0 max 1
+      --help | -h)
+        # shellcheck disable=SC2034
+        optionHelp="1"
+
+        if ((options_parse_optionParsedCountOptionHelp >= 1 )); then
+          Log::displayError "Command ${SCRIPT_NAME} - Option ${options_parse_arg} - Maximum number of option occurrences reached(1)"
+          return 1
+        fi
+        ((++options_parse_optionParsedCountOptionHelp))
+        optionHelpCallback "${options_parse_arg}" "${optionHelp}"
+
+        ;;
+
+      # Option 4/16
+      # optionConfig alts --config
+      # type: Boolean min 0 max 1
+      --config)
+        # shellcheck disable=SC2034
+        optionConfig="1"
+
+        if ((options_parse_optionParsedCountOptionConfig >= 1 )); then
+          Log::displayError "Command ${SCRIPT_NAME} - Option ${options_parse_arg} - Maximum number of option occurrences reached(1)"
+          return 1
+        fi
+        ((++options_parse_optionParsedCountOptionConfig))
+        ;;
+
+      # Option 5/16
+      # optionBashFrameworkConfig alts --bash-framework-config
+      # type: String min 0 max 1
+      --bash-framework-config)
+        shift
+        if (($# == 0)); then
+          Log::displayError "Command ${SCRIPT_NAME} - Option ${options_parse_arg} - a value needs to be specified"
+          return 1
+        fi
+
+        if ((options_parse_optionParsedCountOptionBashFrameworkConfig >= 1 )); then
+          Log::displayError "Command ${SCRIPT_NAME} - Option ${options_parse_arg} - Maximum number of option occurrences reached(1)"
+          return 1
+        fi
+        ((++options_parse_optionParsedCountOptionBashFrameworkConfig))
+        # shellcheck disable=SC2034
+        optionBashFrameworkConfig="$1"
+        optionBashFrameworkConfigCallback "${options_parse_arg}" "${optionBashFrameworkConfig}"
+
+        ;;
+
+      # Option 6/16
+      # optionInfoVerbose alts --verbose|-v
+      # type: Boolean min 0 max 1
+      --verbose | -v)
+        # shellcheck disable=SC2034
+        optionInfoVerbose="1"
+
+        if ((options_parse_optionParsedCountOptionInfoVerbose >= 1 )); then
+          Log::displayError "Command ${SCRIPT_NAME} - Option ${options_parse_arg} - Maximum number of option occurrences reached(1)"
+          return 1
+        fi
+        ((++options_parse_optionParsedCountOptionInfoVerbose))
+        optionInfoVerboseCallback "${options_parse_arg}" "${optionInfoVerbose}"
+
+        updateArgListInfoVerboseCallback "${options_parse_arg}" "${optionInfoVerbose}"
+
+        ;;
+
+      # Option 7/16
+      # optionDebugVerbose alts -vv
+      # type: Boolean min 0 max 1
+      -vv)
+        # shellcheck disable=SC2034
+        optionDebugVerbose="1"
+
+        if ((options_parse_optionParsedCountOptionDebugVerbose >= 1 )); then
+          Log::displayError "Command ${SCRIPT_NAME} - Option ${options_parse_arg} - Maximum number of option occurrences reached(1)"
+          return 1
+        fi
+        ((++options_parse_optionParsedCountOptionDebugVerbose))
+        optionDebugVerboseCallback "${options_parse_arg}" "${optionDebugVerbose}"
+
+        updateArgListDebugVerboseCallback "${options_parse_arg}" "${optionDebugVerbose}"
+
+        ;;
+
+      # Option 8/16
+      # optionTraceVerbose alts -vvv
+      # type: Boolean min 0 max 1
+      -vvv)
+        # shellcheck disable=SC2034
+        optionTraceVerbose="1"
+
+        if ((options_parse_optionParsedCountOptionTraceVerbose >= 1 )); then
+          Log::displayError "Command ${SCRIPT_NAME} - Option ${options_parse_arg} - Maximum number of option occurrences reached(1)"
+          return 1
+        fi
+        ((++options_parse_optionParsedCountOptionTraceVerbose))
+        optionTraceVerboseCallback "${options_parse_arg}" "${optionTraceVerbose}"
+
+        updateArgListTraceVerboseCallback "${options_parse_arg}" "${optionTraceVerbose}"
+
+        ;;
+
+      # Option 9/16
+      # optionEnvFiles alts --env-file
+      # type: StringArray min 0 max -1
+      --env-file)
+        shift
+        if (($# == 0)); then
+          Log::displayError "Command ${SCRIPT_NAME} - Option ${options_parse_arg} - a value needs to be specified"
+          return 1
+        fi
+
+        ((++options_parse_optionParsedCountOptionEnvFiles))
+        optionEnvFiles+=("$1")
+        optionEnvFileCallback "${options_parse_arg}" "${optionEnvFiles[@]}"
+
+        updateArgListEnvFileCallback "${options_parse_arg}" "${optionEnvFiles[@]}"
+
+        ;;
+
+      # Option 10/16
+      # optionLogLevel alts --log-level
+      # type: String min 0 max 1
+      # authorizedValues: OFF|ERR|ERROR|WARN|WARNING|INFO|DEBUG|TRACE
+      --log-level)
+        shift
+        if (($# == 0)); then
+          Log::displayError "Command ${SCRIPT_NAME} - Option ${options_parse_arg} - a value needs to be specified"
+          return 1
+        fi
+        if [[ ! "$1" =~ OFF|ERR|ERROR|WARN|WARNING|INFO|DEBUG|TRACE ]]; then
+          Log::displayError "Command ${SCRIPT_NAME} - Option ${options_parse_arg} - value '$1' is not part of authorized values([OFF ERR ERROR WARN WARNING INFO DEBUG TRACE])"
+          return 1
+        fi
+
+        if ((options_parse_optionParsedCountOptionLogLevel >= 1 )); then
+          Log::displayError "Command ${SCRIPT_NAME} - Option ${options_parse_arg} - Maximum number of option occurrences reached(1)"
+          return 1
+        fi
+        ((++options_parse_optionParsedCountOptionLogLevel))
+        # shellcheck disable=SC2034
+        optionLogLevel="$1"
+        optionLogLevelCallback "${options_parse_arg}" "${optionLogLevel}"
+
+        updateArgListLogLevelCallback "${options_parse_arg}" "${optionLogLevel}"
+
+        ;;
+
+      # Option 11/16
+      # optionLogFile alts --log-file
+      # type: String min 0 max 1
+      --log-file)
+        shift
+        if (($# == 0)); then
+          Log::displayError "Command ${SCRIPT_NAME} - Option ${options_parse_arg} - a value needs to be specified"
+          return 1
+        fi
+
+        if ((options_parse_optionParsedCountOptionLogFile >= 1 )); then
+          Log::displayError "Command ${SCRIPT_NAME} - Option ${options_parse_arg} - Maximum number of option occurrences reached(1)"
+          return 1
+        fi
+        ((++options_parse_optionParsedCountOptionLogFile))
+        # shellcheck disable=SC2034
+        optionLogFile="$1"
+        optionLogFileCallback "${options_parse_arg}" "${optionLogFile}"
+
+        updateArgListLogFileCallback "${options_parse_arg}" "${optionLogFile}"
+
+        ;;
+
+      # Option 12/16
+      # optionDisplayLevel alts --display-level
+      # type: String min 0 max 1
+      # authorizedValues: OFF|ERR|ERROR|WARN|WARNING|INFO|DEBUG|TRACE
+      --display-level)
+        shift
+        if (($# == 0)); then
+          Log::displayError "Command ${SCRIPT_NAME} - Option ${options_parse_arg} - a value needs to be specified"
+          return 1
+        fi
+        if [[ ! "$1" =~ OFF|ERR|ERROR|WARN|WARNING|INFO|DEBUG|TRACE ]]; then
+          Log::displayError "Command ${SCRIPT_NAME} - Option ${options_parse_arg} - value '$1' is not part of authorized values([OFF ERR ERROR WARN WARNING INFO DEBUG TRACE])"
+          return 1
+        fi
+
+        if ((options_parse_optionParsedCountOptionDisplayLevel >= 1 )); then
+          Log::displayError "Command ${SCRIPT_NAME} - Option ${options_parse_arg} - Maximum number of option occurrences reached(1)"
+          return 1
+        fi
+        ((++options_parse_optionParsedCountOptionDisplayLevel))
+        # shellcheck disable=SC2034
+        optionDisplayLevel="$1"
+        optionDisplayLevelCallback "${options_parse_arg}" "${optionDisplayLevel}"
+
+        updateArgListDisplayLevelCallback "${options_parse_arg}" "${optionDisplayLevel}"
+
+        ;;
+
+      # Option 13/16
+      # optionNoColor alts --no-color
+      # type: Boolean min 0 max 1
+      --no-color)
+        # shellcheck disable=SC2034
+        optionNoColor="1"
+
+        if ((options_parse_optionParsedCountOptionNoColor >= 1 )); then
+          Log::displayError "Command ${SCRIPT_NAME} - Option ${options_parse_arg} - Maximum number of option occurrences reached(1)"
+          return 1
+        fi
+        ((++options_parse_optionParsedCountOptionNoColor))
+        optionNoColorCallback "${options_parse_arg}" "${optionNoColor}"
+
+        updateArgListNoColorCallback "${options_parse_arg}" "${optionNoColor}"
+
+        ;;
+
+      # Option 14/16
+      # optionTheme alts --theme
+      # type: String min 0 max 1
+      # authorizedValues: default|default-force|noColor
+      --theme)
+        shift
+        if (($# == 0)); then
+          Log::displayError "Command ${SCRIPT_NAME} - Option ${options_parse_arg} - a value needs to be specified"
+          return 1
+        fi
+        if [[ ! "$1" =~ default|default-force|noColor ]]; then
+          Log::displayError "Command ${SCRIPT_NAME} - Option ${options_parse_arg} - value '$1' is not part of authorized values([default default-force noColor])"
+          return 1
+        fi
+
+        if ((options_parse_optionParsedCountOptionTheme >= 1 )); then
+          Log::displayError "Command ${SCRIPT_NAME} - Option ${options_parse_arg} - Maximum number of option occurrences reached(1)"
+          return 1
+        fi
+        ((++options_parse_optionParsedCountOptionTheme))
+        # shellcheck disable=SC2034
+        optionTheme="$1"
+        optionThemeCallback "${options_parse_arg}" "${optionTheme}"
+
+        updateArgListThemeCallback "${options_parse_arg}" "${optionTheme}"
+
+        ;;
+
+      # Option 15/16
+      # optionVersion alts --version
+      # type: Boolean min 0 max 1
+      --version)
+        # shellcheck disable=SC2034
+        optionVersion="1"
+
+        if ((options_parse_optionParsedCountOptionVersion >= 1 )); then
+          Log::displayError "Command ${SCRIPT_NAME} - Option ${options_parse_arg} - Maximum number of option occurrences reached(1)"
+          return 1
+        fi
+        ((++options_parse_optionParsedCountOptionVersion))
+        optionVersionCallback "${options_parse_arg}" "${optionVersion}"
+
+        ;;
+
+      # Option 16/16
+      # optionQuiet alts --quiet|-q
+      # type: Boolean min 0 max 1
+      --quiet | -q)
+        # shellcheck disable=SC2034
+        optionQuiet="1"
+
+        if ((options_parse_optionParsedCountOptionQuiet >= 1 )); then
+          Log::displayError "Command ${SCRIPT_NAME} - Option ${options_parse_arg} - Maximum number of option occurrences reached(1)"
+          return 1
+        fi
+        ((++options_parse_optionParsedCountOptionQuiet))
+        optionQuietCallback "${options_parse_arg}" "${optionQuiet}"
+
+        updateArgListQuietCallback "${options_parse_arg}" "${optionQuiet}"
+
+        ;;
+
+      -*)
+        unknownOption "${options_parse_arg}" || argOptDefaultBehavior=$?
+        ;;
+      *)
+        ((minParsedArgIndex0 = 0)) || true
+        ((maxParsedArgIndex0 = 0)) || true
+        ((minParsedArgIndex1 = minParsedArgIndex0 + 1)) || true
+        ((maxParsedArgIndex1 = maxParsedArgIndex0 + 1)) || true
+        ((minParsedArgIndex2 = minParsedArgIndex1 + 1)) || true
+        ((maxParsedArgIndex2 = maxParsedArgIndex1 + 1)) || true
+        ((minParsedArgIndex3 = minParsedArgIndex2 + 1)) || true
+        ((maxParsedArgIndex3 = maxParsedArgIndex2 + 1)) || true
+        ((minParsedArgIndex4 = minParsedArgIndex3 + 1)) || true
+        ((maxParsedArgIndex4 = maxParsedArgIndex3 + 1)) || true
+        ((minParsedArgIndex5 = minParsedArgIndex4 + 0)) || true
+        ((maxParsedArgIndex5 = maxParsedArgIndex4)) || true
+        ((incrementArg = 1 ))
+        if ((0)); then
+          # Technical if - never reached
+          :
+
+        # Argument 1/5 - mysqlHostArg
+        # Argument mysqlHostArg min 1 max 1
+        # Argument mysqlHostArg authorizedValues:
+        elif (( options_parse_parsedArgIndex >= minParsedArgIndex0 &&
+          options_parse_parsedArgIndex < maxParsedArgIndex1 )); then
+          if ((options_parse_argParsedCountMysqlHostArg >= 1 )); then
+            Log::displayError "Command ${SCRIPT_NAME} - Argument mysqlHost - Maximum number of argument occurrences reached(1)"
             return 1
           fi
-          if ((options_parse_optionParsedCountOptionTimeout >= 1)); then
-            Log::displayError "Command ${SCRIPT_NAME} - Option ${options_parse_arg} - Maximum number of option occurrences reached(1)"
-            return 1
-          fi
-          ((++options_parse_optionParsedCountOptionTimeout))
+          ((++options_parse_argParsedCountMysqlHostArg))
           # shellcheck disable=SC2034
-          optionTimeout="$1"
-          optionTimeoutCallback "${options_parse_arg}" "${optionTimeout}"
-          ;;
-        # Option 2/15
-        # Option optionBashFrameworkConfig --bash-framework-config variableType String min 0 max 1 authorizedValues '' regexp ''
-        --bash-framework-config)
-          shift
-          if (($# == 0)); then
-            Log::displayError "Command ${SCRIPT_NAME} - Option ${options_parse_arg} - a value needs to be specified"
+          mysqlHostArg="${options_parse_arg}"
+
+
+        # Argument 2/5 - mysqlPortArg
+        # Argument mysqlPortArg min 1 max 1
+        # Argument mysqlPortArg authorizedValues:
+        elif (( options_parse_parsedArgIndex >= minParsedArgIndex1 &&
+          options_parse_parsedArgIndex < maxParsedArgIndex2 )); then
+          if ((options_parse_argParsedCountMysqlPortArg >= 1 )); then
+            Log::displayError "Command ${SCRIPT_NAME} - Argument mysqlPort - Maximum number of argument occurrences reached(1)"
             return 1
           fi
-          if ((options_parse_optionParsedCountOptionBashFrameworkConfig >= 1)); then
-            Log::displayError "Command ${SCRIPT_NAME} - Option ${options_parse_arg} - Maximum number of option occurrences reached(1)"
-            return 1
-          fi
-          ((++options_parse_optionParsedCountOptionBashFrameworkConfig))
+          ((++options_parse_argParsedCountMysqlPortArg))
           # shellcheck disable=SC2034
-          optionBashFrameworkConfig="$1"
-          optionBashFrameworkConfigCallback "${options_parse_arg}" "${optionBashFrameworkConfig}"
-          ;;
-        # Option 3/15
-        # Option optionConfig --config variableType Boolean min 0 max 1 authorizedValues '' regexp ''
-        --config)
+          mysqlPortArg="${options_parse_arg}"
+          mysqlPortArgCallback "${mysqlPortArg}" -- "${@:2}"
+
+
+        # Argument 3/5 - mysqlUserArg
+        # Argument mysqlUserArg min 1 max 1
+        # Argument mysqlUserArg authorizedValues:
+        elif (( options_parse_parsedArgIndex >= minParsedArgIndex2 &&
+          options_parse_parsedArgIndex < maxParsedArgIndex3 )); then
+          if ((options_parse_argParsedCountMysqlUserArg >= 1 )); then
+            Log::displayError "Command ${SCRIPT_NAME} - Argument mysqlUser - Maximum number of argument occurrences reached(1)"
+            return 1
+          fi
+          ((++options_parse_argParsedCountMysqlUserArg))
           # shellcheck disable=SC2034
-          optionConfig="1"
-          if ((options_parse_optionParsedCountOptionConfig >= 1)); then
-            Log::displayError "Command ${SCRIPT_NAME} - Option ${options_parse_arg} - Maximum number of option occurrences reached(1)"
+          mysqlUserArg="${options_parse_arg}"
+
+
+        # Argument 4/5 - mysqlPasswordArg
+        # Argument mysqlPasswordArg min 1 max 1
+        # Argument mysqlPasswordArg authorizedValues:
+        elif (( options_parse_parsedArgIndex >= minParsedArgIndex3 &&
+          options_parse_parsedArgIndex < maxParsedArgIndex4 )); then
+          if ((options_parse_argParsedCountMysqlPasswordArg >= 1 )); then
+            Log::displayError "Command ${SCRIPT_NAME} - Argument mysqlPassword - Maximum number of argument occurrences reached(1)"
             return 1
           fi
-          ((++options_parse_optionParsedCountOptionConfig))
-          ;;
-        # Option 4/15
-        # Option optionInfoVerbose --verbose|-v variableType Boolean min 0 max 1 authorizedValues '' regexp ''
-        --verbose | -v)
+          ((++options_parse_argParsedCountMysqlPasswordArg))
           # shellcheck disable=SC2034
-          optionInfoVerbose="1"
-          if ((options_parse_optionParsedCountOptionInfoVerbose >= 1)); then
-            Log::displayError "Command ${SCRIPT_NAME} - Option ${options_parse_arg} - Maximum number of option occurrences reached(1)"
-            return 1
-          fi
-          ((++options_parse_optionParsedCountOptionInfoVerbose))
-          optionInfoVerboseCallback "${options_parse_arg}"
-          updateArgListInfoVerboseCallback "${options_parse_arg}"
-          ;;
-        # Option 5/15
-        # Option optionDebugVerbose -vv variableType Boolean min 0 max 1 authorizedValues '' regexp ''
-        -vv)
+          mysqlPasswordArg="${options_parse_arg}"
+
+
+        # Argument 5/5 - commandArgs
+        # Argument commandArgs min 0 max -1
+        # Argument commandArgs authorizedValues:
+        elif (( options_parse_parsedArgIndex >= minParsedArgIndex4 )); then
+          ((++options_parse_argParsedCountCommandArgs))
           # shellcheck disable=SC2034
-          optionDebugVerbose="1"
-          if ((options_parse_optionParsedCountOptionDebugVerbose >= 1)); then
-            Log::displayError "Command ${SCRIPT_NAME} - Option ${options_parse_arg} - Maximum number of option occurrences reached(1)"
-            return 1
-          fi
-          ((++options_parse_optionParsedCountOptionDebugVerbose))
-          optionDebugVerboseCallback "${options_parse_arg}"
-          updateArgListDebugVerboseCallback "${options_parse_arg}"
-          ;;
-        # Option 6/15
-        # Option optionTraceVerbose -vvv variableType Boolean min 0 max 1 authorizedValues '' regexp ''
-        -vvv)
           # shellcheck disable=SC2034
-          optionTraceVerbose="1"
-          if ((options_parse_optionParsedCountOptionTraceVerbose >= 1)); then
-            Log::displayError "Command ${SCRIPT_NAME} - Option ${options_parse_arg} - Maximum number of option occurrences reached(1)"
-            return 1
-          fi
-          ((++options_parse_optionParsedCountOptionTraceVerbose))
-          optionTraceVerboseCallback "${options_parse_arg}"
-          updateArgListTraceVerboseCallback "${options_parse_arg}"
-          ;;
-        # Option 7/15
-        # Option optionEnvFiles --env-file variableType StringArray min 0 max -1 authorizedValues '' regexp ''
-        --env-file)
-          shift
-          if (($# == 0)); then
-            Log::displayError "Command ${SCRIPT_NAME} - Option ${options_parse_arg} - a value needs to be specified"
-            return 1
-          fi
-          ((++options_parse_optionParsedCountOptionEnvFiles))
-          optionEnvFiles+=("$1")
-          optionEnvFileCallback "${options_parse_arg}" "${optionEnvFiles[@]}"
-          updateArgListEnvFileCallback "${options_parse_arg}" "${optionEnvFiles[@]}"
-          ;;
-        # Option 8/15
-        # Option optionNoColor --no-color variableType Boolean min 0 max 1 authorizedValues '' regexp ''
-        --no-color)
-          # shellcheck disable=SC2034
-          optionNoColor="1"
-          if ((options_parse_optionParsedCountOptionNoColor >= 1)); then
-            Log::displayError "Command ${SCRIPT_NAME} - Option ${options_parse_arg} - Maximum number of option occurrences reached(1)"
-            return 1
-          fi
-          ((++options_parse_optionParsedCountOptionNoColor))
-          optionNoColorCallback "${options_parse_arg}"
-          updateArgListNoColorCallback "${options_parse_arg}"
-          ;;
-        # Option 9/15
-        # Option optionTheme --theme variableType String min 0 max 1 authorizedValues 'default|default-force|noColor' regexp ''
-        --theme)
-          shift
-          if (($# == 0)); then
-            Log::displayError "Command ${SCRIPT_NAME} - Option ${options_parse_arg} - a value needs to be specified"
-            return 1
-          fi
-          if [[ ! "$1" =~ default|default-force|noColor ]]; then
-            Log::displayError "Command ${SCRIPT_NAME} - Option ${options_parse_arg} - value '$1' is not part of authorized values(default|default-force|noColor)"
-            return 1
-          fi
-          if ((options_parse_optionParsedCountOptionTheme >= 1)); then
-            Log::displayError "Command ${SCRIPT_NAME} - Option ${options_parse_arg} - Maximum number of option occurrences reached(1)"
-            return 1
-          fi
-          ((++options_parse_optionParsedCountOptionTheme))
-          # shellcheck disable=SC2034
-          optionTheme="$1"
-          optionThemeCallback "${options_parse_arg}" "${optionTheme}"
-          updateArgListThemeCallback "${options_parse_arg}" "${optionTheme}"
-          ;;
-        # Option 10/15
-        # Option optionHelp --help|-h variableType Boolean min 0 max 1 authorizedValues '' regexp ''
-        --help | -h)
-          # shellcheck disable=SC2034
-          optionHelp="1"
-          if ((options_parse_optionParsedCountOptionHelp >= 1)); then
-            Log::displayError "Command ${SCRIPT_NAME} - Option ${options_parse_arg} - Maximum number of option occurrences reached(1)"
-            return 1
-          fi
-          ((++options_parse_optionParsedCountOptionHelp))
-          optionHelpCallback "${options_parse_arg}"
-          ;;
-        # Option 11/15
-        # Option optionVersion --version variableType Boolean min 0 max 1 authorizedValues '' regexp ''
-        --version)
-          # shellcheck disable=SC2034
-          optionVersion="1"
-          if ((options_parse_optionParsedCountOptionVersion >= 1)); then
-            Log::displayError "Command ${SCRIPT_NAME} - Option ${options_parse_arg} - Maximum number of option occurrences reached(1)"
-            return 1
-          fi
-          ((++options_parse_optionParsedCountOptionVersion))
-          optionVersionCallback "${options_parse_arg}"
-          ;;
-        # Option 12/15
-        # Option optionQuiet --quiet|-q variableType Boolean min 0 max 1 authorizedValues '' regexp ''
-        --quiet | -q)
-          # shellcheck disable=SC2034
-          optionQuiet="1"
-          if ((options_parse_optionParsedCountOptionQuiet >= 1)); then
-            Log::displayError "Command ${SCRIPT_NAME} - Option ${options_parse_arg} - Maximum number of option occurrences reached(1)"
-            return 1
-          fi
-          ((++options_parse_optionParsedCountOptionQuiet))
-          optionQuietCallback "${options_parse_arg}"
-          updateArgListQuietCallback "${options_parse_arg}"
-          ;;
-        # Option 13/15
-        # Option optionLogLevel --log-level variableType String min 0 max 1 authorizedValues 'OFF|ERR|ERROR|WARN|WARNING|INFO|DEBUG|TRACE' regexp ''
-        --log-level)
-          shift
-          if (($# == 0)); then
-            Log::displayError "Command ${SCRIPT_NAME} - Option ${options_parse_arg} - a value needs to be specified"
-            return 1
-          fi
-          if [[ ! "$1" =~ OFF|ERR|ERROR|WARN|WARNING|INFO|DEBUG|TRACE ]]; then
-            Log::displayError "Command ${SCRIPT_NAME} - Option ${options_parse_arg} - value '$1' is not part of authorized values(OFF|ERR|ERROR|WARN|WARNING|INFO|DEBUG|TRACE)"
-            return 1
-          fi
-          if ((options_parse_optionParsedCountOptionLogLevel >= 1)); then
-            Log::displayError "Command ${SCRIPT_NAME} - Option ${options_parse_arg} - Maximum number of option occurrences reached(1)"
-            return 1
-          fi
-          ((++options_parse_optionParsedCountOptionLogLevel))
-          # shellcheck disable=SC2034
-          optionLogLevel="$1"
-          optionLogLevelCallback "${options_parse_arg}" "${optionLogLevel}"
-          updateArgListLogLevelCallback "${options_parse_arg}" "${optionLogLevel}"
-          ;;
-        # Option 14/15
-        # Option optionLogFile --log-file variableType String min 0 max 1 authorizedValues '' regexp ''
-        --log-file)
-          shift
-          if (($# == 0)); then
-            Log::displayError "Command ${SCRIPT_NAME} - Option ${options_parse_arg} - a value needs to be specified"
-            return 1
-          fi
-          if ((options_parse_optionParsedCountOptionLogFile >= 1)); then
-            Log::displayError "Command ${SCRIPT_NAME} - Option ${options_parse_arg} - Maximum number of option occurrences reached(1)"
-            return 1
-          fi
-          ((++options_parse_optionParsedCountOptionLogFile))
-          # shellcheck disable=SC2034
-          optionLogFile="$1"
-          optionLogFileCallback "${options_parse_arg}" "${optionLogFile}"
-          updateArgListLogFileCallback "${options_parse_arg}" "${optionLogFile}"
-          ;;
-        # Option 15/15
-        # Option optionDisplayLevel --display-level variableType String min 0 max 1 authorizedValues 'OFF|ERR|ERROR|WARN|WARNING|INFO|DEBUG|TRACE' regexp ''
-        --display-level)
-          shift
-          if (($# == 0)); then
-            Log::displayError "Command ${SCRIPT_NAME} - Option ${options_parse_arg} - a value needs to be specified"
-            return 1
-          fi
-          if [[ ! "$1" =~ OFF|ERR|ERROR|WARN|WARNING|INFO|DEBUG|TRACE ]]; then
-            Log::displayError "Command ${SCRIPT_NAME} - Option ${options_parse_arg} - value '$1' is not part of authorized values(OFF|ERR|ERROR|WARN|WARNING|INFO|DEBUG|TRACE)"
-            return 1
-          fi
-          if ((options_parse_optionParsedCountOptionDisplayLevel >= 1)); then
-            Log::displayError "Command ${SCRIPT_NAME} - Option ${options_parse_arg} - Maximum number of option occurrences reached(1)"
-            return 1
-          fi
-          ((++options_parse_optionParsedCountOptionDisplayLevel))
-          # shellcheck disable=SC2034
-          optionDisplayLevel="$1"
-          optionDisplayLevelCallback "${options_parse_arg}" "${optionDisplayLevel}"
-          updateArgListDisplayLevelCallback "${options_parse_arg}" "${optionDisplayLevel}"
-          ;;
-        -*)
-          if [[ "${argOptDefaultBehavior}" = "0" ]]; then
-            Log::displayError "Command ${SCRIPT_NAME} - Invalid option ${options_parse_arg}"
-            return 1
-          fi
-          ;;
-        *)
-          if ((0)); then
-            # Technical if - never reached
-            :
-          # Argument 1/4
-          # Argument mysqlHostArg min 1 max 1 authorizedValues '' regexp ''
-          elif ((options_parse_parsedArgIndex >= 0 && options_parse_parsedArgIndex < 1)); then
-            if ((options_parse_argParsedCountMysqlHostArg >= 1)); then
-              Log::displayError "Command ${SCRIPT_NAME} - Argument mysqlHost - Maximum number of argument occurrences reached(1)"
-              return 1
-            fi
-            ((++options_parse_argParsedCountMysqlHostArg))
-            # shellcheck disable=SC2034
-            mysqlHostArg="${options_parse_arg}"
-          # Argument 2/4
-          # Argument mysqlPortArg min 1 max 1 authorizedValues '' regexp ''
-          elif ((options_parse_parsedArgIndex >= 1 && options_parse_parsedArgIndex < 2)); then
-            if ((options_parse_argParsedCountMysqlPortArg >= 1)); then
-              Log::displayError "Command ${SCRIPT_NAME} - Argument mysqlPort - Maximum number of argument occurrences reached(1)"
-              return 1
-            fi
-            ((++options_parse_argParsedCountMysqlPortArg))
-            # shellcheck disable=SC2034
-            mysqlPortArg="${options_parse_arg}"
-            mysqlPortArgCallback "${mysqlPortArg}" -- "${@:2}"
-          # Argument 3/4
-          # Argument mysqlUserArg min 1 max 1 authorizedValues '' regexp ''
-          elif ((options_parse_parsedArgIndex >= 2 && options_parse_parsedArgIndex < 3)); then
-            if ((options_parse_argParsedCountMysqlUserArg >= 1)); then
-              Log::displayError "Command ${SCRIPT_NAME} - Argument mysqlUserArg - Maximum number of argument occurrences reached(1)"
-              return 1
-            fi
-            ((++options_parse_argParsedCountMysqlUserArg))
-            # shellcheck disable=SC2034
-            mysqlUserArg="${options_parse_arg}"
-          # Argument 4/4
-          # Argument mysqlPasswordArg min 1 max 1 authorizedValues '' regexp ''
-          elif ((options_parse_parsedArgIndex >= 3 && options_parse_parsedArgIndex < 4)); then
-            if ((options_parse_argParsedCountMysqlPasswordArg >= 1)); then
-              Log::displayError "Command ${SCRIPT_NAME} - Argument mysqlPasswordArg - Maximum number of argument occurrences reached(1)"
-              return 1
-            fi
-            ((++options_parse_argParsedCountMysqlPasswordArg))
-            # shellcheck disable=SC2034
-            mysqlPasswordArg="${options_parse_arg}"
-          else
-            if [[ "${argOptDefaultBehavior}" = "0" ]]; then
-              Log::displayError "Command ${SCRIPT_NAME} - Argument - too much arguments provided: $*"
-              return 1
-            fi
-          fi
+          commandArgs+=("${options_parse_arg}")
+
+
+        # else too much args
+        else
+
+
+          # no arg configured, call unknownArgumentCallback
+
+          # shellcheck disable=SC2317
+        unknownOption "${options_parse_arg}"
+
+        fi
+        if ((incrementArg == 1)); then
           ((++options_parse_parsedArgIndex))
-          ;;
-      esac
-      shift || true
-    done
-    if ((options_parse_argParsedCountMysqlHostArg < 1)); then
-      Log::displayError "Command ${SCRIPT_NAME} - Argument 'mysqlHost' should be provided at least 1 time(s)"
-      return 1
-    fi
-    if ((options_parse_argParsedCountMysqlPortArg < 1)); then
-      Log::displayError "Command ${SCRIPT_NAME} - Argument 'mysqlPort' should be provided at least 1 time(s)"
-      return 1
-    fi
-    if ((options_parse_argParsedCountMysqlUserArg < 1)); then
-      Log::displayError "Command ${SCRIPT_NAME} - Argument 'mysqlUserArg' should be provided at least 1 time(s)"
-      return 1
-    fi
-    if ((options_parse_argParsedCountMysqlPasswordArg < 1)); then
-      Log::displayError "Command ${SCRIPT_NAME} - Argument 'mysqlPasswordArg' should be provided at least 1 time(s)"
-      return 1
-    fi
-    commandOptionParseFinished
-    Log::displayDebug "Command ${SCRIPT_NAME} - parse arguments: ${BASH_FRAMEWORK_ARGV[*]}"
-    Log::displayDebug "Command ${SCRIPT_NAME} - parse filtered arguments: ${BASH_FRAMEWORK_ARGV_FILTERED[*]}"
-  elif [[ "${options_parse_cmd}" = "help" ]]; then
-    Array::wrap2 " " 80 0 "${__HELP_TITLE_COLOR}DESCRIPTION:${__RESET_COLOR}" "wait for mysql to be ready"
-    echo
-
-    echo -e "$(Array::wrap2 " " 80 2 "${__HELP_TITLE_COLOR}USAGE:${__RESET_COLOR}" "${SCRIPT_NAME}" "[OPTIONS]" "[ARGUMENTS]")"
-    echo -e "$(Array::wrap2 " " 80 2 "${__HELP_TITLE_COLOR}USAGE:${__RESET_COLOR}" \
-      "${SCRIPT_NAME}" \
-      "[--timeout|-t <timeout>]" "[--bash-framework-config <String>]" "[--config]" "[--verbose|-v]" "[-vv]" "[-vvv]" "[--env-file <String>]" "[--no-color]" "[--theme <String>]" "[--help|-h]" "[--version]" "[--quiet|-q]" "[--log-level <String>]" "[--log-file <String>]" "[--display-level <String>]")"
-    echo
-    echo -e "${__HELP_TITLE_COLOR}ARGUMENTS:${__RESET_COLOR}"
-    echo -e "  ${__HELP_OPTION_COLOR}mysqlHost${__HELP_NORMAL} {single} (mandatory)"
-    local -a helpArray
-    # shellcheck disable=SC2054
-    helpArray=(Mysql\ host\ name)
-    echo -e "    $(Array::wrap2 " " 76 4 "${helpArray[@]}")"
-    echo -e "  ${__HELP_OPTION_COLOR}mysqlPort${__HELP_NORMAL} {single} (mandatory)"
-    local -a helpArray
-    # shellcheck disable=SC2054
-    helpArray=(Mysql\ port)
-    echo -e "    $(Array::wrap2 " " 76 4 "${helpArray[@]}")"
-    echo -e "  ${__HELP_OPTION_COLOR}mysqlUserArg${__HELP_NORMAL} {single} (mandatory)"
-    local -a helpArray
-    # shellcheck disable=SC2054
-    helpArray=(Mysql\ user\ name)
-    echo -e "    $(Array::wrap2 " " 76 4 "${helpArray[@]}")"
-    echo -e "  ${__HELP_OPTION_COLOR}mysqlPasswordArg${__HELP_NORMAL} {single} (mandatory)"
-    local -a helpArray
-    # shellcheck disable=SC2054
-    helpArray=(Mysql\ password)
-    echo -e "    $(Array::wrap2 " " 76 4 "${helpArray[@]}")"
-    echo
-    echo -e "${__HELP_TITLE_COLOR}OPTIONS:${__RESET_COLOR}"
-    echo -e "  ${__HELP_OPTION_COLOR}--timeout${__HELP_NORMAL}, ${__HELP_OPTION_COLOR}-t <timeout>${__HELP_NORMAL} {single}"
-    local -a helpArray
-    # shellcheck disable=SC2054
-    helpArray=(Timeout\ in\ seconds\,\ zero\ for\ no\ timeout.)
-    echo -e "    $(Array::wrap2 " " 76 4 "${helpArray[@]}")"
-    echo '    Default value: 15'
-    echo
-    echo -e "${__HELP_TITLE_COLOR}GLOBAL OPTIONS:${__RESET_COLOR}"
-    echo -e "  ${__HELP_OPTION_COLOR}--bash-framework-config <String>${__HELP_NORMAL} {single}"
-    local -a helpArray
-    # shellcheck disable=SC2054
-    helpArray=(use\ alternate\ bash\ framework\ configuration.)
-    echo -e "    $(Array::wrap2 " " 76 4 "${helpArray[@]}")"
-    echo -e "  ${__HELP_OPTION_COLOR}--config${__HELP_NORMAL} {single}"
-    local -a helpArray
-    # shellcheck disable=SC2054
-    helpArray=(Display\ configuration)
-    echo -e "    $(Array::wrap2 " " 76 4 "${helpArray[@]}")"
-    echo -e "  ${__HELP_OPTION_COLOR}--verbose${__HELP_NORMAL}, ${__HELP_OPTION_COLOR}-v${__HELP_NORMAL} {single}"
-    local -a helpArray
-    # shellcheck disable=SC2054
-    helpArray=(info\ level\ verbose\ mode\ \(alias\ of\ --display-level\ INFO\))
-    echo -e "    $(Array::wrap2 " " 76 4 "${helpArray[@]}")"
-    echo -e "  ${__HELP_OPTION_COLOR}-vv${__HELP_NORMAL} {single}"
-    local -a helpArray
-    # shellcheck disable=SC2054
-    helpArray=(debug\ level\ verbose\ mode\ \(alias\ of\ --display-level\ DEBUG\))
-    echo -e "    $(Array::wrap2 " " 76 4 "${helpArray[@]}")"
-    echo -e "  ${__HELP_OPTION_COLOR}-vvv${__HELP_NORMAL} {single}"
-    local -a helpArray
-    # shellcheck disable=SC2054
-    helpArray=(trace\ level\ verbose\ mode\ \(alias\ of\ --display-level\ TRACE\))
-    echo -e "    $(Array::wrap2 " " 76 4 "${helpArray[@]}")"
-    echo -e "  ${__HELP_OPTION_COLOR}--env-file <String>${__HELP_NORMAL} {list} (optional)"
-    local -a helpArray
-    # shellcheck disable=SC2054
-    helpArray=(Load\ the\ specified\ env\ file\ \(deprecated\,\ please\ use\ --bash-framework-config\ option\ instead\))
-    echo -e "    $(Array::wrap2 " " 76 4 "${helpArray[@]}")"
-    echo -e "  ${__HELP_OPTION_COLOR}--no-color${__HELP_NORMAL} {single}"
-    local -a helpArray
-    # shellcheck disable=SC2054
-    helpArray=(Produce\ monochrome\ output.\ alias\ of\ --theme\ noColor.)
-    echo -e "    $(Array::wrap2 " " 76 4 "${helpArray[@]}")"
-    echo -e "  ${__HELP_OPTION_COLOR}--theme <String>${__HELP_NORMAL} {single}"
-    local -a helpArray
-    # shellcheck disable=SC2054
-    helpArray=(choose\ color\ theme\ -\ default-force\ means\ colors\ will\ be\ produced\ even\ if\ command\ is\ piped)
-    echo -e "    $(Array::wrap2 " " 76 4 "${helpArray[@]}")"
-    echo '    Default value: default'
-    echo '    Possible values: default|default-force|noColor'
-    echo -e "  ${__HELP_OPTION_COLOR}--help${__HELP_NORMAL}, ${__HELP_OPTION_COLOR}-h${__HELP_NORMAL} {single}"
-    local -a helpArray
-    # shellcheck disable=SC2054
-    helpArray=(Display\ this\ command\ help)
-    echo -e "    $(Array::wrap2 " " 76 4 "${helpArray[@]}")"
-    echo -e "  ${__HELP_OPTION_COLOR}--version${__HELP_NORMAL} {single}"
-    local -a helpArray
-    # shellcheck disable=SC2054
-    helpArray=(Print\ version\ information\ and\ quit)
-    echo -e "    $(Array::wrap2 " " 76 4 "${helpArray[@]}")"
-    echo -e "  ${__HELP_OPTION_COLOR}--quiet${__HELP_NORMAL}, ${__HELP_OPTION_COLOR}-q${__HELP_NORMAL} {single}"
-    local -a helpArray
-    # shellcheck disable=SC2054
-    helpArray=(quiet\ mode\,\ doesn\'t\ display\ any\ output)
-    echo -e "    $(Array::wrap2 " " 76 4 "${helpArray[@]}")"
-    echo -e "  ${__HELP_OPTION_COLOR}--log-level <String>${__HELP_NORMAL} {single}"
-    local -a helpArray
-    # shellcheck disable=SC2054
-    helpArray=(Set\ log\ level)
-    echo -e "    $(Array::wrap2 " " 76 4 "${helpArray[@]}")"
-    echo '    Possible values: OFF|ERR|ERROR|WARN|WARNING|INFO|DEBUG|TRACE'
-    echo -e "  ${__HELP_OPTION_COLOR}--log-file <String>${__HELP_NORMAL} {single}"
-    local -a helpArray
-    # shellcheck disable=SC2054
-    helpArray=(Set\ log\ file)
-    echo -e "    $(Array::wrap2 " " 76 4 "${helpArray[@]}")"
-    echo -e "  ${__HELP_OPTION_COLOR}--display-level <String>${__HELP_NORMAL} {single}"
-    local -a helpArray
-    # shellcheck disable=SC2054
-    helpArray=(set\ display\ level)
-    echo -e "    $(Array::wrap2 " " 76 4 "${helpArray[@]}")"
-    echo '    Possible values: OFF|ERR|ERROR|WARN|WARNING|INFO|DEBUG|TRACE'
-    echo -e """
-${__HELP_TITLE}EXIT STATUS CODES:${__HELP_NORMAL}
-${__HELP_OPTION_COLOR}0${__HELP_NORMAL}: mysql is available
-${__HELP_OPTION_COLOR}1${__HELP_NORMAL}: indicates mysql is not available or argument error
-${__HELP_OPTION_COLOR}2${__HELP_NORMAL}: timeout reached"""
-    echo
-    echo -n -e "${__HELP_TITLE_COLOR}VERSION: ${__RESET_COLOR}"
-    echo '2.0'
-    echo
-    echo -e "${__HELP_TITLE_COLOR}AUTHOR:${__RESET_COLOR}"
-    echo '[François Chastanet](https://github.com/fchastanet)'
-    echo
-    echo -e "${__HELP_TITLE_COLOR}SOURCE FILE:${__RESET_COLOR}"
-    echo 'https://github.com/fchastanet/bash-tools/tree/master/src/_binaries/Utils/waitForMysql.sh'
-    echo
-    echo -e "${__HELP_TITLE_COLOR}LICENSE:${__RESET_COLOR}"
-    echo 'MIT License'
-    echo
-    Array::wrap2 ' ' 76 4 "$(copyrightCallback)"
-  else
-    Log::displayError "Command ${SCRIPT_NAME} - Option command invalid: '${options_parse_cmd}'"
-    return 1
-  fi
-}
-
-mysqlPortArgCallback() {
-  if [[ ! "${mysqlPortArg}" =~ ^[0-9]+$ ]] || (( mysqlPortArg == 0 )); then
-    Log::fatal "${SCRIPT_NAME} - invalid port option - must be greater than to 0"
-  fi
-}
-
-waitForMysqlCommand parse "${BASH_FRAMEWORK_ARGV[@]}"
-
-run() {
-  Assert::commandExists "mysql"
-  Log::displayInfo "Waiting for mysql"
-  local -i start_ts=${SECONDS}
-  (printf >&2 ".")
-  until (echo "select 1" | mysql \
-    -h"${mysqlHostArg}" \
-    -P"${mysqlPortArg}" \
-    -u"${mysqlUserArg}" \
-    -p"${mysqlPasswordArg}" &>/dev/null); do
-    (printf >&2 ".")
-    if ((optionTimeout != 0 && SECONDS - start_ts >= optionTimeout)); then
-      (echo >&2 "")
-      Log::displayError "${SCRIPT_NAME} - timeout for ${mysqlHostArg}:${mysqlPortArg} occurred after $((SECONDS - start_ts)) seconds"
-      return 2
-    fi
-    sleep 1
+        fi
+        ;;
+    esac
+    shift || true
   done
 
-  (echo >&2 "")
-  Log::displayInfo "mysql ready"
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  if ((options_parse_argParsedCountMysqlHostArg < 1 )); then
+    Log::displayError "Command ${SCRIPT_NAME} - Argument 'mysqlHost' should be provided at least 1 time(s)"
+    return 1
+  fi
+
+  if ((options_parse_argParsedCountMysqlPortArg < 1 )); then
+    Log::displayError "Command ${SCRIPT_NAME} - Argument 'mysqlPort' should be provided at least 1 time(s)"
+    return 1
+  fi
+
+  if ((options_parse_argParsedCountMysqlUserArg < 1 )); then
+    Log::displayError "Command ${SCRIPT_NAME} - Argument 'mysqlUser' should be provided at least 1 time(s)"
+    return 1
+  fi
+
+  if ((options_parse_argParsedCountMysqlPasswordArg < 1 )); then
+    Log::displayError "Command ${SCRIPT_NAME} - Argument 'mysqlPassword' should be provided at least 1 time(s)"
+    return 1
+  fi || return $?
+
+  commandOptionParseFinished
+
 }
 
-if [[ "${BASH_FRAMEWORK_QUIET_MODE:-0}" = "1" ]]; then
-  run &>/dev/null
-else
-  run
+# @description display command options and arguments help for waitForMysqlCommand
+waitForMysqlCommandHelp() {
+  echo -e "${__HELP_TITLE_COLOR}SYNOPSIS:${__RESET_COLOR}"
+  Array::wrap2 ' ' 76 4 "    " "Wait for mysql to be ready."
+
+  echo
+  echo
+
+  # ------------------------------------------
+  # usage section
+  # ------------------------------------------
+  Array::wrap2 " " 80 2 "${__HELP_TITLE_COLOR}USAGE:${__RESET_COLOR}" "waitForMysql [OPTIONS] [ARGUMENTS]"
+  echo
+  # ------------------------------------------
+  # usage/options section
+  # ------------------------------------------
+  optionsAltList=("[--timeout|-t <timeout>]" "[--exec-command-on-timeout|--lax|-l]" "[--help|-h]" "[--config]" "[--bash-framework-config <bash-framework-config>]" "[--verbose|-v]" "[-vv]" "[-vvv]" "[--env-file <env-file>]" "[--log-level <log-level>]" "[--log-file <log-file>]" "[--display-level <display-level>]" "[--no-color]" "[--theme <theme>]" "[--version]" "[--quiet|-q]"
+  )
+  Array::wrap2 " " 80 2 "${__HELP_TITLE_COLOR}USAGE:${__RESET_COLOR}" \
+    "waitForMysql" "${optionsAltList[@]}"
+  echo
+
+  # ------------------------------------------
+  # usage/arguments section
+  # ------------------------------------------
+  echo
+  echo -e "${__HELP_TITLE_COLOR}ARGUMENTS:${__RESET_COLOR}"
+
+    Array::wrap2 " " 80 2 "  ${__HELP_OPTION_COLOR}mysqlHost${__HELP_NORMAL} {single} (mandatory)
+  "
+  Array::wrap2 ' ' 76 4 "    " "Mysql host name."
+    echo
+    Array::wrap2 " " 80 2 "  ${__HELP_OPTION_COLOR}mysqlPort${__HELP_NORMAL} {single} (mandatory)
+  "
+  Array::wrap2 ' ' 76 4 "    " "Mysql port."
+    echo
+    Array::wrap2 " " 80 2 "  ${__HELP_OPTION_COLOR}mysqlUser${__HELP_NORMAL} {single} (mandatory)
+  "
+  Array::wrap2 ' ' 76 4 "    " "Mysql user name."
+    echo
+    Array::wrap2 " " 80 2 "  ${__HELP_OPTION_COLOR}mysqlPassword${__HELP_NORMAL} {single} (mandatory)
+  "
+  Array::wrap2 ' ' 76 4 "    " "Mysql user password."
+    echo
+    Array::wrap2 " " 80 2 "  [${__HELP_OPTION_COLOR}commandArgs${__HELP_NORMAL} {list} (optional)]
+  "
+  Array::wrap2 ' ' 76 4 "    " "Execute command with args after the test finishes or exit with status code if no command provided."
+    echo
+  # ------------------------------------------
+  # options section
+  # ------------------------------------------
+  echo
+  echo -e "${__HELP_TITLE_COLOR}TIMEOUT OPTIONS:${__RESET_COLOR}"
+  echo -e "  ${__HELP_OPTION_COLOR}--timeout${__HELP_NORMAL}, ${__HELP_OPTION_COLOR}-t <timeout>${__HELP_NORMAL} {single}"
+  Array::wrap2 ' ' 76 4 "    " "Timeout in seconds, zero for no timeout."
+  echo
+
+
+  Array::wrap2 ' ' 76 6 "    Default value: " "15"
+  echo
+
+  echo -e "  ${__HELP_OPTION_COLOR}--exec-command-on-timeout${__HELP_NORMAL}, ${__HELP_OPTION_COLOR}--lax${__HELP_NORMAL}, ${__HELP_OPTION_COLOR}-l${__HELP_NORMAL} {single}"
+  Array::wrap2 ' ' 76 4 "    " "Execute sub-command even if timeout is reached."
+  echo
+
+
+  echo
+  echo -e "${__HELP_TITLE_COLOR}GLOBAL OPTIONS:${__RESET_COLOR}"
+  echo -e "  ${__HELP_OPTION_COLOR}--help${__HELP_NORMAL}, ${__HELP_OPTION_COLOR}-h${__HELP_NORMAL} {single}"
+  Array::wrap2 ' ' 76 4 "    " "Displays this command help"
+  echo
+
+
+
+  echo -e "  ${__HELP_OPTION_COLOR}--config${__HELP_NORMAL} {single}"
+  Array::wrap2 ' ' 76 4 "    " "Displays configuration"
+  echo
+
+
+
+  echo -e "  ${__HELP_OPTION_COLOR}--bash-framework-config <bash-framework-config>${__HELP_NORMAL} {single}"
+  Array::wrap2 ' ' 76 4 "    " "Use alternate bash framework configuration."
+  echo
+
+
+
+  echo -e "  ${__HELP_OPTION_COLOR}--verbose${__HELP_NORMAL}, ${__HELP_OPTION_COLOR}-v${__HELP_NORMAL} {single}"
+  Array::wrap2 ' ' 76 4 "    " "Info level verbose mode (alias of --display-level INFO)"
+  echo
+
+
+
+  echo -e "  ${__HELP_OPTION_COLOR}-vv${__HELP_NORMAL} {single}"
+  Array::wrap2 ' ' 76 4 "    " "Debug level verbose mode (alias of --display-level DEBUG)"
+  echo
+
+
+
+  echo -e "  ${__HELP_OPTION_COLOR}-vvv${__HELP_NORMAL} {single}"
+  Array::wrap2 ' ' 76 4 "    " "Trace level verbose mode (alias of --display-level TRACE)"
+  echo
+
+
+
+  echo -e "  ${__HELP_OPTION_COLOR}--env-file <env-file>${__HELP_NORMAL} {list} (optional)"
+  Array::wrap2 ' ' 76 4 "    " "Load the specified env file (deprecated, please use --bash-framework-config option instead)"
+  echo
+
+
+
+  echo -e "  ${__HELP_OPTION_COLOR}--log-level <log-level>${__HELP_NORMAL} {single}"
+  Array::wrap2 ' ' 76 4 "    " "Set log level"
+  echo
+  Array::wrap2 ' ' 76 6 "    Possible values: " "OFF, "  "ERR, "  "ERROR, "  "WARN, "  "WARNING, "  "INFO, "  "DEBUG, "  "TRACE"
+  echo
+
+
+  echo -e "  ${__HELP_OPTION_COLOR}--log-file <log-file>${__HELP_NORMAL} {single}"
+  Array::wrap2 ' ' 76 4 "    " "Set log file"
+  echo
+
+
+
+  echo -e "  ${__HELP_OPTION_COLOR}--display-level <display-level>${__HELP_NORMAL} {single}"
+  Array::wrap2 ' ' 76 4 "    " "Set display level"
+  echo
+  Array::wrap2 ' ' 76 6 "    Possible values: " "OFF, "  "ERR, "  "ERROR, "  "WARN, "  "WARNING, "  "INFO, "  "DEBUG, "  "TRACE"
+  echo
+
+
+  echo -e "  ${__HELP_OPTION_COLOR}--no-color${__HELP_NORMAL} {single}"
+  Array::wrap2 ' ' 76 4 "    " "Produce monochrome output. alias of --theme noColor."
+  echo
+
+
+
+  echo -e "  ${__HELP_OPTION_COLOR}--theme <theme>${__HELP_NORMAL} {single}"
+  Array::wrap2 ' ' 76 4 "    " "Choose color theme - default-force means colors will be produced even if command is piped."
+  echo
+  Array::wrap2 ' ' 76 6 "    Possible values: " "default, "  "default-force, "  "noColor"
+  echo
+
+  Array::wrap2 ' ' 76 6 "    Default value: " "default"
+  echo
+
+  echo -e "  ${__HELP_OPTION_COLOR}--version${__HELP_NORMAL} {single}"
+  Array::wrap2 ' ' 76 4 "    " "Print version information and quit."
+  echo
+
+
+
+  echo -e "  ${__HELP_OPTION_COLOR}--quiet${__HELP_NORMAL}, ${__HELP_OPTION_COLOR}-q${__HELP_NORMAL} {single}"
+  Array::wrap2 ' ' 76 4 "    " "Quiet mode, doesn't display any output."
+  echo
+
+
+  # ------------------------------------------
+  # longDescription section
+  # ------------------------------------------
+  echo
+  echo
+  echo -e "${__HELP_TITLE_COLOR}DESCRIPTION:${__RESET_COLOR}"
+  longDescriptionFunction
+  # ------------------------------------------
+  # version section
+  # ------------------------------------------
+  echo
+  echo -n -e "${__HELP_TITLE_COLOR}VERSION: ${__RESET_COLOR}"
+  echo "3.0"
+  # ------------------------------------------
+  # author section
+  # ------------------------------------------
+  echo
+  echo -n -e "${__HELP_TITLE_COLOR}AUTHOR: ${__RESET_COLOR}"
+  echo "[François Chastanet](https://github.com/fchastanet)"
+  # ------------------------------------------
+  # sourceFile section
+  # ------------------------------------------
+  echo
+  echo -n -e "${__HELP_TITLE_COLOR}SOURCE FILE: ${__RESET_COLOR}"
+  echo "https://github.com/fchastanet/bash-tools-framework/tree/master/src/_binaries/Utils/waitForMysql/waitForMysql-binary.yaml"
+  # ------------------------------------------
+  # license section
+  # ------------------------------------------
+  echo
+  echo -n -e "${__HELP_TITLE_COLOR}LICENSE: ${__RESET_COLOR}"
+  echo "MIT License"
+  # ------------------------------------------
+  # copyright section
+  # ------------------------------------------
+  Array::wrap2 ' ' 76 0 "$(copyrightCallback)"
+}
+
+
+beforeParseCallback
+
+waitForMysqlCommandParse "$@"
+MAIN_FUNCTION_NAME="main"
+main() {
+
+# shellcheck disable=SC2154
+
+Assert::commandExists "mysql"
+Log::displayInfo "Waiting for mysql"
+declare -i start_ts=${SECONDS}
+declare status=0
+declare -i triesCount=0
+while true; do
+  ((++triesCount))
+  if ((BASH_FRAMEWORK_ARGS_VERBOSE >= __VERBOSE_LEVEL_INFO)); then
+    Log::displayInfo "Try connecting to mysql host ${mysqlHostArg}:${mysqlPortArg} - Try ${triesCount}"
+  else
+    (printf >&2 ".")
+  fi
+  BashTools::runVerboseIfNeeded mysql -h"${mysqlHostArg}" -P"${mysqlPortArg}" -u"${mysqlUserArg}" \
+    -p"${mysqlPasswordArg}" &>/dev/null <<<"SELECT 1" || status=$?
+  if [[ "${status}" = "0" ]]; then
+    break
+  fi
+  if ((optionTimeout != 0 && SECONDS - start_ts >= optionTimeout)); then
+    (echo >&2 "")
+    Log::displayError "${SCRIPT_NAME} - timeout for ${mysqlHostArg}:${mysqlPortArg} occurred after $((SECONDS - start_ts)) seconds"
+    status=2
+    break
+  fi
+  sleep 1
+done
+
+if ((BASH_FRAMEWORK_ARGS_VERBOSE < __VERBOSE_LEVEL_INFO)); then
+  (echo >&2 "")
+fi
+if [[ "${status}" = "0" ]]; then
+  Log::displayInfo "mysql ready"
 fi
 
+# when timed out, call command if any
+if [[ -n "${commandArgs+x}" && "${commandArgs[*]}" != "" ]]; then
+  if [[ "${status}" != "0" && "${optionExecIfTimedOut}" = "0" ]]; then
+    Log::displayError "${SCRIPT_NAME} - failed to connect - strict mode - command not executed"
+    exit "${status}"
+  fi
+  exec "${commandArgs[@]}"
+fi
+
+exit "${status}"
+
 }
 
-facade_main_waitForMysqlsh "$@"
+# if file is sourced avoid calling main function
+# shellcheck disable=SC2178
+BASH_SOURCE=".$0" # cannot be changed in bash
+# shellcheck disable=SC2128
+if test ".$0" == ".${BASH_SOURCE}"; then
+  if [[ "${BASH_FRAMEWORK_QUIET_MODE:-0}" = "1" ]]; then
+    main "$@" &>/dev/null
+  else
+    main "$@"
+  fi
+fi

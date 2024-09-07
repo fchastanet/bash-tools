@@ -38,7 +38,7 @@ whileLoop() {
     fi
     if ((optionTimeout != 0 && SECONDS - start_ts >= optionTimeout)); then
       if [[ "${reportTimeout}" = "1" ]]; then
-        Log::displayError "${SCRIPT_NAME} - timeout for ${hostOrIpArg}:${portArg} occurred after $((SECONDS - start_ts)) seconds"
+        Log::displayError "${SCRIPT_NAME} - timeout for ${hostOrIpArg}:${portArg} occurred after $((SECONDS - start_ts)) seconds > ${optionTimeout}"
       fi
       return 2
     fi
@@ -154,7 +154,7 @@ else
   "${algo}" || result=$?
   # when timed out, call command if any
   if [[ -n "${commandArgs+x}" && "${commandArgs[*]}" != "" ]]; then
-    if [[ "${result}" != "0" && "${optionStrict}" = "1" ]]; then
+    if [[ "${result}" != "0" && "${optionExecIfTimedOut}" = "0" ]]; then
       Log::displayError "${SCRIPT_NAME} - failed to connect - strict mode - command not executed"
       exit "${result}"
     fi

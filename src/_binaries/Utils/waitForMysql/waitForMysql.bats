@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # shellcheck source=src/batsHeaders.sh
-source "$(cd "${BATS_TEST_DIRNAME}/../.." && pwd)/batsHeaders.sh"
+source "$(cd "${BATS_TEST_DIRNAME}/../../.." && pwd)/batsHeaders.sh"
 
 setup() {
   export TMPDIR="${BATS_TEST_TMPDIR}"
@@ -43,7 +43,7 @@ function Utils::waitForMysql::missingUser { #@test
 
   assert_failure 1
   assert_lines_count 1
-  assert_output --partial "ERROR   - Command waitForMysql - Argument 'mysqlUserArg' should be provided at least 1 time(s)"
+  assert_output --partial "ERROR   - Command waitForMysql - Argument 'mysqlUser' should be provided at least 1 time(s)"
 }
 
 function Utils::waitForMysql::missingPassword { #@test
@@ -51,7 +51,7 @@ function Utils::waitForMysql::missingPassword { #@test
 
   assert_failure 1
   assert_lines_count 1
-  assert_output --partial "ERROR   - Command waitForMysql - Argument 'mysqlPasswordArg' should be provided at least 1 time(s)"
+  assert_output --partial "ERROR   - Command waitForMysql - Argument 'mysqlPassword' should be provided at least 1 time(s)"
 }
 
 function Utils::waitForMysql::invalidTimeout { #@test
@@ -91,6 +91,18 @@ function Utils::waitForMysql::mysqlNotAvailableAfter1SecondTimeout { #@test
   stub mysql '-hlocalhost -P3306 -uuser -ppassword : exit 1'
   run "${binDir}/waitForMysql" localhost 3306 user password --timeout 1 2>&1
 
+  assert_failure 2
+  assert_line --index 0 --partial "INFO    - Waiting for mysql"
+  assert_line --index 1 --partial "."
+  assert_line --index 2 --partial "ERROR   - waitForMysql - timeout for localhost:3306 occurred after"
+  assert_lines_count 3
+}
+
+function Utils::waitForMysql::mysqlNotAvailableAfter1SecondTimeoutLax { #@test
+  stub commandExists '-v mysql : exit 0'
+  export BASH_FRAMEWORK_COMMAND=commandExists
+  stub mysql '-hlocalhost -P3306 -uuser -ppassword : exit 1'
+  run "${binDir}/waitForMysql" localhost 3306 user password --timeout 1 --lax 2>&1
   assert_failure 2
   assert_line --index 0 --partial "INFO    - Waiting for mysql"
   assert_line --index 1 --partial "."
