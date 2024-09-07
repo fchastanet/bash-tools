@@ -19,3 +19,12 @@ binData:
           alts:
             - --timeout
             - -t
+
+        - variableName: optionExecIfTimedOut
+          type: Boolean
+          group: groupTimeoutOptions
+          help: Execute sub-command even if timeout is reached.
+          alts:
+            - --exec-command-on-timeout
+            - --lax
+            - -l

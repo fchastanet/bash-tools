@@ -74,15 +74,6 @@ binData:
             - --algorithm
             - --algo
 
-        - variableName: optionStrict
-          type: Boolean
-          group: waitForItOptionGroup
-          help: Only execute sub-command if the test succeeds.
-          alts:
-            - --exec-command-on-success-only
-            - --strict
-            - -s
-
         - variableName: optionLegacy
           type: Boolean
           group: waitForItOptionGroup
