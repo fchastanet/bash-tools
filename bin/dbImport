@@ -1808,6 +1808,7 @@ profileOptionHelpFunction() {
 }
 
 initProfileCommandCallback() {
+  # shellcheck disable=SC2154
   if [[ "${optionProfile}" != "default" && -n "${optionTables}" ]]; then
     Log::fatal "Command ${SCRIPT_NAME} - you cannot use table and profile options at the same time"
   fi
@@ -2823,6 +2824,7 @@ if [[ "${downloadDump}" = "1" ]]; then
     initializeDefaultTargetMysqlOptions dbFromInstance "${fromDbName}"
 
     declare dumpHeader
+    # shellcheck disable=SC2154
     dumpHeader=$(printf "%s\nSET names '%s';\n" "${DUMP_HEADER}" "${optionCharacterSet}")
 
     # calculate remote db dump size

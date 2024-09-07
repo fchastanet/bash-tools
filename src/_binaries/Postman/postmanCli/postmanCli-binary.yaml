@@ -1,0 +1,66 @@
+extends:
+  - "${BASH_TOOLS_ROOT_DIR}/src/_binaries/commandDefinitions/optionsVersion.yaml"
+  - "${FRAMEWORK_ROOT_DIR}/src/_binaries/commandDefinitions/defaultCommand.yaml"
+  - "${FRAMEWORK_ROOT_DIR}/src/_binaries/commandDefinitions/frameworkConfig.yaml"
+
+vars:
+  SRC_FILE_PATH: src/_binaries/Postman/postmanCli/postmanCli-binary.yaml
+
+compilerConfig:
+  targetFile: "${BASH_TOOLS_ROOT_DIR}/bin/postmanCli"
+  relativeRootDirBasedOnTargetDir: ..
+  srcDirs:
+    - ${BASH_TOOLS_ROOT_DIR}/src
+binData:
+  commands:
+    default:
+      functionName: postmanCliCommand
+      version: "3.0"
+      copyrightBeginYear: 2020
+      commandName: postmanCli
+      beforeParseCallbacks:
+        - beforeParseCallback
+      unknownOptionCallbacks:
+        - unknownOption
+      unknownArgumentCallbacks:
+        - unknownOption
+      callbacks:
+        - postmanCliCommandCallback
+      definitionFiles:
+        20: ${BASH_TOOLS_ROOT_DIR}/src/_binaries/Postman/postmanCli/postmanCli-options.sh
+      mainFile: ${BASH_TOOLS_ROOT_DIR}/src/_binaries/Postman/postmanCli/postmanCli-main.sh
+      help: Push/Pull postman collections of all the configured repositories.
+      longDescription: longDescriptionFunction
+      args:
+        - type: String
+          min: 0
+          max: 1
+          help: argCommandHelpFunction
+          authorizedValues:
+            - value: pull
+              help: Pull
+            - value: push
+              help: Push
+          name: command
+          variableName: argCommand
+
+        - type: String
+          min: 0
+          max: -1
+          help: commandArgsHelpFunction
+          name: ref
+          variableName: commandArgs
+
+      optionGroups:
+        groupPushPull:
+          title: "PUSH/PULL OPTIONS:"
+
+      options:
+        - variableName: optionPostmanModelConfig
+          type: String
+          group: groupPushPull
+          help: optionPostmanModelConfigHelpFunction
+          helpValueName: configFile
+          alts:
+            - --postman-model
+            - -m

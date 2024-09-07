@@ -79,6 +79,7 @@ if [[ "${downloadDump}" = "1" ]]; then
     initializeDefaultTargetMysqlOptions dbFromInstance "${fromDbName}"
 
     declare dumpHeader
+    # shellcheck disable=SC2154
     dumpHeader=$(printf "%s\nSET names '%s';\n" "${DUMP_HEADER}" "${optionCharacterSet}")
 
     # calculate remote db dump size

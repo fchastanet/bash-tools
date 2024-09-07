@@ -30,6 +30,7 @@
     "conf/postmanCli/GithubAPI/GitHubAPI-01-Basic_no_auth_postman_collection.json",
     "conf/postmanCli/GithubAPI/GitHubAPI-02-Advanced_with_auth_postman_collection.json",
     "src/_binaries/DbImport/dbImportProfile.options.tpl",
+    "src/_binaries/Database/dbImport/dbImport-options.sh",
     "**/snippets/**"
   ]
 }

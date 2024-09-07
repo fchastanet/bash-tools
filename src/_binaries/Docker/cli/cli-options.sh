@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 # option values
+# shellcheck disable=SC2034
 declare containerArg="default"
 declare finalUserArg="${defaultUserArg}"
 declare finalCommandArg=("${defaultCommandArg[@]}")
