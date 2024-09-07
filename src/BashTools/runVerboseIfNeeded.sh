@@ -7,7 +7,7 @@
 # @exitcode command's exit code
 BashTools::runVerboseIfNeeded() {
   # shellcheck disable=SC2154
-  if [[ "${optionInfoVerbose}" = "1" ]]; then
+  if ((BASH_FRAMEWORK_ARGS_VERBOSE >= __VERBOSE_LEVEL_INFO)); then
     echo >&2 "+ $*"
   fi
   (
