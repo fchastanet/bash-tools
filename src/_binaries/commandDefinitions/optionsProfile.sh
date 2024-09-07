@@ -7,6 +7,7 @@ profileOptionHelpFunction() {
 }
 
 initProfileCommandCallback() {
+  # shellcheck disable=SC2154
   if [[ "${optionProfile}" != "default" && -n "${optionTables}" ]]; then
     Log::fatal "Command ${SCRIPT_NAME} - you cannot use table and profile options at the same time"
   fi

@@ -1,0 +1,76 @@
+[1;37mSYNOPSIS:[0m
+    Push/Pull postman collections of all the configured repositories.
+
+[1;37mUSAGE:[0m postmanCli [OPTIONS] [ARGUMENTS]
+[1;37mUSAGE:[0m postmanCli [--help|-h] [--config]
+  [--bash-framework-config <bash-framework-config>] [--verbose|-v] [-vv] [-vvv]
+  [--env-file <env-file>] [--log-level <log-level>] [--log-file <log-file>]
+  [--display-level <display-level>] [--no-color] [--theme <theme>] [--version]
+  [--quiet|-q] [--postman-model|-m <configFile>]
+
+[1;37mARGUMENTS:[0m
+  [[1;34mcommand[0m {single}]
+    [1;34mpull[0m
+      Pull collections from Postman back to repositories.
+    [1;34mpush[0m
+      Push repositories collections to Postman.
+  [[1;34mref[0m {list} (optional)]
+    List of postman collection's references to pull or push
+    or no argument to pull or push all the collections
+
+[1;37mGLOBAL OPTIONS:[0m
+  [1;34m--help[0m, [1;34m-h[0m {single}
+    Displays this command help
+  [1;34m--config[0m {single}
+    Displays configuration
+  [1;34m--bash-framework-config <bash-framework-config>[0m {single}
+    Use alternate bash framework configuration.
+  [1;34m--verbose[0m, [1;34m-v[0m {single}
+    Info level verbose mode (alias of --display-level INFO)
+  [1;34m-vv[0m {single}
+    Debug level verbose mode (alias of --display-level DEBUG)
+  [1;34m-vvv[0m {single}
+    Trace level verbose mode (alias of --display-level TRACE)
+  [1;34m--env-file <env-file>[0m {list} (optional)
+    Load the specified env file (deprecated, please use --bash-framework-con
+    fig option instead)
+  [1;34m--log-level <log-level>[0m {single}
+    Set log level
+    Possible values: OFF, ERR, ERROR, WARN, WARNING, INFO, DEBUG, TRACE
+  [1;34m--log-file <log-file>[0m {single}
+    Set log file
+  [1;34m--display-level <display-level>[0m {single}
+    Set display level
+    Possible values: OFF, ERR, ERROR, WARN, WARNING, INFO, DEBUG, TRACE
+  [1;34m--no-color[0m {single}
+    Produce monochrome output. alias of --theme noColor.
+  [1;34m--theme <theme>[0m {single}
+    Choose color theme - default-force means colors will be produced even if
+    command is piped.
+    Possible values: default, default-force, noColor
+    Default value: default
+  [1;34m--version[0m {single}
+    Print version information and quit.
+  [1;34m--quiet[0m, [1;34m-q[0m {single}
+    Quiet mode, doesn't display any output.
+
+[1;37mPUSH/PULL OPTIONS:[0m
+  [1;34m--postman-model[0m, [1;34m-m <configFile>[0m {single}
+    postmanCli model file to use
+    Default value: <currentDir>/postmanCli.collections.json
+
+
+[1;37mDESCRIPTION:[0m
+  [1;37mEXIT CODES:[0m
+    [1;34m1[0m: if commit does not exists
+    [1;34m2[0m: if ref is not convertible to commit oid
+    [1;34m3[0m: if commit is not included in given branch
+
+[1;37mVERSION: [0m3.0
+
+[1;37mAUTHOR: [0m[François Chastanet](https://github.com/fchastanet)
+
+[1;37mSOURCE FILE: [0mhttps://github.com/fchastanet/bash-tools-framework/tree/master/src/_binaries/Postman/postmanCli/postmanCli-binary.yaml
+
+[1;37mLICENSE: [0mMIT License
+Copyright (c) 2020-now François Chastanet
