@@ -1,0 +1,115 @@
+[1;37mSYNOPSIS:[0m
+    Retrieve latest binary release from github and install it.
+
+[1;37mUSAGE:[0m upgradeGithubRelease [OPTIONS] [ARGUMENTS]
+[1;37mUSAGE:[0m upgradeGithubRelease [--help|-h] [--config]
+  [--bash-framework-config <bash-framework-config>] [--verbose|-v] [-vv] [-vvv]
+  [--env-file <env-file>] [--log-level <log-level>] [--log-file <log-file>]
+  [--display-level <display-level>] [--no-color] [--theme <theme>] [--version]
+  [--quiet|-q] [--version-arg <versionArg>]
+  [--current-version|-c <currentVersion>] [--exact-version|-e <exactVersion>]
+
+[1;37mARGUMENTS:[0m
+  [1;34mtargetFile[0m {single} (mandatory)
+    The binary downloaded will be written to this file path. Ensure the path
+    is writable.
+  [1;34mgithubUrlPattern[0m {single} (mandatory)
+    The url pattern to use to download the binary, see examples below.
+    @version@ is template variable that will be replaced by the latest
+      version tag found on github.
+
+[1;37mGLOBAL OPTIONS:[0m
+  [1;34m--help[0m, [1;34m-h[0m {single}
+    Displays this command help
+  [1;34m--config[0m {single}
+    Displays configuration
+  [1;34m--bash-framework-config <bash-framework-config>[0m {single}
+    Use alternate bash framework configuration.
+  [1;34m--verbose[0m, [1;34m-v[0m {single}
+    Info level verbose mode (alias of --display-level INFO)
+  [1;34m-vv[0m {single}
+    Debug level verbose mode (alias of --display-level DEBUG)
+  [1;34m-vvv[0m {single}
+    Trace level verbose mode (alias of --display-level TRACE)
+  [1;34m--env-file <env-file>[0m {list} (optional)
+    Load the specified env file (deprecated, please use --bash-framework-con
+    fig option instead)
+  [1;34m--log-level <log-level>[0m {single}
+    Set log level
+    Possible values: OFF, ERR, ERROR, WARN, WARNING, INFO, DEBUG, TRACE
+  [1;34m--log-file <log-file>[0m {single}
+    Set log file
+  [1;34m--display-level <display-level>[0m {single}
+    Set display level
+    Possible values: OFF, ERR, ERROR, WARN, WARNING, INFO, DEBUG, TRACE
+  [1;34m--no-color[0m {single}
+    Produce monochrome output. alias of --theme noColor.
+  [1;34m--theme <theme>[0m {single}
+    Choose color theme - default-force means colors will be produced even if
+    command is piped.
+    Possible values: default, default-force, noColor
+    Default value: default
+  [1;34m--version[0m {single}
+    Print version information and quit.
+  [1;34m--quiet[0m, [1;34m-q[0m {single}
+    Quiet mode, doesn't display any output.
+
+[1;37mVERSION MANAGEMENT:[0m
+  [1;34m--version-arg <versionArg>[0m {single}
+    The argument that will be provided to the currently installed binary
+    to check the version of the software. See options constraints below.
+
+    Default value: --version
+  [1;34m--current-version[0m, [1;34m-c <currentVersion>[0m {single}
+    Sometimes the command to retrieve the version is complicated.
+    Some command needs you to parse json or other commands
+    that provides multiple sub command versions.
+    In this case you can provide the version you currently have.
+    See options constraints and examples below.
+  [1;34m--exact-version[0m, [1;34m-e <exactVersion>[0m {single}
+    If provided and currently installed binary is not this exactVersion,
+    this exact version of the binary will be installed.
+    See options constraints below.
+
+
+[1;37mDESCRIPTION:[0m
+  [1;37mGITHUB TEMPLATE URLS EXAMPLES:[0m
+
+    Simple ones(Sometimes @version@ template variable has to be specified twice):[2;97m
+    "https://github.com/hadolint/hadolint/releases/download/v@version@/hadolint-Linux-x86_64"
+    "https://github.com/koalaman/shellcheck/releases/download/v@version@/shellcheck-v@version@.linux.x86_64.tar.xz"
+    "https://github.com/sharkdp/fd/releases/download/v@version@/fd_@version@_amd64.deb"
+    "https://github.com/sharkdp/bat/releases/download/v@version@/bat_@version@_amd64.deb"
+    "https://github.com/kubernetes-sigs/kind/releases/download/v@version@/kind-linux-amd64"
+    "https://github.com/kubernetes/minikube/releases/download/v@version@/minikube-linux-amd64"
+    "https://github.com/plantuml/plantuml/releases/download/v@version@/plantuml-@version@.jar"
+    "https://github.com/Versent/saml2aws/releases/download/v@version@/saml2aws_@version@_linux_amd64.tar.gz"
+[0m
+    If you want to add a condition on architecture(linux, windows, x86, 64/32 bits):[2;97m
+    "https://github.com/docker/compose/releases/download/v@version@/docker-compose-$(uname -s | tr "[:upper:]" "[:lower:]")-$(uname -m)"
+    "https://github.com/docker/docker-credential-helpers/releases/download/v@version@/docker-credential-wincred-v@version@.windows-$(dpkg --print-architecture).exe"
+    "https://github.com/Blacksmoke16/oq/releases/download/v@version@/oq-v@version@-$(uname -s)-$(uname -m)"
+[0m
+  [1;37mCOMMAND EXAMPLES:[0m
+[0m
+    Download docker-compose latest version[2;97m
+    upgradeGithubRelease /usr/local/bin/docker-compose \
+      "https://github.com/docker/compose/releases/download/v@version@/docker-compose-$(uname -s | tr "[:upper:]" "[:lower:]")-$(uname -m)"
+[0m
+    Download oq specific version[2;97m
+    upgradeGithubRelease /usr/local/bin/oq --exact-version 1.3.4 \
+      "https://github.com/Blacksmoke16/oq/releases/download/v@version@/oq-v@version@-$(uname -s)-$(uname -m)"
+[0m
+    Download oq specific version correctly retrieving the oq version and not the jq one[2;97m
+    upgradeGithubRelease /usr/local/bin/oq --exact-version 1.3.4 --version-arg '-V | grep oq:' \
+      "https://github.com/Blacksmoke16/oq/releases/download/v@version@/oq-v@version@-$(uname -s)-$(uname -m)"
+[0m
+
+[1;37mVERSION: [0m3.0
+
+[1;37mAUTHOR: [0m[François Chastanet](https://github.com/fchastanet)
+
+[1;37mSOURCE FILE: [0mhttps://github.com/fchastanet/bash-tools-framework/tree/master/src/_binaries/Git/upgradeGithubRelease/upgradeGithubRelease-binary.yaml
+
+[1;37mLICENSE: [0mMIT License
+Copyright (c) 2020-now François Chastanet

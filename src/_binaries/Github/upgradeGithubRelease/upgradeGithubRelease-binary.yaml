@@ -1,0 +1,79 @@
+extends:
+  - "${BASH_TOOLS_ROOT_DIR}/src/_binaries/commandDefinitions/optionsVersion.yaml"
+  - "${FRAMEWORK_ROOT_DIR}/src/_binaries/commandDefinitions/defaultCommand.yaml"
+  - "${FRAMEWORK_ROOT_DIR}/src/_binaries/commandDefinitions/frameworkConfig.yaml"
+
+vars:
+  SRC_FILE_PATH: src/_binaries/Git/upgradeGithubRelease/upgradeGithubRelease-binary.yaml
+
+compilerConfig:
+  targetFile: "${BASH_TOOLS_ROOT_DIR}/bin/upgradeGithubRelease"
+  relativeRootDirBasedOnTargetDir: ..
+  srcDirs:
+    - ${BASH_TOOLS_ROOT_DIR}/src
+binData:
+  commands:
+    default:
+      functionName: upgradeGithubReleaseCommand
+      version: "3.0"
+      copyrightBeginYear: 2020
+      commandName: upgradeGithubRelease
+      beforeParseCallbacks:
+        - beforeParseCallback
+        - specificRequirements
+      definitionFiles:
+        20: ${BASH_TOOLS_ROOT_DIR}/src/_binaries/Github/upgradeGithubRelease/upgradeGithubRelease-options.sh
+      mainFile: ${BASH_TOOLS_ROOT_DIR}/src/_binaries/Github/upgradeGithubRelease/upgradeGithubRelease-main.sh
+      help: Retrieve latest binary release from github and install it.
+      longDescription: longDescriptionFunction
+      args:
+        - type: String
+          min: 1
+          max: 1
+          help:
+            The binary downloaded will be written to this file path. Ensure the
+            path is writable.
+          name: targetFile
+          callbacks:
+            - targetFileArgCallback
+          variableName: targetFileArg
+        - type: String
+          min: 1
+          max: 1
+          help: githubUrlPatternHelpFunction
+          name: githubUrlPattern
+          callbacks:
+            - githubUrlPatternArgCallback
+          variableName: githubUrlPatternArg
+      optionGroups:
+        groupVersionManagementFunction:
+          title: "VERSION MANAGEMENT:"
+      options:
+        - variableName: optionVersionArg
+          group: groupVersionManagementFunction
+          type: String
+          help: |
+            The argument that will be provided to the currently installed binary
+            to check the version of the software. See options constraints below.
+          helpValueName: versionArg
+          defaultValue: "--version"
+          alts:
+            - --version-arg
+
+        - variableName: optionCurrentVersion
+          group: groupVersionManagementFunction
+          type: String
+          help: optionCurrentVersionHelpFunction
+          helpValueName: currentVersion
+          alts:
+            - --current-version
+            - -c
+
+        - variableName: optionExactVersion
+          group: groupVersionManagementFunction
+          type: String
+          help: exactVersionHelpFunction
+          helpValueName: exactVersion
+          alts:
+            - --exact-version
+            - -e
