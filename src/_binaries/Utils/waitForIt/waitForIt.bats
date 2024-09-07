@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # shellcheck source=src/batsHeaders.sh
-source "$(cd "${BATS_TEST_DIRNAME}/../.." && pwd)/batsHeaders.sh"
+source "$(cd "${BATS_TEST_DIRNAME}/../../.." && pwd)/batsHeaders.sh"
 
 setup() {
   export TMPDIR="${BATS_TEST_TMPDIR}"
@@ -27,27 +27,27 @@ function Utils::waitForIt::noArgs { #@test
 
   assert_failure 1
   assert_lines_count 1
-  assert_output --partial "ERROR   - Command waitForIt - Option '--host' should be provided at least 1 time(s)"
+  assert_output --partial "ERROR   - Command waitForIt - Argument 'hostOrIp' should be provided at least 1 time(s)"
 }
 
 function Utils::waitForIt::missingPort { #@test
-  run "${binDir}/waitForIt" --host localhost 2>&1
+  run "${binDir}/waitForIt" localhost 2>&1
 
   assert_failure 1
   assert_lines_count 1
-  assert_output --partial "ERROR   - Command waitForIt - Option '--port' should be provided at least 1 time(s)"
+  assert_output --partial "ERROR   - Command waitForIt - Argument 'port' should be provided at least 1 time(s)"
 }
 
 function Utils::waitForIt::missingHost { #@test
-  run "${binDir}/waitForIt" --port 8888 2>&1
+  run "${binDir}/waitForIt" 8888 2>&1
 
   assert_failure 1
   assert_lines_count 1
-  assert_output --partial "ERROR   - Command waitForIt - Option '--host' should be provided at least 1 time(s)"
+  assert_output --partial "ERROR   - Command waitForIt - Argument 'port' should be provided at least 1 time(s)"
 }
 
 function Utils::waitForIt::invalidTimeout { #@test
-  run "${binDir}/waitForIt" --host localhost --port 8888 --timeout invalid 2>&1
+  run "${binDir}/waitForIt" localhost 8888 --timeout invalid 2>&1
 
   assert_failure 1
   assert_lines_count 1
@@ -55,17 +55,17 @@ function Utils::waitForIt::invalidTimeout { #@test
 }
 
 function Utils::waitForIt::invalidAlgo { #@test
-  run "${binDir}/waitForIt" --host localhost --port 8888 --algo invalid 2>&1
+  run "${binDir}/waitForIt" localhost 8888 --algo invalid 2>&1
 
   assert_failure 1
   assert_lines_count 1
-  assert_output --partial "FATAL   - waitForIt - invalid algorithm 'invalid'"
+  assert_output --partial "FATAL   - waitForIt - invalid algorithm option 'invalid'"
 }
 
 function Utils::waitForIt::algo::timeoutV1WithNc::WithoutCommand { #@test
-  stub timeout "-t 1 ${binDir}/waitForIt --host localhost --port 8888 --timeout 1 --algo timeoutV1WithNc : ${binDir}/waitForIt --host localhost --port 8888 --timeout 1 --algo timeoutV1WithNc"
+  stub timeout "-t 1 ${binDir}/waitForIt localhost 8888 --timeout 1 --algo timeoutV1WithNc : ${binDir}/waitForIt localhost 8888 --timeout 1 --algo timeoutV1WithNc"
   stub nc "-z localhost 8888 -w 1 : exit 0"
-  run "${binDir}/waitForIt" --host localhost --port 8888 --timeout 1 --algo timeoutV1WithNc 2>&1
+  run "${binDir}/waitForIt" localhost 8888 --timeout 1 --algo timeoutV1WithNc 2>&1
 
   assert_success
   assert_line --index 0 --partial "INFO    - waitForIt - using algorithm timeoutV1WithNc"
@@ -76,10 +76,10 @@ function Utils::waitForIt::algo::timeoutV1WithNc::WithoutCommand { #@test
 }
 
 function Utils::waitForIt::algo::timeoutV1WithNc::ExecCommand { #@test
-  stub timeout "-t 1 ${binDir}/waitForIt --host localhost --port 8888 --timeout 1 --algo timeoutV1WithNc echo success : \
-    ${binDir}/waitForIt --host localhost --port 8888 --timeout 1 --algo timeoutV1WithNc echo success"
+  stub timeout "-t 1 ${binDir}/waitForIt localhost 8888 --timeout 1 --algo timeoutV1WithNc echo success : \
+    ${binDir}/waitForIt localhost 8888 --timeout 1 --algo timeoutV1WithNc echo success"
   stub nc "-z localhost 8888 -w 1 : exit 0"
-  run "${binDir}/waitForIt" --host localhost --port 8888 --timeout 1 --algo timeoutV1WithNc echo "success" 2>&1
+  run "${binDir}/waitForIt" localhost 8888 --timeout 1 --algo timeoutV1WithNc echo "success" 2>&1
 
   assert_success
   assert_line --index 0 --partial "INFO    - waitForIt - using algorithm timeoutV1WithNc"
@@ -98,8 +98,8 @@ function Utils::waitForIt::algo::timeoutV1WithNc::NoCommandExecutedIfFailed { #@
   chmod +x "${HOME}/bin/nc"
 
   stub timeout \
-    "-t 1 ${binDir}/waitForIt --host localhost --port 8888 --timeout 1 --strict --algo timeoutV1WithNc echo success : ${binDir}/waitForIt --host localhost --port 8888 --timeout 1 --strict --algo timeoutV1WithNc echo success"
-  run "${binDir}/waitForIt" --host localhost --port 8888 --timeout 1 --strict --algo timeoutV1WithNc echo "success" 2>&1
+    "-t 1 ${binDir}/waitForIt localhost 8888 --timeout 1 --strict --algo timeoutV1WithNc echo success : ${binDir}/waitForIt localhost 8888 --timeout 1 --strict --algo timeoutV1WithNc echo success"
+  run "${binDir}/waitForIt" localhost 8888 --timeout 1 --strict --algo timeoutV1WithNc echo "success" 2>&1
 
   assert_failure 2
   assert_line --index 0 --partial "INFO    - waitForIt - using algorithm timeoutV1WithNc"
@@ -111,9 +111,9 @@ function Utils::waitForIt::algo::timeoutV1WithNc::NoCommandExecutedIfFailed { #@
 }
 
 function Utils::waitForIt::algo::timeoutV2WithNc::WithoutCommand { #@test
-  stub timeout "1 ${binDir}/waitForIt --host localhost --port 8888 --timeout 1 --algo timeoutV2WithNc : ${binDir}/waitForIt --host localhost --port 8888 --timeout 1 --algo timeoutV2WithNc"
+  stub timeout "1 ${binDir}/waitForIt localhost 8888 --timeout 1 --algo timeoutV2WithNc : ${binDir}/waitForIt localhost 8888 --timeout 1 --algo timeoutV2WithNc"
   stub nc "-z localhost 8888 -w 1 : exit 0"
-  run "${binDir}/waitForIt" --host localhost --port 8888 --timeout 1 --algo timeoutV2WithNc 2>&1
+  run "${binDir}/waitForIt" localhost 8888 --timeout 1 --algo timeoutV2WithNc 2>&1
 
   assert_success
   assert_line --index 0 --partial "INFO    - waitForIt - using algorithm timeoutV2WithNc"
@@ -123,10 +123,10 @@ function Utils::waitForIt::algo::timeoutV2WithNc::WithoutCommand { #@test
 }
 
 function Utils::waitForIt::algo::timeoutV2WithNc::ExecCommand { #@test
-  stub timeout "1 ${binDir}/waitForIt --host localhost --port 8888 --timeout 1 --algo timeoutV2WithNc echo success : \
-    ${binDir}/waitForIt --host localhost --port 8888 --timeout 1 --algo timeoutV2WithNc echo success"
+  stub timeout "1 ${binDir}/waitForIt localhost 8888 --timeout 1 --algo timeoutV2WithNc echo success : \
+    ${binDir}/waitForIt localhost 8888 --timeout 1 --algo timeoutV2WithNc echo success"
   stub nc "-z localhost 8888 -w 1 : exit 0"
-  run "${binDir}/waitForIt" --host localhost --port 8888 --timeout 1 --algo timeoutV2WithNc echo "success" 2>&1
+  run "${binDir}/waitForIt" localhost 8888 --timeout 1 --algo timeoutV2WithNc echo "success" 2>&1
 
   assert_success
   assert_line --index 0 --partial "INFO    - waitForIt - using algorithm timeoutV2WithNc"
@@ -144,8 +144,8 @@ function Utils::waitForIt::algo::timeoutV2WithNc::NoCommandExecutedIfFailed { #@
   chmod +x "${HOME}/bin/nc"
 
   stub timeout \
-    "1 ${binDir}/waitForIt --host localhost --port 8888 --timeout 1 --strict --algo timeoutV2WithNc echo success : ${binDir}/waitForIt --host localhost --port 8888 --timeout 1 --strict --algo timeoutV2WithNc echo success"
-  run "${binDir}/waitForIt" --host localhost --port 8888 --timeout 1 --strict --algo timeoutV2WithNc echo "success" 2>&1
+    "1 ${binDir}/waitForIt localhost 8888 --timeout 1 --strict --algo timeoutV2WithNc echo success : ${binDir}/waitForIt localhost 8888 --timeout 1 --strict --algo timeoutV2WithNc echo success"
+  run "${binDir}/waitForIt" localhost 8888 --timeout 1 --strict --algo timeoutV2WithNc echo "success" 2>&1
 
   assert_failure 2
   assert_line --index 0 --partial "INFO    - waitForIt - using algorithm timeoutV2WithNc"
@@ -164,8 +164,8 @@ function Utils::waitForIt::algo::timeoutV1WithTcp::WithoutCommand { #@test
     echo "mocked $*"
   }
   export -f mockedTcp
-  stub timeout "-t 1 ${binDir}/waitForIt --host localhost --port 8888 --timeout 1 --algo timeoutV1WithTcp : ${binDir}/waitForIt --host localhost --port 8888 --timeout 1 --algo timeoutV1WithTcp"
-  run "${binDir}/waitForIt" --host localhost --port 8888 --timeout 1 --algo timeoutV1WithTcp 2>&1
+  stub timeout "-t 1 ${binDir}/waitForIt localhost 8888 --timeout 1 --algo timeoutV1WithTcp : ${binDir}/waitForIt localhost 8888 --timeout 1 --algo timeoutV1WithTcp"
+  run "${binDir}/waitForIt" localhost 8888 --timeout 1 --algo timeoutV1WithTcp 2>&1
 
   assert_success
   assert_line --index 0 --partial "INFO    - waitForIt - using algorithm timeoutV1WithTcp"
@@ -182,9 +182,9 @@ function Utils::waitForIt::algo::timeoutV1WithTcp::ExecCommand { #@test
     echo "mocked $*"
   }
   export -f mockedTcp
-  stub timeout "-t 1 ${binDir}/waitForIt --host localhost --port 8888 --timeout 1 --algo timeoutV1WithTcp echo success : \
-    ${binDir}/waitForIt --host localhost --port 8888 --timeout 1 --algo timeoutV1WithTcp echo success"
-  run "${binDir}/waitForIt" --host localhost --port 8888 --timeout 1 --algo timeoutV1WithTcp echo "success" 2>&1
+  stub timeout "-t 1 ${binDir}/waitForIt localhost 8888 --timeout 1 --algo timeoutV1WithTcp echo success : \
+    ${binDir}/waitForIt localhost 8888 --timeout 1 --algo timeoutV1WithTcp echo success"
+  run "${binDir}/waitForIt" localhost 8888 --timeout 1 --algo timeoutV1WithTcp echo "success" 2>&1
 
   assert_success
   assert_line --index 0 --partial "INFO    - waitForIt - using algorithm timeoutV1WithTcp"
@@ -203,8 +203,8 @@ function Utils::waitForIt::algo::timeoutV1WithTcp::NoCommandExecutedIfFailed { #
   }
   export -f mockedTcp
   stub timeout \
-    "-t 1 ${binDir}/waitForIt --host localhost --port 8888 --timeout 1 --strict --algo timeoutV1WithTcp echo success : ${binDir}/waitForIt --host localhost --port 8888 --timeout 1 --strict --algo timeoutV1WithTcp echo success"
-  run "${binDir}/waitForIt" --host localhost --port 8888 --timeout 1 --strict --algo timeoutV1WithTcp echo "success" 2>&1
+    "-t 1 ${binDir}/waitForIt localhost 8888 --timeout 1 --strict --algo timeoutV1WithTcp echo success : ${binDir}/waitForIt localhost 8888 --timeout 1 --strict --algo timeoutV1WithTcp echo success"
+  run "${binDir}/waitForIt" localhost 8888 --timeout 1 --strict --algo timeoutV1WithTcp echo "success" 2>&1
 
   assert_failure 2
   assert_line --index 0 --partial "INFO    - waitForIt - using algorithm timeoutV1WithTcp"
@@ -221,8 +221,8 @@ function Utils::waitForIt::algo::timeoutV2WithTcp::WithoutCommand { #@test
     return 0
   }
   export -f mockedTcp
-  stub timeout "1 ${binDir}/waitForIt --host localhost --port 8888 --timeout 1 --algo timeoutV2WithTcp : ${binDir}/waitForIt --host localhost --port 8888 --timeout 1 --algo timeoutV2WithTcp"
-  run "${binDir}/waitForIt" --host localhost --port 8888 --timeout 1 --algo timeoutV2WithTcp 2>&1
+  stub timeout "1 ${binDir}/waitForIt localhost 8888 --timeout 1 --algo timeoutV2WithTcp : ${binDir}/waitForIt localhost 8888 --timeout 1 --algo timeoutV2WithTcp"
+  run "${binDir}/waitForIt" localhost 8888 --timeout 1 --algo timeoutV2WithTcp 2>&1
 
   assert_success
   assert_line --index 0 --partial "INFO    - waitForIt - using algorithm timeoutV2WithTcp"
@@ -238,9 +238,9 @@ function Utils::waitForIt::algo::timeoutV2WithTcp::ExecCommand { #@test
     return 0
   }
   export -f mockedTcp
-  stub timeout "1 ${binDir}/waitForIt --host localhost --port 8888 --timeout 1 --algo timeoutV2WithTcp echo success : \
-    ${binDir}/waitForIt --host localhost --port 8888 --timeout 1 --algo timeoutV2WithTcp echo success"
-  run "${binDir}/waitForIt" --host localhost --port 8888 --timeout 1 --algo timeoutV2WithTcp echo "success" 2>&1
+  stub timeout "1 ${binDir}/waitForIt localhost 8888 --timeout 1 --algo timeoutV2WithTcp echo success : \
+    ${binDir}/waitForIt localhost 8888 --timeout 1 --algo timeoutV2WithTcp echo success"
+  run "${binDir}/waitForIt" localhost 8888 --timeout 1 --algo timeoutV2WithTcp echo "success" 2>&1
 
   assert_success
   assert_line --index 0 --partial "INFO    - waitForIt - using algorithm timeoutV2WithTcp"
@@ -258,8 +258,8 @@ function Utils::waitForIt::algo::timeoutV2WithTcp::NoCommandExecutedIfFailed { #
   }
   export -f mockedTcp
   stub timeout \
-    "1 ${binDir}/waitForIt --host localhost --port 8888 --timeout 1 --strict --algo timeoutV2WithTcp echo success : ${binDir}/waitForIt --host localhost --port 8888 --timeout 1 --strict --algo timeoutV2WithTcp echo success"
-  run "${binDir}/waitForIt" --host localhost --port 8888 --timeout 1 --strict --algo timeoutV2WithTcp echo "success" 2>&1
+    "1 ${binDir}/waitForIt localhost 8888 --timeout 1 --strict --algo timeoutV2WithTcp echo success : ${binDir}/waitForIt localhost 8888 --timeout 1 --strict --algo timeoutV2WithTcp echo success"
+  run "${binDir}/waitForIt" localhost 8888 --timeout 1 --strict --algo timeoutV2WithTcp echo "success" 2>&1
 
   assert_failure 2
   assert_line --index 0 --partial "INFO    - waitForIt - using algorithm timeoutV2WithTcp"
@@ -278,8 +278,8 @@ function Utils::waitForIt::algo::whileLoopWithTcp::WithoutCommand { #@test
     echo "mocked $*"
   }
   export -f mockedTcp
-  stub timeout "-t 1 ${binDir}/waitForIt --host localhost --port 8888 --timeout 1 --algo whileLoopWithTcp : ${binDir}/waitForIt --host localhost --port 8888 --timeout 1 --algo whileLoopWithTcp"
-  run "${binDir}/waitForIt" --host localhost --port 8888 --timeout 1 --algo whileLoopWithTcp 2>&1
+  stub timeout "-t 1 ${binDir}/waitForIt localhost 8888 --timeout 1 --algo whileLoopWithTcp : ${binDir}/waitForIt localhost 8888 --timeout 1 --algo whileLoopWithTcp"
+  run "${binDir}/waitForIt" localhost 8888 --timeout 1 --algo whileLoopWithTcp 2>&1
 
   assert_success
   assert_line --index 0 --partial "INFO    - waitForIt - using algorithm whileLoopWithTcp"
@@ -296,9 +296,9 @@ function Utils::waitForIt::algo::whileLoopWithTcp::ExecCommand { #@test
     echo "mocked $*"
   }
   export -f mockedTcp
-  stub timeout "-t 1 ${binDir}/waitForIt --host localhost --port 8888 --timeout 1 --algo whileLoopWithTcp echo success : \
-    ${binDir}/waitForIt --host localhost --port 8888 --timeout 1 --algo whileLoopWithTcp echo success"
-  run "${binDir}/waitForIt" --host localhost --port 8888 --timeout 1 --algo whileLoopWithTcp echo "success" 2>&1
+  stub timeout "-t 1 ${binDir}/waitForIt localhost 8888 --timeout 1 --algo whileLoopWithTcp echo success : \
+    ${binDir}/waitForIt localhost 8888 --timeout 1 --algo whileLoopWithTcp echo success"
+  run "${binDir}/waitForIt" localhost 8888 --timeout 1 --algo whileLoopWithTcp echo "success" 2>&1
 
   assert_success
   assert_line --index 0 --partial "INFO    - waitForIt - using algorithm whileLoopWithTcp"
@@ -316,7 +316,7 @@ function Utils::waitForIt::algo::whileLoopWithTcp::NoCommandExecutedIfFailed { #
     return 1
   }
   export -f mockedTcp
-  run "${binDir}/waitForIt" --host localhost --port 8888 --timeout 1 --strict --algo whileLoopWithTcp echo "success" 2>&1
+  run "${binDir}/waitForIt" localhost 8888 --timeout 1 --strict --algo whileLoopWithTcp echo "success" 2>&1
 
   assert_failure 2
   assert_line --index 0 --partial "INFO    - waitForIt - using algorithm whileLoopWithTcp"
@@ -332,7 +332,7 @@ function Utils::waitForIt::algo::whileLoopWithNc::WithoutCommand { #@test
     echo 'exit 0'
   ) >"${HOME}/bin/nc"
   chmod +x "${HOME}/bin/nc"
-  run "${binDir}/waitForIt" --host localhost --port 8888 --timeout 1 --algo whileLoopWithNc 2>&1
+  run "${binDir}/waitForIt" localhost 8888 --timeout 1 --algo whileLoopWithNc 2>&1
 
   assert_success
   assert_line --index 0 --partial "INFO    - waitForIt - using algorithm whileLoopWithNc"
@@ -347,7 +347,7 @@ function Utils::waitForIt::algo::whileLoopWithNc::ExecCommand { #@test
     echo 'exit 0'
   ) >"${HOME}/bin/nc"
   chmod +x "${HOME}/bin/nc"
-  run "${binDir}/waitForIt" --host localhost --port 8888 --timeout 1 --algo whileLoopWithNc echo "success" 2>&1
+  run "${binDir}/waitForIt" localhost 8888 --timeout 1 --algo whileLoopWithNc echo "success" 2>&1
 
   assert_success
   assert_line --index 0 --partial "INFO    - waitForIt - using algorithm whileLoopWithNc"
@@ -363,7 +363,7 @@ function Utils::waitForIt::algo::whileLoopWithNc::NoCommandExecutedIfFailed { #@
     echo 'exit 1'
   ) >"${HOME}/bin/nc"
   chmod +x "${HOME}/bin/nc"
-  run "${binDir}/waitForIt" --host localhost --port 8888 --timeout 1 --strict --algo whileLoopWithNc echo "success" 2>&1
+  run "${binDir}/waitForIt" localhost 8888 --timeout 1 --strict --algo whileLoopWithNc echo "success" 2>&1
 
   assert_failure 2
   assert_line --index 0 --partial "INFO    - waitForIt - using algorithm whileLoopWithNc"

@@ -1,0 +1,21 @@
+---
+binData:
+  commands:
+    default:
+      definitionFiles:
+        27: "${BASH_TOOLS_ROOT_DIR}/src/_binaries/commandDefinitions/optionsTimeout.sh"
+      optionGroups:
+        groupTimeoutOptions:
+          title: "TIMEOUT OPTIONS:"
+      options:
+        - variableName: optionTimeout
+          group: groupTimeoutOptions
+          type: String
+          help: Timeout in seconds, zero for no timeout.
+          helpValueName: timeout
+          defaultValue: 15
+          callbacks:
+            - optionTimeoutCallback
+          alts:
+            - --timeout
+            - -t

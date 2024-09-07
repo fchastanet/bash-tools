@@ -16,9 +16,8 @@ function BashTools::runVerboseIfNeeded::noTrace { #@test
 }
 
 function BashTools::runVerboseIfNeeded::trace { #@test
-  export optionInfoVerbose="1"
   cmdTest() {
-    optionInfoVerbose="1" BashTools::runVerboseIfNeeded echo "coucou"
+    BASH_FRAMEWORK_ARGS_VERBOSE=__VERBOSE_LEVEL_INFO BashTools::runVerboseIfNeeded echo "coucou"
   }
   run cmdTest
   assert_lines_count 2
@@ -28,9 +27,9 @@ function BashTools::runVerboseIfNeeded::trace { #@test
 }
 
 function BashTools::runVerboseIfNeeded::redirectCmdOutputs { #@test
-  export
+  export BASH_FRAMEWORK_ARGS_VERBOSE
   cmdTest() {
-    optionInfoVerbose="1" optionRedirectCmdOutputs="/dev/null" BashTools::runVerboseIfNeeded echo "coucou"
+    BASH_FRAMEWORK_ARGS_VERBOSE=__VERBOSE_LEVEL_INFO optionRedirectCmdOutputs="/dev/null" BashTools::runVerboseIfNeeded echo "coucou"
   }
   run cmdTest
   assert_output '+ echo coucou'
