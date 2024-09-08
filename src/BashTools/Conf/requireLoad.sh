@@ -1,10 +1,13 @@
 #!/bin/bash
 
+read -r -d '\0' bashToolsDefaultConfigTemplate <<-EOM || true
+#{{ include ".env" .Data . -}}
+EOM
+
 # @description loads ~/.bash-tools/.env if available
 # if not creates it from a default template
 # else check if new options need to be added
 BashTools::Conf::requireLoad() {
-  # @embed "${BASH_TOOLS_ROOT_DIR}/conf/.env" as bashToolsDefaultConfigTemplate
   BASH_TOOLS_ROOT_DIR="$(cd "${CURRENT_DIR}/${RELATIVE_FRAMEWORK_DIR_TO_CURRENT_DIR}" && pwd -P)"
   if [[ -d "${BASH_TOOLS_ROOT_DIR}/vendor/bash-tools-framework/" ]]; then
     FRAMEWORK_ROOT_DIR="$(cd "${BASH_TOOLS_ROOT_DIR}/vendor/bash-tools-framework" && pwd -P)"
@@ -32,7 +35,7 @@ BashTools::Conf::requireLoad() {
     (
       echo "#!/usr/bin/env bash"
       # shellcheck disable=SC2154
-      echo "${embed_file_bashToolsDefaultConfigTemplate}"
+      echo "${bashToolsDefaultConfigTemplate}"
     ) >"${envFile}"
     Log::displayInfo "Configuration file '${envFile}' created"
   else
@@ -45,7 +48,7 @@ BashTools::Conf::requireLoad() {
       ) >>"${envFile}"
     fi
   fi
-  # shellcheck source=/conf/.env
+  # shellcheck source=/conf/defaultEnv/.env
   source "${envFile}" || {
     Log::displayError "impossible to load '${envFile}'"
     exit 1

@@ -6,10 +6,7 @@ declare HOME_PROFILES_DIR
 declare defaultFromDsn="default.remote"
 
 beforeParseCallback() {
-  BashTools::Conf::requireLoad
-  Env::requireLoad
-  UI::requireTheme
-  Log::requireLoad
+  defaultBeforeParseCallback
   Linux::requireExecutedAsUser
   Linux::requireRealpathCommand
 }
@@ -17,6 +14,7 @@ beforeParseCallback() {
 initConf() {
   # shellcheck disable=SC2034
   PROFILES_DIR="${BASH_TOOLS_ROOT_DIR}/conf/dbImportProfiles"
+  # shellcheck disable=SC2034
   HOME_PROFILES_DIR="${HOME}/.bash-tools/dbImportProfiles"
   Db::checkRequirements
 }
@@ -27,23 +25,9 @@ optionHelpCallback() {
 }
 
 longDescriptionFunction() {
-  local profilesList=""
-  local dsnList=""
-  dsnList="$(Conf::getMergedList "dsn" "env")"
-  profilesList="$(Conf::getMergedList "dbImportProfiles" "sh" || true)"
-
-  echo -e "${__HELP_TITLE}Default profiles directory:${__HELP_NORMAL}"
-  echo -e "${PROFILES_DIR-configuration error}"
+  fromDsnOptionLongDescription
   echo
-  echo -e "${__HELP_TITLE}User profiles directory:${__HELP_NORMAL}"
-  echo -e "${HOME_PROFILES_DIR-configuration error}"
-  echo -e "Allows to override profiles defined in 'Default profiles directory'"
-  echo
-  echo -e "${__HELP_TITLE}List of available profiles:${__HELP_NORMAL}"
-  echo -e "${profilesList}"
-  echo
-  echo -e "${__HELP_TITLE}List of available dsn:${__HELP_NORMAL}"
-  echo -e "${dsnList}"
+  profileOptionLongDescription
 }
 
 dbImportStreamCommandCallback() {

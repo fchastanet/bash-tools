@@ -1,7 +1,9 @@
 extends:
   - "${BASH_TOOLS_ROOT_DIR}/src/_binaries/commandDefinitions/optionsProfile.yaml"
+  - "${BASH_TOOLS_ROOT_DIR}/src/_binaries/commandDefinitions/optionsTables.yaml"
   - "${BASH_TOOLS_ROOT_DIR}/src/_binaries/commandDefinitions/optionsVersion.yaml"
   - "${BASH_TOOLS_ROOT_DIR}/src/_binaries/commandDefinitions/optionsMysqlTarget.yaml"
+  - "${BASH_TOOLS_ROOT_DIR}/src/_binaries/commandDefinitions/optionsDefault.yaml"
   - "${FRAMEWORK_ROOT_DIR}/src/_binaries/commandDefinitions/defaultCommand.yaml"
   - "${FRAMEWORK_ROOT_DIR}/src/_binaries/commandDefinitions/frameworkConfig.yaml"
 
@@ -10,9 +12,7 @@ vars:
 
 compilerConfig:
   targetFile: "${BASH_TOOLS_ROOT_DIR}/bin/dbImportStream"
-  relativeRootDirBasedOnTargetDir: ..
-  srcDirs:
-    - ${BASH_TOOLS_ROOT_DIR}/src
+
 binData:
   commands:
     default:
@@ -27,7 +27,6 @@ binData:
         - dbImportStreamCommandCallback@100
       definitionFiles:
         20: ${BASH_TOOLS_ROOT_DIR}/src/_binaries/Database/dbImportStream/dbImportStream-options.sh
-        99: ${BASH_TOOLS_ROOT_DIR}/src/_binaries/commandDefinitions/optionsDefault.sh
       mainFile: ${BASH_TOOLS_ROOT_DIR}/src/_binaries/Database/dbImportStream/dbImportStream-main.sh
       help: Stream tar.gz file or gz file through mysql.
       longDescription: longDescriptionFunction

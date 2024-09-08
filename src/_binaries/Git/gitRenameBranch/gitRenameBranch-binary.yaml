@@ -1,6 +1,7 @@
 extends:
   - "${BASH_TOOLS_ROOT_DIR}/src/_binaries/Git/gitToolsDefaultOptions.yaml"
   - "${BASH_TOOLS_ROOT_DIR}/src/_binaries/commandDefinitions/optionsVersion.yaml"
+  - "${BASH_TOOLS_ROOT_DIR}/src/_binaries/commandDefinitions/optionsDefault.yaml"
   - "${FRAMEWORK_ROOT_DIR}/src/_binaries/commandDefinitions/defaultCommand.yaml"
   - "${FRAMEWORK_ROOT_DIR}/src/_binaries/commandDefinitions/frameworkConfig.yaml"
 
@@ -9,9 +10,7 @@ vars:
 
 compilerConfig:
   targetFile: "${BASH_TOOLS_ROOT_DIR}/bin/gitRenameBranch"
-  relativeRootDirBasedOnTargetDir: ..
-  srcDirs:
-    - ${BASH_TOOLS_ROOT_DIR}/src
+
 binData:
   commands:
     default:

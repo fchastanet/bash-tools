@@ -10,7 +10,7 @@ setup() {
   mkdir -p "${HOME}/.bash-tools"
   mkdir -p "${HOME}/bin"
   export PATH="${HOME}/bin:${PATH}"
-  cp "${rootDir}/conf/.env" "${HOME}/.bash-tools/.env"
+  cp "${rootDir}/conf/defaultEnv/.env" "${HOME}/.bash-tools/.env"
 }
 
 teardown() {

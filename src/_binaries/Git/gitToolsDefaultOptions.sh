@@ -1,11 +1,8 @@
 #!/usr/bin/env bash
 
 beforeParseCallback() {
+  defaultBeforeParseCallback
   Linux::requireExecutedAsUser
-  BashTools::Conf::requireLoad
-  Env::requireLoad
-  UI::requireTheme
-  Log::requireLoad
 }
 
 declare optionRedirectCmdOutputs=""

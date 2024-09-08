@@ -11,7 +11,7 @@ setup() {
   export TMPDIR="${BATS_TEST_TMPDIR}"
   export HOME="${BATS_TEST_TMPDIR}/home"
   export BASH_FRAMEWORK_THEME="noColor"
-  export bashToolsDefaultConfigTemplate="$(cat "${rootDir}/conf/.env")"
+  export bashToolsDefaultConfigTemplate="$(cat "${rootDir}/conf/defaultEnv/.env")"
 }
 
 function BashTools::Conf::requireLoad::envFileDoesNotExist { #@test
@@ -25,7 +25,7 @@ function BashTools::Conf::requireLoad::envFileDoesNotExist { #@test
 
 function BashTools::Conf::requireLoad::envFileWithApiKeyExists { #@test
   mkdir -p "${HOME}/.bash-tools"
-  cp "${rootDir}/conf/.env" "${HOME}/.bash-tools/.env"
+  cp "${rootDir}/conf/defaultEnv/.env" "${HOME}/.bash-tools/.env"
   sed -i -E -e 's/^POSTMAN_API_KEY=/POSTMAN_API_KEY=fake2/' "${HOME}/.bash-tools/.env"
   local status=0
   BashTools::Conf::requireLoad >"${BATS_TEST_TMPDIR}/result" 2>&1 || status=$?
@@ -37,7 +37,7 @@ function BashTools::Conf::requireLoad::envFileWithApiKeyExists { #@test
 
 function BashTools::Conf::requireLoad::envFileExistsMissingApiKey { #@test
   mkdir -p "${HOME}/.bash-tools"
-  cp "${rootDir}/conf/.env" "${HOME}/.bash-tools/.env"
+  cp "${rootDir}/conf/defaultEnv/.env" "${HOME}/.bash-tools/.env"
   sed -i -E -e 's/^POSTMAN_API_KEY=//' "${HOME}/.bash-tools/.env"
   local status=0
   BashTools::Conf::requireLoad >"${BATS_TEST_TMPDIR}/result" 2>&1 || status=$?
@@ -50,7 +50,7 @@ function BashTools::Conf::requireLoad::envFileExistsMissingApiKey { #@test
 
 function BashTools::Conf::requireLoad::envFileImpossibleToLoad { #@test
   mkdir -p "${HOME}/.bash-tools"
-  cp "${rootDir}/conf/.env" "${HOME}/.bash-tools/.env"
+  cp "${rootDir}/conf/defaultEnv/.env" "${HOME}/.bash-tools/.env"
   echo "return 12" >>"${HOME}/.bash-tools/.env"
   run BashTools::Conf::requireLoad 2>&1
   assert_failure 1

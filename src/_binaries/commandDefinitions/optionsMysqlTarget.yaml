@@ -4,6 +4,7 @@ binData:
     default:
       definitionFiles:
         23: "${BASH_TOOLS_ROOT_DIR}/src/_binaries/commandDefinitions/optionsMysqlTarget.sh"
+        29: "${BASH_TOOLS_ROOT_DIR}/src/_binaries/commandDefinitions/optionsFromDsn.sh"
       optionGroups:
         groupTargetOptions:
           title: "TARGET OPTIONS:"

@@ -1,0 +1,21 @@
+---
+binData:
+  commands:
+    default:
+      definitionFiles:
+        28: "${BASH_TOOLS_ROOT_DIR}/src/_binaries/commandDefinitions/optionsTables.sh"
+      optionGroups:
+        groupProfileOptions:
+          title: "PROFILE OPTIONS:"
+      options:
+        - variableName: optionTables
+          group: groupProfileOptions
+          type: String
+          help:
+            "Import only table specified in the list.\nIf aws mode, ignore
+            profile option."
+          callbacks:
+            - optionTablesCallback
+          helpValueName: tablesSeparatedByComma
+          alts:
+            - --tables

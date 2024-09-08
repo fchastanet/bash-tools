@@ -1,8 +1,12 @@
 #!/usr/bin/env bash
 
-beforeParseCallback() {
+defaultBeforeParseCallback() {
   BashTools::Conf::requireLoad
   Env::requireLoad
   UI::requireTheme
   Log::requireLoad
+}
+
+beforeParseCallback() {
+  defaultBeforeParseCallback
 }

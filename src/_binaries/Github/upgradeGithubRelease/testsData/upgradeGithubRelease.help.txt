@@ -4,7 +4,7 @@
 [1;37mUSAGE:[0m upgradeGithubRelease [OPTIONS] [ARGUMENTS]
 [1;37mUSAGE:[0m upgradeGithubRelease [--help|-h] [--config]
   [--bash-framework-config <bash-framework-config>] [--verbose|-v] [-vv] [-vvv]
-  [--env-file <env-file>] [--log-level <log-level>] [--log-file <log-file>]
+  [--log-level <log-level>] [--log-file <log-file>]
   [--display-level <display-level>] [--no-color] [--theme <theme>] [--version]
   [--quiet|-q] [--version-arg <versionArg>]
   [--current-version|-c <currentVersion>] [--exact-version|-e <exactVersion>]
@@ -31,9 +31,6 @@
     Debug level verbose mode (alias of --display-level DEBUG)
   [1;34m-vvv[0m {single}
     Trace level verbose mode (alias of --display-level TRACE)
-  [1;34m--env-file <env-file>[0m {list} (optional)
-    Load the specified env file (deprecated, please use --bash-framework-con
-    fig option instead)
   [1;34m--log-level <log-level>[0m {single}
     Set log level
     Possible values: OFF, ERR, ERROR, WARN, WARNING, INFO, DEBUG, TRACE

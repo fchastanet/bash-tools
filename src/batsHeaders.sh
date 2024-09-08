@@ -16,7 +16,7 @@ export BASH_FRAMEWORK_DISPLAY_LEVEL="${__LEVEL_INFO}"
 export BASH_FRAMEWORK_LOG_LEVEL=${__LEVEL_OFF}
 export SKIP_REQUIREMENTS_CHECKS=1
 
-Env::requireLoad "${rootDir}/conf/.env"
+Env::requireLoad "${rootDir}/conf/defaultEnv/.env"
 Log::requireLoad
 
 # @description test command help

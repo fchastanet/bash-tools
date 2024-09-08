@@ -1,8 +1,5 @@
 #!/usr/bin/env bash
 
-Linux::requireExecutedAsUser
-Linux::requireTarCommand
-
 if ! command -v parallel &>/dev/null; then
   Log::displayInfo "We will install GNU parallel software, please enter you sudo password"
   sudo apt-get update || true
@@ -28,6 +25,7 @@ if [[ -d "${HOME}/.bash-tools" ]]; then
 
   Log::displayInfo "Updating configuration"
   cp -R --no-clobber "${BASH_TOOLS_ROOT_DIR}/conf/." "${HOME}/.bash-tools"
+  cp "${BASH_TOOLS_ROOT_DIR}/conf/defaultEnv/.env" "${HOME}/.bash-tools"
   if [[ "${FRAMEWORK_ROOT_DIR}/conf/.env" -nt "${HOME}/.bash-tools/.env" ]]; then
     Log::displayWarning "${FRAMEWORK_ROOT_DIR}/conf/.env is newer than ${HOME}/.bash-tools/.env, compare the files to check if some updates need to be applied"
   else
@@ -36,5 +34,6 @@ if [[ -d "${HOME}/.bash-tools" ]]; then
 else
   Log::displayInfo "Installing configuration in ~/.bash-tools"
   mkdir -p "${HOME}/.bash-tools"
-  cp -R "${BASE_DIR}/conf/." "${HOME}/.bash-tools"
+  cp -R "${BASH_TOOLS_ROOT_DIR}/conf/." "${HOME}/.bash-tools"
+  cp "${BASH_TOOLS_ROOT_DIR}/conf/defaultEnv/.env" "${HOME}/.bash-tools"
 fi

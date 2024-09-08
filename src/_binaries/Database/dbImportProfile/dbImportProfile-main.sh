@@ -12,12 +12,6 @@ WHERE
 ORDER BY maxSize DESC
 EOM2
 
-# check dependencies
-Linux::requireExecutedAsUser
-Linux::requireRealpathCommand
-Assert::commandExists mysql "sudo apt-get install -y mysql-client"
-Assert::commandExists mysqlshow "sudo apt-get install -y mysql-client"
-
 # create db instance
 declare -Agx dbFromInstance
 

@@ -44,9 +44,7 @@ unknownArg() {
 }
 
 beforeParseCallback() {
-  Env::requireLoad
-  UI::requireTheme
-  Log::requireLoad
+  defaultBeforeParseCallback
   Linux::requireExecutedAsUser
   Linux::requireRealpathCommand
   init

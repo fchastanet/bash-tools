@@ -10,7 +10,7 @@ setup() {
   export HOME="${BATS_TEST_TMPDIR}/home"
   export BASH_FRAMEWORK_ENV_FILEPATH="${BATS_TEST_DIRNAME}/testsData/.env"
   mkdir -p "${HOME}/.bash-tools"
-  cp "${rootDir}/conf/.env" "${HOME}/.bash-tools/.env"
+  cp "${rootDir}/conf/defaultEnv/.env" "${HOME}/.bash-tools/.env"
 
 }
 
