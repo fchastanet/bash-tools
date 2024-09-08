@@ -15,11 +15,12 @@ setup() {
     "${HOME}/.bash-tools/dbQueries" \
     "${HOME}/.bash-tools/dbScripts"
   cp "${BATS_TEST_DIRNAME}/testsData/pv" "${HOME}/bin"
-  cp "${rootDir}/conf/.env" "${HOME}/.bash-tools/.env"
+  cp "${rootDir}/conf/defaultEnv/.env" "${HOME}/.bash-tools/.env"
   touch \
     "${HOME}/bin/mysqldump" \
     "${HOME}/bin/mysqlshow" \
-    "${HOME}/bin/builtinCommandWrapper"
+    "${HOME}/bin/builtinCommandWrapper" \
+    "${HOME}/.bash-tools/dbScripts/fakeScript.sh"
   chmod +x "${HOME}/bin/"*
   export BASH_FRAMEWORK_COMMAND="builtinCommandWrapper"
 

@@ -3,11 +3,26 @@ declare defaultFromDsn="default.remote"
 # shellcheck disable=SC2034
 declare PROFILES_DIR
 declare HOME_PROFILES_DIR
+# shellcheck disable=SC2034
+defaultOptionProfile=""
+
+beforeParseCallback() {
+  defaultBeforeParseCallback
+  Linux::requireExecutedAsUser
+  Linux::requireRealpathCommand
+  Assert::commandExists mysql "sudo apt-get install -y mysql-client"
+  Assert::commandExists mysqlshow "sudo apt-get install -y mysql-client"
+}
 
 initConf() {
   # shellcheck disable=SC2034
   PROFILES_DIR="${BASH_TOOLS_ROOT_DIR}/conf/dbImportProfiles"
+  # shellcheck disable=SC2034
   HOME_PROFILES_DIR="${HOME}/.bash-tools/dbImportProfiles"
+}
+
+initProfileCommandCallback() {
+  :
 }
 
 optionHelpCallback() {
@@ -16,23 +31,9 @@ optionHelpCallback() {
 }
 
 longDescriptionFunction() {
-  local profilesList=""
-  local dsnList=""
-  dsnList="$(Conf::getMergedList "dsn" "env")"
-  profilesList="$(Conf::getMergedList "dbImportProfiles" "sh" || true)"
-
-  echo -e "${__HELP_TITLE}Default profiles directory:${__HELP_NORMAL}"
-  echo -e "${PROFILES_DIR-configuration error}"
+  fromDsnOptionLongDescription
   echo
-  echo -e "${__HELP_TITLE}User profiles directory:${__HELP_NORMAL}"
-  echo -e "${HOME_PROFILES_DIR-configuration error}"
-  echo -e 'Allows to override profiles defined in "Default profiles directory"'
-  echo
-  echo -e "${__HELP_TITLE}List of available profiles:${__HELP_NORMAL}"
-  echo -e "${profilesList}"
-  echo
-  echo -e "${__HELP_TITLE}List of available dsn:${__HELP_NORMAL}"
-  echo -e "${dsnList}"
+  profileOptionLongDescription
 }
 
 optionProfileHelpFunction() {
@@ -46,16 +47,6 @@ optionFromDsnHelpFunction() {
   Array::wrap2 " " 80 4 \
     "    dsn to use for source database (Default: ${defaultFromDsn})\n" \
     "if not provided, the file name pattern will be 'auto_<dsn>_<fromDbName>.sh'"
-  echo
-}
-
-optionRatioHelpFunction() {
-  Array::wrap2 " " 80 4 \
-    "    define the ratio to use (0 to 100% - default 70).\n" \
-    "- 0 means profile will filter out all the tables\n" \
-    "- 100 means profile will keep all the tables.\n" \
-    "Eg: 70 means that tables with size(table+index)\n" \
-    "that are greater than 70% of the max table size will be excluded."
   echo
 }
 

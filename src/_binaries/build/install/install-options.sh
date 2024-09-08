@@ -7,3 +7,9 @@ optionHelpCallback() {
   installCommandHelp
   exit 0
 }
+
+beforeParseCallback() {
+  defaultBeforeParseCallback
+  Linux::requireExecutedAsUser
+  Linux::requireTarCommand
+}

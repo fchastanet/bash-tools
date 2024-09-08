@@ -1,0 +1,15 @@
+---
+compilerConfig:
+  relativeRootDirBasedOnTargetDir: ..
+  srcDirs:
+    - ${BASH_TOOLS_ROOT_DIR}/src
+  templateDirs:
+    - ${BASH_TOOLS_ROOT_DIR}/conf/defaultEnv
+
+binData:
+  commands:
+    default:
+      definitionFiles:
+        11: "${BASH_TOOLS_ROOT_DIR}/src/_binaries/commandDefinitions/optionsDefault.sh"
+      beforeParseCallbacks:
+        - beforeParseCallback

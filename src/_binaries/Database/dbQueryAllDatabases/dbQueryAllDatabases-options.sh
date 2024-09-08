@@ -11,10 +11,7 @@ declare copyrightBeginYear="2020"
 declare defaultFromDsn="default.remote"
 
 beforeParseCallback() {
-  BashTools::Conf::requireLoad
-  Env::requireLoad
-  UI::requireTheme
-  Log::requireLoad
+  defaultBeforeParseCallback
   Linux::requireExecutedAsUser
   Linux::requireRealpathCommand
 }
@@ -46,33 +43,34 @@ optionSeparatorCallback() {
 longDescriptionFunction() {
   local example1=$'dbQueryAllDatabases databaseSize -j 12 --separator "|" --bar 2>/dev/null | column -s "|" -t -n -c 40'
 
-  local dsnList queriesList
-  dsnList="$(Conf::getMergedList "dsn" "env" "    - ")"
-  queriesList="$(Conf::getMergedList "dbQueries" "sql" "    - " || true)"
+  local queriesList
+  queriesList="$(Conf::getMergedList "dbQueries" "sql" "      - " || true)"
 
-  echo -e "${__HELP_TITLE}  LIST OF AVAILABLE DSN:${__HELP_NORMAL}"
-  echo -e "${dsnList}"
+  fromDsnOptionLongDescription
   echo
-  echo -e "${__HELP_TITLE}  DEFAULT QUERIES DIRECTORY:${__HELP_NORMAL}"
-  echo -e "    ${QUERIES_DIR-configuration error}"
+  echo -e "  ${__HELP_TITLE}QUERIES${__HELP_NORMAL}"
+  echo -e "    ${__HELP_TITLE}Default queries directory:${__HELP_NORMAL}"
+  echo -e "      ${QUERIES_DIR-configuration error}"
   echo
-  echo -e "${__HELP_TITLE}  USER QUERIES DIRECTORY:${__HELP_NORMAL}"
-  echo -e "    ${HOME_QUERIES_DIR-configuration error}"
-  echo -e "    Allows to override queries defined in 'Default queries directory'"
+  echo -e "    ${__HELP_TITLE}User queries directory:${__HELP_NORMAL}"
+  echo -e "      ${HOME_QUERIES_DIR-configuration error}"
+  echo -e "      Allows to override queries defined in 'Default queries directory'"
   echo
-  echo -e "${__HELP_TITLE}  LIST OF AVAILABLE QUERIES:${__HELP_NORMAL}"
+  echo -e "    ${__HELP_TITLE}List of available queries:${__HELP_NORMAL}"
   echo -e "${queriesList}"
   echo
-  echo -e "${__HELP_TITLE}  EXAMPLES:${__HELP_NORMAL}"
+  echo -e "  ${__HELP_TITLE}EXAMPLES:${__HELP_NORMAL}"
   echo -e "    ${__HELP_EXAMPLE}${example1}${__HELP_NORMAL}"
 }
 
 argQueryHelpFunction() {
-  Array::wrap2 " " 80 6 \
-    "    Query to execute" "\n" \
-    "- <file>, try to execute the mysql query provided by the file" "\n" \
-    '- <queryFile>, search for query file in queries directory (see below)' "\n" \
-    '- else the argument is interpreted as query string'
+  echo "    Query to execute"
+  echo "      - <file>, try to execute the mysql query"
+  echo "        provided by the file"
+  echo '      - <queryFile>, search for query file in'
+  echo '        queries directory (see below)'
+  echo '      - else the argument is interpreted as'
+  echo '        query string'
 }
 
 dbQueryAllDatabasesEveryArgumentCallback() {

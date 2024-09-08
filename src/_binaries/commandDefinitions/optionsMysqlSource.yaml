@@ -3,6 +3,7 @@ binData:
   commands:
     default:
       definitionFiles:
+        29: "${BASH_TOOLS_ROOT_DIR}/src/_binaries/commandDefinitions/optionsFromDsn.sh"
         40: "${BASH_TOOLS_ROOT_DIR}/src/_binaries/commandDefinitions/optionsMysqlSource.sh"
       optionGroups:
         groupSourceDbOptions:

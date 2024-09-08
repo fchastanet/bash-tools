@@ -19,7 +19,8 @@ setup() {
   cp "${BATS_TEST_DIRNAME}/testsData/dsn/"* "${HOME}/.bash-tools/dsn/"
   touch "${HOME}/bin/mysql" "${HOME}/bin/mysqldump" "${HOME}/bin/mysqlshow" "${HOME}/bin/builtinCommandWrapper"
   chmod +x "${HOME}/bin/"*
-  cp "${rootDir}/conf/.env" "${HOME}/.bash-tools/.env"
+  cp "${rootDir}/conf/defaultEnv/.env" "${HOME}/.bash-tools/.env"
+  cp "${BATS_TEST_DIRNAME}/testsData/dbImportProfiles/"* "${HOME}/.bash-tools/dbImportProfiles/"
 
   export BASH_FRAMEWORK_COMMAND="builtinCommandWrapper"
 

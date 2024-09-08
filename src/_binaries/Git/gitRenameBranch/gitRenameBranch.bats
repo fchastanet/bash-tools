@@ -10,7 +10,7 @@ setup() {
 
   export HOME="${BATS_TEST_TMPDIR}/home"
   mkdir -p "${HOME}/.bash-tools"
-  cp "${rootDir}/conf/.env" "${HOME}/.bash-tools/.env"
+  cp "${rootDir}/conf/defaultEnv/.env" "${HOME}/.bash-tools/.env"
 
   mkdir "${BATS_TEST_TMPDIR}/gitRepo"
   mkdir "${BATS_TEST_TMPDIR}/gitRepoFake"

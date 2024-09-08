@@ -1,5 +1,6 @@
 extends:
   - "${BASH_TOOLS_ROOT_DIR}/src/_binaries/commandDefinitions/optionsVersion.yaml"
+  - "${BASH_TOOLS_ROOT_DIR}/src/_binaries/commandDefinitions/optionsDefault.yaml"
   - "${FRAMEWORK_ROOT_DIR}/src/_binaries/commandDefinitions/defaultCommand.yaml"
   - "${FRAMEWORK_ROOT_DIR}/src/_binaries/commandDefinitions/frameworkConfig.yaml"
 
@@ -23,6 +24,5 @@ binData:
       unknownArgumentCallbacks:
         - unknownArg
       definitionFiles:
-        11: ${BASH_TOOLS_ROOT_DIR}/src/_binaries/commandDefinitions/optionsDefault.sh
         99: ${BASH_TOOLS_ROOT_DIR}/src/_binaries/Database/dbScriptAllDatabases/dbScriptOneDatabase.sh
       mainFile: ${BASH_TOOLS_ROOT_DIR}/src/_binaries/Database/dbScriptAllDatabases/extractData.sh

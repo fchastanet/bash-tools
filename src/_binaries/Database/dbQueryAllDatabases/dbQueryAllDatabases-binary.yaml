@@ -2,6 +2,7 @@ extends:
   - "${BASH_TOOLS_ROOT_DIR}/src/_binaries/commandDefinitions/optionsJobs.yaml"
   - "${BASH_TOOLS_ROOT_DIR}/src/_binaries/commandDefinitions/optionsFromDsn.yaml"
   - "${BASH_TOOLS_ROOT_DIR}/src/_binaries/commandDefinitions/optionsVersion.yaml"
+  - "${BASH_TOOLS_ROOT_DIR}/src/_binaries/commandDefinitions/optionsDefault.yaml"
   - "${FRAMEWORK_ROOT_DIR}/src/_binaries/commandDefinitions/defaultCommand.yaml"
   - "${FRAMEWORK_ROOT_DIR}/src/_binaries/commandDefinitions/frameworkConfig.yaml"
 
@@ -10,9 +11,7 @@ vars:
 
 compilerConfig:
   targetFile: "${BASH_TOOLS_ROOT_DIR}/bin/dbQueryAllDatabases"
-  relativeRootDirBasedOnTargetDir: ..
-  srcDirs:
-    - ${BASH_TOOLS_ROOT_DIR}/src
+
 binData:
   commands:
     default:
@@ -28,12 +27,11 @@ binData:
       everyArgumentCallbacks:
         - dbQueryAllDatabasesEveryArgumentCallback
       definitionFiles:
-        11: ${BASH_TOOLS_ROOT_DIR}/src/_binaries/commandDefinitions/optionsDefault.sh
         99: ${BASH_TOOLS_ROOT_DIR}/src/_binaries/Database/dbQueryAllDatabases/dbQueryAllDatabases-options.sh
       mainFile: ${BASH_TOOLS_ROOT_DIR}/src/_binaries/Database/dbQueryAllDatabases/dbQueryAllDatabases-main.sh
       help:
         "Execute a query on multiple databases to generate a tsv format
-        report.\\n The query can be parallelized on multiple databases."
+        report.\nThe query can be parallelized on multiple databases."
       longDescription: longDescriptionFunction
       optionGroups:
         groupQueryOptions:

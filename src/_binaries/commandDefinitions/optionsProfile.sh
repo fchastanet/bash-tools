@@ -1,12 +1,42 @@
 #!/usr/bin/env bash
 
-profileOptionHelpFunction() {
-  Array::wrap2 " " 80 4 \
-    "    The name of the profile to use in order to include or exclude tables."
+profileOptionLongDescription() {
+  local profilesList=""
+  profilesList="$(Conf::getMergedList "dbImportProfiles" "sh" "      - " || true)"
+
+  echo -e "  ${__HELP_TITLE}Profiles${__HELP_NORMAL}"
+  echo -e "    ${__HELP_TITLE}Default profiles directory:${__HELP_NORMAL}"
+  echo -e "      ${PROFILES_DIR-configuration error}"
   echo
+  echo -e "    ${__HELP_TITLE}User profiles directory:${__HELP_NORMAL}"
+  echo -e "      ${HOME_PROFILES_DIR-configuration error}"
+  echo -e '      Allows to override profiles defined in "Default profiles directory"'
+  echo
+  echo -e "    ${__HELP_TITLE}List of available profiles:${__HELP_NORMAL}"
+  echo -e "${profilesList}"
 }
 
+profileOptionHelpFunction() {
+  echo "    The name of the profile to use in order to"
+  echo "    include or exclude tables."
+}
+
+initOptionProfileIfNotSet() {
+  if [[ -z "${optionProfile}" ]]; then
+    optionProfile="${defaultOptionProfile}"
+  fi
+  local -a profilesArray
+  readarray -t profilesArray < <(Conf::getMergedList "dbImportProfiles" "sh" "" || true)
+  if ! Array::contains "${optionProfile}" "${profilesArray[@]}"; then
+    Log::displayError "${SCRIPT_NAME} - invalid profile '${optionProfile}' provided"
+    return 1
+  fi
+}
+
+declare defaultOptionProfile="default"
 initProfileCommandCallback() {
+  initOptionProfileIfNotSet
+
   # shellcheck disable=SC2154
   if [[ "${optionProfile}" != "default" && -n "${optionTables}" ]]; then
     Log::fatal "Command ${SCRIPT_NAME} - you cannot use table and profile options at the same time"
@@ -33,19 +63,4 @@ initProfileCommandCallback() {
   fi
   chmod +x "${profileCommandFile}"
   Log::displayInfo "${profileMsgInfo}"
-}
-
-profileOptionCallback() {
-  local -a profilesArray
-  readarray -t profilesArray < <(Conf::getMergedList "dbImportProfiles" "sh" "" || true)
-  if ! Array::contains "$2" "${profilesArray[@]}"; then
-    Log::displayError "${SCRIPT_NAME} - invalid profile '$2' provided"
-    return 1
-  fi
-}
-
-optionTablesCallback() {
-  if [[ ! ${optionTables} =~ ^[A-Za-z0-9_]+(,[A-Za-z0-9_]+)*$ ]]; then
-    Log::fatal "Command ${SCRIPT_NAME} - Table list is not valid : ${optionTables}"
-  fi
 }

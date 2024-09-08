@@ -161,7 +161,7 @@ repos:
         exclude: /testsData/
 
   - repo: https://github.com/fchastanet/bash-tools-framework
-    rev: 5.1.0
+    rev: 5.1.2
     hooks:
       - id: fixShebangExecutionBit
       - id: awkLint
@@ -192,6 +192,10 @@ repos:
             WARNING,
           ]
       - id: plantuml
+        exclude: |
+          (?x)(
+            ^conf/mysql2pumlSkins/default.puml$
+          )
 
   - repo: local
     hooks:

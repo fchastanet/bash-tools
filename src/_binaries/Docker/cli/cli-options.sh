@@ -13,10 +13,7 @@ declare PROFILES_DIR
 declare HOME_PROFILES_DIR
 
 beforeParseCallback() {
-  BashTools::Conf::requireLoad
-  Env::requireLoad
-  UI::requireTheme
-  Log::requireLoad
+  defaultBeforeParseCallback
   Linux::requireRealpathCommand
   Assert::commandExists docker "check https://docs.docker.com/engine/install/ubuntu/"
 }

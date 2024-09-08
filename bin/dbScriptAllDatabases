@@ -338,18 +338,79 @@ Bash::handlePipelineFailure() {
 }
 
 
+read -r -d '\0' bashToolsDefaultConfigTemplate <<-EOM || true
+#
+# shellcheck disable=SC2034
+
+# Default settings
+# you can override these settings by creating ${HOME}/.bash-tools/.env file
+
+###
+### DISPLAY Level
+### minimum level of the messages that will be displayed on screen
+###
+### 0: NO LOG
+### 1: ERROR
+### 2: WARNING
+### 3: INFO
+### 4: DEBUG
+###
+BASH_FRAMEWORK_DISPLAY_LEVEL=${BASH_FRAMEWORK_DISPLAY_LEVEL:-3}
+
+###
+### DISPLAY duration
+### 0: no duration is displayed on the messages
+### 1: duration between previous message and current is displayed
+### with the message
+###
+DISPLAY_DURATION=${DISPLAY_DURATION:0}
+
+###
+### Log to file
+###
+### all log messages will be redirected to log file specified
+### this same path will be used inside and outside of the container
+###
+BASH_FRAMEWORK_LOG_FILE=${BASH_FRAMEWORK_LOG_FILE:-${FRAMEWORK_ROOT_DIR}/logs/bash.log}
+
+###
+### LOG Level
+### minimum level of the messages that will be logged into LOG_FILE
+###
+### 0: NO LOG
+### 1: ERROR
+### 2: WARNING
+### 3: INFO
+### 4: DEBUG
+###
+BASH_FRAMEWORK_LOG_LEVEL=${BASH_FRAMEWORK_LOG_LEVEL:-0}
+
+# absolute directory containing db import sql dumps
+DB_IMPORT_DUMP_DIR=${DB_IMPORT_DUMP_DIR:-${HOME}/.bash-tools/dbImportDumps}
+
+# garbage collect all files for which modification is greater than eg: 30 days (+30)
+# each time an existing file is used by dbImport/dbImportTable
+# the file modification time is set to now
+DB_IMPORT_GARBAGE_COLLECT_DAYS=${DB_IMPORT_GARBAGE_COLLECT_DAYS:-+30}
+
+# absolute directory containing dbScripts used by dbScriptAllDatabases
+SCRIPTS_FOLDER=${SCRIPTS_FOLDER:-${HOME}/.bash-tools/conf/dbScripts}
+
+# -----------------------------------------------------
+# AWS Parameters
+# -----------------------------------------------------
+S3_BASE_URL=${S3_BASE_URL:-}
+
+# -----------------------------------------------------
+# Postman Parameters
+# -----------------------------------------------------
+POSTMAN_API_KEY=
+EOM
+
 # @description loads ~/.bash-tools/.env if available
 # if not creates it from a default template
 # else check if new options need to be added
 BashTools::Conf::requireLoad() {
-Linux::requireTarCommand
-Compiler::Embed::extractFileFromBase64 \
-  "${PERSISTENT_TMPDIR:-/tmp}/db87222729e0f1ed9c597a486a61a08c/bashToolsDefaultConfigTemplate" \
-  "IyEvdXNyL2Jpbi9lbnYgYmFzaAojIHNoZWxsY2hlY2sgZGlzYWJsZT1TQzIwMzQKCiMgRGVmYXVsdCBzZXR0aW5ncwojIHlvdSBjYW4gb3ZlcnJpZGUgdGhlc2Ugc2V0dGluZ3MgYnkgY3JlYXRpbmcgJHtIT01FfS8uYmFzaC10b29scy8uZW52IGZpbGUKCiMjIwojIyMgRElTUExBWSBMZXZlbAojIyMgbWluaW11bSBsZXZlbCBvZiB0aGUgbWVzc2FnZXMgdGhhdCB3aWxsIGJlIGRpc3BsYXllZCBvbiBzY3JlZW4KIyMjCiMjIyAwOiBOTyBMT0cKIyMjIDE6IEVSUk9SCiMjIyAyOiBXQVJOSU5HCiMjIyAzOiBJTkZPCiMjIyA0OiBERUJVRwojIyMKQkFTSF9GUkFNRVdPUktfRElTUExBWV9MRVZFTD0ke0JBU0hfRlJBTUVXT1JLX0RJU1BMQVlfTEVWRUw6LTN9CgojIyMKIyMjIERJU1BMQVkgZHVyYXRpb24KIyMjIDA6IG5vIGR1cmF0aW9uIGlzIGRpc3BsYXllZCBvbiB0aGUgbWVzc2FnZXMKIyMjIDE6IGR1cmF0aW9uIGJldHdlZW4gcHJldmlvdXMgbWVzc2FnZSBhbmQgY3VycmVudCBpcyBkaXNwbGF5ZWQKIyMjIHdpdGggdGhlIG1lc3NhZ2UKIyMjCkRJU1BMQVlfRFVSQVRJT049JHtESVNQTEFZX0RVUkFUSU9OOjB9CgojIyMKIyMjIExvZyB0byBmaWxlCiMjIwojIyMgYWxsIGxvZyBtZXNzYWdlcyB3aWxsIGJlIHJlZGlyZWN0ZWQgdG8gbG9nIGZpbGUgc3BlY2lmaWVkCiMjIyB0aGlzIHNhbWUgcGF0aCB3aWxsIGJlIHVzZWQgaW5zaWRlIGFuZCBvdXRzaWRlIG9mIHRoZSBjb250YWluZXIKIyMjCkJBU0hfRlJBTUVXT1JLX0xPR19GSUxFPSR7QkFTSF9GUkFNRVdPUktfTE9HX0ZJTEU6LSR7RlJBTUVXT1JLX1JPT1RfRElSfS9sb2dzL2Jhc2gubG9nfQoKIyMjCiMjIyBMT0cgTGV2ZWwKIyMjIG1pbmltdW0gbGV2ZWwgb2YgdGhlIG1lc3NhZ2VzIHRoYXQgd2lsbCBiZSBsb2dnZWQgaW50byBMT0dfRklMRQojIyMKIyMjIDA6IE5PIExPRwojIyMgMTogRVJST1IKIyMjIDI6IFdBUk5JTkcKIyMjIDM6IElORk8KIyMjIDQ6IERFQlVHCiMjIwpCQVNIX0ZSQU1FV09SS19MT0dfTEVWRUw9JHtCQVNIX0ZSQU1FV09SS19MT0dfTEVWRUw6LTB9CgojIGFic29sdXRlIGRpcmVjdG9yeSBjb250YWluaW5nIGRiIGltcG9ydCBzcWwgZHVtcHMKREJfSU1QT1JUX0RVTVBfRElSPSR7REJfSU1QT1JUX0RVTVBfRElSOi0ke0hPTUV9Ly5iYXNoLXRvb2xzL2RiSW1wb3J0RHVtcHN9CgojIGdhcmJhZ2UgY29sbGVjdCBhbGwgZmlsZXMgZm9yIHdoaWNoIG1vZGlmaWNhdGlvbiBpcyBncmVhdGVyIHRoYW4gZWc6IDMwIGRheXMgKCszMCkKIyBlYWNoIHRpbWUgYW4gZXhpc3RpbmcgZmlsZSBpcyB1c2VkIGJ5IGRiSW1wb3J0L2RiSW1wb3J0VGFibGUKIyB0aGUgZmlsZSBtb2RpZmljYXRpb24gdGltZSBpcyBzZXQgdG8gbm93CkRCX0lNUE9SVF9HQVJCQUdFX0NPTExFQ1RfREFZUz0ke0RCX0lNUE9SVF9HQVJCQUdFX0NPTExFQ1RfREFZUzotKzMwfQoKIyBhYnNvbHV0ZSBkaXJlY3RvcnkgY29udGFpbmluZyBkYlNjcmlwdHMgdXNlZCBieSBkYlNjcmlwdEFsbERhdGFiYXNlcwpTQ1JJUFRTX0ZPTERFUj0ke1NDUklQVFNfRk9MREVSOi0ke0hPTUV9Ly5iYXNoLXRvb2xzL2NvbmYvZGJTY3JpcHRzfQoKIyAtLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLQojIEFXUyBQYXJhbWV0ZXJzCiMgLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0KUzNfQkFTRV9VUkw9JHtTM19CQVNFX1VSTDotfQoKIyAtLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLQojIFBvc3RtYW4gUGFyYW1ldGVycwojIC0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tClBPU1RNQU5fQVBJX0tFWT0K" \
-  "755"
-
-declare -gx embed_file_bashToolsDefaultConfigTemplate="${PERSISTENT_TMPDIR:-/tmp}/db87222729e0f1ed9c597a486a61a08c/bashToolsDefaultConfigTemplate"
-
   BASH_TOOLS_ROOT_DIR="$(cd "${CURRENT_DIR}/${RELATIVE_FRAMEWORK_DIR_TO_CURRENT_DIR}" && pwd -P)"
   if [[ -d "${BASH_TOOLS_ROOT_DIR}/vendor/bash-tools-framework/" ]]; then
     FRAMEWORK_ROOT_DIR="$(cd "${BASH_TOOLS_ROOT_DIR}/vendor/bash-tools-framework" && pwd -P)"
@@ -377,7 +438,7 @@ declare -gx embed_file_bashToolsDefaultConfigTemplate="${PERSISTENT_TMPDIR:-/tmp
     (
       echo "#!/usr/bin/env bash"
       # shellcheck disable=SC2154
-      echo "${embed_file_bashToolsDefaultConfigTemplate}"
+      echo "${bashToolsDefaultConfigTemplate}"
     ) >"${envFile}"
     Log::displayInfo "Configuration file '${envFile}' created"
   else
@@ -390,41 +451,11 @@ declare -gx embed_file_bashToolsDefaultConfigTemplate="${PERSISTENT_TMPDIR:-/tmp
       ) >>"${envFile}"
     fi
   fi
-  # shellcheck source=/conf/.env
+  # shellcheck source=/conf/defaultEnv/.env
   source "${envFile}" || {
     Log::displayError "impossible to load '${envFile}'"
     exit 1
   }
-}
-
-
-# @description convert base64 encoded back to target file
-# if target file is executable prepend dir of target
-# file to PATH to make binary available everywhere
-# it is advised to include in the path of the target file
-# the md5sum of the binFile
-#
-# @arg $1 targetFile:String the file to write
-# @arg $2 binFileBase64:String the base64 encoded file
-# @arg $3 fileMode:String the chmod to set on the file
-# @set PATH String prepend target embedded file binary directory to PATH variable if binary executable
-Compiler::Embed::extractFileFromBase64() {
-  local targetFile="$1"
-  local binFileBase64="$2"
-  local fileMode="${3:-+x}"
-  local targetDir="${targetFile%/*}"
-
-  if [[ ! -f "${targetFile}" ]]; then
-    if [[ ! -d "${targetDir}" ]]; then
-      mkdir -p "${targetDir}"
-    fi
-    base64 -d >"${targetFile}" <<<"${binFileBase64}"
-    chmod "${fileMode}" "${targetFile}"
-  fi
-
-  if [[ -x "${targetFile}" ]]; then
-    Env::pathPrepend "${targetDir}"
-  fi
 }
 
 
@@ -759,19 +790,6 @@ Db::checkRequirements() {
 }
 
 
-# @description prepend directories to the PATH environment variable
-# @arg $@ args:String[] list of directories to prepend
-# @set PATH update PATH with the directories prepended
-Env::pathPrepend() {
-  local arg
-  for arg in "$@"; do
-    if [[ -d "${arg}" && ":${PATH}:" != *":${arg}:"* ]]; then
-      PATH="$(realpath "${arg}"):${PATH}"
-    fi
-  done
-}
-
-
 # @description ensure env files are loaded
 # @arg $@ list of default files to load at the end
 # @exitcode 1 if one of env files fails to load
@@ -851,14 +869,6 @@ Linux::requireRealpathCommand() {
   export REQUIRE_FUNCTION_LINUX_REQUIRE_REALPATH_COMMAND_LOADED=1
 
   Assert::commandExists realpath
-}
-
-
-# @description ensure command tar is available
-# @exitcode 1 if tar command not available
-# @stderr diagnostics information is displayed
-Linux::requireTarCommand() {
-  Assert::commandExists tar
 }
 
 
@@ -1341,6 +1351,7 @@ beforeParseCallback() {
 
 copyrightCallback() {
   #
+  # shellcheck disable=SC2155,SC2154,SC2250
   echo "Copyright (c) 2020-now François Chastanet"
 }
 
@@ -1382,16 +1393,6 @@ optionVersionCallback() {
   # shellcheck disable=SC2154
   echo "${SCRIPT_NAME} version 3.0"
   exit 0
-}
-
-# shellcheck disable=SC2317 # if function is overridden
-optionEnvFileCallback() {
-  local envFile="$2"
-  Log::displayWarning "Command ${SCRIPT_NAME} - Option --env-file is deprecated and will be removed in the future"
-  if [[ ! -f "${envFile}" || ! -r "${envFile}" ]]; then
-    Log::displayError "Command ${SCRIPT_NAME} - Option --env-file - File '${envFile}' doesn't exist"
-    exit 1
-  fi
 }
 
 # shellcheck disable=SC2317 # if function is overridden
@@ -1568,9 +1569,6 @@ commandOptionParseFinished() {
   defaultEnvFile="${PERSISTENT_TMPDIR}/.framework-config"
   echo "${defaultFrameworkConfig}" >"${defaultEnvFile}"
   local -a files=("${defaultEnvFile}")
-  if [[ -f "${envFile}" ]]; then
-    files+=("${envFile}")
-  fi
   # shellcheck disable=SC2154
   if [[ -f "${optionBashFrameworkConfig}" ]]; then
     files+=("${optionBashFrameworkConfig}")
@@ -1586,11 +1584,15 @@ commandOptionParseFinished() {
 
 
 
-beforeParseCallback() {
+defaultBeforeParseCallback() {
   BashTools::Conf::requireLoad
   Env::requireLoad
   UI::requireTheme
   Log::requireLoad
+}
+
+beforeParseCallback() {
+  defaultBeforeParseCallback
 }
 
 
@@ -1603,14 +1605,10 @@ declare defaultFromDsn="default.remote"
 declare outputDirectory="${HOME}/.bash-tools/output"
 
 beforeParseCallback() {
+  defaultBeforeParseCallback
   Assert::commandExists mysql "sudo apt-get install -y mysql-client"
   Assert::commandExists mysqlshow "sudo apt-get install -y mysql-client"
   Assert::commandExists parallel "sudo apt-get install -y parallel"
-
-  BashTools::Conf::requireLoad
-  Env::requireLoad
-  UI::requireTheme
-  Log::requireLoad
   Linux::requireExecutedAsUser
   Linux::requireRealpathCommand
 }
@@ -1628,37 +1626,36 @@ optionHelpCallback() {
 }
 
 longDescriptionFunction() {
-  local dsnList scriptsList
-  dsnList="$(Conf::getMergedList "dsn" "env")"
-  scriptsList="$(Conf::getMergedList "dbScripts" "sh")"
+  local scriptsList
+  scriptsList="$(Conf::getMergedList "dbScripts" "sh" "      - " || true)"
 
-  echo -e "${__HELP_TITLE}NOTE:${__HELP_NORMAL}"
-  echo -e "the use of output, log-format, verbose options highly depends on the script used"
+  fromDsnOptionLongDescription
   echo
-  echo -e "${__HELP_TITLE}LIST OF AVAILABLE DSN:${__HELP_NORMAL}"
-  echo -e "${dsnList}"
+  echo -e "  ${__HELP_TITLE}SCRIPTS${__HELP_NORMAL}"
+  echo -e "    ${__HELP_TITLE}Default scripts directory:${__HELP_NORMAL}"
+  echo -e "      ${SCRIPTS_DIR-configuration error}"
   echo
-  echo -e "${__HELP_TITLE}DEFAULT SCRIPTS DIRECTORY:${__HELP_NORMAL}"
-  echo -e "${SCRIPTS_DIR-configuration error}"
+  echo -e "    ${__HELP_TITLE}User scripts directory:${__HELP_NORMAL}"
+  echo -e "      ${HOME_SCRIPTS_DIR-configuration error}"
+  echo -e "      Allows to override queries defined in 'Default scripts directory'"
   echo
-  echo -e "${__HELP_TITLE}USER SCRIPTS DIRECTORY:${__HELP_NORMAL}"
-  echo -e "${HOME_SCRIPTS_DIR-configuration error}"
-  echo -e "Allows to override queries defined in 'Default scripts directory'"
-  echo
-  echo -e "${__HELP_TITLE}LIST OF AVAILABLE SCRIPTS:${__HELP_NORMAL}"
+  echo -e "    ${__HELP_TITLE}List of available scripts:${__HELP_NORMAL}"
   echo -e "${scriptsList}"
   echo
-  echo -e "${__HELP_TITLE}EXAMPLES:${__HELP_NORMAL} script conf/dbScripts/extractData.sh"
-  echo -e "    executes query databaseSize (see conf/dbQueries/databaseSize.sql) on each db and log the result in log file in default output dir, call it using"
+  echo -e "  ${__HELP_TITLE}NOTE:${__HELP_NORMAL}"
+  echo -e "    the use of output, log-format, verbose options highly depends on the script used"
+  echo
+  echo -e "  ${__HELP_TITLE}EXAMPLES:${__HELP_NORMAL} script conf/dbScripts/extractData.sh"
+  echo -e "    1. executes query databaseSize (see conf/dbQueries/databaseSize.sql) on each db and log the result in log file in default output dir, call it using"
   echo -e "    ${__HELP_EXAMPLE}$0 -j 10 extractData databaseSize${__HELP_NORMAL}"
   echo
-  echo -e "    executes query databaseSize on each db and display the result on stdout (2>/dev/null hides information messages)"
+  echo -e "    2. executes query databaseSize on each db and display the result on stdout (2>/dev/null hides information messages)"
   echo -e "    ${__HELP_EXAMPLE}$0 -j 10 --log-format none extractData databaseSize${__HELP_NORMAL}"
   echo
-  echo -e "    use --verbose to get some debug information"
+  echo -e "    3. use --verbose to get some debug information"
   echo -e "    ${__HELP_EXAMPLE}$0 -j 10 --log-format none --verbose extractData databaseSize${__HELP_NORMAL}"
   echo
-  echo -e "${__HELP_TITLE}USE CASES:${__HELP_NORMAL}"
+  echo -e "  ${__HELP_TITLE}USE CASES:${__HELP_NORMAL}"
   echo -e "    you can use this script in order to check that each db model conforms with your ORM schema"
   echo -e "    simply create a new script in conf/dbQueries that will call your orm schema checker"
   echo
@@ -1716,6 +1713,24 @@ optionJobsCallback() {
 
 
 
+fromDsnOptionLongDescription() {
+  local dsnList=""
+  dsnList="$(Conf::getMergedList "dsn" "env" "      - ")"
+
+  echo -e "  ${__HELP_TITLE}Data Source Name (DSN)${__HELP_NORMAL}"
+  echo -e "    ${__HELP_TITLE}Default dsn directory:${__HELP_NORMAL}"
+  echo -e "      ${BASH_TOOLS_ROOT_DIR}/conf/dsn"
+  echo
+  echo -e "    ${__HELP_TITLE}User dsn directory:${__HELP_NORMAL}"
+  echo -e "      ${HOME}/.bash-tools/dsn"
+  echo -e '      Allows to override dsn defined in "Default dsn directory"'
+  echo
+  echo -e "    ${__HELP_TITLE}List of available dsn:${__HELP_NORMAL}"
+  echo -e "${dsnList}"
+}
+
+
+
 optionVersionCallback() {
   # shellcheck disable=SC2154
   echo "${SCRIPT_NAME} version 3.0"
@@ -1738,7 +1753,6 @@ declare optionBashFrameworkConfig=""
 declare optionInfoVerbose="0"
 declare optionDebugVerbose="0"
 declare optionTraceVerbose="0"
-declare -a optionEnvFiles=()
 declare optionLogLevel=""
 declare optionLogFile=""
 declare optionDisplayLevel=""
@@ -1783,7 +1797,6 @@ dbScriptAllDatabasesCommandParse() {
   optionTraceVerbose="0"
   local -i options_parse_optionParsedCountOptionTraceVerbose
   ((options_parse_optionParsedCountOptionTraceVerbose = 0)) || true
-
   optionLogLevel=""
   local -i options_parse_optionParsedCountOptionLogLevel
   ((options_parse_optionParsedCountOptionLogLevel = 0)) || true
@@ -1827,7 +1840,7 @@ dbScriptAllDatabasesCommandParse() {
     local options_parse_arg="$1"
     local argOptDefaultBehavior=0
     case "${options_parse_arg}" in
-      # Option 1/20
+      # Option 1/19
       # optionJobs alts --jobs|-j
       # type: String min 0 max 1
       --jobs | -j)
@@ -1848,7 +1861,7 @@ dbScriptAllDatabasesCommandParse() {
 
         ;;
 
-      # Option 2/20
+      # Option 2/19
       # optionProgressBar alts --bar|-b
       # type: Boolean min 0 max 1
       --bar | -b)
@@ -1864,7 +1877,7 @@ dbScriptAllDatabasesCommandParse() {
 
         ;;
 
-      # Option 3/20
+      # Option 3/19
       # optionFromDsn alts --from-dsn|-f
       # type: String min 0 max 1
       --from-dsn | -f)
@@ -1883,7 +1896,7 @@ dbScriptAllDatabasesCommandParse() {
         optionFromDsn="$1"
         ;;
 
-      # Option 4/20
+      # Option 4/19
       # optionHelp alts --help|-h
       # type: Boolean min 0 max 1
       --help | -h)
@@ -1899,7 +1912,7 @@ dbScriptAllDatabasesCommandParse() {
 
         ;;
 
-      # Option 5/20
+      # Option 5/19
       # optionConfig alts --config
       # type: Boolean min 0 max 1
       --config)
@@ -1913,7 +1926,7 @@ dbScriptAllDatabasesCommandParse() {
         ((++options_parse_optionParsedCountOptionConfig))
         ;;
 
-      # Option 6/20
+      # Option 6/19
       # optionBashFrameworkConfig alts --bash-framework-config
       # type: String min 0 max 1
       --bash-framework-config)
@@ -1934,7 +1947,7 @@ dbScriptAllDatabasesCommandParse() {
 
         ;;
 
-      # Option 7/20
+      # Option 7/19
       # optionInfoVerbose alts --verbose|-v
       # type: Boolean min 0 max 1
       --verbose | -v)
@@ -1952,7 +1965,7 @@ dbScriptAllDatabasesCommandParse() {
 
         ;;
 
-      # Option 8/20
+      # Option 8/19
       # optionDebugVerbose alts -vv
       # type: Boolean min 0 max 1
       -vv)
@@ -1970,7 +1983,7 @@ dbScriptAllDatabasesCommandParse() {
 
         ;;
 
-      # Option 9/20
+      # Option 9/19
       # optionTraceVerbose alts -vvv
       # type: Boolean min 0 max 1
       -vvv)
@@ -1988,25 +2001,7 @@ dbScriptAllDatabasesCommandParse() {
 
         ;;
 
-      # Option 10/20
-      # optionEnvFiles alts --env-file
-      # type: StringArray min 0 max -1
-      --env-file)
-        shift
-        if (($# == 0)); then
-          Log::displayError "Command ${SCRIPT_NAME} - Option ${options_parse_arg} - a value needs to be specified"
-          return 1
-        fi
-
-        ((++options_parse_optionParsedCountOptionEnvFiles))
-        optionEnvFiles+=("$1")
-        optionEnvFileCallback "${options_parse_arg}" "${optionEnvFiles[@]}"
-
-        updateArgListEnvFileCallback "${options_parse_arg}" "${optionEnvFiles[@]}"
-
-        ;;
-
-      # Option 11/20
+      # Option 10/19
       # optionLogLevel alts --log-level
       # type: String min 0 max 1
       # authorizedValues: OFF|ERR|ERROR|WARN|WARNING|INFO|DEBUG|TRACE
@@ -2034,7 +2029,7 @@ dbScriptAllDatabasesCommandParse() {
 
         ;;
 
-      # Option 12/20
+      # Option 11/19
       # optionLogFile alts --log-file
       # type: String min 0 max 1
       --log-file)
@@ -2057,7 +2052,7 @@ dbScriptAllDatabasesCommandParse() {
 
         ;;
 
-      # Option 13/20
+      # Option 12/19
       # optionDisplayLevel alts --display-level
       # type: String min 0 max 1
       # authorizedValues: OFF|ERR|ERROR|WARN|WARNING|INFO|DEBUG|TRACE
@@ -2085,7 +2080,7 @@ dbScriptAllDatabasesCommandParse() {
 
         ;;
 
-      # Option 14/20
+      # Option 13/19
       # optionNoColor alts --no-color
       # type: Boolean min 0 max 1
       --no-color)
@@ -2103,7 +2098,7 @@ dbScriptAllDatabasesCommandParse() {
 
         ;;
 
-      # Option 15/20
+      # Option 14/19
       # optionTheme alts --theme
       # type: String min 0 max 1
       # authorizedValues: default|default-force|noColor
@@ -2131,7 +2126,7 @@ dbScriptAllDatabasesCommandParse() {
 
         ;;
 
-      # Option 16/20
+      # Option 15/19
       # optionVersion alts --version
       # type: Boolean min 0 max 1
       --version)
@@ -2147,7 +2142,7 @@ dbScriptAllDatabasesCommandParse() {
 
         ;;
 
-      # Option 17/20
+      # Option 16/19
       # optionQuiet alts --quiet|-q
       # type: Boolean min 0 max 1
       --quiet | -q)
@@ -2165,7 +2160,7 @@ dbScriptAllDatabasesCommandParse() {
 
         ;;
 
-      # Option 18/20
+      # Option 17/19
       # optionDatabases alts --database
       # type: StringArray min 0 max 1
       --database)
@@ -2183,7 +2178,7 @@ dbScriptAllDatabasesCommandParse() {
         optionDatabases+=("$1")
         ;;
 
-      # Option 19/20
+      # Option 18/19
       # optionOutputDir alts --output|-o
       # type: String min 0 max 1
       --output | -o)
@@ -2204,7 +2199,7 @@ dbScriptAllDatabasesCommandParse() {
 
         ;;
 
-      # Option 20/20
+      # Option 19/19
       # optionLogFormat alts --log-format|-l
       # type: String min 0 max 1
       # authorizedValues: none|log
@@ -2310,7 +2305,6 @@ dbScriptAllDatabasesCommandParse() {
 
 
 
-
   if ((options_parse_argParsedCountArgScriptToExecute < 1 )); then
     Log::displayError "Command ${SCRIPT_NAME} - Argument 'scriptToExecute' should be provided at least 1 time(s)"
     return 1
@@ -2338,7 +2332,7 @@ dbScriptAllDatabasesCommandHelp() {
   # ------------------------------------------
   # usage/options section
   # ------------------------------------------
-  optionsAltList=("[--jobs|-j <jobsCount>]" "[--bar|-b]" "[--from-dsn|-f <dsn>]" "[--help|-h]" "[--config]" "[--bash-framework-config <bash-framework-config>]" "[--verbose|-v]" "[-vv]" "[-vvv]" "[--env-file <env-file>]" "[--log-level <log-level>]" "[--log-file <log-file>]" "[--display-level <display-level>]" "[--no-color]" "[--theme <theme>]" "[--version]" "[--quiet|-q]" "[--database <dbName>]" "[--output|-o <outputDirectory>]" "[--log-format|-l <logFormat>]"
+  optionsAltList=("[--jobs|-j <jobsCount>]" "[--bar|-b]" "[--from-dsn|-f <dsn>]" "[--help|-h]" "[--config]" "[--bash-framework-config <bash-framework-config>]" "[--verbose|-v]" "[-vv]" "[-vvv]" "[--log-level <log-level>]" "[--log-file <log-file>]" "[--display-level <display-level>]" "[--no-color]" "[--theme <theme>]" "[--version]" "[--quiet|-q]" "[--database <dbName>]" "[--output|-o <outputDirectory>]" "[--log-format|-l <logFormat>]"
   )
   Array::wrap2 " " 80 2 "${__HELP_TITLE_COLOR}USAGE:${__RESET_COLOR}" \
     "dbScriptAllDatabases" "${optionsAltList[@]}"
@@ -2372,7 +2366,7 @@ dbScriptAllDatabasesCommandHelp() {
   echo
 
   echo -e "  ${__HELP_OPTION_COLOR}--bar${__HELP_NORMAL}, ${__HELP_OPTION_COLOR}-b${__HELP_NORMAL} {single}"
-  Array::wrap2 ' ' 76 4 "    " "Show progress as a progress bar. In the bar is shown: % of jobs completed," "estimated seconds left, and number of jobs started." ""
+  Array::wrap2 ' ' 76 4 "    " "Show progress as a progress bar. In the bar is shown: % of jobs" "completed, estimated seconds left, and number of jobs started."
   echo
 
 
@@ -2417,12 +2411,6 @@ dbScriptAllDatabasesCommandHelp() {
 
   echo -e "  ${__HELP_OPTION_COLOR}-vvv${__HELP_NORMAL} {single}"
   Array::wrap2 ' ' 76 4 "    " "Trace level verbose mode (alias of --display-level TRACE)"
-  echo
-
-
-
-  echo -e "  ${__HELP_OPTION_COLOR}--env-file <env-file>${__HELP_NORMAL} {list} (optional)"
-  Array::wrap2 ' ' 76 4 "    " "Load the specified env file (deprecated, please use --bash-framework-config option instead)"
   echo
 
 
@@ -2476,7 +2464,7 @@ dbScriptAllDatabasesCommandHelp() {
   echo
   echo -e "${__HELP_TITLE_COLOR}SCRIPTS OPTIONS:${__RESET_COLOR}"
   echo -e "  ${__HELP_OPTION_COLOR}--database <dbName>${__HELP_NORMAL} {single}"
-  Array::wrap2 ' ' 76 4 "    " "If provided will check only this db, otherwise script will be executed on all dbs of mysql server."
+  Array::wrap2 ' ' 76 4 "    " "If provided will check only this db," "otherwise script will be executed on all dbs of mysql server."
   echo
 
 

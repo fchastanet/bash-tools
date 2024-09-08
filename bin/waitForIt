@@ -355,6 +355,127 @@ Bash::handlePipelineFailure() {
 }
 
 
+read -r -d '\0' bashToolsDefaultConfigTemplate <<-EOM || true
+#
+# shellcheck disable=SC2034
+
+# Default settings
+# you can override these settings by creating ${HOME}/.bash-tools/.env file
+
+###
+### DISPLAY Level
+### minimum level of the messages that will be displayed on screen
+###
+### 0: NO LOG
+### 1: ERROR
+### 2: WARNING
+### 3: INFO
+### 4: DEBUG
+###
+BASH_FRAMEWORK_DISPLAY_LEVEL=${BASH_FRAMEWORK_DISPLAY_LEVEL:-3}
+
+###
+### DISPLAY duration
+### 0: no duration is displayed on the messages
+### 1: duration between previous message and current is displayed
+### with the message
+###
+DISPLAY_DURATION=${DISPLAY_DURATION:0}
+
+###
+### Log to file
+###
+### all log messages will be redirected to log file specified
+### this same path will be used inside and outside of the container
+###
+BASH_FRAMEWORK_LOG_FILE=${BASH_FRAMEWORK_LOG_FILE:-${FRAMEWORK_ROOT_DIR}/logs/bash.log}
+
+###
+### LOG Level
+### minimum level of the messages that will be logged into LOG_FILE
+###
+### 0: NO LOG
+### 1: ERROR
+### 2: WARNING
+### 3: INFO
+### 4: DEBUG
+###
+BASH_FRAMEWORK_LOG_LEVEL=${BASH_FRAMEWORK_LOG_LEVEL:-0}
+
+# absolute directory containing db import sql dumps
+DB_IMPORT_DUMP_DIR=${DB_IMPORT_DUMP_DIR:-${HOME}/.bash-tools/dbImportDumps}
+
+# garbage collect all files for which modification is greater than eg: 30 days (+30)
+# each time an existing file is used by dbImport/dbImportTable
+# the file modification time is set to now
+DB_IMPORT_GARBAGE_COLLECT_DAYS=${DB_IMPORT_GARBAGE_COLLECT_DAYS:-+30}
+
+# absolute directory containing dbScripts used by dbScriptAllDatabases
+SCRIPTS_FOLDER=${SCRIPTS_FOLDER:-${HOME}/.bash-tools/conf/dbScripts}
+
+# -----------------------------------------------------
+# AWS Parameters
+# -----------------------------------------------------
+S3_BASE_URL=${S3_BASE_URL:-}
+
+# -----------------------------------------------------
+# Postman Parameters
+# -----------------------------------------------------
+POSTMAN_API_KEY=
+EOM
+
+# @description loads ~/.bash-tools/.env if available
+# if not creates it from a default template
+# else check if new options need to be added
+BashTools::Conf::requireLoad() {
+  BASH_TOOLS_ROOT_DIR="$(cd "${CURRENT_DIR}/${RELATIVE_FRAMEWORK_DIR_TO_CURRENT_DIR}" && pwd -P)"
+  if [[ -d "${BASH_TOOLS_ROOT_DIR}/vendor/bash-tools-framework/" ]]; then
+    FRAMEWORK_ROOT_DIR="$(cd "${BASH_TOOLS_ROOT_DIR}/vendor/bash-tools-framework" && pwd -P)"
+  else
+    # if the directory does not exist yet, give a value to FRAMEWORK_ROOT_DIR
+    FRAMEWORK_ROOT_DIR="${BASH_TOOLS_ROOT_DIR}/vendor/bash-tools-framework"
+  fi
+  # shellcheck disable=SC2034
+  FRAMEWORK_SRC_DIR="${FRAMEWORK_ROOT_DIR}/src"
+  # shellcheck disable=SC2034
+  FRAMEWORK_BIN_DIR="${FRAMEWORK_ROOT_DIR}/bin"
+  # shellcheck disable=SC2034
+  FRAMEWORK_VENDOR_DIR="${FRAMEWORK_ROOT_DIR}/vendor"
+  # shellcheck disable=SC2034
+  FRAMEWORK_VENDOR_BIN_DIR="${FRAMEWORK_ROOT_DIR}/vendor/bin"
+
+  if [[ -f "${HOME}/.bash-tools/.env" ]]; then
+    # shellcheck disable=SC2034
+    BASH_FRAMEWORK_ENV_FILES=("${HOME}/.bash-tools/.env")
+  fi
+
+  local envFile="${HOME}/.bash-tools/.env"
+  if [[ ! -f "${envFile}" ]]; then
+    mkdir -p "${HOME}/.bash-tools"
+    (
+      echo "#!/usr/bin/env bash"
+      # shellcheck disable=SC2154
+      echo "${bashToolsDefaultConfigTemplate}"
+    ) >"${envFile}"
+    Log::displayInfo "Configuration file '${envFile}' created"
+  else
+    if ! grep -q '^POSTMAN_API_KEY=' "${envFile}"; then
+      (
+        echo '# -----------------------------------------------------'
+        echo '# Postman Parameters'
+        echo '# -----------------------------------------------------'
+        echo 'POSTMAN_API_KEY='
+      ) >>"${envFile}"
+    fi
+  fi
+  # shellcheck source=/conf/defaultEnv/.env
+  source "${envFile}" || {
+    Log::displayError "impossible to load '${envFile}'"
+    exit 1
+  }
+}
+
+
 # @description run command specified
 # @arg $@ array:String[] the command to run
 # @env optionInfoVerbose int - if 1 displays the command specified before running it
@@ -518,19 +639,6 @@ Log::displayInfo() {
 }
 
 
-# @description Display message using warning color (yellow)
-# @arg $1 message:String the message to display
-# @env DISPLAY_DURATION int (default 0) if 1 display elapsed time information between 2 info logs
-# @env LOG_CONTEXT String allows to contextualize the log
-Log::displayWarning() {
-  if ((BASH_FRAMEWORK_DISPLAY_LEVEL >= __LEVEL_WARNING)); then
-    Log::computeDuration
-    echo -e "${__WARNING_COLOR}WARN    - ${LOG_CONTEXT:-}${LOG_LAST_DURATION_STR:-}${1}${__RESET_COLOR}" >&2
-  fi
-  Log::logWarning "$1"
-}
-
-
 # @description Display message using error color (red) and exit immediately with error status 1
 # @arg $1 message:String the message to display
 # @env DISPLAY_DURATION int (default 0) if 1 display elapsed time information between 2 info logs
@@ -610,15 +718,6 @@ Log::logMessage() {
     date="$(date '+%Y-%m-%d %H:%M:%S')"
     touch "${BASH_FRAMEWORK_LOG_FILE}"
     printf "%s|%7s|%s\n" "${date}" "${levelMsg}" "${msg}" >>"${BASH_FRAMEWORK_LOG_FILE}"
-  fi
-}
-
-
-# @description log message to file
-# @arg $1 message:String the message to display
-Log::logWarning() {
-  if ((BASH_FRAMEWORK_LOG_LEVEL >= __LEVEL_WARNING)); then
-    Log::logMessage "${2:-WARNING}" "$1"
   fi
 }
 
@@ -918,6 +1017,7 @@ beforeParseCallback() {
 
 copyrightCallback() {
   #
+  # shellcheck disable=SC2155,SC2154,SC2250
   echo "Copyright (c) 2020-now François Chastanet"
 }
 
@@ -959,16 +1059,6 @@ optionVersionCallback() {
   # shellcheck disable=SC2154
   echo "${SCRIPT_NAME} version 3.0"
   exit 0
-}
-
-# shellcheck disable=SC2317 # if function is overridden
-optionEnvFileCallback() {
-  local envFile="$2"
-  Log::displayWarning "Command ${SCRIPT_NAME} - Option --env-file is deprecated and will be removed in the future"
-  if [[ ! -f "${envFile}" || ! -r "${envFile}" ]]; then
-    Log::displayError "Command ${SCRIPT_NAME} - Option --env-file - File '${envFile}' doesn't exist"
-    exit 1
-  fi
 }
 
 # shellcheck disable=SC2317 # if function is overridden
@@ -1145,9 +1235,6 @@ commandOptionParseFinished() {
   defaultEnvFile="${PERSISTENT_TMPDIR}/.framework-config"
   echo "${defaultFrameworkConfig}" >"${defaultEnvFile}"
   local -a files=("${defaultEnvFile}")
-  if [[ -f "${envFile}" ]]; then
-    files+=("${envFile}")
-  fi
   # shellcheck disable=SC2154
   if [[ -f "${optionBashFrameworkConfig}" ]]; then
     files+=("${optionBashFrameworkConfig}")
@@ -1159,6 +1246,19 @@ commandOptionParseFinished() {
   if [[ "${optionConfig}" = "1" ]]; then
     displayConfig
   fi
+}
+
+
+
+defaultBeforeParseCallback() {
+  BashTools::Conf::requireLoad
+  Env::requireLoad
+  UI::requireTheme
+  Log::requireLoad
+}
+
+beforeParseCallback() {
+  defaultBeforeParseCallback
 }
 
 
@@ -1255,7 +1355,6 @@ declare optionBashFrameworkConfig=""
 declare optionInfoVerbose="0"
 declare optionDebugVerbose="0"
 declare optionTraceVerbose="0"
-declare -a optionEnvFiles=()
 declare optionLogLevel=""
 declare optionLogFile=""
 declare optionDisplayLevel=""
@@ -1297,7 +1396,6 @@ waitForItCommandParse() {
   optionTraceVerbose="0"
   local -i options_parse_optionParsedCountOptionTraceVerbose
   ((options_parse_optionParsedCountOptionTraceVerbose = 0)) || true
-
   optionLogLevel=""
   local -i options_parse_optionParsedCountOptionLogLevel
   ((options_parse_optionParsedCountOptionLogLevel = 0)) || true
@@ -1343,7 +1441,7 @@ waitForItCommandParse() {
     local options_parse_arg="$1"
     local argOptDefaultBehavior=0
     case "${options_parse_arg}" in
-      # Option 1/18
+      # Option 1/17
       # optionTimeout alts --timeout|-t
       # type: String min 0 max 1
       --timeout | -t)
@@ -1364,7 +1462,7 @@ waitForItCommandParse() {
 
         ;;
 
-      # Option 2/18
+      # Option 2/17
       # optionExecIfTimedOut alts --exec-command-on-timeout|--lax|-l
       # type: Boolean min 0 max 1
       --exec-command-on-timeout | --lax | -l)
@@ -1378,7 +1476,7 @@ waitForItCommandParse() {
         ((++options_parse_optionParsedCountOptionExecIfTimedOut))
         ;;
 
-      # Option 3/18
+      # Option 3/17
       # optionHelp alts --help|-h
       # type: Boolean min 0 max 1
       --help | -h)
@@ -1394,7 +1492,7 @@ waitForItCommandParse() {
 
         ;;
 
-      # Option 4/18
+      # Option 4/17
       # optionConfig alts --config
       # type: Boolean min 0 max 1
       --config)
@@ -1408,7 +1506,7 @@ waitForItCommandParse() {
         ((++options_parse_optionParsedCountOptionConfig))
         ;;
 
-      # Option 5/18
+      # Option 5/17
       # optionBashFrameworkConfig alts --bash-framework-config
       # type: String min 0 max 1
       --bash-framework-config)
@@ -1429,7 +1527,7 @@ waitForItCommandParse() {
 
         ;;
 
-      # Option 6/18
+      # Option 6/17
       # optionInfoVerbose alts --verbose|-v
       # type: Boolean min 0 max 1
       --verbose | -v)
@@ -1447,7 +1545,7 @@ waitForItCommandParse() {
 
         ;;
 
-      # Option 7/18
+      # Option 7/17
       # optionDebugVerbose alts -vv
       # type: Boolean min 0 max 1
       -vv)
@@ -1465,7 +1563,7 @@ waitForItCommandParse() {
 
         ;;
 
-      # Option 8/18
+      # Option 8/17
       # optionTraceVerbose alts -vvv
       # type: Boolean min 0 max 1
       -vvv)
@@ -1483,25 +1581,7 @@ waitForItCommandParse() {
 
         ;;
 
-      # Option 9/18
-      # optionEnvFiles alts --env-file
-      # type: StringArray min 0 max -1
-      --env-file)
-        shift
-        if (($# == 0)); then
-          Log::displayError "Command ${SCRIPT_NAME} - Option ${options_parse_arg} - a value needs to be specified"
-          return 1
-        fi
-
-        ((++options_parse_optionParsedCountOptionEnvFiles))
-        optionEnvFiles+=("$1")
-        optionEnvFileCallback "${options_parse_arg}" "${optionEnvFiles[@]}"
-
-        updateArgListEnvFileCallback "${options_parse_arg}" "${optionEnvFiles[@]}"
-
-        ;;
-
-      # Option 10/18
+      # Option 9/17
       # optionLogLevel alts --log-level
       # type: String min 0 max 1
       # authorizedValues: OFF|ERR|ERROR|WARN|WARNING|INFO|DEBUG|TRACE
@@ -1529,7 +1609,7 @@ waitForItCommandParse() {
 
         ;;
 
-      # Option 11/18
+      # Option 10/17
       # optionLogFile alts --log-file
       # type: String min 0 max 1
       --log-file)
@@ -1552,7 +1632,7 @@ waitForItCommandParse() {
 
         ;;
 
-      # Option 12/18
+      # Option 11/17
       # optionDisplayLevel alts --display-level
       # type: String min 0 max 1
       # authorizedValues: OFF|ERR|ERROR|WARN|WARNING|INFO|DEBUG|TRACE
@@ -1580,7 +1660,7 @@ waitForItCommandParse() {
 
         ;;
 
-      # Option 13/18
+      # Option 12/17
       # optionNoColor alts --no-color
       # type: Boolean min 0 max 1
       --no-color)
@@ -1598,7 +1678,7 @@ waitForItCommandParse() {
 
         ;;
 
-      # Option 14/18
+      # Option 13/17
       # optionTheme alts --theme
       # type: String min 0 max 1
       # authorizedValues: default|default-force|noColor
@@ -1626,7 +1706,7 @@ waitForItCommandParse() {
 
         ;;
 
-      # Option 15/18
+      # Option 14/17
       # optionVersion alts --version
       # type: Boolean min 0 max 1
       --version)
@@ -1642,7 +1722,7 @@ waitForItCommandParse() {
 
         ;;
 
-      # Option 16/18
+      # Option 15/17
       # optionQuiet alts --quiet|-q
       # type: Boolean min 0 max 1
       --quiet | -q)
@@ -1660,7 +1740,7 @@ waitForItCommandParse() {
 
         ;;
 
-      # Option 17/18
+      # Option 16/17
       # optionAlgo alts --algorithm|--algo
       # type: String min 0 max 1
       --algorithm | --algo)
@@ -1681,7 +1761,7 @@ waitForItCommandParse() {
 
         ;;
 
-      # Option 18/18
+      # Option 17/17
       # optionLegacy alts --user-nc
       # type: Boolean min 0 max 1
       --user-nc)
@@ -1785,7 +1865,6 @@ waitForItCommandParse() {
 
 
 
-
   if ((options_parse_argParsedCountHostOrIpArg < 1 )); then
     Log::displayError "Command ${SCRIPT_NAME} - Argument 'hostOrIp' should be provided at least 1 time(s)"
     return 1
@@ -1818,7 +1897,7 @@ waitForItCommandHelp() {
   # ------------------------------------------
   # usage/options section
   # ------------------------------------------
-  optionsAltList=("[--timeout|-t <timeout>]" "[--exec-command-on-timeout|--lax|-l]" "[--help|-h]" "[--config]" "[--bash-framework-config <bash-framework-config>]" "[--verbose|-v]" "[-vv]" "[-vvv]" "[--env-file <env-file>]" "[--log-level <log-level>]" "[--log-file <log-file>]" "[--display-level <display-level>]" "[--no-color]" "[--theme <theme>]" "[--version]" "[--quiet|-q]" "[--algorithm|--algo <algorithm>]" "[--user-nc]"
+  optionsAltList=("[--timeout|-t <timeout>]" "[--exec-command-on-timeout|--lax|-l]" "[--help|-h]" "[--config]" "[--bash-framework-config <bash-framework-config>]" "[--verbose|-v]" "[-vv]" "[-vvv]" "[--log-level <log-level>]" "[--log-file <log-file>]" "[--display-level <display-level>]" "[--no-color]" "[--theme <theme>]" "[--version]" "[--quiet|-q]" "[--algorithm|--algo <algorithm>]" "[--user-nc]"
   )
   Array::wrap2 " " 80 2 "${__HELP_TITLE_COLOR}USAGE:${__RESET_COLOR}" \
     "waitForIt" "${optionsAltList[@]}"
@@ -1894,12 +1973,6 @@ waitForItCommandHelp() {
 
   echo -e "  ${__HELP_OPTION_COLOR}-vvv${__HELP_NORMAL} {single}"
   Array::wrap2 ' ' 76 4 "    " "Trace level verbose mode (alias of --display-level TRACE)"
-  echo
-
-
-
-  echo -e "  ${__HELP_OPTION_COLOR}--env-file <env-file>${__HELP_NORMAL} {list} (optional)"
-  Array::wrap2 ' ' 76 4 "    " "Load the specified env file (deprecated, please use --bash-framework-config option instead)"
   echo
 
 

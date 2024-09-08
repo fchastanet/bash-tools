@@ -17,12 +17,13 @@ setup() {
   cp "${BATS_TEST_DIRNAME}/testsData/pv" "${HOME}/bin"
   cp "${BATS_TEST_DIRNAME}/testsData/gawk" "${HOME}/bin"
   cp "${BATS_TEST_DIRNAME}/testsData/gawk" "${HOME}/bin/awk"
-  cp "${rootDir}/conf/.env" "${HOME}/.bash-tools/.env"
+  cp "${rootDir}/conf/defaultEnv/.env" "${HOME}/.bash-tools/.env"
   touch \
     "${HOME}/bin/mysql" \
     "${HOME}/bin/mysqldump" \
     "${HOME}/bin/mysqlshow" \
-    "${HOME}/bin/builtinCommandWrapper"
+    "${HOME}/bin/builtinCommandWrapper" \
+    "${HOME}/.bash-tools/dbQueries/fakeQuery.sql"
   chmod +x "${HOME}/bin/"*
   export BASH_FRAMEWORK_COMMAND="builtinCommandWrapper"
 
@@ -32,10 +33,12 @@ setup() {
 }
 
 teardown() {
+  rm -Rf "${HOME}" || true
   unstub_all
 }
 
 function Database::dbQueryAllDatabases::display_help { #@test
+
   testCommand "${binDir}/dbQueryAllDatabases" dbQueryAllDatabases.help.txt
 }
 

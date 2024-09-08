@@ -12,6 +12,7 @@ setup() {
   touch "${HOME}/bin/docker"
   chmod +x "${HOME}/bin/"*
   cp -R "${rootDir}/conf" "${HOME}/.bash-tools"
+  cp "${rootDir}/conf/defaultEnv/.env" "${HOME}/.bash-tools"
 
   export PATH="${PATH}:${HOME}/bin"
 }

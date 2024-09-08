@@ -3,7 +3,9 @@ extends:
   - "${BASH_TOOLS_ROOT_DIR}/src/_binaries/commandDefinitions/optionsMysqlCollationName.yaml"
   - "${BASH_TOOLS_ROOT_DIR}/src/_binaries/commandDefinitions/optionsMysqlTarget.yaml"
   - "${BASH_TOOLS_ROOT_DIR}/src/_binaries/commandDefinitions/optionsProfile.yaml"
+  - "${BASH_TOOLS_ROOT_DIR}/src/_binaries/commandDefinitions/optionsTables.yaml"
   - "${BASH_TOOLS_ROOT_DIR}/src/_binaries/commandDefinitions/optionsMysqlSource.yaml"
+  - "${BASH_TOOLS_ROOT_DIR}/src/_binaries/commandDefinitions/optionsDefault.yaml"
   - "${FRAMEWORK_ROOT_DIR}/src/_binaries/commandDefinitions/defaultCommand.yaml"
   - "${FRAMEWORK_ROOT_DIR}/src/_binaries/commandDefinitions/frameworkConfig.yaml"
 
@@ -12,9 +14,7 @@ vars:
 
 compilerConfig:
   targetFile: "${BASH_TOOLS_ROOT_DIR}/bin/dbImport"
-  relativeRootDirBasedOnTargetDir: ..
-  srcDirs:
-    - ${BASH_TOOLS_ROOT_DIR}/src
+
 binData:
   commands:
     default:
@@ -31,6 +31,7 @@ binData:
         20: ${BASH_TOOLS_ROOT_DIR}/src/_binaries/Database/dbImport/dbImport-options.sh
       mainFile: ${BASH_TOOLS_ROOT_DIR}/src/_binaries/Database/dbImport/dbImport-main.sh
       help: Import source db into target db using eventual table filter.
+      longDescription: longDescriptionFunction
       args:
         - help: The name of the source/remote database.
           type: String

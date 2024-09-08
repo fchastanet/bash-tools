@@ -1,0 +1,19 @@
+---
+binData:
+  commands:
+    default:
+      definitionFiles:
+        28: "${BASH_TOOLS_ROOT_DIR}/src/_binaries/commandDefinitions/optionsRatio.sh"
+      optionGroups:
+        groupProfileOptions:
+          title: "PROFILE OPTIONS:"
+      options:
+        - variableName: optionRatio
+          group: groupProfileOptions
+          type: String
+          help: optionRatioHelpFunction
+          helpValueName: ratio
+          defaultValue: 70
+          alts:
+            - --ratio
+            - -r

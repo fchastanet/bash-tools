@@ -1,6 +1,9 @@
 extends:
+  - "${BASH_TOOLS_ROOT_DIR}/src/_binaries/commandDefinitions/optionsRatio.yaml"
+  - "${BASH_TOOLS_ROOT_DIR}/src/_binaries/commandDefinitions/optionsProfile.yaml"
   - "${BASH_TOOLS_ROOT_DIR}/src/_binaries/commandDefinitions/optionsVersion.yaml"
   - "${BASH_TOOLS_ROOT_DIR}/src/_binaries/commandDefinitions/optionsFromDsn.yaml"
+  - "${BASH_TOOLS_ROOT_DIR}/src/_binaries/commandDefinitions/optionsDefault.yaml"
   - "${FRAMEWORK_ROOT_DIR}/src/_binaries/commandDefinitions/defaultCommand.yaml"
   - "${FRAMEWORK_ROOT_DIR}/src/_binaries/commandDefinitions/frameworkConfig.yaml"
 
@@ -9,9 +12,7 @@ vars:
 
 compilerConfig:
   targetFile: "${BASH_TOOLS_ROOT_DIR}/bin/dbImportProfile"
-  relativeRootDirBasedOnTargetDir: ..
-  srcDirs:
-    - ${BASH_TOOLS_ROOT_DIR}/src
+
 binData:
   commands:
     default:
@@ -25,31 +26,10 @@ binData:
       callbacks:
         - dbImportProfileCommandCallback@100
       definitionFiles:
-        20: ${BASH_TOOLS_ROOT_DIR}/src/_binaries/Database/dbImportProfile/dbImportProfile-options.sh
-        99: ${BASH_TOOLS_ROOT_DIR}/src/_binaries/commandDefinitions/optionsDefault.sh
+        99: ${BASH_TOOLS_ROOT_DIR}/src/_binaries/Database/dbImportProfile/dbImportProfile-options.sh
       mainFile: ${BASH_TOOLS_ROOT_DIR}/src/_binaries/Database/dbImportProfile/dbImportProfile-main.sh
       help: Generate optimized profiles to be used by dbImport.
       longDescription: longDescriptionFunction
-      options:
-        - variableName: optionProfile
-          group: OptionsGroup
-          type: String
-          help: optionProfileHelpFunction
-          helpValueName: profile
-          alts:
-            - --profile
-            - -p
-
-        - variableName: optionRatio
-          group: OptionsGroup
-          type: String
-          help: optionRatioHelpFunction
-          helpValueName: ratio
-          defaultValue: 70
-          alts:
-            - --ratio
-            - -r
-
       args:
         - help: The name of the source/remote database.
           type: String

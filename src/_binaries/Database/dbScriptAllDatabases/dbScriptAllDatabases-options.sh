@@ -8,14 +8,10 @@ declare defaultFromDsn="default.remote"
 declare outputDirectory="${HOME}/.bash-tools/output"
 
 beforeParseCallback() {
+  defaultBeforeParseCallback
   Assert::commandExists mysql "sudo apt-get install -y mysql-client"
   Assert::commandExists mysqlshow "sudo apt-get install -y mysql-client"
   Assert::commandExists parallel "sudo apt-get install -y parallel"
-
-  BashTools::Conf::requireLoad
-  Env::requireLoad
-  UI::requireTheme
-  Log::requireLoad
   Linux::requireExecutedAsUser
   Linux::requireRealpathCommand
 }
@@ -33,37 +29,36 @@ optionHelpCallback() {
 }
 
 longDescriptionFunction() {
-  local dsnList scriptsList
-  dsnList="$(Conf::getMergedList "dsn" "env")"
-  scriptsList="$(Conf::getMergedList "dbScripts" "sh")"
+  local scriptsList
+  scriptsList="$(Conf::getMergedList "dbScripts" "sh" "      - " || true)"
 
-  echo -e "${__HELP_TITLE}NOTE:${__HELP_NORMAL}"
-  echo -e "the use of output, log-format, verbose options highly depends on the script used"
+  fromDsnOptionLongDescription
   echo
-  echo -e "${__HELP_TITLE}LIST OF AVAILABLE DSN:${__HELP_NORMAL}"
-  echo -e "${dsnList}"
+  echo -e "  ${__HELP_TITLE}SCRIPTS${__HELP_NORMAL}"
+  echo -e "    ${__HELP_TITLE}Default scripts directory:${__HELP_NORMAL}"
+  echo -e "      ${SCRIPTS_DIR-configuration error}"
   echo
-  echo -e "${__HELP_TITLE}DEFAULT SCRIPTS DIRECTORY:${__HELP_NORMAL}"
-  echo -e "${SCRIPTS_DIR-configuration error}"
+  echo -e "    ${__HELP_TITLE}User scripts directory:${__HELP_NORMAL}"
+  echo -e "      ${HOME_SCRIPTS_DIR-configuration error}"
+  echo -e "      Allows to override queries defined in 'Default scripts directory'"
   echo
-  echo -e "${__HELP_TITLE}USER SCRIPTS DIRECTORY:${__HELP_NORMAL}"
-  echo -e "${HOME_SCRIPTS_DIR-configuration error}"
-  echo -e "Allows to override queries defined in 'Default scripts directory'"
-  echo
-  echo -e "${__HELP_TITLE}LIST OF AVAILABLE SCRIPTS:${__HELP_NORMAL}"
+  echo -e "    ${__HELP_TITLE}List of available scripts:${__HELP_NORMAL}"
   echo -e "${scriptsList}"
   echo
-  echo -e "${__HELP_TITLE}EXAMPLES:${__HELP_NORMAL} script conf/dbScripts/extractData.sh"
-  echo -e "    executes query databaseSize (see conf/dbQueries/databaseSize.sql) on each db and log the result in log file in default output dir, call it using"
+  echo -e "  ${__HELP_TITLE}NOTE:${__HELP_NORMAL}"
+  echo -e "    the use of output, log-format, verbose options highly depends on the script used"
+  echo
+  echo -e "  ${__HELP_TITLE}EXAMPLES:${__HELP_NORMAL} script conf/dbScripts/extractData.sh"
+  echo -e "    1. executes query databaseSize (see conf/dbQueries/databaseSize.sql) on each db and log the result in log file in default output dir, call it using"
   echo -e "    ${__HELP_EXAMPLE}$0 -j 10 extractData databaseSize${__HELP_NORMAL}"
   echo
-  echo -e "    executes query databaseSize on each db and display the result on stdout (2>/dev/null hides information messages)"
+  echo -e "    2. executes query databaseSize on each db and display the result on stdout (2>/dev/null hides information messages)"
   echo -e "    ${__HELP_EXAMPLE}$0 -j 10 --log-format none extractData databaseSize${__HELP_NORMAL}"
   echo
-  echo -e "    use --verbose to get some debug information"
+  echo -e "    3. use --verbose to get some debug information"
   echo -e "    ${__HELP_EXAMPLE}$0 -j 10 --log-format none --verbose extractData databaseSize${__HELP_NORMAL}"
   echo
-  echo -e "${__HELP_TITLE}USE CASES:${__HELP_NORMAL}"
+  echo -e "  ${__HELP_TITLE}USE CASES:${__HELP_NORMAL}"
   echo -e "    you can use this script in order to check that each db model conforms with your ORM schema"
   echo -e "    simply create a new script in conf/dbQueries that will call your orm schema checker"
   echo

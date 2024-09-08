@@ -338,18 +338,79 @@ Bash::handlePipelineFailure() {
 }
 
 
+read -r -d '\0' bashToolsDefaultConfigTemplate <<-EOM || true
+#
+# shellcheck disable=SC2034
+
+# Default settings
+# you can override these settings by creating ${HOME}/.bash-tools/.env file
+
+###
+### DISPLAY Level
+### minimum level of the messages that will be displayed on screen
+###
+### 0: NO LOG
+### 1: ERROR
+### 2: WARNING
+### 3: INFO
+### 4: DEBUG
+###
+BASH_FRAMEWORK_DISPLAY_LEVEL=${BASH_FRAMEWORK_DISPLAY_LEVEL:-3}
+
+###
+### DISPLAY duration
+### 0: no duration is displayed on the messages
+### 1: duration between previous message and current is displayed
+### with the message
+###
+DISPLAY_DURATION=${DISPLAY_DURATION:0}
+
+###
+### Log to file
+###
+### all log messages will be redirected to log file specified
+### this same path will be used inside and outside of the container
+###
+BASH_FRAMEWORK_LOG_FILE=${BASH_FRAMEWORK_LOG_FILE:-${FRAMEWORK_ROOT_DIR}/logs/bash.log}
+
+###
+### LOG Level
+### minimum level of the messages that will be logged into LOG_FILE
+###
+### 0: NO LOG
+### 1: ERROR
+### 2: WARNING
+### 3: INFO
+### 4: DEBUG
+###
+BASH_FRAMEWORK_LOG_LEVEL=${BASH_FRAMEWORK_LOG_LEVEL:-0}
+
+# absolute directory containing db import sql dumps
+DB_IMPORT_DUMP_DIR=${DB_IMPORT_DUMP_DIR:-${HOME}/.bash-tools/dbImportDumps}
+
+# garbage collect all files for which modification is greater than eg: 30 days (+30)
+# each time an existing file is used by dbImport/dbImportTable
+# the file modification time is set to now
+DB_IMPORT_GARBAGE_COLLECT_DAYS=${DB_IMPORT_GARBAGE_COLLECT_DAYS:-+30}
+
+# absolute directory containing dbScripts used by dbScriptAllDatabases
+SCRIPTS_FOLDER=${SCRIPTS_FOLDER:-${HOME}/.bash-tools/conf/dbScripts}
+
+# -----------------------------------------------------
+# AWS Parameters
+# -----------------------------------------------------
+S3_BASE_URL=${S3_BASE_URL:-}
+
+# -----------------------------------------------------
+# Postman Parameters
+# -----------------------------------------------------
+POSTMAN_API_KEY=
+EOM
+
 # @description loads ~/.bash-tools/.env if available
 # if not creates it from a default template
 # else check if new options need to be added
 BashTools::Conf::requireLoad() {
-Linux::requireTarCommand
-Compiler::Embed::extractFileFromBase64 \
-  "${PERSISTENT_TMPDIR:-/tmp}/db87222729e0f1ed9c597a486a61a08c/bashToolsDefaultConfigTemplate" \
-  "IyEvdXNyL2Jpbi9lbnYgYmFzaAojIHNoZWxsY2hlY2sgZGlzYWJsZT1TQzIwMzQKCiMgRGVmYXVsdCBzZXR0aW5ncwojIHlvdSBjYW4gb3ZlcnJpZGUgdGhlc2Ugc2V0dGluZ3MgYnkgY3JlYXRpbmcgJHtIT01FfS8uYmFzaC10b29scy8uZW52IGZpbGUKCiMjIwojIyMgRElTUExBWSBMZXZlbAojIyMgbWluaW11bSBsZXZlbCBvZiB0aGUgbWVzc2FnZXMgdGhhdCB3aWxsIGJlIGRpc3BsYXllZCBvbiBzY3JlZW4KIyMjCiMjIyAwOiBOTyBMT0cKIyMjIDE6IEVSUk9SCiMjIyAyOiBXQVJOSU5HCiMjIyAzOiBJTkZPCiMjIyA0OiBERUJVRwojIyMKQkFTSF9GUkFNRVdPUktfRElTUExBWV9MRVZFTD0ke0JBU0hfRlJBTUVXT1JLX0RJU1BMQVlfTEVWRUw6LTN9CgojIyMKIyMjIERJU1BMQVkgZHVyYXRpb24KIyMjIDA6IG5vIGR1cmF0aW9uIGlzIGRpc3BsYXllZCBvbiB0aGUgbWVzc2FnZXMKIyMjIDE6IGR1cmF0aW9uIGJldHdlZW4gcHJldmlvdXMgbWVzc2FnZSBhbmQgY3VycmVudCBpcyBkaXNwbGF5ZWQKIyMjIHdpdGggdGhlIG1lc3NhZ2UKIyMjCkRJU1BMQVlfRFVSQVRJT049JHtESVNQTEFZX0RVUkFUSU9OOjB9CgojIyMKIyMjIExvZyB0byBmaWxlCiMjIwojIyMgYWxsIGxvZyBtZXNzYWdlcyB3aWxsIGJlIHJlZGlyZWN0ZWQgdG8gbG9nIGZpbGUgc3BlY2lmaWVkCiMjIyB0aGlzIHNhbWUgcGF0aCB3aWxsIGJlIHVzZWQgaW5zaWRlIGFuZCBvdXRzaWRlIG9mIHRoZSBjb250YWluZXIKIyMjCkJBU0hfRlJBTUVXT1JLX0xPR19GSUxFPSR7QkFTSF9GUkFNRVdPUktfTE9HX0ZJTEU6LSR7RlJBTUVXT1JLX1JPT1RfRElSfS9sb2dzL2Jhc2gubG9nfQoKIyMjCiMjIyBMT0cgTGV2ZWwKIyMjIG1pbmltdW0gbGV2ZWwgb2YgdGhlIG1lc3NhZ2VzIHRoYXQgd2lsbCBiZSBsb2dnZWQgaW50byBMT0dfRklMRQojIyMKIyMjIDA6IE5PIExPRwojIyMgMTogRVJST1IKIyMjIDI6IFdBUk5JTkcKIyMjIDM6IElORk8KIyMjIDQ6IERFQlVHCiMjIwpCQVNIX0ZSQU1FV09SS19MT0dfTEVWRUw9JHtCQVNIX0ZSQU1FV09SS19MT0dfTEVWRUw6LTB9CgojIGFic29sdXRlIGRpcmVjdG9yeSBjb250YWluaW5nIGRiIGltcG9ydCBzcWwgZHVtcHMKREJfSU1QT1JUX0RVTVBfRElSPSR7REJfSU1QT1JUX0RVTVBfRElSOi0ke0hPTUV9Ly5iYXNoLXRvb2xzL2RiSW1wb3J0RHVtcHN9CgojIGdhcmJhZ2UgY29sbGVjdCBhbGwgZmlsZXMgZm9yIHdoaWNoIG1vZGlmaWNhdGlvbiBpcyBncmVhdGVyIHRoYW4gZWc6IDMwIGRheXMgKCszMCkKIyBlYWNoIHRpbWUgYW4gZXhpc3RpbmcgZmlsZSBpcyB1c2VkIGJ5IGRiSW1wb3J0L2RiSW1wb3J0VGFibGUKIyB0aGUgZmlsZSBtb2RpZmljYXRpb24gdGltZSBpcyBzZXQgdG8gbm93CkRCX0lNUE9SVF9HQVJCQUdFX0NPTExFQ1RfREFZUz0ke0RCX0lNUE9SVF9HQVJCQUdFX0NPTExFQ1RfREFZUzotKzMwfQoKIyBhYnNvbHV0ZSBkaXJlY3RvcnkgY29udGFpbmluZyBkYlNjcmlwdHMgdXNlZCBieSBkYlNjcmlwdEFsbERhdGFiYXNlcwpTQ1JJUFRTX0ZPTERFUj0ke1NDUklQVFNfRk9MREVSOi0ke0hPTUV9Ly5iYXNoLXRvb2xzL2NvbmYvZGJTY3JpcHRzfQoKIyAtLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLQojIEFXUyBQYXJhbWV0ZXJzCiMgLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0KUzNfQkFTRV9VUkw9JHtTM19CQVNFX1VSTDotfQoKIyAtLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLQojIFBvc3RtYW4gUGFyYW1ldGVycwojIC0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tClBPU1RNQU5fQVBJX0tFWT0K" \
-  "755"
-
-declare -gx embed_file_bashToolsDefaultConfigTemplate="${PERSISTENT_TMPDIR:-/tmp}/db87222729e0f1ed9c597a486a61a08c/bashToolsDefaultConfigTemplate"
-
   BASH_TOOLS_ROOT_DIR="$(cd "${CURRENT_DIR}/${RELATIVE_FRAMEWORK_DIR_TO_CURRENT_DIR}" && pwd -P)"
   if [[ -d "${BASH_TOOLS_ROOT_DIR}/vendor/bash-tools-framework/" ]]; then
     FRAMEWORK_ROOT_DIR="$(cd "${BASH_TOOLS_ROOT_DIR}/vendor/bash-tools-framework" && pwd -P)"
@@ -377,7 +438,7 @@ declare -gx embed_file_bashToolsDefaultConfigTemplate="${PERSISTENT_TMPDIR:-/tmp
     (
       echo "#!/usr/bin/env bash"
       # shellcheck disable=SC2154
-      echo "${embed_file_bashToolsDefaultConfigTemplate}"
+      echo "${bashToolsDefaultConfigTemplate}"
     ) >"${envFile}"
     Log::displayInfo "Configuration file '${envFile}' created"
   else
@@ -390,7 +451,7 @@ declare -gx embed_file_bashToolsDefaultConfigTemplate="${PERSISTENT_TMPDIR:-/tmp
       ) >>"${envFile}"
     fi
   fi
-  # shellcheck source=/conf/.env
+  # shellcheck source=/conf/defaultEnv/.env
   source "${envFile}" || {
     Log::displayError "impossible to load '${envFile}'"
     exit 1
@@ -419,36 +480,6 @@ BashTools::runVerboseIfNeeded() {
 }
 
 
-# @description convert base64 encoded back to target file
-# if target file is executable prepend dir of target
-# file to PATH to make binary available everywhere
-# it is advised to include in the path of the target file
-# the md5sum of the binFile
-#
-# @arg $1 targetFile:String the file to write
-# @arg $2 binFileBase64:String the base64 encoded file
-# @arg $3 fileMode:String the chmod to set on the file
-# @set PATH String prepend target embedded file binary directory to PATH variable if binary executable
-Compiler::Embed::extractFileFromBase64() {
-  local targetFile="$1"
-  local binFileBase64="$2"
-  local fileMode="${3:-+x}"
-  local targetDir="${targetFile%/*}"
-
-  if [[ ! -f "${targetFile}" ]]; then
-    if [[ ! -d "${targetDir}" ]]; then
-      mkdir -p "${targetDir}"
-    fi
-    base64 -d >"${targetFile}" <<<"${binFileBase64}"
-    chmod "${fileMode}" "${targetFile}"
-  fi
-
-  if [[ -x "${targetFile}" ]]; then
-    Env::pathPrepend "${targetDir}"
-  fi
-}
-
-
 # @description check if all requirements are satisfied
 # to execute dbImport commands
 Db::checkRequirements() {
@@ -465,19 +496,6 @@ Db::checkRequirements() {
   Assert::commandExists awk "sudo apt-get install -y gawk" || ((++failures))
   Version::checkMinimal "gawk" "--version" "5.0.1" || ((++failures))
   return "${failures}"
-}
-
-
-# @description prepend directories to the PATH environment variable
-# @arg $@ args:String[] list of directories to prepend
-# @set PATH update PATH with the directories prepended
-Env::pathPrepend() {
-  local arg
-  for arg in "$@"; do
-    if [[ -d "${arg}" && ":${PATH}:" != *":${arg}:"* ]]; then
-      PATH="$(realpath "${arg}"):${PATH}"
-    fi
-  done
 }
 
 
@@ -532,14 +550,6 @@ Linux::requireExecutedAsUser() {
   if [[ "$(id -u)" = "0" ]]; then
     Log::fatal "this script should be executed as normal user"
   fi
-}
-
-
-# @description ensure command tar is available
-# @exitcode 1 if tar command not available
-# @stderr diagnostics information is displayed
-Linux::requireTarCommand() {
-  Assert::commandExists tar
 }
 
 
@@ -622,19 +632,6 @@ Log::displayInfo() {
 }
 
 
-# @description Display message using warning color (yellow)
-# @arg $1 message:String the message to display
-# @env DISPLAY_DURATION int (default 0) if 1 display elapsed time information between 2 info logs
-# @env LOG_CONTEXT String allows to contextualize the log
-Log::displayWarning() {
-  if ((BASH_FRAMEWORK_DISPLAY_LEVEL >= __LEVEL_WARNING)); then
-    Log::computeDuration
-    echo -e "${__WARNING_COLOR}WARN    - ${LOG_CONTEXT:-}${LOG_LAST_DURATION_STR:-}${1}${__RESET_COLOR}" >&2
-  fi
-  Log::logWarning "$1"
-}
-
-
 # @description Display message using error color (red) and exit immediately with error status 1
 # @arg $1 message:String the message to display
 # @env DISPLAY_DURATION int (default 0) if 1 display elapsed time information between 2 info logs
@@ -714,15 +711,6 @@ Log::logMessage() {
     date="$(date '+%Y-%m-%d %H:%M:%S')"
     touch "${BASH_FRAMEWORK_LOG_FILE}"
     printf "%s|%7s|%s\n" "${date}" "${levelMsg}" "${msg}" >>"${BASH_FRAMEWORK_LOG_FILE}"
-  fi
-}
-
-
-# @description log message to file
-# @arg $1 message:String the message to display
-Log::logWarning() {
-  if ((BASH_FRAMEWORK_LOG_LEVEL >= __LEVEL_WARNING)); then
-    Log::logMessage "${2:-WARNING}" "$1"
   fi
 }
 
@@ -1022,6 +1010,7 @@ beforeParseCallback() {
 
 copyrightCallback() {
   #
+  # shellcheck disable=SC2155,SC2154,SC2250
   echo "Copyright (c) 2020-now François Chastanet"
 }
 
@@ -1063,16 +1052,6 @@ optionVersionCallback() {
   # shellcheck disable=SC2154
   echo "${SCRIPT_NAME} version 3.0"
   exit 0
-}
-
-# shellcheck disable=SC2317 # if function is overridden
-optionEnvFileCallback() {
-  local envFile="$2"
-  Log::displayWarning "Command ${SCRIPT_NAME} - Option --env-file is deprecated and will be removed in the future"
-  if [[ ! -f "${envFile}" || ! -r "${envFile}" ]]; then
-    Log::displayError "Command ${SCRIPT_NAME} - Option --env-file - File '${envFile}' doesn't exist"
-    exit 1
-  fi
 }
 
 # shellcheck disable=SC2317 # if function is overridden
@@ -1249,9 +1228,6 @@ commandOptionParseFinished() {
   defaultEnvFile="${PERSISTENT_TMPDIR}/.framework-config"
   echo "${defaultFrameworkConfig}" >"${defaultEnvFile}"
   local -a files=("${defaultEnvFile}")
-  if [[ -f "${envFile}" ]]; then
-    files+=("${envFile}")
-  fi
   # shellcheck disable=SC2154
   if [[ -f "${optionBashFrameworkConfig}" ]]; then
     files+=("${optionBashFrameworkConfig}")
@@ -1267,12 +1243,22 @@ commandOptionParseFinished() {
 
 
 
-beforeParseCallback() {
-  Linux::requireExecutedAsUser
+defaultBeforeParseCallback() {
   BashTools::Conf::requireLoad
   Env::requireLoad
   UI::requireTheme
   Log::requireLoad
+}
+
+beforeParseCallback() {
+  defaultBeforeParseCallback
+}
+
+
+
+beforeParseCallback() {
+  defaultBeforeParseCallback
+  Linux::requireExecutedAsUser
 }
 
 declare optionRedirectCmdOutputs=""
@@ -1320,7 +1306,6 @@ declare optionBashFrameworkConfig=""
 declare optionInfoVerbose="0"
 declare optionDebugVerbose="0"
 declare optionTraceVerbose="0"
-declare -a optionEnvFiles=()
 declare optionLogLevel=""
 declare optionLogFile=""
 declare optionDisplayLevel=""
@@ -1352,7 +1337,6 @@ gitIsBranchCommandParse() {
   optionTraceVerbose="0"
   local -i options_parse_optionParsedCountOptionTraceVerbose
   ((options_parse_optionParsedCountOptionTraceVerbose = 0)) || true
-
   optionLogLevel=""
   local -i options_parse_optionParsedCountOptionLogLevel
   ((options_parse_optionParsedCountOptionLogLevel = 0)) || true
@@ -1386,7 +1370,7 @@ gitIsBranchCommandParse() {
     local options_parse_arg="$1"
     local argOptDefaultBehavior=0
     case "${options_parse_arg}" in
-      # Option 1/14
+      # Option 1/13
       # optionHelp alts --help|-h
       # type: Boolean min 0 max 1
       --help | -h)
@@ -1402,7 +1386,7 @@ gitIsBranchCommandParse() {
 
         ;;
 
-      # Option 2/14
+      # Option 2/13
       # optionConfig alts --config
       # type: Boolean min 0 max 1
       --config)
@@ -1416,7 +1400,7 @@ gitIsBranchCommandParse() {
         ((++options_parse_optionParsedCountOptionConfig))
         ;;
 
-      # Option 3/14
+      # Option 3/13
       # optionBashFrameworkConfig alts --bash-framework-config
       # type: String min 0 max 1
       --bash-framework-config)
@@ -1437,7 +1421,7 @@ gitIsBranchCommandParse() {
 
         ;;
 
-      # Option 4/14
+      # Option 4/13
       # optionInfoVerbose alts --verbose|-v
       # type: Boolean min 0 max 1
       --verbose | -v)
@@ -1455,7 +1439,7 @@ gitIsBranchCommandParse() {
 
         ;;
 
-      # Option 5/14
+      # Option 5/13
       # optionDebugVerbose alts -vv
       # type: Boolean min 0 max 1
       -vv)
@@ -1473,7 +1457,7 @@ gitIsBranchCommandParse() {
 
         ;;
 
-      # Option 6/14
+      # Option 6/13
       # optionTraceVerbose alts -vvv
       # type: Boolean min 0 max 1
       -vvv)
@@ -1491,25 +1475,7 @@ gitIsBranchCommandParse() {
 
         ;;
 
-      # Option 7/14
-      # optionEnvFiles alts --env-file
-      # type: StringArray min 0 max -1
-      --env-file)
-        shift
-        if (($# == 0)); then
-          Log::displayError "Command ${SCRIPT_NAME} - Option ${options_parse_arg} - a value needs to be specified"
-          return 1
-        fi
-
-        ((++options_parse_optionParsedCountOptionEnvFiles))
-        optionEnvFiles+=("$1")
-        optionEnvFileCallback "${options_parse_arg}" "${optionEnvFiles[@]}"
-
-        updateArgListEnvFileCallback "${options_parse_arg}" "${optionEnvFiles[@]}"
-
-        ;;
-
-      # Option 8/14
+      # Option 7/13
       # optionLogLevel alts --log-level
       # type: String min 0 max 1
       # authorizedValues: OFF|ERR|ERROR|WARN|WARNING|INFO|DEBUG|TRACE
@@ -1537,7 +1503,7 @@ gitIsBranchCommandParse() {
 
         ;;
 
-      # Option 9/14
+      # Option 8/13
       # optionLogFile alts --log-file
       # type: String min 0 max 1
       --log-file)
@@ -1560,7 +1526,7 @@ gitIsBranchCommandParse() {
 
         ;;
 
-      # Option 10/14
+      # Option 9/13
       # optionDisplayLevel alts --display-level
       # type: String min 0 max 1
       # authorizedValues: OFF|ERR|ERROR|WARN|WARNING|INFO|DEBUG|TRACE
@@ -1588,7 +1554,7 @@ gitIsBranchCommandParse() {
 
         ;;
 
-      # Option 11/14
+      # Option 10/13
       # optionNoColor alts --no-color
       # type: Boolean min 0 max 1
       --no-color)
@@ -1606,7 +1572,7 @@ gitIsBranchCommandParse() {
 
         ;;
 
-      # Option 12/14
+      # Option 11/13
       # optionTheme alts --theme
       # type: String min 0 max 1
       # authorizedValues: default|default-force|noColor
@@ -1634,7 +1600,7 @@ gitIsBranchCommandParse() {
 
         ;;
 
-      # Option 13/14
+      # Option 12/13
       # optionVersion alts --version
       # type: Boolean min 0 max 1
       --version)
@@ -1650,7 +1616,7 @@ gitIsBranchCommandParse() {
 
         ;;
 
-      # Option 14/14
+      # Option 13/13
       # optionQuiet alts --quiet|-q
       # type: Boolean min 0 max 1
       --quiet | -q)
@@ -1729,7 +1695,6 @@ gitIsBranchCommandParse() {
 
 
 
-
   if ((options_parse_argParsedCountBranchNameArg < 1 )); then
     Log::displayError "Command ${SCRIPT_NAME} - Argument 'branchName' should be provided at least 1 time(s)"
     return 1
@@ -1757,7 +1722,7 @@ gitIsBranchCommandHelp() {
   # ------------------------------------------
   # usage/options section
   # ------------------------------------------
-  optionsAltList=("[--help|-h]" "[--config]" "[--bash-framework-config <bash-framework-config>]" "[--verbose|-v]" "[-vv]" "[-vvv]" "[--env-file <env-file>]" "[--log-level <log-level>]" "[--log-file <log-file>]" "[--display-level <display-level>]" "[--no-color]" "[--theme <theme>]" "[--version]" "[--quiet|-q]"
+  optionsAltList=("[--help|-h]" "[--config]" "[--bash-framework-config <bash-framework-config>]" "[--verbose|-v]" "[-vv]" "[-vvv]" "[--log-level <log-level>]" "[--log-file <log-file>]" "[--display-level <display-level>]" "[--no-color]" "[--theme <theme>]" "[--version]" "[--quiet|-q]"
   )
   Array::wrap2 " " 80 2 "${__HELP_TITLE_COLOR}USAGE:${__RESET_COLOR}" \
     "gitIsBranch" "${optionsAltList[@]}"
@@ -1810,12 +1775,6 @@ gitIsBranchCommandHelp() {
 
   echo -e "  ${__HELP_OPTION_COLOR}-vvv${__HELP_NORMAL} {single}"
   Array::wrap2 ' ' 76 4 "    " "Trace level verbose mode (alias of --display-level TRACE)"
-  echo
-
-
-
-  echo -e "  ${__HELP_OPTION_COLOR}--env-file <env-file>${__HELP_NORMAL} {list} (optional)"
-  Array::wrap2 ' ' 76 4 "    " "Load the specified env file (deprecated, please use --bash-framework-config option instead)"
   echo
 
 

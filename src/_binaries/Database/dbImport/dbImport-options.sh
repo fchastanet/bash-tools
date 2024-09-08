@@ -12,10 +12,7 @@ declare PROFILES_DIR
 declare HOME_PROFILES_DIR
 
 beforeParseCallback() {
-  BashTools::Conf::requireLoad
-  Env::requireLoad
-  UI::requireTheme
-  Log::requireLoad
+  defaultBeforeParseCallback
   Linux::requireRealpathCommand
   Linux::requireExecutedAsUser
 }
@@ -33,32 +30,16 @@ optionHelpCallback() {
 }
 
 longDescriptionFunction() {
-  local profilesList=""
-  local dsnList=""
-  dsnList="$(Conf::getMergedList "dsn" "env")"
-  profilesList="$(Conf::getMergedList "dbImportProfiles" "sh" || true)"
-
-  echo -e "${__HELP_TITLE}Default profiles directory:${__HELP_NORMAL}"
-  echo -e "${PROFILES_DIR-configuration error}"
-
-  echo -e "${__HELP_TITLE}User profiles directory:${__HELP_NORMAL}"
-  echo -e "${HOME_PROFILES_DIR-configuration error}"
-  echo -e "Allows to override profiles defined in 'Default profiles directory'"
-
-  echo -e "${__HELP_TITLE}List of available profiles:${__HELP_NORMAL}"
-  echo -e "${profilesList}"
-
-  echo -e "${__HELP_TITLE}List of available dsn:${__HELP_NORMAL}"
-  echo -e "${dsnList}"
-
-  echo -e "${__HELP_TITLE}Aws s3 location:${__HELP_NORMAL}"
-  echo -e "${S3_BASE_URL}"
+  mysqlSourceLongDescription
   echo
-  echo -e "${__HELP_TITLE}Example 1: from one database to another one${__HELP_NORMAL}"
-  echo -e "${__HELP_EXAMPLE}TODO${__HELP_NORMAL}"
+  profileOptionLongDescription
   echo
-  echo -e "${__HELP_TITLE}Example 2: import from S3${__HELP_NORMAL}"
-  echo -e "${__HELP_EXAMPLE}TODO${__HELP_NORMAL}"
+  echo -e "  ${__HELP_TITLE}Examples${__HELP_NORMAL}"
+  echo -e "    1. from one database to another one"
+  echo -e "    ${__HELP_EXAMPLE}dbImport --from-dsn localhost --target-dsn remote fromDb toDb${__HELP_NORMAL}"
+  echo
+  echo -e "    2. import from S3"
+  echo -e "    ${__HELP_EXAMPLE}dbImport --from-aws awsFile.tar.gz --target-dsn localhost fromDb toDb${__HELP_NORMAL}"
   Db::checkRequirements
 }
 
