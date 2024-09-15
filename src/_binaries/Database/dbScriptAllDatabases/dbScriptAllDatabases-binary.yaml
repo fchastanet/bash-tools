@@ -3,7 +3,6 @@ extends:
   - "${BASH_TOOLS_ROOT_DIR}/src/_binaries/commandDefinitions/optionsFromDsn.yaml"
   - "${BASH_TOOLS_ROOT_DIR}/src/_binaries/commandDefinitions/optionsVersion.yaml"
   - "${BASH_TOOLS_ROOT_DIR}/src/_binaries/commandDefinitions/optionsDefault.yaml"
-  - "${BASH_TOOLS_ROOT_DIR}/src/_binaries/commandDefinitions/optionsDefault.yaml"
   - "${FRAMEWORK_ROOT_DIR}/src/_binaries/commandDefinitions/defaultCommand.yaml"
   - "${FRAMEWORK_ROOT_DIR}/src/_binaries/commandDefinitions/frameworkConfig.yaml"
 
@@ -78,9 +77,9 @@ binData:
           type: String
           help: If output dir provided, will log each db result to log file.
           helpValueName: logFormat
-          authorizedValuesList:
-            - none
-            - log
+          authorizedValues:
+            - value: none
+            - value: log
           defaultValue: none
           callbacks:
             - outputDirectoryCallback

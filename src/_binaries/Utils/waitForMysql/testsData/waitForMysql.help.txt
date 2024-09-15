@@ -10,16 +10,11 @@
   [--quiet|-q]
 
 [1;37mARGUMENTS:[0m
-  [1;34mmysqlHost[0m {single} (mandatory)
-    Mysql host name.
-  [1;34mmysqlPort[0m {single} (mandatory)
-    Mysql port.
-  [1;34mmysqlUser[0m {single} (mandatory)
-    Mysql user name.
-  [1;34mmysqlPassword[0m {single} (mandatory)
-    Mysql user password.
-  [[1;34mcommandArgs[0m {list} (optional)]
-    Execute command with args after the test finishes or exit with status co
+  [1;34mmysqlHost[0m {single} (mandatory)    Mysql host name.
+  [1;34mmysqlPort[0m {single} (mandatory)    Mysql port.
+  [1;34mmysqlUser[0m {single} (mandatory)    Mysql user name.
+  [1;34mmysqlPassword[0m {single} (mandatory)    Mysql user password.
+  [[1;34mcommandArgs[0m {list} (optional)]    Execute command with args after the test finishes or exit with status co
     de if no command provided.
 
 [1;37mTIMEOUT OPTIONS:[0m
@@ -44,18 +39,37 @@
     Trace level verbose mode (alias of --display-level TRACE)
   [1;34m--log-level <log-level>[0m {single}
     Set log level
-    Possible values: OFF, ERR, ERROR, WARN, WARNING, INFO, DEBUG, TRACE
+    Possible values: 
+      - OFF[0m
+      - ERR[0m
+      - ERROR[0m
+      - WARN[0m
+      - WARNING[0m
+      - INFO[0m
+      - DEBUG[0m
+      - TRACE[0m
   [1;34m--log-file <log-file>[0m {single}
     Set log file
   [1;34m--display-level <display-level>[0m {single}
     Set display level
-    Possible values: OFF, ERR, ERROR, WARN, WARNING, INFO, DEBUG, TRACE
+    Possible values: 
+      - OFF[0m
+      - ERR[0m
+      - ERROR[0m
+      - WARN[0m
+      - WARNING[0m
+      - INFO[0m
+      - DEBUG[0m
+      - TRACE[0m
   [1;34m--no-color[0m {single}
     Produce monochrome output. alias of --theme noColor.
   [1;34m--theme <theme>[0m {single}
     Choose color theme - default-force means colors will be produced even if
     command is piped.
-    Possible values: default, default-force, noColor
+    Possible values: 
+      - default[0m
+      - default-force[0m
+      - noColor[0m
     Default value: default
   [1;34m--version[0m {single}
     Print version information and quit.
