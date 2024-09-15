@@ -9,13 +9,14 @@
   [--quiet|-q] [--postman-model|-m <configFile>]
 
 [1;37mARGUMENTS:[0m
-  [[1;34mcommand[0m {single}]
-    [1;34mpull[0m
+  [[1;34mcommand[0m {single}]    [1;34mpull[0m
       Pull collections from Postman back to repositories.
     [1;34mpush[0m
       Push repositories collections to Postman.
-  [[1;34mref[0m {list} (optional)]
-    List of postman collection's references to pull or push
+    Possible values:
+      - pull:[0m Pull
+      - push:[0m Push
+  [[1;34mref[0m {list} (optional)]    List of postman collection's references to pull or push
     or no argument to pull or push all the collections
 
 [1;37mGLOBAL OPTIONS:[0m
@@ -33,18 +34,37 @@
     Trace level verbose mode (alias of --display-level TRACE)
   [1;34m--log-level <log-level>[0m {single}
     Set log level
-    Possible values: OFF, ERR, ERROR, WARN, WARNING, INFO, DEBUG, TRACE
+    Possible values: 
+      - OFF[0m
+      - ERR[0m
+      - ERROR[0m
+      - WARN[0m
+      - WARNING[0m
+      - INFO[0m
+      - DEBUG[0m
+      - TRACE[0m
   [1;34m--log-file <log-file>[0m {single}
     Set log file
   [1;34m--display-level <display-level>[0m {single}
     Set display level
-    Possible values: OFF, ERR, ERROR, WARN, WARNING, INFO, DEBUG, TRACE
+    Possible values: 
+      - OFF[0m
+      - ERR[0m
+      - ERROR[0m
+      - WARN[0m
+      - WARNING[0m
+      - INFO[0m
+      - DEBUG[0m
+      - TRACE[0m
   [1;34m--no-color[0m {single}
     Produce monochrome output. alias of --theme noColor.
   [1;34m--theme <theme>[0m {single}
     Choose color theme - default-force means colors will be produced even if
     command is piped.
-    Possible values: default, default-force, noColor
+    Possible values: 
+      - default[0m
+      - default-force[0m
+      - noColor[0m
     Default value: default
   [1;34m--version[0m {single}
     Print version information and quit.
