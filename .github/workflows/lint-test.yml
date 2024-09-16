@@ -122,7 +122,7 @@ jobs:
         if: ${{ always() }}
         # You can override MegaLinter flavor used to have faster performances
         # More info at https://megalinter.io/flavors/
-        uses: oxsecurity/megalinter/flavors/terraform@v7
+        uses: oxsecurity/megalinter/flavors/terraform@v8
         # All available variables are described in documentation
         # https://megalinter.io/configuration/
         env:
