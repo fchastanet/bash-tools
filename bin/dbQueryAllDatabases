@@ -2553,11 +2553,11 @@ main() {
 
 Linux::requireTarCommand
 Compiler::Embed::extractFileFromBase64 \
-  "${PERSISTENT_TMPDIR:-/tmp}/f256a4bbcf47bbd258e277f86718408c/dbQueryAllDatabasesScript" \
+  "${PERSISTENT_TMPDIR:-/tmp}/101ee8873657e2b35014acccb93127462c5f709e4e72f74dfa2c94a05be94876/dbQueryAllDatabasesScript" \
   "QkVHSU57CiAgaGVhZGVyUHJpbnRlZD0wCn0KL14kLyB7bmV4dH0KewogIGJ1ZmZlciA9IHN1YnN0cigkMCwgMCwgMzUpCiAgbGluZSA9ICQwCiAgaWYoYnVmZmVyID09ICJAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQCIpIHsKICAgIGlmIChoZWFkZXJQcmludGVkID09IDApIHsKICAgICAgbGluZT1zdWJzdHIobGluZSwgMzYpCiAgICAgIGhlYWRlclByaW50ZWQ9MQogICAgfSBlbHNlIHsKICAgICAgbmV4dAogICAgfQogIH0KICBwcmludCBsaW5lCgp9Cg==" \
   "644"
 
-declare -gx embed_file_dbQueryAllDatabasesScript="${PERSISTENT_TMPDIR:-/tmp}/f256a4bbcf47bbd258e277f86718408c/dbQueryAllDatabasesScript"
+declare -gx embed_file_dbQueryAllDatabasesScript="${PERSISTENT_TMPDIR:-/tmp}/101ee8873657e2b35014acccb93127462c5f709e4e72f74dfa2c94a05be94876/dbQueryAllDatabasesScript"
 
 
 # later on, parallel calls this script(inception)

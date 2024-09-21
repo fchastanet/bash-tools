@@ -161,7 +161,7 @@ repos:
         exclude: /testsData/
 
   - repo: https://github.com/fchastanet/bash-tools-framework
-    rev: v5.1.3
+    rev: 6.0.0
     hooks:
       - id: fixShebangExecutionBit
       - id: awkLint
@@ -210,6 +210,6 @@ repos:
         stages: [manual] # GITHUB
 
   - repo: https://github.com/fchastanet/bash-compiler
-    rev: v0.3.6
+    rev: v1.0.0
     hooks:
       - id: buildBashBinaries
