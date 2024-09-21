@@ -2803,11 +2803,11 @@ main() {
 
 Linux::requireTarCommand
 Compiler::Embed::extractFileFromBase64 \
-  "${PERSISTENT_TMPDIR:-/tmp}/95e2e89e049fcfcd74a8b75390f067bf/dumpSizeQuery" \
+  "${PERSISTENT_TMPDIR:-/tmp}/2e26e9149612ae897e866701fc461bca4f7dc43993209e69077db41f10c2a0a6/dumpSizeQuery" \
   "U0VMRUNUIFJPVU5EKFNVTShkYXRhX2xlbmd0aCArIGluZGV4X2xlbmd0aCkgLyAxMDI0IC8gMTAyNCwgMCkgQVMgc2l6ZQpGUk9NIGluZm9ybWF0aW9uX3NjaGVtYS5UQUJMRVMgV0hFUkUgdGFibGVfc2NoZW1hPScke2Zyb21EYk5hbWV9JwpBTkQgdGFibGVfbmFtZSBJTigke2xpc3RUYWJsZXNEdW1wU2l6ZX0sICdkdW1teScpCkdST1VQIEJZIHRhYmxlX3NjaGVtYQo=" \
   "644"
 
-declare -gx embed_file_dumpSizeQuery="${PERSISTENT_TMPDIR:-/tmp}/95e2e89e049fcfcd74a8b75390f067bf/dumpSizeQuery"
+declare -gx embed_file_dumpSizeQuery="${PERSISTENT_TMPDIR:-/tmp}/2e26e9149612ae897e866701fc461bca4f7dc43993209e69077db41f10c2a0a6/dumpSizeQuery"
 
 
 # dump header/footer
