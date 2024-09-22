@@ -888,6 +888,19 @@ Log::displayInfo() {
 }
 
 
+# @description Display message using success color (bg green/fg white)
+# @arg $1 message:String the message to display
+# @env DISPLAY_DURATION int (default 0) if 1 display elapsed time information between 2 info logs
+# @env LOG_CONTEXT String allows to contextualize the log
+Log::displaySuccess() {
+  if ((BASH_FRAMEWORK_DISPLAY_LEVEL >= __LEVEL_INFO)); then
+    Log::computeDuration
+    echo -e "${__SUCCESS_COLOR}SUCCESS - ${LOG_CONTEXT:-}${LOG_LAST_DURATION_STR:-}${1}${__RESET_COLOR}" >&2
+  fi
+  Log::logSuccess "$1"
+}
+
+
 # @description Display message using warning color (yellow)
 # @arg $1 message:String the message to display
 # @env DISPLAY_DURATION int (default 0) if 1 display elapsed time information between 2 info logs
@@ -980,6 +993,15 @@ Log::logMessage() {
     date="$(date '+%Y-%m-%d %H:%M:%S')"
     touch "${BASH_FRAMEWORK_LOG_FILE}"
     printf "%s|%7s|%s\n" "${date}" "${levelMsg}" "${msg}" >>"${BASH_FRAMEWORK_LOG_FILE}"
+  fi
+}
+
+
+# @description log message to file
+# @arg $1 message:String the message to display
+Log::logSuccess() {
+  if ((BASH_FRAMEWORK_LOG_LEVEL >= __LEVEL_INFO)); then
+    Log::logMessage "${2:-SUCCESS}" "$1"
   fi
 }
 
@@ -1214,17 +1236,20 @@ Version::checkMinimal() {
 
   Log::displayDebug "check ${commandName} version ${version} against minimal ${minimalVersion}"
 
-  Version::compare "${version}" "${minimalVersion}" || {
-    local result=$?
-    if [[ "${result}" = "1" ]]; then
+  local result=0
+  Version::compare "${version}" "${minimalVersion}" || result=$?
+  case "${result}" in
+    1)
       Log::displayInfo "${commandName} version is ${version} greater than ${minimalVersion}"
-    elif [[ "${result}" = "2" ]]; then
+      ;;
+    2)
       Log::displayError "${commandName} minimal version is ${minimalVersion}, your version is ${version}"
       return 1
-    fi
-    return 0
-  }
-
+      ;;
+    *)
+      Log::displaySuccess "${commandName} version is matching exactly the expected minimal version ${version}"
+      ;;
+  esac
 }
 
 
@@ -1276,7 +1301,6 @@ Version::parse() {
     "$@"
 }
 # FUNCTIONS
-
 
 declare -a BASH_FRAMEWORK_ARGV_FILTERED=()
 
@@ -1957,7 +1981,6 @@ extractDataCommandParse() {
 extractDataCommandHelp() {
   echo -e "${__HELP_TITLE_COLOR}SYNOPSIS:${__RESET_COLOR}"
   Array::wrap2 ' ' 76 4 "    " ""
-
   echo
   echo
 

@@ -1068,7 +1068,6 @@ UI::theme() {
 }
 # FUNCTIONS
 
-
 declare -a BASH_FRAMEWORK_ARGV_FILTERED=()
 
 beforeParseCallback() {
@@ -1799,7 +1798,6 @@ mysql2pumlCommandParse() {
 mysql2pumlCommandHelp() {
   echo -e "${__HELP_TITLE_COLOR}SYNOPSIS:${__RESET_COLOR}"
   Array::wrap2 ' ' 76 4 "    " "Converts mysql dump sql schema to plantuml format."
-
   echo
   echo
 
