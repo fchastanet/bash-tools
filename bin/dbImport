@@ -388,7 +388,7 @@ DISPLAY_DURATION=${DISPLAY_DURATION:0}
 ### all log messages will be redirected to log file specified
 ### this same path will be used inside and outside of the container
 ###
-BASH_FRAMEWORK_LOG_FILE=${BASH_FRAMEWORK_LOG_FILE:-${FRAMEWORK_ROOT_DIR}/logs/bash.log}
+BASH_FRAMEWORK_LOG_FILE=${BASH_FRAMEWORK_LOG_FILE:-${BASH_TOOLS_ROOT_DIR}/logs/bash.log}
 
 ###
 ### LOG Level
@@ -2083,10 +2083,12 @@ dbImportCommandParse() {
   ((options_parse_optionParsedCountOptionQuiet = 0)) || true
 
   fromDbName=""
+
   local -i options_parse_argParsedCountFromDbName
   ((options_parse_argParsedCountFromDbName = 0)) || true
 
   targetDbName=""
+
   local -i options_parse_argParsedCountTargetDbName
   ((options_parse_argParsedCountTargetDbName = 0)) || true
 
@@ -2637,9 +2639,11 @@ dbImportCommandHelp() {
   Array::wrap2 ' ' 76 4 "    " "The name of the source/remote database."
   echo
 
+
   Array::wrap2 " " 80 2 "  [${__HELP_OPTION_COLOR}<targetDbName>${__HELP_NORMAL} {single}]"
   Array::wrap2 ' ' 76 4 "    " "The name of the target database" "Default value: <fromDbName>(without extension)" ""
   echo
+
 
   # ------------------------------------------
   # options section

@@ -371,7 +371,7 @@ DISPLAY_DURATION=${DISPLAY_DURATION:0}
 ### all log messages will be redirected to log file specified
 ### this same path will be used inside and outside of the container
 ###
-BASH_FRAMEWORK_LOG_FILE=${BASH_FRAMEWORK_LOG_FILE:-${FRAMEWORK_ROOT_DIR}/logs/bash.log}
+BASH_FRAMEWORK_LOG_FILE=${BASH_FRAMEWORK_LOG_FILE:-${BASH_TOOLS_ROOT_DIR}/logs/bash.log}
 
 ###
 ### LOG Level
@@ -1390,18 +1390,22 @@ waitForMysqlCommandParse() {
   ((options_parse_optionParsedCountOptionQuiet = 0)) || true
 
   mysqlHostArg=""
+
   local -i options_parse_argParsedCountMysqlHostArg
   ((options_parse_argParsedCountMysqlHostArg = 0)) || true
 
   mysqlPortArg=""
+
   local -i options_parse_argParsedCountMysqlPortArg
   ((options_parse_argParsedCountMysqlPortArg = 0)) || true
 
   mysqlUserArg=""
+
   local -i options_parse_argParsedCountMysqlUserArg
   ((options_parse_argParsedCountMysqlUserArg = 0)) || true
 
   mysqlPasswordArg=""
+
   local -i options_parse_argParsedCountMysqlPasswordArg
   ((options_parse_argParsedCountMysqlPasswordArg = 0)) || true
 
@@ -1883,21 +1887,26 @@ waitForMysqlCommandHelp() {
   Array::wrap2 ' ' 76 4 "    " "Mysql host name."
   echo
 
+
   Array::wrap2 " " 80 2 "  ${__HELP_OPTION_COLOR}mysqlPort${__HELP_NORMAL} {single} (mandatory)"
   Array::wrap2 ' ' 76 4 "    " "Mysql port."
   echo
+
 
   Array::wrap2 " " 80 2 "  ${__HELP_OPTION_COLOR}mysqlUser${__HELP_NORMAL} {single} (mandatory)"
   Array::wrap2 ' ' 76 4 "    " "Mysql user name."
   echo
 
+
   Array::wrap2 " " 80 2 "  ${__HELP_OPTION_COLOR}mysqlPassword${__HELP_NORMAL} {single} (mandatory)"
   Array::wrap2 ' ' 76 4 "    " "Mysql user password."
   echo
 
+
   Array::wrap2 " " 80 2 "  [${__HELP_OPTION_COLOR}commandArgs${__HELP_NORMAL} {list} (optional)]"
   Array::wrap2 ' ' 76 4 "    " "Execute command with args after the test finishes or exit with status code if no command provided."
   echo
+
 
   # ------------------------------------------
   # options section

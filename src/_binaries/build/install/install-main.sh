@@ -19,7 +19,7 @@ if [[ -d "${HOME}/.bash-tools" ]]; then
   if [[ "${optionSkipBackup}" = "1" ]]; then
     Log::displayInfo "Backup of ~/.bash-tools is set to be skipped"
   else
-    BACKUP_DIR="${FRAMEWORK_ROOT_DIR}/logs" \
+    BACKUP_DIR="${BASH_TOOLS_ROOT_DIR}/logs" \
       Backup::dir "${HOME}" ".bash-tools"
   fi
 

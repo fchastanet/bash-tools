@@ -371,7 +371,7 @@ DISPLAY_DURATION=${DISPLAY_DURATION:0}
 ### all log messages will be redirected to log file specified
 ### this same path will be used inside and outside of the container
 ###
-BASH_FRAMEWORK_LOG_FILE=${BASH_FRAMEWORK_LOG_FILE:-${FRAMEWORK_ROOT_DIR}/logs/bash.log}
+BASH_FRAMEWORK_LOG_FILE=${BASH_FRAMEWORK_LOG_FILE:-${BASH_TOOLS_ROOT_DIR}/logs/bash.log}
 
 ###
 ### LOG Level
@@ -1852,6 +1852,7 @@ dbScriptAllDatabasesCommandParse() {
   ((options_parse_optionParsedCountOptionLogFormat = 0)) || true
 
   argScriptToExecute=""
+
   local -i options_parse_argParsedCountArgScriptToExecute
   ((options_parse_argParsedCountArgScriptToExecute = 0)) || true
 
@@ -2369,9 +2370,11 @@ dbScriptAllDatabasesCommandHelp() {
   Array::wrap2 ' ' 76 4 "    " "The script that will be executed on each databases."
   echo
 
+
   Array::wrap2 " " 80 2 "  [${__HELP_OPTION_COLOR}scriptArguments${__HELP_NORMAL} {list} (optional)]"
   Array::wrap2 ' ' 76 4 "    " "Optional parameters to pass to the script."
   echo
+
 
   # ------------------------------------------
   # options section

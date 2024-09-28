@@ -413,7 +413,7 @@ DISPLAY_DURATION=${DISPLAY_DURATION:0}
 ### all log messages will be redirected to log file specified
 ### this same path will be used inside and outside of the container
 ###
-BASH_FRAMEWORK_LOG_FILE=${BASH_FRAMEWORK_LOG_FILE:-${FRAMEWORK_ROOT_DIR}/logs/bash.log}
+BASH_FRAMEWORK_LOG_FILE=${BASH_FRAMEWORK_LOG_FILE:-${BASH_TOOLS_ROOT_DIR}/logs/bash.log}
 
 ###
 ### LOG Level
@@ -1751,10 +1751,12 @@ upgradeGithubReleaseCommandParse() {
   ((options_parse_optionParsedCountOptionExactVersion = 0)) || true
 
   targetFileArg=""
+
   local -i options_parse_argParsedCountTargetFileArg
   ((options_parse_argParsedCountTargetFileArg = 0)) || true
 
   githubUrlPatternArg=""
+
   local -i options_parse_argParsedCountGithubUrlPatternArg
   ((options_parse_argParsedCountGithubUrlPatternArg = 0)) || true
 
@@ -2211,8 +2213,10 @@ upgradeGithubReleaseCommandHelp() {
   Array::wrap2 ' ' 76 4 "    " "The binary downloaded will be written to this file path. Ensure the path is writable."
   echo
 
+
   Array::wrap2 " " 80 2 "  ${__HELP_OPTION_COLOR}githubUrlPattern${__HELP_NORMAL} {single} (mandatory)"
   githubUrlPatternHelpFunction
+
 
 
   # ------------------------------------------
