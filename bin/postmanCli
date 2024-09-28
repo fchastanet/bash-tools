@@ -388,7 +388,7 @@ DISPLAY_DURATION=${DISPLAY_DURATION:0}
 ### all log messages will be redirected to log file specified
 ### this same path will be used inside and outside of the container
 ###
-BASH_FRAMEWORK_LOG_FILE=${BASH_FRAMEWORK_LOG_FILE:-${FRAMEWORK_ROOT_DIR}/logs/bash.log}
+BASH_FRAMEWORK_LOG_FILE=${BASH_FRAMEWORK_LOG_FILE:-${BASH_TOOLS_ROOT_DIR}/logs/bash.log}
 
 ###
 ### LOG Level
@@ -1995,6 +1995,7 @@ postmanCliCommandParse() {
   ((options_parse_optionParsedCountOptionPostmanModelConfig = 0)) || true
 
   argCommand=""
+
   local -i options_parse_argParsedCountArgCommand
   ((options_parse_argParsedCountArgCommand = 0)) || true
 
@@ -2392,8 +2393,10 @@ postmanCliCommandHelp() {
   Array::wrap2 ' ' 76 8 "      - ${__OPTION_COLOR}push:${__RESET_COLOR} Push"
   echo
 
+
   Array::wrap2 " " 80 2 "  [${__HELP_OPTION_COLOR}ref${__HELP_NORMAL} {list} (optional)]"
   commandArgsHelpFunction
+
 
 
   # ------------------------------------------

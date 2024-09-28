@@ -371,7 +371,7 @@ DISPLAY_DURATION=${DISPLAY_DURATION:0}
 ### all log messages will be redirected to log file specified
 ### this same path will be used inside and outside of the container
 ###
-BASH_FRAMEWORK_LOG_FILE=${BASH_FRAMEWORK_LOG_FILE:-${FRAMEWORK_ROOT_DIR}/logs/bash.log}
+BASH_FRAMEWORK_LOG_FILE=${BASH_FRAMEWORK_LOG_FILE:-${BASH_TOOLS_ROOT_DIR}/logs/bash.log}
 
 ###
 ### LOG Level
@@ -1385,10 +1385,12 @@ gitIsAncestorOfCommandParse() {
   ((options_parse_optionParsedCountOptionQuiet = 0)) || true
 
   claimedBranchArg=""
+
   local -i options_parse_argParsedCountClaimedBranchArg
   ((options_parse_argParsedCountClaimedBranchArg = 0)) || true
 
   refArg=""
+
   local -i options_parse_argParsedCountRefArg
   ((options_parse_argParsedCountRefArg = 0)) || true
 
@@ -1785,9 +1787,11 @@ gitIsAncestorOfCommandHelp() {
   Array::wrap2 ' ' 76 4 "    " "The branch in which the ref will be searched."
   echo
 
+
   Array::wrap2 " " 80 2 "  ${__HELP_OPTION_COLOR}ref${__HELP_NORMAL} {single} (mandatory)"
   Array::wrap2 ' ' 76 4 "    " "The ref to check."
   echo
+
 
   # ------------------------------------------
   # options section
