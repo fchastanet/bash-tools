@@ -1946,7 +1946,7 @@ declare optionQuiet="0"
 declare optionPostmanModelConfig=""
 # arguments variables initialization
 declare argCommand=""
-declare commandArgs=""
+declare -a commandArgs=()
 # @description parse command options and arguments for postmanCliCommand
 postmanCliCommandParse() {
   Log::displayDebug "Command ${SCRIPT_NAME} - parse arguments: ${BASH_FRAMEWORK_ARGV[*]}"
@@ -1999,7 +1999,7 @@ postmanCliCommandParse() {
   local -i options_parse_argParsedCountArgCommand
   ((options_parse_argParsedCountArgCommand = 0)) || true
 
-  commandArgs=""
+  commandArgs=()
 
 
   # shellcheck disable=SC2034
@@ -2329,7 +2329,8 @@ postmanCliCommandParse() {
         elif (( options_parse_parsedArgIndex >= minParsedArgIndex1 )); then
           ((++options_parse_argParsedCountCommandArgs))
           # shellcheck disable=SC2034
-          commandArgs="${options_parse_arg}"
+          # shellcheck disable=SC2034
+          commandArgs+=("${options_parse_arg}")
 
 
         # else too much args

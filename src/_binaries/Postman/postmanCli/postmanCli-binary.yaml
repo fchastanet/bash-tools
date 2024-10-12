@@ -43,7 +43,7 @@ binData:
           name: command
           variableName: argCommand
 
-        - type: String
+        - type: StringArray
           min: 0
           max: -1
           help: commandArgsHelpFunction

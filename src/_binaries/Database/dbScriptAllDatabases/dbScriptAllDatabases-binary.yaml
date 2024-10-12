@@ -55,8 +55,8 @@ binData:
           group: groupScriptsOptions
           type: StringArray
           help:
-            "If provided will check only this db,\notherwise script will be
-            executed on all dbs of mysql server."
+            "If provided will check only databases specified,\notherwise script
+            will be executed on all dbs of mysql server."
           helpValueName: dbName
           alts:
             - --database

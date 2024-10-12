@@ -1842,8 +1842,7 @@ dbScriptAllDatabasesCommandParse() {
   optionQuiet="0"
   local -i options_parse_optionParsedCountOptionQuiet
   ((options_parse_optionParsedCountOptionQuiet = 0)) || true
-  local -i options_parse_optionParsedCountOptionDatabases
-  ((options_parse_optionParsedCountOptionDatabases = 0)) || true
+
   optionOutputDir=""
   local -i options_parse_optionParsedCountOptionOutputDir
   ((options_parse_optionParsedCountOptionOutputDir = 0)) || true
@@ -2187,7 +2186,7 @@ dbScriptAllDatabasesCommandParse() {
 
       # Option 17/19
       # optionDatabases alts --database
-      # type: StringArray min 0 max 1
+      # type: StringArray min 0 max -1
       --database)
         shift
         if (($# == 0)); then
@@ -2195,10 +2194,6 @@ dbScriptAllDatabasesCommandParse() {
           return 1
         fi
 
-        if ((options_parse_optionParsedCountOptionDatabases >= 1 )); then
-          Log::displayError "Command ${SCRIPT_NAME} - Option ${options_parse_arg} - Maximum number of option occurrences reached(1)"
-          return 1
-        fi
         ((++options_parse_optionParsedCountOptionDatabases))
         optionDatabases+=("$1")
         ;;
@@ -2490,8 +2485,8 @@ dbScriptAllDatabasesCommandHelp() {
 
   echo
   echo -e "${__HELP_TITLE_COLOR}SCRIPTS OPTIONS:${__RESET_COLOR}"
-  echo -e "  ${__HELP_OPTION_COLOR}--database <dbName>${__HELP_NORMAL} {single}"
-  Array::wrap2 ' ' 76 4 "    " "If provided will check only this db," "otherwise script will be executed on all dbs of mysql server."
+  echo -e "  ${__HELP_OPTION_COLOR}--database <dbName>${__HELP_NORMAL} {list} (optional)"
+  Array::wrap2 ' ' 76 4 "    " "If provided will check only databases specified," "otherwise script will be executed on all dbs of mysql server."
   echo
 
 

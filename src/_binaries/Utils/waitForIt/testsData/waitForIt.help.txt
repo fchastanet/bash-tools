@@ -74,7 +74,7 @@
   [1;34m--quiet[0m, [1;34m-q[0m {single}
     Quiet mode, doesn't display any output.
 
-[1;37mOPTIONS:[0m
+[1;37mSPECIFIC OPTIONS:[0m
   [1;34m--algorithm[0m, [1;34m--algo <algorithm>[0m {single}
     Algorithm to use Check algorithms list below.
     Default: automatic selection based on commands availability and timeout option value.

@@ -80,8 +80,8 @@
     Quiet mode, doesn't display any output.
 
 [1;37mSCRIPTS OPTIONS:[0m
-  [1;34m--database <dbName>[0m {single}
-    If provided will check only this db,
+  [1;34m--database <dbName>[0m {list} (optional)
+    If provided will check only databases specified,
     otherwise script will be executed on all dbs of mysql server.
   [1;34m--output[0m, [1;34m-o <outputDirectory>[0m {single}
     Output directory, see log-format option.
