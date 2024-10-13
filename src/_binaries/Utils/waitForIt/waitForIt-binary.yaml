@@ -59,7 +59,7 @@ binData:
 
       optionGroups:
         waitForItOptionGroup:
-          title: "OPTIONS:"
+          title: "SPECIFIC OPTIONS:"
 
       options:
         - variableName: optionAlgo

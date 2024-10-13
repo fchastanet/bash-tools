@@ -2053,7 +2053,7 @@ waitForItCommandHelp() {
   echo
 
   echo
-  echo -e "${__HELP_TITLE_COLOR}OPTIONS:${__RESET_COLOR}"
+  echo -e "${__HELP_TITLE_COLOR}SPECIFIC OPTIONS:${__RESET_COLOR}"
   echo -e "  ${__HELP_OPTION_COLOR}--algorithm${__HELP_NORMAL}, ${__HELP_OPTION_COLOR}--algo <algorithm>${__HELP_NORMAL} {single}"
   algorithmHelpFunction
 
