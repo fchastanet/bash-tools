@@ -325,7 +325,7 @@ Assert::tty() {
 
 
 read -r -d '\0' bashToolsDefaultConfigTemplate <<-EOM || true
-#
+##!/usr/bin/env bash
 # shellcheck disable=SC2034
 
 # Default settings

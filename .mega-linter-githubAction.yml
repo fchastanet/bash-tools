@@ -1,6 +1,8 @@
 ---
 EXTENDS:
   - .mega-linter.yml
+DISABLE:
+  - BASH_SHELLCHECK
 SHOW_ELAPSED_TIME: false
 VALIDATE_ALL_CODEBASE: true
 

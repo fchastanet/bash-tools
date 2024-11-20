@@ -1,7 +1,7 @@
 #!/bin/bash
 
 read -r -d '\0' bashToolsDefaultConfigTemplate <<-EOM || true
-#{{ include ".env" .Data . -}}
+#{{ includeFile "${BASH_TOOLS_ROOT_DIR}/conf/defaultEnv/.env"  -}}
 EOM
 
 # @description loads ~/.bash-tools/.env if available
