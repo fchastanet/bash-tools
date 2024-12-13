@@ -74,7 +74,7 @@ jobs:
           git_user_signingkey: true
           git_commit_gpgsign: true
 
-      - uses: tibdex/github-app-token@v1
+      - uses: tibdex/github-app-token@v2
         if: ${{ success() }}
         id: generate-token
         with:
@@ -239,7 +239,7 @@ jobs:
           git_user_signingkey: true
           git_commit_gpgsign: true
 
-      - uses: tibdex/github-app-token@v1
+      - uses: tibdex/github-app-token@v2
         if: ${{ success() }}
         id: generate-token
         with:
@@ -292,7 +292,7 @@ jobs:
           exit "${status}"
 
       - name: Publish Test Report
-        uses: mikepenz/action-junit-report@v4
+        uses: mikepenz/action-junit-report@v5
         if: ${{ always()}}
         with:
           token: ${{ github.token }}
@@ -303,7 +303,7 @@ jobs:
           report_paths: "logs/**.xml"
 
       - name: Checkstyle aggregation
-        uses: lcollins/checkstyle-github-action@v3.0.0
+        uses: lcollins/checkstyle-github-action@v3.1.0
         with:
           path: "logs/*.xml"
 
