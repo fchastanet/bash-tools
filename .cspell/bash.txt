@@ -1,5 +1,4 @@
 ABRT
-ABRT
 addgroup
 asort
 AUTOCOMMIT
@@ -23,7 +22,6 @@ Datash
 datetime
 DELIMS
 deps
-Deps
 dhclient
 DISTRO
 distutils
@@ -60,7 +58,6 @@ keychain
 KHTML
 killall
 lastpipe
-lastpipe
 libkrb
 libloadandcheckconfigsh
 loadandcheckconfig
@@ -76,7 +73,6 @@ newuser
 noargs
 nohup
 noninteractive
-NONINTERACTIVE
 nullglob
 onbuild
 PATHCONV

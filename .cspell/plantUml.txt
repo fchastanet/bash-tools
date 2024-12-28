@@ -1,5 +1,4 @@
 endfunction
-endfunction
 enduml
 nullable
 skinparam

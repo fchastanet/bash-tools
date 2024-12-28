@@ -1,3 +1,4 @@
+# kics-scan disable=555ab8f9-2001-455e-a077-f2d0f41e2fb9
 ---
 # Lint the code base and launch unit test at each push or pull request
 name: Lint and test
@@ -34,6 +35,7 @@ env:
   COND_UPDATED_SOURCES: false
   COND_APPLY_FIXES_NEEDED: false
 
+permissions: read-all
 jobs:
   # -------------------------------------------------------
   # Pre-commit
@@ -49,7 +51,7 @@ jobs:
       # needed by megalinter
       pull-requests: write
     steps:
-      - uses: akatov/commit-status-updater@a9e988ec5454692ff7745a509452422a35172ad6
+      - uses: ouzi-dev/commit-status-updater@v2
         with:
           name: build-bash-tools
           status: pending
@@ -81,7 +83,7 @@ jobs:
           app_id: ${{ secrets.APP_ID }}
           private_key: ${{ secrets.APP_PRIVATE_KEY }}
 
-      - uses: akatov/commit-status-updater@a9e988ec5454692ff7745a509452422a35172ad6
+      - uses: ouzi-dev/commit-status-updater@v2
         with:
           name: pre-commit-megalinter
           status: pending
@@ -121,10 +123,10 @@ jobs:
         id: ml
         if: ${{ always() }}
         # You can override MegaLinter flavor used to have faster performances
-        # More info at https://megalinter.io/flavors/
+        # More info at https://megalinter.io/latest/flavors/
         uses: oxsecurity/megalinter/flavors/terraform@v8
         # All available variables are described in documentation
-        # https://megalinter.io/configuration/
+        # https://megalinter.io/latest/configuration/
         env:
           # Validates all source when push on master,
           # else just the git diff with master.
@@ -171,7 +173,7 @@ jobs:
           env.COND_UPDATED_SOURCES == 'true' &&
           env.COND_APPLY_FIXES_NEEDED == 'true' &&
           !contains(github.event.head_commit.message, 'skip fix')
-        uses: peter-evans/create-pull-request@v6
+        uses: peter-evans/create-pull-request@v7
         with:
           token: ${{ steps.generate-token.outputs.token }}
           committer: fchastanet <fchastanet@gmail.com>
@@ -191,7 +193,7 @@ jobs:
           echo "Pull Request Number - ${{ steps.cpr.outputs.pull-request-number }}"
           echo "Pull Request URL - ${{ steps.cpr.outputs.pull-request-url }}"
 
-      - uses: akatov/commit-status-updater@a9e988ec5454692ff7745a509452422a35172ad6
+      - uses: ouzi-dev/commit-status-updater@v2
         if: ${{ always() }}
         with:
           name: pre-commit-megalinter
@@ -246,7 +248,7 @@ jobs:
           app_id: ${{ secrets.APP_ID }}
           private_key: ${{ secrets.APP_PRIVATE_KEY }}
 
-      - uses: akatov/commit-status-updater@a9e988ec5454692ff7745a509452422a35172ad6
+      - uses: ouzi-dev/commit-status-updater@v2
         with:
           name: unit-tests-${{matrix.vendor}}-${{matrix.bashTarVersion}}
           status: pending
@@ -315,7 +317,7 @@ jobs:
           path: |
             logs/**
 
-      - uses: akatov/commit-status-updater@a9e988ec5454692ff7745a509452422a35172ad6
+      - uses: ouzi-dev/commit-status-updater@v2
         with:
           name: unit-tests-${{matrix.vendor}}-${{matrix.bashTarVersion}}
           status: ${{ job.status }}
@@ -334,7 +336,7 @@ jobs:
       # You can get the conclusion via env (env.WORKFLOW_CONCLUSION)
       - uses: AbsoLouie/workflow-conclusion-status@v1.0.2
 
-      - uses: akatov/commit-status-updater@a9e988ec5454692ff7745a509452422a35172ad6
+      - uses: ouzi-dev/commit-status-updater@v2
         with:
           name: build-bash-tools
           # neutral, success, skipped, cancelled, timed_out, action_required, failure

@@ -59,7 +59,6 @@ gtid
 heightwhenhidden
 histappend
 HISTCONTROL
-HISTCONTROL
 HISTFILESIZE
 HISTIGNORE
 HISTSIZE
@@ -91,8 +90,6 @@ maximised
 mcrypt
 mdformat
 megalinter
-megalinter
-meslo
 Meslo
 Msys
 mthis
@@ -117,7 +114,6 @@ oldmode
 oneline
 ovpn
 oxsecurity
-oxsecurity
 pagedown
 pageup
 Parens
@@ -127,14 +123,11 @@ pcre
 pgdn
 pgup
 Phar
-phar
 phing
 phpcollection
 phpcolors
-PHPCS
 phpcs
 phpcsfixer
-PHPDOC
 PHPDOC
 phpinfo
 phpmailer
@@ -189,7 +182,6 @@ tigrc
 tintcolor
 Titlebar
 twosuperior
-UNINDEXED
 unindexed
 unstaged
 upgrader
@@ -201,7 +193,6 @@ wddx
 wekyb
 widthtype
 WORKON
-WSLCONFIG
 wslconfig
 xapi
 XDMCP

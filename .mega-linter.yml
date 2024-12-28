@@ -129,6 +129,16 @@ SPELL_FILTER_REGEX_EXCLUDE: |
     \.idea/
   )
 
+SPELL_PROSELINT_FILTER_REGEX_EXCLUDE: |
+  (?x)(
+    ^\.git/|
+    ^\.history/|
+    ^\.idea/|
+    ^pages/_sidebar.md|
+    /testsData/|
+    ^.cspell/config.txt$
+  )
+
 MARKDOWN_MARKDOWN_LINK_CHECK_FILTER_REGEX_EXCLUDE: |
   (?x)(
     report/

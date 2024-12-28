@@ -1,5 +1,7 @@
 {
   "checks": {
-    "typography.diacritical_marks": false
+    "typography.diacritical_marks": false,
+    "typography.symbols.curly_quotes": false,
+    "typography.symbols.copyright": false
   }
 }

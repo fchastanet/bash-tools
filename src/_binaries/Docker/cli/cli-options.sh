@@ -53,7 +53,7 @@ longDescriptionFunction() {
   echo
   echo -e "${__HELP_TITLE}EXAMPLES:${__HELP_EXAMPLE}"
   echo -e "    to connect to mysql container in bash mode with user mysql"
-  echo -e "        ${SCRIPT_NAME} mysql mysql '/bin/bash'"
+  echo -e "        ${SCRIPT_NAME} mysql-container-name mysql '/bin/bash'"
   echo -e "    to connect to web container with user root"
   echo -e "        ${SCRIPT_NAME} web root"
   echo -e "${__HELP_NORMAL}"

@@ -107,7 +107,7 @@ Plantuml diagram generated
 
 using plantuml software, here an example of resulting diagram
 
-![resulting database diagram](src/_binaries/Converters/testsData/mysql2puml-model.png)
+![resulting database diagram](src/_binaries/Converters/mysql2puml/testsData/mysql2puml-model.png)
 
 ## 3. Git tools
 
