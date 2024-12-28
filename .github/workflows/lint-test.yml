@@ -49,7 +49,7 @@ jobs:
       # needed by megalinter
       pull-requests: write
     steps:
-      - uses: akatov/commit-status-updater@a9e988ec5454692ff7745a509452422a35172ad6
+      - uses: ouzi-dev/commit-status-updater@v2
         with:
           name: build-bash-tools
           status: pending
@@ -81,7 +81,7 @@ jobs:
           app_id: ${{ secrets.APP_ID }}
           private_key: ${{ secrets.APP_PRIVATE_KEY }}
 
-      - uses: akatov/commit-status-updater@a9e988ec5454692ff7745a509452422a35172ad6
+      - uses: ouzi-dev/commit-status-updater@v2
         with:
           name: pre-commit-megalinter
           status: pending
@@ -191,7 +191,7 @@ jobs:
           echo "Pull Request Number - ${{ steps.cpr.outputs.pull-request-number }}"
           echo "Pull Request URL - ${{ steps.cpr.outputs.pull-request-url }}"
 
-      - uses: akatov/commit-status-updater@a9e988ec5454692ff7745a509452422a35172ad6
+      - uses: ouzi-dev/commit-status-updater@v2
         if: ${{ always() }}
         with:
           name: pre-commit-megalinter
@@ -246,7 +246,7 @@ jobs:
           app_id: ${{ secrets.APP_ID }}
           private_key: ${{ secrets.APP_PRIVATE_KEY }}
 
-      - uses: akatov/commit-status-updater@a9e988ec5454692ff7745a509452422a35172ad6
+      - uses: ouzi-dev/commit-status-updater@v2
         with:
           name: unit-tests-${{matrix.vendor}}-${{matrix.bashTarVersion}}
           status: pending
@@ -315,7 +315,7 @@ jobs:
           path: |
             logs/**
 
-      - uses: akatov/commit-status-updater@a9e988ec5454692ff7745a509452422a35172ad6
+      - uses: ouzi-dev/commit-status-updater@v2
         with:
           name: unit-tests-${{matrix.vendor}}-${{matrix.bashTarVersion}}
           status: ${{ job.status }}
@@ -334,7 +334,7 @@ jobs:
       # You can get the conclusion via env (env.WORKFLOW_CONCLUSION)
       - uses: AbsoLouie/workflow-conclusion-status@v1.0.2
 
-      - uses: akatov/commit-status-updater@a9e988ec5454692ff7745a509452422a35172ad6
+      - uses: ouzi-dev/commit-status-updater@v2
         with:
           name: build-bash-tools
           # neutral, success, skipped, cancelled, timed_out, action_required, failure
