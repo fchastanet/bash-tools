@@ -1,5 +1,4 @@
 clairefro
-EJSON
 ejson
 octocat
 prerequest

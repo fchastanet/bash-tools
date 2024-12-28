@@ -97,7 +97,7 @@ This list can be overridden in home/.bash-tools/cliProfiles
 
 [1;37mEXAMPLES:[2;97m
     to connect to mysql container in bash mode with user mysql
-        cli mysql mysql '/bin/bash'
+        cli mysql-container-name mysql '/bin/bash'
     to connect to web container with user root
         cli web root
 [0m

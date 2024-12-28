@@ -49,7 +49,7 @@ fail-on-severity: "high"
 #   enable: false
 #   maven:
 #     search-upstream-by-sha1: true
-#     base-url: https://search.maven.org/solrsearch/select
+#     base-url: https://central.sonatype.com/artifact/org.testcontainers/solr
 
 # db:
 # check for database updates on execution

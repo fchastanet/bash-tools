@@ -2,7 +2,6 @@ abitur
 adipiscing
 aliquet
 amet
-amet
 commodo
 condimentum
 consectetur
@@ -16,9 +15,7 @@ et
 fini
 finibus
 id
-id
 in
-ipsum
 ipsum
 libero
 lobortis
@@ -34,7 +31,6 @@ purus
 quis
 sapien
 semper
-sit
 sit
 turpis
 vel

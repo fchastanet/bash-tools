@@ -14,3 +14,4 @@ https://github.com/docker/docker-credential-helpers/releases/download/v@version@
 https://github.com/Versent/saml2aws/releases/download/v@version@/saml2aws_@version@_linux_amd64.tar.gz
 https://github.com/fchastanet/bash-tools/tree/master/src/_binaries*
 Commands.md
+https://www.gnu.org/software/parallel/

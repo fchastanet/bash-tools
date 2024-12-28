@@ -17,13 +17,11 @@ endfunction
 enduml
 fchastanet
 functionsretryparameterized
-functionsretryparameterized
 installationconfiguration
 installdir
 installfile
 Jetbrains
 libassertsh
-libloadandcheckconfigsh
 libloadandcheckconfigsh
 libutilssh
 loadandcheckconfig
@@ -33,7 +31,6 @@ markdownlint
 openapi
 PATHCONV
 Powerlevel
-powerlevel
 proot
 refactorings
 Scrasnups
