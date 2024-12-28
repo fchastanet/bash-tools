@@ -303,7 +303,7 @@ jobs:
           report_paths: "logs/**.xml"
 
       - name: Checkstyle aggregation
-        uses: lcollins/checkstyle-github-action@v3.1.0
+        uses: lcollins/checkstyle-github-action@v3
         with:
           path: "logs/*.xml"
 

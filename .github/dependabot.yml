@@ -6,6 +6,8 @@ updates:
     directory: "/"
     schedule:
       # Check for updates to GitHub Actions every week
-      interval: "weekly"
+      interval: "monthly"
       day: "friday"
+      time: "22:00"
+      timezone: "UTC"
     open-pull-requests-limit: 1
