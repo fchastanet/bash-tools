@@ -12,40 +12,45 @@ importInstallCallbacks() {
 
 forEachSoftware() {
   local configFile="${1}"
-  local callback="${2}"
   shift 2 || true
   local softwareIds=("$@")
-  local softwareId url version versionArg targetFile
-  local sudo installCallback softVersionCallback
 
-  # Process each software entry
-  for softwareId in "${softwareIds[@]}"; do
-    local software
-    software="$(yq ".softwares[] | select(.id == \"${softwareId}\")" "${configFile}")"
+  # Run installations in parallel using xargs
+  printf "%s\n" "${softwareIds[@]}" |
+    SKIP_YAML_CHECKS=1 xargs -P "$(nproc)" -I {} \
+      "${BASH_SOURCE[0]}" \
+      -c "${optionConfigFile}" \
+      "{}" 2>&1
+}
 
-    if [[ -n "${software}" ]]; then
-      url="$(echo "${software}" | yq --raw-output '.url' -)"
-      version="$(echo "${software}" | yq --raw-output '.version' -)"
-      versionArg="$(echo "${software}" | yq --raw-output '.versionArg' -)"
-      targetFile="$(echo "${software}" | yq --raw-output '.targetFile' -)"
-      sudo="$(echo "${software}" | yq --raw-output '.sudo' -)"
-      installCallback="$(echo "${software}" | yq --raw-output '.installCallback' -)"
-      if [[ -z "${installCallback}" || "${installCallback}" = "null" ]]; then
-        installCallback="Github::defaultInstall"
-      fi
-      softVersionCallback="$(echo "${software}" | yq --raw-output '.softVersionCallback' -)"
-      if [[ -z "${softVersionCallback}" || "${softVersionCallback}" = "null" ]]; then
-        softVersionCallback="Version::getCommandVersionFromPlainText"
-      fi
-      if command -v "${targetFile##*/}" &>/dev/null && [[ "$(command -v "${targetFile##*/}")" != "${targetFile}" ]]; then
-        Log::displayWarning "Existing executable found at $(command -v "${targetFile##*/}")"
-      fi
-      "${callback}" \
-        "${softwareId}" "${url}" "${version}" \
-        "${versionArg}" "${targetFile}" "${sudo}" \
-        "${installCallback}" "${softVersionCallback}"
+processSingleSoftware() {
+  local configFile="${1}"
+  local softwareId="${2}"
+
+  local software
+  software="$(yq ".softwares[] | select(.id == \"${softwareId}\")" "${configFile}")"
+  # shellcheck disable=SC2034
+  LOG_CONTEXT="Software ${softwareId} - "
+  if [[ -n "${software}" ]]; then
+    url="$(echo "${software}" | yq --raw-output '.url' -)"
+    version="$(echo "${software}" | yq --raw-output '.version' -)"
+    versionArg="$(echo "${software}" | yq --raw-output '.versionArg' -)"
+    targetFile="$(echo "${software}" | yq --raw-output '.targetFile' -)"
+    sudo="$(echo "${software}" | yq --raw-output '.sudo' -)"
+    installCallback="$(echo "${software}" | yq --raw-output '.installCallback' -)"
+    if [[ -z "${installCallback}" || "${installCallback}" = "null" ]]; then
+      installCallback="Github::defaultInstall"
     fi
-  done
+    softVersionCallback="$(echo "${software}" | yq --raw-output '.softVersionCallback' -)"
+    if [[ -z "${softVersionCallback}" || "${softVersionCallback}" = "null" ]]; then
+      softVersionCallback="Version::getCommandVersionFromPlainText"
+    fi
+
+    installSoftware \
+      "${softwareId}" "${url}" "${version}" \
+      "${versionArg}" "${targetFile}" "${sudo}" \
+      "${installCallback}" "${softVersionCallback}"
+  fi
 }
 
 installSoftware() {
@@ -101,9 +106,19 @@ installSoftware() {
     "${installCallback}"; then
     Log::displayError "Failed to install ${softwareId}"
   fi
-  # shellcheck disable=SC2034
-  GH_WARNING_DISPLAYED=1
 }
+if command -v gh &>/dev/null; then
+  if [[ -z "${SKIP_YAML_CHECKS:-}" && -z "${GH_TOKEN}" ]]; then
+    if gh auth status | grep -q "Logged in to github.com"; then
+      GH_TOKEN="$(gh auth token)"
+      export GH_TOKEN
+    fi
+  fi
+  if [[ -z "${GH_TOKEN}" ]]; then
+    Log::displayWarning "GH_TOKEN is not set, cannot use gh, using curl to retrieve release versions list"
+    export GH_WARNING_DISPLAYED=1
+  fi
+fi
 
 declare -a softwareIds
 # Get all software entries if no specific IDs provided
@@ -112,6 +127,9 @@ if [[ ${#softwareIdsArg[@]} -eq 0 ]]; then
 else
   softwareIds=("${softwareIdsArg[@]}")
 fi
-
-forEachSoftware \
-  "${optionConfigFile}" installSoftware "${softwareIds[@]}"
+if [[ ${#softwareIds[@]} -eq 1 ]]; then
+  processSingleSoftware "${optionConfigFile}" "${softwareIds[0]}"
+else
+  forEachSoftware \
+    "${optionConfigFile}" "${softwareIds[@]}"
+fi

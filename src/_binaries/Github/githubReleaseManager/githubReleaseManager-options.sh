@@ -30,7 +30,7 @@ validateSoftwareIds() {
 
   for softwareId in "${softwareIds[@]}"; do
     if ! echo "${validIds}" | grep -q "^${softwareId}$"; then
-      Log::displayError "Software ID '${softwareId}' not found in configuration file"
+      Log::displayError "Software ID '${softwareId}' not found in configuration file '${configFile}'"
       ((errors++))
     fi
   done
@@ -41,6 +41,7 @@ validateSoftwareIds() {
 validateYamlConfig() {
   local configFile="$1"
   local errors=0
+  Log::displayInfo "Validating configuration file ${configFile}"
 
   # Check if softwares key exists and is an array
   if ! yq '.softwares | type' "${configFile}" | grep -q "array"; then
@@ -61,6 +62,7 @@ validateYamlConfig() {
     done
   done < <(yq '.softwares | keys | .[]' "${configFile}")
 
+  Log::displayInfo "Configuration file ${configFile} validation complete"
   return "${errors}"
 }
 
@@ -71,6 +73,9 @@ configFileOptionCallback() {
   # shellcheck disable=SC2154
   if [[ ! -f "${optionConfigFile}" ]]; then
     Log::fatal "Configuration file ${optionConfigFile} does not exist"
+  fi
+  if [[ "${SKIP_YAML_CHECKS:-0}" = "1" ]]; then
+    return
   fi
   if ! validateYamlConfig "${optionConfigFile}"; then
     Log::fatal "Configuration file ${optionConfigFile} is invalid"

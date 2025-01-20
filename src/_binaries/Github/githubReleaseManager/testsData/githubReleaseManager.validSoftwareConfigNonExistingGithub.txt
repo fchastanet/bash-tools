@@ -1,4 +1,6 @@
-[44mINFO    - Installing validSoftwareConfig...[0m
+[44mINFO    - Validating configuration file /bash/src/_binaries/Github/githubReleaseManager/testsData/githubReleaseManager.yaml[0m
+[44mINFO    - Configuration file /bash/src/_binaries/Github/githubReleaseManager/testsData/githubReleaseManager.yaml validation complete[0m
+[44mINFO    - Software: validSoftwareConfig Installing validSoftwareConfig...[0m
   URL pattern: validUrl
   URL: validUrl
   Version: validVersion
@@ -6,5 +8,5 @@
   Sudo: sudo
   Install callback: installCallback
   Soft version callback: softVersionCallback
-[31mERROR   - targetFile version validVersion doesn't exist on github[0m
-[31mERROR   - Failed to install validSoftwareConfig[0m
+[31mERROR   - Software: validSoftwareConfig targetFile version validVersion doesn't exist on github[0m
+[31mERROR   - Software: validSoftwareConfig Failed to install validSoftwareConfig[0m

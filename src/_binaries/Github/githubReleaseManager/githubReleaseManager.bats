@@ -46,22 +46,27 @@ function Github::githubReleaseManager::missingSoftwaresKey { #@test
     "'.softwares | keys | .[]' '${f}' : exit 1"
   run "${binDir}/githubReleaseManager" -c "${f}" invalidSoftwareId 2>&1
   assert_failure 1
-  assert_lines_count 2
-  assert_line --index 0 --partial "ERROR   - Configuration file must have a 'softwares' array"
-  assert_line --index 1 --partial "FATAL   - Configuration file ${f} is invalid"
+  assert_lines_count 4
+  assert_line --index 0 --partial "INFO    - Validating configuration file ${f}"
+  assert_line --index 1 --partial "ERROR   - Configuration file must have a 'softwares' array"
+  assert_line --index 2 --partial "INFO    - Configuration file ${f} validation complete"
+  assert_line --index 3 --partial "FATAL   - Configuration file ${f} is invalid"
 }
 
 function Github::githubReleaseManager::invalidSoftwareId { #@test
+  local f="${BATS_TEST_DIRNAME}/testsData/githubReleaseManager.yaml"
   stub yq \
-    "'.softwares | type' '${BATS_TEST_DIRNAME}/testsData/githubReleaseManager.yaml' : echo 'array'" \
-    "'.softwares | keys | .[]' "${BATS_TEST_DIRNAME}/testsData/githubReleaseManager.yaml" : exit 0" \
-    "'.softwares[].id' "${BATS_TEST_DIRNAME}/testsData/githubReleaseManager.yaml" : exit 1"
+    "'.softwares | type' '${f}' : echo 'array'" \
+    "'.softwares | keys | .[]' "${f}" : exit 0" \
+    "'.softwares[].id' "${f}" : exit 1"
   run "${binDir}/githubReleaseManager" \
-    -c "${BATS_TEST_DIRNAME}/testsData/githubReleaseManager.yaml" invalidSoftwareId 2>&1
+    -c "${f}" invalidSoftwareId 2>&1
   assert_failure 1
-  assert_lines_count 2
-  assert_line --index 0 --partial "ERROR   - Software ID 'invalidSoftwareId' not found in configuration file"
-  assert_line --index 1 --partial "FATAL   - Invalid software ID(s) provided"
+  assert_lines_count 4
+  assert_line --index 0 --partial "INFO    - Validating configuration file ${f}"
+  assert_line --index 1 --partial "INFO    - Configuration file ${f} validation complete"
+  assert_line --index 2 --partial "ERROR   - Software ID 'invalidSoftwareId' not found in configuration file"
+  assert_line --index 3 --partial "FATAL   - Invalid software ID(s) provided"
 }
 
 function Github::githubReleaseManager::invalidSoftwareConfigurationMissingId { #@test
@@ -76,13 +81,15 @@ function Github::githubReleaseManager::invalidSoftwareConfigurationMissingId { #
   run "${binDir}/githubReleaseManager" \
     -c "${BATS_TEST_DIRNAME}/testsData/githubReleaseManager.yaml" invalidSoftwareConfig 2>&1
   assert_failure 1
-  assert_lines_count 6
-  assert_line --index 0 --partial "ERROR   - Missing required field 'id' in software entry invalidSoftwareConfig"
-  assert_line --index 1 --partial "ERROR   - Missing required field 'url' in software entry invalidSoftwareConfig"
-  assert_line --index 2 --partial "ERROR   - Missing required field 'version' in software entry invalidSoftwareConfig"
-  assert_line --index 3 --partial "ERROR   - Missing required field 'targetFile' in software entry invalidSoftwareConfig"
-  assert_line --index 4 --partial "ERROR   - Missing required field 'versionArg' in software entry invalidSoftwareConfig"
-  assert_line --index 5 --partial "FATAL   - Configuration file ${BATS_TEST_DIRNAME}/testsData/githubReleaseManager.yaml is invalid"
+  assert_lines_count 8
+  assert_line --index 0 --partial "INFO    - Validating configuration file ${BATS_TEST_DIRNAME}/testsData/githubReleaseManager.yaml"
+  assert_line --index 1 --partial "ERROR   - Missing required field 'id' in software entry invalidSoftwareConfig"
+  assert_line --index 2 --partial "ERROR   - Missing required field 'url' in software entry invalidSoftwareConfig"
+  assert_line --index 3 --partial "ERROR   - Missing required field 'version' in software entry invalidSoftwareConfig"
+  assert_line --index 4 --partial "ERROR   - Missing required field 'targetFile' in software entry invalidSoftwareConfig"
+  assert_line --index 5 --partial "ERROR   - Missing required field 'versionArg' in software entry invalidSoftwareConfig"
+  assert_line --index 6 --partial "INFO    - Configuration file ${BATS_TEST_DIRNAME}/testsData/githubReleaseManager.yaml validation complete"
+  assert_line --index 7 --partial "FATAL   - Configuration file ${BATS_TEST_DIRNAME}/testsData/githubReleaseManager.yaml is invalid"
 }
 
 function Github::githubReleaseManager::validSoftwareConfigNonExistingGithub { #@test
