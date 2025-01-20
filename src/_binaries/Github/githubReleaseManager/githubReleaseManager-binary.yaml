@@ -1,0 +1,55 @@
+extends:
+  - "${BASH_TOOLS_ROOT_DIR}/src/_binaries/commandDefinitions/optionsVersion.yaml"
+  - "${BASH_TOOLS_ROOT_DIR}/src/_binaries/commandDefinitions/optionsDefault.yaml"
+  - "${FRAMEWORK_ROOT_DIR}/src/_binaries/commandDefinitions/defaultCommand.yaml"
+  - "${FRAMEWORK_ROOT_DIR}/src/_binaries/commandDefinitions/frameworkConfig.yaml"
+
+vars:
+  SRC_FILE_PATH: src/_binaries/Git/githubReleaseManager/githubReleaseManager-binary.yaml
+
+compilerConfig:
+  targetFile: "${BASH_TOOLS_ROOT_DIR}/bin/githubReleaseManager"
+
+binData:
+  commands:
+    default:
+      functionName: githubReleaseManagerCommand
+      version: "3.0"
+      copyrightBeginYear: 2020
+      commandName: githubReleaseManager
+      beforeParseCallbacks:
+        - beforeParseCallback
+        - specificRequirements
+      callbacks:
+        - configFileOptionCallback
+      definitionFiles:
+        20: ${BASH_TOOLS_ROOT_DIR}/src/_binaries/Github/githubReleaseManager/githubReleaseManager-options.sh
+      mainFile: ${BASH_TOOLS_ROOT_DIR}/src/_binaries/Github/githubReleaseManager/githubReleaseManager-main.sh
+      help: Retrieve latest binary release from github and install it.
+      longDescription: longDescriptionFunction
+      args:
+        - type: StringArray
+          min: 0
+          max: -1
+          help: |
+            The specific software ids to install.
+            If not provided, all the softwares specified in configuration
+            file will be installed.
+          name: softwareId
+          callbacks:
+            - softwareIdsArgCallback
+          variableName: softwareIdsArg
+      optionGroups:
+        groupGithubReleaseManagerGroupFunction:
+          title: "GITHUB RELEASE MANAGER OPTIONS:"
+      options:
+        - variableName: optionConfigFile
+          group: groupGithubReleaseManagerGroupFunction
+          type: String
+          help: |
+            The yaml configuration file to use.
+          helpValueName: configFile
+          defaultValue: "<currentDir>/githubReleaseManager.yaml"
+          alts:
+            - --config-file
+            - -c

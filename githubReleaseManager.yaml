@@ -1,0 +1,110 @@
+---
+softwares:
+  - id: docker-compose-latest
+    url: |
+      "https://github.com/docker/compose/releases/download/v@version@/docker-compose-${kernel}-${MACHINE}"
+    version: latest
+    versionArg: --version
+    sudo: sudo
+    targetFile: /usr/local/bin/docker-compose
+  - id: hadolint
+    url: |
+      "https://github.com/hadolint/hadolint/releases/download/v@version@/hadolint-${KERNEL}-${MACHINE}"
+    version: latest
+    versionArg: --version
+    sudo: sudo
+    targetFile: /usr/local/bin/hadolint
+  - id: shellcheck
+    url: |
+      "https://github.com/koalaman/shellcheck/releases/download/v@version@/shellcheck-v@version@.${kernel}.${MACHINE}.tar.xz"
+    version: latest
+    versionArg: --version
+    sudo: sudo
+    targetFile: /usr/local/bin/shellcheck
+  - id: fd
+    url: |
+      "https://github.com/sharkdp/fd/releases/download/v@version@/fd_@version@_${ARCH}.deb"
+    version: latest
+    versionArg: --version
+    sudo: sudo
+    targetFile: /usr/bin/fd
+    installCallback: InstallCallbacks::installDeb
+  - id: bat
+    url: |
+      "https://github.com/sharkdp/bat/releases/download/v@version@/bat_@version@_${arch}.deb"
+    version: latest
+    versionArg: --version
+    sudo: sudo
+    targetFile: /usr/bin/bat
+    installCallback: InstallCallbacks::installDeb
+  - id: kind
+    url: |
+      "https://github.com/kubernetes-sigs/kind/releases/download/v@version@/kind-${kernel}-${arch}"
+    version: latest
+    versionArg: --version
+    sudo: sudo
+    targetFile: /usr/local/bin/kind
+  - id: minikube
+    url: |
+      "https://github.com/kubernetes/minikube/releases/download/v@version@/minikube-${kernel}-${arch}"
+    version: latest
+    versionArg: version
+    sudo: sudo
+    targetFile: /usr/local/bin/minikube
+  - id: plantuml
+    version: latest
+    url: |
+      "https://github.com/plantuml/plantuml/releases/download/v@version@/plantuml-@version@.jar"
+    versionArg:
+      java -jar /opt/java/plantuml.jar -version | head -1 | Version::parse
+    softVersionCallback: InstallCallbacks::getVersion
+    sudo: sudo
+    targetFile: /opt/java/plantuml.jar
+  - id: saml2aws
+    url: https://github.com/Versent/saml2aws/releases/download/v@version@/saml2aws_@version@_${kernel}_${arch}.tar.gz
+    version: latest
+    versionArg: --version
+    sudo: sudo
+    targetFile: /usr/local/bin/saml2aws
+    installCallback: InstallCallbacks::installFromTarGz
+  - id: docker-credential-wincred.exe
+    url: |
+      "https://github.com/docker/docker-credential-helpers/releases/download/v@version@/docker-credential-wincred-v@version@.windows-${ARCH}.exe"
+    version: latest
+    versionArg: --version
+    sudo: sudo
+    targetFile: /usr/local/bin/docker-credential-wincred.exe
+  - id: oq
+    url: |
+      "https://github.com/Blacksmoke16/oq/releases/download/v@version@/oq-v@version@-${KERNEL}-${MACHINE}"
+    version: latest
+    versionArg: /usr/local/bin/oq --version | grep 'oq' | Version::parse
+    softVersionCallback: InstallCallbacks::getVersion
+    sudo: sudo
+    targetFile: /usr/local/bin/oq
+  - id: k9s
+    url: |
+      "https://github.com/derailed/k9s/releases/download/v@version@/k9s_${kernel}_${arch}.deb"
+    version: latest
+    versionArg: /usr/bin/k9s version | grep 'Version:' | Version::parse
+    softVersionCallback: InstallCallbacks::getVersion
+    sudo: sudo
+    targetFile: /usr/bin/k9s
+    installCallback: InstallCallbacks::installDeb
+  - id: shfmt
+    url: |
+      "https://github.com/mvdan/sh/releases/download/v@version@/shfmt_v@version@_${kernel}_${arch}"
+    version: latest
+    versionArg: --version
+    sudo: sudo
+    targetFile: /usr/local/bin/shfmt
+# TODO
+# SUDO=sudo GIT_CLONE_OPTIONS="--depth=1" Git::cloneOrPullIfNoChanges \
+#     "/opt/kubeps1" \
+#     "https://github.com/jonmosco/kube-ps1.git"
+
+# SUDO=sudo GIT_CLONE_OPTIONS="--depth=1" Git::cloneOrPullIfNoChanges \
+#   "/opt/kubectx" \
+#   "https://github.com/ahmetb/kubectx"
+# sudo ln -sf /opt/kubectx/kubectx /usr/local/bin/kubectx
+# sudo ln -sf /opt/kubectx/kubens /usr/local/bin/kubens

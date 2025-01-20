@@ -1,0 +1,10 @@
+[44mINFO    - Installing validSoftwareConfig...[0m
+  URL pattern: validUrl
+  URL: validUrl
+  Version: validVersion
+  Target file: targetFile
+  Sudo: sudo
+  Install callback: installCallback
+  Soft version callback: softVersionCallback
+[31mERROR   - targetFile version validVersion doesn't exist on github[0m
+[31mERROR   - Failed to install validSoftwareConfig[0m

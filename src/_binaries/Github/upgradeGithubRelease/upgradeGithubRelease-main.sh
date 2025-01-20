@@ -7,11 +7,12 @@ computeCurrentCommandVersion() {
     return 0
   fi
   if [[ -n "${optionVersionArg}" ]]; then
-    "${targetFileArg}" "${optionVersionArg}" 2>&1 | Version::parse || return 3
+    # shellcheck disable=SC2086
+    "${targetFileArg}" ${optionVersionArg} 2>&1 | Version::parse || return 3
   fi
 }
 
-EXACT_VERSION="${optionExactVersion}" \
+VERSION_PLACEHOLDER="@version@" EXACT_VERSION="${optionExactVersion}" \
   Github::upgradeRelease \
   "${targetFileArg}" \
   "${githubUrlPatternArg}" \

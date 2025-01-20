@@ -15,6 +15,7 @@
   - [3.2. bin/gitIsBranch](#32-bingitisbranch)
   - [3.3. bin/gitRenameBranch](#33-bingitrenamebranch)
   - [3.4. bin/upgradeGithubRelease](#34-binupgradegithubrelease)
+  - [3.5. bin/githubReleaseManager](#35-bingithubreleasemanager)
 - [4. Dev tools](#4-dev-tools)
   - [4.1. bin/cli](#41-bincli)
     - [4.1.1. Help](#411-help)
@@ -133,6 +134,12 @@ using plantuml software, here an example of resulting diagram
 
 ```text
 @@@upgradeGithubRelease_help@@@
+```
+
+### 3.5. bin/githubReleaseManager
+
+```text
+@@@githubReleaseManager_help@@@
 ```
 
 ## 4. Dev tools

@@ -1,0 +1,9 @@
+---
+softwares:
+  - id: docker-compose-latest
+    url: |
+      "https://github./docker/compose/releases/download/v@version@/docker-compose-$(uname -s | tr "[:upper:]" "[:lower:]")-$(uname -m)"
+    version: latest
+    versionArg: --version
+    sudo: sudo
+    targetFile: /usr/local/bin/docker-compose

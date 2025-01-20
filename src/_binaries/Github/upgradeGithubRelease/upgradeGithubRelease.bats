@@ -67,7 +67,6 @@ function Git::upgradeGithubRelease::filePathNotWritable { #@test
 function Git::upgradeGithubRelease::filePathNotExistsExactVersionShortArg { #@test
   # shellcheck disable=SC2016
   stub curl \
-    '-L --connect-timeout 5 --fail --silent https://api.github.com/repos/hadolint/hadolint/releases/latest : echo "{\"tag_name\": \"1.0.0\"}"' \
     '-L --connect-timeout 5 -o /dev/null --silent --head --fail https://github.com/hadolint/hadolint/releases/download/v1.0.0/hadolint-Linux-x86_64 : exit 0' \
     '-L --connect-timeout 5 -o * --fail https://github.com/hadolint/hadolint/releases/download/v1.0.0/hadolint-Linux-x86_64 : echo "success" > "$5"'
 
@@ -75,19 +74,17 @@ function Git::upgradeGithubRelease::filePathNotExistsExactVersionShortArg { #@te
     RETRY_MAX_RETRY=1 \
       "${binDir}/upgradeGithubRelease" \
       "${BATS_TEST_TMPDIR}/targetFile" \
-      "https://github.com/hadolint/hadolint/releases/download/v@latestVersion@/hadolint-Linux-x86_64" \
+      "https://github.com/hadolint/hadolint/releases/download/v@version@/hadolint-Linux-x86_64" \
       -e "1.0.0" \
       --verbose
   }
   run upgradeGithubRelease 2>&1
   assert_success
-  assert_lines_count 6
-  assert_line --index 0 --partial "INFO    - Attempt 1/1: Retrieving release versions list ..."
-  assert_line --index 1 --partial "INFO    - Latest version found is 1.0.0"
-  assert_line --index 2 --partial "INFO    - Upgrading ${BATS_TEST_TMPDIR}/targetFile from version not existing to 1.0.0"
-  assert_line --index 3 --partial "INFO    - Using url https://github.com/hadolint/hadolint/releases/download/v1.0.0/hadolint-Linux-x86_64"
-  assert_line --index 4 --partial "INFO    - Attempt 1/1:"
-  assert_line --index 5 --partial "SUCCESS - Version 1.0.0 installed in ${BATS_TEST_TMPDIR}/targetFile"
+  assert_lines_count 4
+  assert_line --index 0 --partial "INFO    - Upgrading ${BATS_TEST_TMPDIR}/targetFile from version not existing to 1.0.0"
+  assert_line --index 1 --partial "INFO    - Using url https://github.com/hadolint/hadolint/releases/download/v1.0.0/hadolint-Linux-x86_64"
+  assert_line --index 2 --partial "INFO    - Attempt 1/1:"
+  assert_line --index 3 --partial "SUCCESS - Version 1.0.0 installed in ${BATS_TEST_TMPDIR}/targetFile"
 
   [[ "$(cat "${BATS_TEST_TMPDIR}/targetFile")" = "success" ]]
 }
@@ -95,7 +92,6 @@ function Git::upgradeGithubRelease::filePathNotExistsExactVersionShortArg { #@te
 function Git::upgradeGithubRelease::filePathNotExistsExactVersionLongArg { #@test
   # shellcheck disable=SC2016
   stub curl \
-    '-L --connect-timeout 5 --fail --silent https://api.github.com/repos/hadolint/hadolint/releases/latest : echo "{\"tag_name\": \"1.0.0\"}"' \
     '-L --connect-timeout 5 -o /dev/null --silent --head --fail https://github.com/hadolint/hadolint/releases/download/v1.0.0/hadolint-Linux-x86_64 : exit 0' \
     '-L --connect-timeout 5 -o * --fail https://github.com/hadolint/hadolint/releases/download/v1.0.0/hadolint-Linux-x86_64 : echo "success" > "$5"'
 
@@ -103,20 +99,18 @@ function Git::upgradeGithubRelease::filePathNotExistsExactVersionLongArg { #@tes
     RETRY_MAX_RETRY=1 \
       "${binDir}/upgradeGithubRelease" \
       "${BATS_TEST_TMPDIR}/targetFile" \
-      "https://github.com/hadolint/hadolint/releases/download/v@latestVersion@/hadolint-Linux-x86_64" \
+      "https://github.com/hadolint/hadolint/releases/download/v@version@/hadolint-Linux-x86_64" \
       --exact-version "1.0.0" \
       --verbose
   }
   run upgradeGithubRelease 2>&1
   assert_success
   assert_success
-  assert_lines_count 6
-  assert_line --index 0 --partial "INFO    - Attempt 1/1: Retrieving release versions list ..."
-  assert_line --index 1 --partial "INFO    - Latest version found is 1.0.0"
-  assert_line --index 2 --partial "INFO    - Upgrading ${BATS_TEST_TMPDIR}/targetFile from version not existing to 1.0.0"
-  assert_line --index 3 --partial "INFO    - Using url https://github.com/hadolint/hadolint/releases/download/v1.0.0/hadolint-Linux-x86_64"
-  assert_line --index 4 --partial "INFO    - Attempt 1/1:"
-  assert_line --index 5 --partial "SUCCESS - Version 1.0.0 installed in ${BATS_TEST_TMPDIR}/targetFile"
+  assert_lines_count 4
+  assert_line --index 0 --partial "INFO    - Upgrading ${BATS_TEST_TMPDIR}/targetFile from version not existing to 1.0.0"
+  assert_line --index 1 --partial "INFO    - Using url https://github.com/hadolint/hadolint/releases/download/v1.0.0/hadolint-Linux-x86_64"
+  assert_line --index 2 --partial "INFO    - Attempt 1/1:"
+  assert_line --index 3 --partial "SUCCESS - Version 1.0.0 installed in ${BATS_TEST_TMPDIR}/targetFile"
 
   [[ "$(cat "${BATS_TEST_TMPDIR}/targetFile")" = "success" ]]
 }
@@ -130,7 +124,7 @@ function Git::upgradeGithubRelease::filePathNotExistsLatestVersionNotFound { #@t
     RETRY_MAX_RETRY=1 \
       "${binDir}/upgradeGithubRelease" \
       "${BATS_TEST_TMPDIR}/targetFile" \
-      "https://github.com/hadolint/hadolint/releases/download/v@latestVersion@/hadolint-Linux-x86_64" \
+      "https://github.com/hadolint/hadolint/releases/download/v@version@/hadolint-Linux-x86_64" \
       --verbose
   }
   run upgradeGithubRelease 2>&1
@@ -152,7 +146,7 @@ function Git::upgradeGithubRelease::filePathNotExistsLatestVersionFound { #@test
     RETRY_MAX_RETRY=1 \
       "${binDir}/upgradeGithubRelease" \
       "${BATS_TEST_TMPDIR}/targetFile" \
-      "https://github.com/hadolint/hadolint/releases/download/v@latestVersion@/hadolint-Linux-x86_64" \
+      "https://github.com/hadolint/hadolint/releases/download/v@version@/hadolint-Linux-x86_64" \
       --verbose
   }
   run upgradeGithubRelease 2>&1
@@ -173,7 +167,6 @@ function Git::upgradeGithubRelease::filePathExistsExactVersionUpgradeNeeded { #@
   cp "${BATS_TEST_DIRNAME}/testsData/upgradeGithubRelease_bin" "${BATS_TEST_TMPDIR}"
   # shellcheck disable=SC2016
   stub curl \
-    '-L --connect-timeout 5 --fail --silent https://api.github.com/repos/hadolint/hadolint/releases/latest : echo "{\"tag_name\": \"1.2.0\"}"' \
     '-L --connect-timeout 5 -o /dev/null --silent --head --fail https://github.com/hadolint/hadolint/releases/download/v1.1.0/hadolint-Linux-x86_64 : exit 0' \
     '-L --connect-timeout 5 -o * --fail https://github.com/hadolint/hadolint/releases/download/v1.1.0/hadolint-Linux-x86_64 : echo "success" > "$5"'
 
@@ -181,20 +174,17 @@ function Git::upgradeGithubRelease::filePathExistsExactVersionUpgradeNeeded { #@
     RETRY_MAX_RETRY=1 \
       "${binDir}/upgradeGithubRelease" \
       "${BATS_TEST_TMPDIR}/targetFile" \
-      "https://github.com/hadolint/hadolint/releases/download/v@latestVersion@/hadolint-Linux-x86_64" \
+      "https://github.com/hadolint/hadolint/releases/download/v@version@/hadolint-Linux-x86_64" \
       --exact-version "1.1.0" \
       --verbose
   }
   run upgradeGithubRelease 2>&1
-
   assert_success
-  assert_lines_count 6
-  assert_line --index 0 --partial "INFO    - Attempt 1/1: Retrieving release versions list ..."
-  assert_line --index 1 --partial "INFO    - Latest version found is 1.2.0"
-  assert_line --index 2 --partial "INFO    - Upgrading ${BATS_TEST_TMPDIR}/targetFile from version not existing to 1.1.0"
-  assert_line --index 3 --partial "INFO    - Using url https://github.com/hadolint/hadolint/releases/download/v1.1.0/hadolint-Linux-x86_64"
-  assert_line --index 4 --partial "INFO    - Attempt 1/1:"
-  assert_line --index 5 --partial "SUCCESS - Version 1.1.0 installed in ${BATS_TEST_TMPDIR}/targetFile"
+  assert_lines_count 4
+  assert_line --index 0 --partial "INFO    - Upgrading ${BATS_TEST_TMPDIR}/targetFile from version not existing to 1.1.0"
+  assert_line --index 1 --partial "INFO    - Using url https://github.com/hadolint/hadolint/releases/download/v1.1.0/hadolint-Linux-x86_64"
+  assert_line --index 2 --partial "INFO    - Attempt 1/1:"
+  assert_line --index 3 --partial "SUCCESS - Version 1.1.0 installed in ${BATS_TEST_TMPDIR}/targetFile"
 
   [[ "$(cat "${BATS_TEST_TMPDIR}/targetFile")" = "success" ]]
 }
@@ -202,22 +192,19 @@ function Git::upgradeGithubRelease::filePathExistsExactVersionUpgradeNeeded { #@
 function Git::upgradeGithubRelease::filePathExistsExactVersionUpgradeNotNeeded { #@test
   cp "${BATS_TEST_DIRNAME}/testsData/upgradeGithubRelease_bin" "${BATS_TEST_TMPDIR}/upgradeGithubRelease"
   stub curl \
-    '-L --connect-timeout 5 --fail --silent https://api.github.com/repos/hadolint/hadolint/releases/latest : echo "{\"tag_name\": \"1.1.0\"}"' \
     '-L --connect-timeout 5 -o /dev/null --silent --head --fail https://github.com/hadolint/hadolint/releases/download/v1.0.0/hadolint-Linux-x86_64 : exit 0'
 
   upgradeGithubRelease() {
     RETRY_MAX_RETRY=1 \
       "${binDir}/upgradeGithubRelease" \
       "${BATS_TEST_TMPDIR}/upgradeGithubRelease" \
-      "https://github.com/hadolint/hadolint/releases/download/v@latestVersion@/hadolint-Linux-x86_64" \
+      "https://github.com/hadolint/hadolint/releases/download/v@version@/hadolint-Linux-x86_64" \
       --exact-version "1.0.0" \
       --verbose
   }
   run upgradeGithubRelease 2>&1
 
   assert_success
-  assert_lines_count 3
-  assert_line --index 0 --partial "INFO    - Attempt 1/1: Retrieving release versions list ..."
-  assert_line --index 1 --partial "INFO    - Latest version found is 1.1.0"
-  assert_line --index 2 --partial "INFO    - ${BATS_TEST_TMPDIR}/upgradeGithubRelease version 1.0.0 already installed"
+  assert_lines_count 1
+  assert_line --index 0 --partial "INFO    - ${BATS_TEST_TMPDIR}/upgradeGithubRelease version 1.0.0 already installed"
 }

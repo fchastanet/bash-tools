@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 ###############################################################################
-# GENERATED FROM https://github.com/fchastanet/bash-tools-framework/tree/master/src/_binaries/Git/upgradeGithubRelease/upgradeGithubRelease-binary.yaml
+# GENERATED FROM https://github.com/fchastanet/bash-tools-framework/tree/master/src/_binaries/Git/githubReleaseManager/githubReleaseManager-binary.yaml
 # DO NOT EDIT IT
 # @generated
 ###############################################################################
@@ -137,6 +137,23 @@ export __VERBOSE_LEVEL_INFO=1
 export __VERBOSE_LEVEL_DEBUG=2
 # @description verbose level info
 export __VERBOSE_LEVEL_TRACE=3
+
+
+# @description check if an element is contained in an array
+#
+# @arg $1 needle:String
+# @arg $@ array:String[]
+# @exitcode 0 if found
+# @exitcode 1 otherwise
+# @example
+#   Array::contains "${libPath}" "${__BASH_FRAMEWORK_IMPORTED_FILES[@]}"
+Array::contains() {
+  local element
+  for element in "${@:2}"; do
+    [[ "${element}" = "$1" ]] && return 0
+  done
+  return 1
+}
 
 
 # @description concatenate each element of an array with a separator
@@ -291,29 +308,6 @@ Assert::commandExists() {
 }
 
 
-# Checks if file can be created in folder
-#
-
-# @description Checks if file can be created in folder
-# The file does not need to exist
-# @arg $1 file:String
-# @exitcode 1 if file is not a valid path
-# @exitcode 2 if file parent's dir is not writable
-# @exitcode 3 if existing file is not writable
-# @see Assert::validPath
-Assert::fileWritable() {
-  local file="$1"
-
-  Assert::validPath "${file}" || return 1
-  if [[ -f "${file}" ]]; then
-    [[ -w "${file}" ]] || return 3
-  else
-    [[ -w "${file%/*}" ]] || return 2
-  fi
-
-}
-
-
 # @description check if tty (interactive mode) is active
 # @noargs
 # @exitcode 1 if tty not active
@@ -327,25 +321,6 @@ Assert::tty() {
     return 0
   fi
   tty -s
-}
-
-
-# @description check if argument is a valid linux path
-# invalid path are those with:
-# - invalid characters
-# - component beginning by a - (because could be considered as a command's option)
-# - not beginning with a slash
-# - relative
-#
-# @arg $1 path:string path that needs to be checked
-# @exitcode 1 if path is invalid
-# @see https://regex101.com/r/afLrmM/2
-# @see Assert::validPosixPath if you need more restrictive check
-Assert::validPath() {
-  local path="$1"
-
-  [[ "${path}" =~ ^\/$|^(\/[.a-zA-Z_0-9][.a-zA-Z_0-9-]*)+$ ]] &&
-    [[ ! "${path}" =~ (\/\.\.)|(\.\.\/)|^\.$|^\.\.$ ]] # avoid relative
 }
 
 
@@ -680,6 +655,74 @@ Github::upgradeRelease() {
 }
 
 
+# @description Get version of installed software
+# @arg $1 newSoftware:String Name of the software
+# @arg $2 versionArg:String Command to get version
+# @exitcode 0:Success
+InstallCallbacks::getVersion() {
+  # local newSoftware="$1"
+  local versionArg="$2"
+  eval "${versionArg}" || {
+    Log::displayError "Failed to get version"
+    return 1
+  }
+}
+
+
+# @description Install debian package (with .deb extension)
+# @arg $1 debFile:String
+InstallCallbacks::installDeb() {
+  local newSoftware="$1"
+  Log::displayInfo "Installing Debian package ${newSoftware}"
+  sudo dpkg -i "${newSoftware}"
+  sudo rm -f "${newSoftware}"
+}
+
+
+# @description Install tar.gz file
+# @arg $1 newSoftware:String Name of the software
+# @arg $2 targetFileArg:String Target file
+# @exitcode 0:Success
+InstallCallbacks::installFromTarGz() {
+  local newSoftware="$1"
+  local targetFileArg="$2"
+  Log::displayInfo "Installing ${newSoftware} to ${targetFileArg}"
+  sudo tar xzvf "${newSoftware}" -C "${targetFileArg%/*}" "${targetFileArg##*/}"
+  sudo chmod +x "${targetFileArg}"
+  hash -r
+  sudo rm -f "${newSoftware}"
+}
+
+
+# @description apt-get install
+# @arg $@ softwares:String[] list of softwares to install
+# @feature Retry::default
+# Linux::requireSudoCommand
+# @stdout diagnostics logs
+Linux::Apt::install() {
+
+  if [[ "${REQUIRE_FUNCTION_LINUX_REQUIRE_UBUNTU_LOADED:-0}" != 1 ]]; then
+    echo >&2 "Requirement Linux::requireUbuntu has not been loaded"
+    exit 1
+  fi
+
+  Log::displayInfo "Apt install $*"
+  Retry::default sudo apt-get install -y -q "$@"
+}
+
+
+# @description retrieve linux distributor id
+# @noargs
+# @exitcode 1 if lsb_release fails or not found
+# @stdout the linux distributor id
+Linux::getDistributorId() {
+  (
+    source /etc/os-release
+    echo "${ID}"
+  )
+}
+
+
 # @description ensure command jq is available
 # @exitcode 1 if jq command not available
 # @stderr diagnostics information is displayed
@@ -688,6 +731,17 @@ Linux::requireJqCommand() {
 
   if [[ "${SKIP_REQUIRE_JQ:-0}" = "0" && "${SKIP_REQUIRES:-0}" = "0" ]]; then
     Assert::commandExists jq
+  fi
+}
+
+
+# @description ensure linux distribution is ubuntu
+# @exitcode 1 if linux distribution is not ubuntu
+Linux::requireUbuntu() {
+  export REQUIRE_FUNCTION_LINUX_REQUIRE_UBUNTU_LOADED=1
+
+  if ! Array::contains "$(Linux::getDistributorId)" "ubuntu" "debian"; then
+    Log::fatal "this script should be executed under Ubuntu or Debian OS"
   fi
 }
 
@@ -1633,86 +1687,79 @@ specificRequirements() {
 }
 
 longDescriptionFunction() {
-  echo -e "  ${__HELP_TITLE}GITHUB TEMPLATE URLS EXAMPLES:${__HELP_NORMAL}"
-  echo
-  echo -e "    Simple ones(Sometimes @version@ template variable has to be specified twice):${__HELP_EXAMPLE}"
-  echo -e '    "https://github.com/hadolint/hadolint/releases/download/v@version@/hadolint-Linux-x86_64"'
-  echo -e '    "https://github.com/koalaman/shellcheck/releases/download/v@version@/shellcheck-v@version@.linux.x86_64.tar.xz"'
-  echo -e '    "https://github.com/sharkdp/fd/releases/download/v@version@/fd_@version@_amd64.deb"'
-  echo -e '    "https://github.com/sharkdp/bat/releases/download/v@version@/bat_@version@_amd64.deb"'
-  echo -e '    "https://github.com/kubernetes-sigs/kind/releases/download/v@version@/kind-linux-amd64"'
-  echo -e '    "https://github.com/kubernetes/minikube/releases/download/v@version@/minikube-linux-amd64"'
-  echo -e '    "https://github.com/plantuml/plantuml/releases/download/v@version@/plantuml-@version@.jar"'
-  echo -e '    "https://github.com/Versent/saml2aws/releases/download/v@version@/saml2aws_@version@_linux_amd64.tar.gz"'
-  echo -e "${__HELP_NORMAL}"
-  echo -e "    If you want to add a condition on architecture(linux, windows, x86, 64/32 bits):${__HELP_EXAMPLE}"
-  # shellcheck disable=SC2016
-  echo -e '    "https://github.com/docker/compose/releases/download/v@version@/docker-compose-$(uname -s | tr "[:upper:]" "[:lower:]")-$(uname -m)"'
-  # shellcheck disable=SC2016
-  echo -e '    "https://github.com/docker/docker-credential-helpers/releases/download/v@version@/docker-credential-wincred-v@version@.windows-$(dpkg --print-architecture).exe"'
-  # shellcheck disable=SC2016
-  echo -e '    "https://github.com/Blacksmoke16/oq/releases/download/v@version@/oq-v@version@-$(uname -s)-$(uname -m)"'
-  echo -e "${__HELP_NORMAL}"
-  echo -e "  ${__HELP_TITLE}COMMAND EXAMPLES:${__HELP_NORMAL}"
-  echo -e "${__HELP_NORMAL}"
-  echo -e "    Download docker-compose latest version${__HELP_EXAMPLE}"
-  echo -e "    upgradeGithubRelease /usr/local/bin/docker-compose \\"
-  # shellcheck disable=SC2016
-  echo -e '      "https://github.com/docker/compose/releases/download/v@version@/docker-compose-$(uname -s | tr "[:upper:]" "[:lower:]")-$(uname -m)"'
-  echo -e "${__HELP_NORMAL}"
-  echo -e "    Download oq specific version${__HELP_EXAMPLE}"
-  echo -e "    upgradeGithubRelease /usr/local/bin/oq --exact-version 1.3.4 \\"
-  # shellcheck disable=SC2016
-  echo -e '      "https://github.com/Blacksmoke16/oq/releases/download/v@version@/oq-v@version@-$(uname -s)-$(uname -m)"'
-  echo -e "${__HELP_NORMAL}"
-  echo -e "    Download oq specific version correctly retrieving the oq version and not the jq one${__HELP_EXAMPLE}"
-  echo -e "    upgradeGithubRelease /usr/local/bin/oq --exact-version 1.3.4 --version-arg '-V | grep oq:' \\"
-  # shellcheck disable=SC2016
-  echo -e '      "https://github.com/Blacksmoke16/oq/releases/download/v@version@/oq-v@version@-$(uname -s)-$(uname -m)"'
-  echo -e "${__HELP_NORMAL}"
-}
-
-githubUrlPatternHelpFunction() {
-  echo '    The url pattern to use to download the binary, see examples below.'
-  echo '    @version@ is template variable that will be replaced by the latest'
-  echo '      version tag found on github.'
-}
-
-optionCurrentVersionHelpFunction() {
-  echo '    Sometimes the command to retrieve the version is complicated.'
-  echo '    Some command needs you to parse json or other commands'
-  echo '    that provides multiple sub command versions.'
-  echo '    In this case you can provide the version you currently have.'
-  echo '    See options constraints and examples below.'
-}
-
-exactVersionHelpFunction() {
-  echo '    If provided and currently installed binary is not this exactVersion,'
-  echo '    this exact version of the binary will be installed.'
-  echo '    See options constraints below.'
+  :
 }
 
 optionHelpCallback() {
-  upgradeGithubReleaseCommandHelp
+  githubReleaseManagerCommandHelp
   exit 0
 }
 
-githubUrlPatternArgCallback() {
-  # shellcheck disable=SC2154
-  if [[ ! "${githubUrlPatternArg}" =~ ^https://github.com/ ]]; then
-    Log::fatal "Invalid githubUrlPattern ${githubUrlPatternArg} provided, it should begin with https://github.com/"
-  fi
+softwareIdsArgCallback() {
+  # validate if strings provided are valid software ids
+  :
 }
 
-targetFileArgCallback() {
-  if [[ "${targetFileArg:0:1}" != "/" ]]; then
-    targetFileArg="$(pwd)/${targetFileArg}"
+validateSoftwareIds() {
+  local configFile="$1"
+  shift
+  local softwareIds=("$@")
+  local errors=0
+
+  # Get all valid software IDs from config
+  local validIds
+  validIds="$(yq '.softwares[].id' "${configFile}")"
+
+  for softwareId in "${softwareIds[@]}"; do
+    if ! echo "${validIds}" | grep -q "^${softwareId}$"; then
+      Log::displayError "Software ID '${softwareId}' not found in configuration file"
+      ((errors++))
+    fi
+  done
+
+  return "${errors}"
+}
+
+validateYamlConfig() {
+  local configFile="$1"
+  local errors=0
+
+  # Check if softwares key exists and is an array
+  if ! yq '.softwares | type' "${configFile}" | grep -q "array"; then
+    Log::displayError "Configuration file must have a 'softwares' array"
+    ((errors++))
   fi
-  if ! Assert::validPath "${targetFileArg}"; then
-    Log::fatal "File ${targetFileArg} is not a valid path"
+
+  # Validate each software entry
+  while IFS= read -r index; do
+    local prefix=".softwares[${index}]"
+
+    # Required fields
+    for field in "id" "url" "version" "targetFile" "versionArg"; do
+      if [[ -z "$(yq "${prefix}.${field}" "${configFile}")" ]]; then
+        Log::displayError "Missing required field '${field}' in software entry ${index}"
+        ((errors++))
+      fi
+    done
+  done < <(yq '.softwares | keys | .[]' "${configFile}")
+
+  return "${errors}"
+}
+
+configFileOptionCallback() {
+  if [[ -z "${optionConfigFile}" || "${optionConfigFile}" = "<currentDir>/githubReleaseManager.yaml" ]]; then
+    optionConfigFile="$(pwd)/githubReleaseManager.yaml"
   fi
-  if ! Assert::fileWritable "${targetFileArg}"; then
-    Log::fatal "File ${targetFileArg} is not writable"
+  # shellcheck disable=SC2154
+  if [[ ! -f "${optionConfigFile}" ]]; then
+    Log::fatal "Configuration file ${optionConfigFile} does not exist"
+  fi
+  if ! validateYamlConfig "${optionConfigFile}"; then
+    Log::fatal "Configuration file ${optionConfigFile} is invalid"
+  fi
+  # shellcheck disable=SC2154
+  if ! validateSoftwareIds "${optionConfigFile}" "${softwareIdsArg[@]}"; then
+    Log::fatal "Invalid software ID(s) provided"
   fi
 }
 
@@ -1727,7 +1774,7 @@ optionVersionCallback() {
 
 
 # ------------------------------------------
-# Command upgradeGithubReleaseCommand
+# Command githubReleaseManagerCommand
 # ------------------------------------------
 
 # options variables initialization
@@ -1744,14 +1791,11 @@ declare optionNoColor="0"
 declare optionTheme="default"
 declare optionVersion="0"
 declare optionQuiet="0"
-declare optionVersionArg="--version"
-declare optionCurrentVersion=""
-declare optionExactVersion=""
+declare optionConfigFile="<currentDir>/githubReleaseManager.yaml"
 # arguments variables initialization
-declare targetFileArg=""
-declare githubUrlPatternArg=""
-# @description parse command options and arguments for upgradeGithubReleaseCommand
-upgradeGithubReleaseCommandParse() {
+declare -a softwareIdsArg=()
+# @description parse command options and arguments for githubReleaseManagerCommand
+githubReleaseManagerCommandParse() {
   Log::displayDebug "Command ${SCRIPT_NAME} - parse arguments: ${BASH_FRAMEWORK_ARGV[*]}"
   Log::displayDebug "Command ${SCRIPT_NAME} - parse filtered arguments: ${BASH_FRAMEWORK_ARGV_FILTERED[*]}"
   optionHelp="0"
@@ -1793,25 +1837,11 @@ upgradeGithubReleaseCommandParse() {
   optionQuiet="0"
   local -i options_parse_optionParsedCountOptionQuiet
   ((options_parse_optionParsedCountOptionQuiet = 0)) || true
-  optionVersionArg="--version"
-  local -i options_parse_optionParsedCountOptionVersionArg
-  ((options_parse_optionParsedCountOptionVersionArg = 0)) || true
-  optionCurrentVersion=""
-  local -i options_parse_optionParsedCountOptionCurrentVersion
-  ((options_parse_optionParsedCountOptionCurrentVersion = 0)) || true
-  optionExactVersion=""
-  local -i options_parse_optionParsedCountOptionExactVersion
-  ((options_parse_optionParsedCountOptionExactVersion = 0)) || true
+  optionConfigFile="<currentDir>/githubReleaseManager.yaml"
+  local -i options_parse_optionParsedCountOptionConfigFile
+  ((options_parse_optionParsedCountOptionConfigFile = 0)) || true
 
-  targetFileArg=""
-
-  local -i options_parse_argParsedCountTargetFileArg
-  ((options_parse_argParsedCountTargetFileArg = 0)) || true
-
-  githubUrlPatternArg=""
-
-  local -i options_parse_argParsedCountGithubUrlPatternArg
-  ((options_parse_argParsedCountGithubUrlPatternArg = 0)) || true
+  softwareIdsArg=()
 
 
   # shellcheck disable=SC2034
@@ -1820,7 +1850,7 @@ upgradeGithubReleaseCommandParse() {
     local options_parse_arg="$1"
     local argOptDefaultBehavior=0
     case "${options_parse_arg}" in
-      # Option 1/16
+      # Option 1/14
       # optionHelp alts --help|-h
       # type: Boolean min 0 max 1
       --help | -h)
@@ -1836,7 +1866,7 @@ upgradeGithubReleaseCommandParse() {
 
         ;;
 
-      # Option 2/16
+      # Option 2/14
       # optionConfig alts --config
       # type: Boolean min 0 max 1
       --config)
@@ -1850,7 +1880,7 @@ upgradeGithubReleaseCommandParse() {
         ((++options_parse_optionParsedCountOptionConfig))
         ;;
 
-      # Option 3/16
+      # Option 3/14
       # optionBashFrameworkConfig alts --bash-framework-config
       # type: String min 0 max 1
       --bash-framework-config)
@@ -1871,7 +1901,7 @@ upgradeGithubReleaseCommandParse() {
 
         ;;
 
-      # Option 4/16
+      # Option 4/14
       # optionInfoVerbose alts --verbose|-v
       # type: Boolean min 0 max 1
       --verbose | -v)
@@ -1889,7 +1919,7 @@ upgradeGithubReleaseCommandParse() {
 
         ;;
 
-      # Option 5/16
+      # Option 5/14
       # optionDebugVerbose alts -vv
       # type: Boolean min 0 max 1
       -vv)
@@ -1907,7 +1937,7 @@ upgradeGithubReleaseCommandParse() {
 
         ;;
 
-      # Option 6/16
+      # Option 6/14
       # optionTraceVerbose alts -vvv
       # type: Boolean min 0 max 1
       -vvv)
@@ -1925,7 +1955,7 @@ upgradeGithubReleaseCommandParse() {
 
         ;;
 
-      # Option 7/16
+      # Option 7/14
       # optionLogLevel alts --log-level
       # type: String min 0 max 1
       # authorizedValues: OFF|ERR|ERROR|WARN|WARNING|INFO|DEBUG|TRACE
@@ -1953,7 +1983,7 @@ upgradeGithubReleaseCommandParse() {
 
         ;;
 
-      # Option 8/16
+      # Option 8/14
       # optionLogFile alts --log-file
       # type: String min 0 max 1
       --log-file)
@@ -1976,7 +2006,7 @@ upgradeGithubReleaseCommandParse() {
 
         ;;
 
-      # Option 9/16
+      # Option 9/14
       # optionDisplayLevel alts --display-level
       # type: String min 0 max 1
       # authorizedValues: OFF|ERR|ERROR|WARN|WARNING|INFO|DEBUG|TRACE
@@ -2004,7 +2034,7 @@ upgradeGithubReleaseCommandParse() {
 
         ;;
 
-      # Option 10/16
+      # Option 10/14
       # optionNoColor alts --no-color
       # type: Boolean min 0 max 1
       --no-color)
@@ -2022,7 +2052,7 @@ upgradeGithubReleaseCommandParse() {
 
         ;;
 
-      # Option 11/16
+      # Option 11/14
       # optionTheme alts --theme
       # type: String min 0 max 1
       # authorizedValues: default|default-force|noColor
@@ -2050,7 +2080,7 @@ upgradeGithubReleaseCommandParse() {
 
         ;;
 
-      # Option 12/16
+      # Option 12/14
       # optionVersion alts --version
       # type: Boolean min 0 max 1
       --version)
@@ -2066,7 +2096,7 @@ upgradeGithubReleaseCommandParse() {
 
         ;;
 
-      # Option 13/16
+      # Option 13/14
       # optionQuiet alts --quiet|-q
       # type: Boolean min 0 max 1
       --quiet | -q)
@@ -2084,61 +2114,23 @@ upgradeGithubReleaseCommandParse() {
 
         ;;
 
-      # Option 14/16
-      # optionVersionArg alts --version-arg
+      # Option 14/14
+      # optionConfigFile alts --config-file|-c
       # type: String min 0 max 1
-      --version-arg)
+      --config-file | -c)
         shift
         if (($# == 0)); then
           Log::displayError "Command ${SCRIPT_NAME} - Option ${options_parse_arg} - a value needs to be specified"
           return 1
         fi
 
-        if ((options_parse_optionParsedCountOptionVersionArg >= 1 )); then
+        if ((options_parse_optionParsedCountOptionConfigFile >= 1 )); then
           Log::displayError "Command ${SCRIPT_NAME} - Option ${options_parse_arg} - Maximum number of option occurrences reached(1)"
           return 1
         fi
-        ((++options_parse_optionParsedCountOptionVersionArg))
+        ((++options_parse_optionParsedCountOptionConfigFile))
         # shellcheck disable=SC2034
-        optionVersionArg="$1"
-        ;;
-
-      # Option 15/16
-      # optionCurrentVersion alts --current-version|-c
-      # type: String min 0 max 1
-      --current-version | -c)
-        shift
-        if (($# == 0)); then
-          Log::displayError "Command ${SCRIPT_NAME} - Option ${options_parse_arg} - a value needs to be specified"
-          return 1
-        fi
-
-        if ((options_parse_optionParsedCountOptionCurrentVersion >= 1 )); then
-          Log::displayError "Command ${SCRIPT_NAME} - Option ${options_parse_arg} - Maximum number of option occurrences reached(1)"
-          return 1
-        fi
-        ((++options_parse_optionParsedCountOptionCurrentVersion))
-        # shellcheck disable=SC2034
-        optionCurrentVersion="$1"
-        ;;
-
-      # Option 16/16
-      # optionExactVersion alts --exact-version|-e
-      # type: String min 0 max 1
-      --exact-version | -e)
-        shift
-        if (($# == 0)); then
-          Log::displayError "Command ${SCRIPT_NAME} - Option ${options_parse_arg} - a value needs to be specified"
-          return 1
-        fi
-
-        if ((options_parse_optionParsedCountOptionExactVersion >= 1 )); then
-          Log::displayError "Command ${SCRIPT_NAME} - Option ${options_parse_arg} - Maximum number of option occurrences reached(1)"
-          return 1
-        fi
-        ((++options_parse_optionParsedCountOptionExactVersion))
-        # shellcheck disable=SC2034
-        optionExactVersion="$1"
+        optionConfigFile="$1"
         ;;
 
       -*)
@@ -2150,41 +2142,21 @@ upgradeGithubReleaseCommandParse() {
       *)
         ((minParsedArgIndex0 = 0)) || true
         ((maxParsedArgIndex0 = 0)) || true
-        ((minParsedArgIndex1 = minParsedArgIndex0 + 1)) || true
-        ((maxParsedArgIndex1 = maxParsedArgIndex0 + 1)) || true
-        ((minParsedArgIndex2 = minParsedArgIndex1 + 1)) || true
-        ((maxParsedArgIndex2 = maxParsedArgIndex1 + 1)) || true
+        ((minParsedArgIndex1 = minParsedArgIndex0 + 0)) || true
+        ((maxParsedArgIndex1 = maxParsedArgIndex0)) || true
         ((incrementArg = 1 ))
         if ((0)); then
           # Technical if - never reached
           :
 
-        # Argument 1/2 - targetFileArg
-        # Argument targetFileArg min 1 max 1
-        elif (( options_parse_parsedArgIndex >= minParsedArgIndex0 &&
-          options_parse_parsedArgIndex < maxParsedArgIndex1 )); then
-          if ((options_parse_argParsedCountTargetFileArg >= 1 )); then
-            Log::displayError "Command ${SCRIPT_NAME} - Argument targetFile - Maximum number of argument occurrences reached(1)"
-            return 1
-          fi
-          ((++options_parse_argParsedCountTargetFileArg))
+        # Argument 1/1 - softwareIdsArg
+        # Argument softwareIdsArg min 0 max -1
+        elif (( options_parse_parsedArgIndex >= minParsedArgIndex0 )); then
+          ((++options_parse_argParsedCountSoftwareIdsArg))
           # shellcheck disable=SC2034
-          targetFileArg="${options_parse_arg}"
-          targetFileArgCallback "${targetFileArg}" -- "${@:2}"
-
-
-        # Argument 2/2 - githubUrlPatternArg
-        # Argument githubUrlPatternArg min 1 max 1
-        elif (( options_parse_parsedArgIndex >= minParsedArgIndex1 &&
-          options_parse_parsedArgIndex < maxParsedArgIndex2 )); then
-          if ((options_parse_argParsedCountGithubUrlPatternArg >= 1 )); then
-            Log::displayError "Command ${SCRIPT_NAME} - Argument githubUrlPattern - Maximum number of argument occurrences reached(1)"
-            return 1
-          fi
-          ((++options_parse_argParsedCountGithubUrlPatternArg))
           # shellcheck disable=SC2034
-          githubUrlPatternArg="${options_parse_arg}"
-          githubUrlPatternArgCallback "${githubUrlPatternArg}" -- "${@:2}"
+          softwareIdsArg+=("${options_parse_arg}")
+          softwareIdsArgCallback "${softwareIdsArg[@]}" -- "${@:2}"
 
 
         # else too much args
@@ -2204,39 +2176,16 @@ upgradeGithubReleaseCommandParse() {
         ;;
     esac
     shift || true
-  done
+  done || return $?
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  if ((options_parse_argParsedCountTargetFileArg < 1 )); then
-    Log::displayError "Command ${SCRIPT_NAME} - Argument 'targetFile' should be provided at least 1 time(s)"
-    return 1
-  fi
-
-  if ((options_parse_argParsedCountGithubUrlPatternArg < 1 )); then
-    Log::displayError "Command ${SCRIPT_NAME} - Argument 'githubUrlPattern' should be provided at least 1 time(s)"
-    return 1
-  fi || return $?
 
   commandOptionParseFinished
+  configFileOptionCallback
 
 }
 
-# @description display command options and arguments help for upgradeGithubReleaseCommand
-upgradeGithubReleaseCommandHelp() {
+# @description display command options and arguments help for githubReleaseManagerCommand
+githubReleaseManagerCommandHelp() {
   echo -e "${__HELP_TITLE_COLOR}SYNOPSIS:${__RESET_COLOR}"
   Array::wrap2 ' ' 76 4 "    " "Retrieve latest binary release from github and install it."
   echo
@@ -2245,15 +2194,15 @@ upgradeGithubReleaseCommandHelp() {
   # ------------------------------------------
   # usage section
   # ------------------------------------------
-  Array::wrap2 " " 80 2 "${__HELP_TITLE_COLOR}USAGE:${__RESET_COLOR}" "upgradeGithubRelease [OPTIONS] [ARGUMENTS]"
+  Array::wrap2 " " 80 2 "${__HELP_TITLE_COLOR}USAGE:${__RESET_COLOR}" "githubReleaseManager [OPTIONS] [ARGUMENTS]"
   echo
   # ------------------------------------------
   # usage/options section
   # ------------------------------------------
-  optionsAltList=("[--help|-h]" "[--config]" "[--bash-framework-config <bash-framework-config>]" "[--verbose|-v]" "[-vv]" "[-vvv]" "[--log-level <log-level>]" "[--log-file <log-file>]" "[--display-level <display-level>]" "[--no-color]" "[--theme <theme>]" "[--version]" "[--quiet|-q]" "[--version-arg <versionArg>]" "[--current-version|-c <currentVersion>]" "[--exact-version|-e <exactVersion>]"
+  optionsAltList=("[--help|-h]" "[--config]" "[--bash-framework-config <bash-framework-config>]" "[--verbose|-v]" "[-vv]" "[-vvv]" "[--log-level <log-level>]" "[--log-file <log-file>]" "[--display-level <display-level>]" "[--no-color]" "[--theme <theme>]" "[--version]" "[--quiet|-q]" "[--config-file|-c <configFile>]"
   )
   Array::wrap2 " " 80 2 "${__HELP_TITLE_COLOR}USAGE:${__RESET_COLOR}" \
-    "upgradeGithubRelease" "${optionsAltList[@]}"
+    "githubReleaseManager" "${optionsAltList[@]}"
   echo
 
   # ------------------------------------------
@@ -2262,14 +2211,9 @@ upgradeGithubReleaseCommandHelp() {
   echo
   echo -e "${__HELP_TITLE_COLOR}ARGUMENTS:${__RESET_COLOR}"
 
-  Array::wrap2 " " 80 2 "  ${__HELP_OPTION_COLOR}targetFile${__HELP_NORMAL} {single} (mandatory)"
-  Array::wrap2 ' ' 76 4 "    " "The binary downloaded will be written to this file path. Ensure the path is writable."
+  Array::wrap2 " " 80 2 "  [${__HELP_OPTION_COLOR}softwareId${__HELP_NORMAL} {list} (optional)]"
+  Array::wrap2 ' ' 76 4 "    " "The specific software ids to install." "If not provided, all the softwares specified in configuration" "file will be installed." ""
   echo
-
-
-  Array::wrap2 " " 80 2 "  ${__HELP_OPTION_COLOR}githubUrlPattern${__HELP_NORMAL} {single} (mandatory)"
-  githubUrlPatternHelpFunction
-
 
 
   # ------------------------------------------
@@ -2366,23 +2310,13 @@ upgradeGithubReleaseCommandHelp() {
   echo
 
   echo
-  echo -e "${__HELP_TITLE_COLOR}VERSION MANAGEMENT:${__RESET_COLOR}"
-  echo -e "  ${__HELP_OPTION_COLOR}--version-arg <versionArg>${__HELP_NORMAL} {single}"
-  Array::wrap2 ' ' 76 4 "    " "The argument that will be provided to the currently installed binary" "to check the version of the software. See options constraints below." ""
+  echo -e "${__HELP_TITLE_COLOR}GITHUB RELEASE MANAGER OPTIONS:${__RESET_COLOR}"
+  echo -e "  ${__HELP_OPTION_COLOR}--config-file${__HELP_NORMAL}, ${__HELP_OPTION_COLOR}-c <configFile>${__HELP_NORMAL} {single}"
+  Array::wrap2 ' ' 76 4 "    " "The yaml configuration file to use." ""
   echo
 
-  Array::wrap2 ' ' 76 6 "    Default value: " "--version"
+  Array::wrap2 ' ' 76 6 "    Default value: " "<currentDir>/githubReleaseManager.yaml"
   echo
-
-  echo -e "  ${__HELP_OPTION_COLOR}--current-version${__HELP_NORMAL}, ${__HELP_OPTION_COLOR}-c <currentVersion>${__HELP_NORMAL} {single}"
-  optionCurrentVersionHelpFunction
-
-
-
-  echo -e "  ${__HELP_OPTION_COLOR}--exact-version${__HELP_NORMAL}, ${__HELP_OPTION_COLOR}-e <exactVersion>${__HELP_NORMAL} {single}"
-  exactVersionHelpFunction
-
-
   # ------------------------------------------
   # longDescription section
   # ------------------------------------------
@@ -2407,7 +2341,7 @@ upgradeGithubReleaseCommandHelp() {
   # ------------------------------------------
   echo
   echo -n -e "${__HELP_TITLE_COLOR}SOURCE FILE: ${__RESET_COLOR}"
-  echo "https://github.com/fchastanet/bash-tools-framework/tree/master/src/_binaries/Git/upgradeGithubRelease/upgradeGithubRelease-binary.yaml"
+  echo "https://github.com/fchastanet/bash-tools-framework/tree/master/src/_binaries/Git/githubReleaseManager/githubReleaseManager-binary.yaml"
   # ------------------------------------------
   # license section
   # ------------------------------------------
@@ -2424,30 +2358,126 @@ upgradeGithubReleaseCommandHelp() {
 beforeParseCallback
 specificRequirements
 
-upgradeGithubReleaseCommandParse "$@"
+githubReleaseManagerCommandParse "$@"
 MAIN_FUNCTION_NAME="main"
 main() {
 
 # shellcheck disable=SC2154
 
-computeCurrentCommandVersion() {
-  if [[ -n "${optionCurrentVersion}" ]]; then
-    echo "${optionCurrentVersion}"
-    return 0
-  fi
-  if [[ -n "${optionVersionArg}" ]]; then
-    # shellcheck disable=SC2086
-    "${targetFileArg}" ${optionVersionArg} 2>&1 | Version::parse || return 3
-  fi
+importInstallCallbacks() {
+  InstallCallbacks::installDeb
+  Github::defaultInstall
+  Linux::Apt::install
+  Linux::requireUbuntu
+  InstallCallbacks::getVersion
+  InstallCallbacks::installFromTarGz
 }
 
-VERSION_PLACEHOLDER="@version@" EXACT_VERSION="${optionExactVersion}" \
-  Github::upgradeRelease \
-  "${targetFileArg}" \
-  "${githubUrlPatternArg}" \
-  "${optionVersionArg}" \
-  computeCurrentCommandVersion \
-  Github::defaultInstall
+forEachSoftware() {
+  local configFile="${1}"
+  local callback="${2}"
+  shift 2 || true
+  local softwareIds=("$@")
+  local softwareId url version versionArg targetFile
+  local sudo installCallback softVersionCallback
+
+  # Process each software entry
+  for softwareId in "${softwareIds[@]}"; do
+    local software
+    software="$(yq ".softwares[] | select(.id == \"${softwareId}\")" "${configFile}")"
+
+    if [[ -n "${software}" ]]; then
+      url="$(echo "${software}" | yq --raw-output '.url' -)"
+      version="$(echo "${software}" | yq --raw-output '.version' -)"
+      versionArg="$(echo "${software}" | yq --raw-output '.versionArg' -)"
+      targetFile="$(echo "${software}" | yq --raw-output '.targetFile' -)"
+      sudo="$(echo "${software}" | yq --raw-output '.sudo' -)"
+      installCallback="$(echo "${software}" | yq --raw-output '.installCallback' -)"
+      if [[ -z "${installCallback}" || "${installCallback}" = "null" ]]; then
+        installCallback="Github::defaultInstall"
+      fi
+      softVersionCallback="$(echo "${software}" | yq --raw-output '.softVersionCallback' -)"
+      if [[ -z "${softVersionCallback}" || "${softVersionCallback}" = "null" ]]; then
+        softVersionCallback="Version::getCommandVersionFromPlainText"
+      fi
+      if command -v "${targetFile##*/}" &>/dev/null && [[ "$(command -v "${targetFile##*/}")" != "${targetFile}" ]]; then
+        Log::displayWarning "Existing executable found at $(command -v "${targetFile##*/}")"
+      fi
+      "${callback}" \
+        "${softwareId}" "${url}" "${version}" \
+        "${versionArg}" "${targetFile}" "${sudo}" \
+        "${installCallback}" "${softVersionCallback}"
+    fi
+  done
+}
+
+installSoftware() {
+  local softwareId="${1}"
+  local githubUrlPattern="${2}"
+  local version="${3}"
+  local versionArg="${4}"
+  local targetFileArg="${5}"
+  local sudo="${6}"
+  local installCallback="${7:-Github::defaultInstall}"
+  local softVersionCallback="${8:-Version::getCommandVersionFromPlainText}"
+  if [[ "${sudo}" == "null" ]]; then
+    sudo=""
+  fi
+  local githubUrl
+  # shellcheck disable=SC2097,SC2098
+  githubUrl="$(
+    ARCH="$(dpkg --print-architecture)" \
+    arch="${ARCH,,}" \
+    KERNEL="$(uname -s)" \
+    kernel="${KERNEL,,}" \
+    MACHINE="$(uname -m)" \
+    machine="${MACHINE,,}" \
+    OS="$(uname -s)" \
+    os="${OS,,}" \
+      eval echo "${githubUrlPattern}"
+  )"
+  local targetFile
+  targetFile="$(eval echo "${targetFileArg}")"
+  Log::displayInfo "Installing ${softwareId}..."
+  echo "  URL pattern: ${githubUrlPattern}"
+  echo "  URL: ${githubUrl}"
+  echo "  Version: ${version}"
+  echo "  Target file: ${targetFile}"
+  echo "  Sudo: ${sudo}"
+  echo "  Install callback: ${installCallback}"
+  echo "  Soft version callback: ${softVersionCallback}"
+  local exactVersion
+  if [[ "${version}" == "latest" ]]; then
+    exactVersion=""
+  else
+    exactVersion="${version}"
+  fi
+
+  if ! SUDO="${sudo}" \
+    VERSION_PLACEHOLDER="@version@" EXACT_VERSION="${exactVersion}" \
+    SOFT_VERSION_CALLBACK="${softVersionCallback}" \
+    Github::upgradeRelease \
+    "${targetFile}" \
+    "${githubUrl}" \
+    "${versionArg}" \
+    "${softVersionCallback}" \
+    "${installCallback}"; then
+    Log::displayError "Failed to install ${softwareId}"
+  fi
+  # shellcheck disable=SC2034
+  GH_WARNING_DISPLAYED=1
+}
+
+declare -a softwareIds
+# Get all software entries if no specific IDs provided
+if [[ ${#softwareIdsArg[@]} -eq 0 ]]; then
+  readarray -t softwareIds < <(yq --raw-output '.softwares[].id' "${optionConfigFile}")
+else
+  softwareIds=("${softwareIdsArg[@]}")
+fi
+
+forEachSoftware \
+  "${optionConfigFile}" installSoftware "${softwareIds[@]}"
 
 }
 

@@ -23,6 +23,7 @@ Log::requireLoad
 # @env BATS_FIX_TEST int 1 to fix testsData expected files
 # @arg $1 command:String command to test
 # @arg $2 expectedOutputFile:String expected output file
+# @env ERROR_CODE int 0
 testCommand() {
   local command="$1"
   local expectedOutputFile="$2"
@@ -34,7 +35,11 @@ testCommand() {
   export INTERACTIVE=1
   UI::theme default
   run "${command}" "${args[@]}"
-  assert_success
+  if [[ "${ERROR_CODE:-0}" == "0" ]]; then
+    assert_success
+  else
+    assert_failure "${ERROR_CODE}"
+  fi
   if [[ "${BATS_FIX_TEST}" = "1" && ! -f "${BATS_TEST_DIRNAME}/testsData/${expectedOutputFile}" ]]; then
     mkdir -p "${BATS_TEST_DIRNAME}/testsData" || true
     touch "${BATS_TEST_DIRNAME}/testsData/${expectedOutputFile}"
