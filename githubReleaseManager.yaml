@@ -21,6 +21,7 @@ softwares:
     versionArg: --version
     sudo: sudo
     targetFile: /usr/local/bin/shellcheck
+    installCallback: InstallCallbacks::installFromTarXz
   - id: fd
     url: |
       "https://github.com/sharkdp/fd/releases/download/v@version@/fd_@version@_${ARCH}.deb"

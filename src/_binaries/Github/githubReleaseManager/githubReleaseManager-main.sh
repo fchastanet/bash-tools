@@ -8,6 +8,7 @@ importInstallCallbacks() {
   Linux::requireUbuntu
   InstallCallbacks::getVersion
   InstallCallbacks::installFromTarGz
+  InstallCallbacks::installFromTarXz
 }
 
 forEachSoftware() {
