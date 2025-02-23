@@ -122,5 +122,6 @@ WORKDIR
 wslprofile
 xdebug
 xdebugini
+xzvf
 zcat
 zstyle

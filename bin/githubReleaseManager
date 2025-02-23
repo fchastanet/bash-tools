@@ -539,6 +539,107 @@ Framework::createTempFile() {
 }
 
 
+# @description clone the repository if not done yet, else pull it if no change in it
+# @arg $1 dir:String directory in which repository is installed or will be cloned
+# @arg $2 repo:String repository url
+# @arg $3 cloneCallback:Function callback on successful clone
+# @arg $4 pullCallback:Function callback on successful pull
+# @env GIT_CLONE_OPTIONS:String additional options to pass to git clone command
+# @env SUDO String allows to use custom sudo prefix command
+# @exitcode 0 on successful pulling/cloning, 1 on failure
+Git::cloneOrPullIfNoChanges() {
+  local dir="$1"
+  shift || true
+  local repo="$1"
+  shift || true
+  local cloneCallback=${1:-}
+  shift || true
+  local pullCallback=${1:-}
+  shift || true
+
+  if [[ -d "${dir}/.git" ]]; then
+    local exitCode=0
+    Git::pullIfNoChanges "${dir}" || exitCode=$?
+    if [[ "${exitCode}" =~ ^[245]$ ]]; then
+      # changes detected or pull not applicable
+      return 0
+    elif [[ "${exitCode}" != "0" ]]; then
+      return "${exitCode}"
+    fi
+    # shellcheck disable=SC2086
+    if [[ "$(type -t ${pullCallback})" = "function" ]]; then
+      ${pullCallback} "${dir}"
+    fi
+  else
+    Log::displayInfo "cloning ${repo} ..."
+    if ! ${SUDO:-} test -d "${dir%/*}"; then
+      ${SUDO:-} mkdir -p "${dir%/*}"
+    fi
+    # shellcheck disable=SC2086,SC2248
+    if ${SUDO:-} git clone ${GIT_CLONE_OPTIONS} --progress "$@" "${repo}" "${dir}"; then
+      # shellcheck disable=SC2086
+      if [[ "$(type -t ${cloneCallback})" = "function" ]]; then
+        ${cloneCallback} "${dir}"
+      fi
+    else
+      Log::displayError "Cloning '${repo}' on '${dir}' failed"
+      return 1
+    fi
+  fi
+}
+
+
+# @description pull git directory only if no change has been detected
+# @arg $1 dir:String the git directory to pull
+# @exitcode 0 on successful pulling
+# @exitcode 1 on any other failure
+# @exitcode 2 changes detected, pull avoided
+# @exitcode 3 not a git directory
+# @exitcode 4 not able to update index
+# @exitcode 5 not a branch, pull avoided
+# @stderr diagnostics information is displayed
+# @env SUDO String allows to use custom sudo prefix command
+Git::pullIfNoChanges() {
+
+  if [[ "${REQUIRE_FUNCTION_GIT_REQUIRE_GIT_COMMAND_LOADED:-0}" != 1 ]]; then
+    echo >&2 "Requirement Git::requireGitCommand has not been loaded"
+    exit 1
+  fi
+
+  local dir="$1"
+  if [[ ! -d "${dir}/.git" ]]; then
+    return 3
+  fi
+  (
+    cd "${dir}" || return 3
+    if ! ${SUDO:-} git update-index --refresh &>/dev/null; then
+      Log::displayWarning "Impossible to update git index of '${dir}' - check if you have modified file"
+      return 4
+    fi
+    if ! ${SUDO:-} git diff-index --quiet HEAD --; then
+      Log::displayWarning "Pulling git repository '${dir}' avoided as changes detected"
+      return 2
+    fi
+    if ! ${SUDO:-} git symbolic-ref -q HEAD; then
+      Log::displayWarning "Pulling git repository '${dir}' avoided as you are not on a branch"
+      return 5
+    fi
+    Log::displayInfo "Pull git repository '${dir}' as no changes detected"
+    ${SUDO:-} git pull --progress
+  )
+}
+
+
+# @description ensure command git is available
+# @exitcode 1 if git command not available
+# @stderr diagnostics information is displayed
+Git::requireGitCommand() {
+  export REQUIRE_FUNCTION_GIT_REQUIRE_GIT_COMMAND_LOADED=1
+
+  Assert::commandExists git
+}
+
+
 # @description intermediate callback that is used by Github::upgradeRelease
 # or Github::installRelease
 # if installCallback is not set, it allows to:
@@ -669,7 +770,7 @@ InstallCallbacks::getVersion() {
 }
 
 
-# @description Install debian package (with .deb extension)
+# @description Install Debian package (with .deb extension)
 # @arg $1 debFile:String
 InstallCallbacks::installDeb() {
   local newSoftware="$1"
@@ -701,7 +802,7 @@ InstallCallbacks::installFromTarGz() {
 InstallCallbacks::installFromTarXz() {
   local newSoftware="$1"
   local targetFileArg="$2"
-  set -x
+
   Log::displayInfo "Installing ${newSoftware} to ${targetFileArg}"
   # Create temp directory
   local tempDir
@@ -719,7 +820,6 @@ InstallCallbacks::installFromTarXz() {
 
   # Cleanup
   sudo rm -rf "${tempDir}" "${newSoftware}"
-  set +x
 }
 
 
@@ -771,6 +871,16 @@ Linux::requireUbuntu() {
 
   if ! Array::contains "$(Linux::getDistributorId)" "ubuntu" "debian"; then
     Log::fatal "this script should be executed under Ubuntu or Debian OS"
+  fi
+}
+
+
+# @description ensure command yq is available
+# @exitcode 1 if yq command not available
+# @stderr diagnostics information is displayed
+Linux::requireYqCommand() {
+  if [[ "${SKIP_REQUIRE_YQ:-0}" = "0" && "${SKIP_REQUIRES:-0}" = "0" ]]; then
+    Assert::commandExists yq
   fi
 }
 
@@ -1713,6 +1823,8 @@ beforeParseCallback() {
 
 specificRequirements() {
   Linux::requireJqCommand
+  Linux::requireYqCommand
+  Git::requireGitCommand
 }
 
 longDescriptionFunction() {
@@ -1754,13 +1866,6 @@ validateYamlConfig() {
   local errors=0
   Log::displayInfo "Validating configuration file ${configFile}"
 
-  local missingFields
-  missingFields="$(yq eval '.softwares[] | select( has("id") and has("url") and has("version") and has("targetFile") and has("versionArg") | not) | .id // "[unknown]"' "${configFile}")"
-  if [[ "${missingFields}" != '[unknown]' ]]; then
-    Log::displayError "Missing required fields in software entries: ${missingFields}"
-    ((errors++))
-  fi
-
   # Check if softwares key exists and is an array
   if ! yq '.softwares | type' "${configFile}" | grep -q "!!seq"; then
     Log::displayError "Configuration file must have a 'softwares' array"
@@ -1771,13 +1876,12 @@ validateYamlConfig() {
   while IFS= read -r index; do
     local prefix=".softwares[${index}]"
 
-    # Required fields
-    for field in "id" "url" "version" "targetFile" "versionArg"; do
-      if [[ -z "$(yq "${prefix}.${field}" "${configFile}")" ]]; then
-        Log::displayError "Missing required field '${field}' in software entry ${index}"
-        ((errors++))
-      fi
-    done
+    local missingFields
+    missingFields="$(yq eval "${prefix}"' | select( has("id") and has("url") and has("version") and has("targetFile") and has("versionArg") | not) | .id // "[unknown]"' "${configFile}")"
+    if [[ "${missingFields}" != '[unknown]' ]]; then
+      Log::displayError "Missing required fields in software ${index} entries: ${missingFields}"
+      ((errors++))
+    fi
   done < <(yq '.softwares | keys | .[]' "${configFile}")
 
   Log::displayInfo "Configuration file ${configFile} validation complete"
@@ -2413,6 +2517,8 @@ importInstallCallbacks() {
   InstallCallbacks::getVersion
   InstallCallbacks::installFromTarGz
   InstallCallbacks::installFromTarXz
+  Git::cloneOrPullIfNoChanges
+  Git::requireGitCommand
 }
 
 forEachSoftware() {
@@ -2447,42 +2553,110 @@ processSingleSoftware() {
   local configFile="${1}"
   local softwareId="${2}"
 
-  local software
-  software="$(yq ".softwares[] | select(.id == \"${softwareId}\")" "${configFile}")"
+  local id=""
+  local url=""
+  local version=""
+  local versionArg=""
+  local targetFile=""
+  local sudo=""
+  local installCallback=""
+  local softVersionCallback=""
+  local type=""
+  local installScript=""
+  local targetDir=""
+  local cloneOptions=""
+  local branch=""
+
+  # shellcheck source=/dev/null
+  source <(
+    yq -o shell -r \
+      ".softwares[] | select(.id == \"${softwareId}\") | del(.installScript)" \
+      "${configFile}" | sed -E \
+      -e '/^$/d' \
+      -e 's/^([^=]+)=["\x27]*(.*)$/\1="\2/' \
+      -e 's/["\x27]*$/"/'
+  )
+  if [[ -z "${id}" ]]; then
+    return 0
+  fi
   # shellcheck disable=SC2034
   LOG_CONTEXT="Software ${softwareId} - "
-  if [[ -n "${software}" ]]; then
-    local url=""
-    local version=""
-    local versionArg=""
-    local targetFile=""
-    local sudo=""
-    local installCallback=""
-    local softVersionCallback=""
-    # shellcheck source=/dev/null
-    source <(
-      yq -r \
-        ".softwares[] | select(.id == \"${softwareId}\") | to_entries[] | \"\(.key)=\(.value)\"" \
-        "${configFile}" | sed -E \
-        -e '/^$/d' \
-        -e 's/^([^=]+)=["\x27]*(.*)$/\1="\2/' \
-        -e 's/["\x27]*$/"/'
-    )
-    if [[ -z "${installCallback}" || "${installCallback}" = "null" ]]; then
-      installCallback="Github::defaultInstall"
+  if [[ -z "${installCallback}" || "${installCallback}" = "null" ]]; then
+    installCallback="Github::defaultInstall"
+  fi
+  if [[ -z "${softVersionCallback}" || "${softVersionCallback}" = "null" ]]; then
+    softVersionCallback="Version::getCommandVersionFromPlainText"
+  fi
+  if [[ -z "${type}" || "${type}" == "null" ]]; then
+    type="githubRelease"
+  fi
+  if [[ "${type}" == "gitClone" ]]; then
+    installScript="$(yq -r ".softwares[] | select(.id == \"${softwareId}\") | .installScript" "${configFile}")"
+    if [[ "${installScript}" = "null" ]]; then
+      installScript=""
     fi
-    if [[ -z "${softVersionCallback}" || "${softVersionCallback}" = "null" ]]; then
-      softVersionCallback="Version::getCommandVersionFromPlainText"
+    if [[ -z "${targetDir}" || "${targetDir}" == "null" ]]; then
+      Log::displayError "targetDir is required for gitClone type"
+      return 1
     fi
-
-    installSoftware \
+    installUsingGitClone \
+      "${softwareId}" "${url}" "${sudo}" \
+      "${targetDir}" "${branch}" "${cloneOptions}" "${installScript}"
+  else
+    installGithubRelease \
       "${softwareId}" "${url}" "${version}" \
       "${versionArg}" "${targetFile}" "${sudo}" \
       "${installCallback}" "${softVersionCallback}"
   fi
 }
 
-installSoftware() {
+installUsingGitClone() {
+  local softwareId="${1}"
+  local githubUrl="${2}"
+  local sudo="${3}"
+  local targetDir="${4}"
+  local branch="${5:-master}"
+  local cloneOptions="${6:-}"
+  local installScript="${7:-}"
+
+  if [[ "${sudo}" == "null" ]]; then
+    sudo=""
+  fi
+  Log::displayInfo "Installing ${softwareId}..."
+  echo "  Type: Git Clone"
+  echo "  URL: ${githubUrl}"
+  echo "  Sudo: ${sudo}"
+  echo "  Branch: ${branch}"
+  echo "  Clone options: ${cloneOptions}"
+  echo "  Target dir: ${targetDir}"
+  if [[ -n "${installScript}" ]]; then
+    echo "  Install script: Yes"
+  fi
+  function changeBranch() {
+    local dir="$1"
+    (
+      cd "${dir}" || return 1
+      "${sudo:-}" git checkout "${branch}"
+    )
+  }
+  if ! SUDO="${sudo}" Git::cloneOrPullIfNoChanges \
+    "${targetDir}" "${githubUrl}" changeBranch changeBranch; then
+    Log::displayError "Failed to clone/pull ${softwareId}"
+    return 1
+  fi
+  if [[ -n "${installScript}" ]]; then
+    Log::displayInfo "Executing install script for ${softwareId}"
+    (
+      cd "${targetDir}" || return 1
+      eval "${installScript}"
+    ) || {
+      Log::displayError "Failed to execute install script for ${softwareId}"
+      return 1
+    }
+  fi
+}
+
+installGithubRelease() {
   local softwareId="${1}"
   local githubUrl="${2}"
   local version="${3}"
@@ -2496,7 +2670,9 @@ installSoftware() {
   fi
   local targetFile
   targetFile="$(eval echo "${targetFileArg}")"
+
   Log::displayInfo "Installing ${softwareId}..."
+  echo "  Type: GitHub Release"
   echo "  URL: ${githubUrl}"
   echo "  Version: ${version}"
   echo "  Target file: ${targetFile}"

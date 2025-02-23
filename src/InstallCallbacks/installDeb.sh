@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# @description Install debian package (with .deb extension)
+# @description Install Debian package (with .deb extension)
 # @arg $1 debFile:String
 InstallCallbacks::installDeb() {
   local newSoftware="$1"

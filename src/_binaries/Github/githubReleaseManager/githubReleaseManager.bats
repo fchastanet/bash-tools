@@ -18,10 +18,12 @@ teardown() {
 }
 
 function Github::githubReleaseManager::display_help { #@test
+  stub yq
   testCommand "${binDir}/githubReleaseManager" githubReleaseManager.help.txt
 }
 
 function Github::githubReleaseManager::noArg { #@test
+  stub yq
   (
     cd "${BATS_TEST_TMPDIR}" || exit
 
@@ -33,6 +35,7 @@ function Github::githubReleaseManager::noArg { #@test
 }
 
 function Github::githubReleaseManager::filePathInvalid { #@test
+  stub yq
   run "${binDir}/githubReleaseManager" -c François 2>&1
   assert_failure 1
   assert_lines_count 1
@@ -40,10 +43,10 @@ function Github::githubReleaseManager::filePathInvalid { #@test
 }
 
 function Github::githubReleaseManager::missingSoftwaresKey { #@test
-  local f="${BATS_TEST_DIRNAME}/testsData/githubReleaseManager-MissingSotwaresKey.yaml"
+  local f="${BATS_TEST_DIRNAME}/testsData/githubReleaseManager-MissingSoftwaresKey.yaml"
   stub yq \
-    "'.softwares | type' '${f}' : exit 1" \
-    "'.softwares | keys | .[]' '${f}' : exit 1"
+    "'.softwares | type' '${f}' : echo 'invalidType'" \
+    "'.softwares | keys | .[]' '${f}' : exit 0"
   run "${binDir}/githubReleaseManager" -c "${f}" invalidSoftwareId 2>&1
   assert_failure 1
   assert_lines_count 4
@@ -56,7 +59,7 @@ function Github::githubReleaseManager::missingSoftwaresKey { #@test
 function Github::githubReleaseManager::invalidSoftwareId { #@test
   local f="${BATS_TEST_DIRNAME}/testsData/githubReleaseManager.yaml"
   stub yq \
-    "'.softwares | type' '${f}' : echo 'array'" \
+    "'.softwares | type' '${f}' : echo '!!seq'" \
     "'.softwares | keys | .[]' "${f}" : exit 0" \
     "'.softwares[].id' "${f}" : exit 1"
   run "${binDir}/githubReleaseManager" \
@@ -70,51 +73,35 @@ function Github::githubReleaseManager::invalidSoftwareId { #@test
 }
 
 function Github::githubReleaseManager::invalidSoftwareConfigurationMissingId { #@test
+  local f="${BATS_TEST_DIRNAME}/testsData/githubReleaseManager.yaml"
   stub yq \
-    "'.softwares | type' '${BATS_TEST_DIRNAME}/testsData/githubReleaseManager.yaml' : echo 'array'" \
-    "'.softwares | keys | .[]' "${BATS_TEST_DIRNAME}/testsData/githubReleaseManager.yaml" : echo 'invalidSoftwareConfig'" \
-    "'.softwares[invalidSoftwareConfig].id' "${BATS_TEST_DIRNAME}/testsData/githubReleaseManager.yaml" : exit 1" \
-    "'.softwares[invalidSoftwareConfig].url' "${BATS_TEST_DIRNAME}/testsData/githubReleaseManager.yaml" : exit 1" \
-    "'.softwares[invalidSoftwareConfig].version' "${BATS_TEST_DIRNAME}/testsData/githubReleaseManager.yaml" : exit 1" \
-    "'.softwares[invalidSoftwareConfig].targetFile' "${BATS_TEST_DIRNAME}/testsData/githubReleaseManager.yaml" : exit 1" \
-    "'.softwares[invalidSoftwareConfig].versionArg' "${BATS_TEST_DIRNAME}/testsData/githubReleaseManager.yaml" : exit 1"
+    "'.softwares | type' '${f}' : echo '!!seq'" \
+    "'.softwares | keys | .[]' '${f}' : echo 'invalidSoftwareConfig'" \
+    "eval * '${f}' : echo 'version'"
   run "${binDir}/githubReleaseManager" \
     -c "${BATS_TEST_DIRNAME}/testsData/githubReleaseManager.yaml" invalidSoftwareConfig 2>&1
   assert_failure 1
-  assert_lines_count 8
+  assert_lines_count 4
   assert_line --index 0 --partial "INFO    - Validating configuration file ${BATS_TEST_DIRNAME}/testsData/githubReleaseManager.yaml"
-  assert_line --index 1 --partial "ERROR   - Missing required field 'id' in software entry invalidSoftwareConfig"
-  assert_line --index 2 --partial "ERROR   - Missing required field 'url' in software entry invalidSoftwareConfig"
-  assert_line --index 3 --partial "ERROR   - Missing required field 'version' in software entry invalidSoftwareConfig"
-  assert_line --index 4 --partial "ERROR   - Missing required field 'targetFile' in software entry invalidSoftwareConfig"
-  assert_line --index 5 --partial "ERROR   - Missing required field 'versionArg' in software entry invalidSoftwareConfig"
-  assert_line --index 6 --partial "INFO    - Configuration file ${BATS_TEST_DIRNAME}/testsData/githubReleaseManager.yaml validation complete"
-  assert_line --index 7 --partial "FATAL   - Configuration file ${BATS_TEST_DIRNAME}/testsData/githubReleaseManager.yaml is invalid"
+  assert_line --index 1 --partial "ERROR   - Missing required fields in software invalidSoftwareConfig entries: version"
+  assert_line --index 2 --partial "INFO    - Configuration file ${BATS_TEST_DIRNAME}/testsData/githubReleaseManager.yaml validation complete"
+  assert_line --index 3 --partial "FATAL   - Configuration file ${BATS_TEST_DIRNAME}/testsData/githubReleaseManager.yaml is invalid"
 }
 
 function Github::githubReleaseManager::validSoftwareConfigNonExistingGithub { #@test
   local f="${BATS_TEST_DIRNAME}/testsData/githubReleaseManager.yaml"
-  local validSoftwareConfigFile="${BATS_TEST_DIRNAME}/testsData/validSoftware.json"
+  local validSoftwareConfigFile="${BATS_TEST_DIRNAME}/testsData/validSoftware.sh"
   stub yq \
-    "'.softwares | type' '${f}' : echo 'array'" \
-    "'.softwares | keys | .[]' "${f}" : echo '0'" \
-    "'.softwares[0].id' "${f}" : echo 'validSoftwareConfig'" \
-    "'.softwares[0].url' "${f}" : echo 'validUrl'" \
-    "'.softwares[0].version' "${f}" : echo 'validVersion'" \
-    "'.softwares[0].targetFile' "${f}" : echo 'validTargetFile'" \
-    "'.softwares[0].versionArg' "${f}" : echo 'validVersionArg'" \
+    "'.softwares | type' '${f}' : echo '!!seq'" \
+    "'.softwares | keys | .[]' '${f}' : echo '0'" \
+    "eval * '${f}' : echo '[unknown]'" \
     "'.softwares[].id' '${f}' : echo 'validSoftwareConfig'" \
-    "'.softwares[] | select(.id == \"validSoftwareConfig\")' '${f}' : cat '${validSoftwareConfigFile}'" \
-    "--raw-output .url - : echo 'validUrl'" \
-    "--raw-output .version - : echo 'validVersion'" \
-    "--raw-output .versionArg - : echo 'validVersionArg'" \
-    "--raw-output .targetFile - : echo 'targetFile'" \
-    "--raw-output .sudo - : echo 'sudo'" \
-    "--raw-output .installCallback - : echo 'installCallback'" \
-    "--raw-output .softVersionCallback - : echo 'softVersionCallback'"
+    "-o shell -r * '${f}' : cat '${validSoftwareConfigFile}'"
+  stub gh \
+    'auth status : exit 0'
   stub dpkg '--print-architecture : echo "amd64"'
   Github::isReleaseVersionExist() { return 1; }
 
-  ERROR_CODE=0 testCommand "${binDir}/githubReleaseManager" "githubReleaseManager.validSoftwareConfigNonExistingGithub.txt" \
+  ERROR_CODE=0 RETRY_DELAY_BETWEEN_RETRIES=0 testCommand "${binDir}/githubReleaseManager" "githubReleaseManager.validSoftwareConfigNonExistingGithub.txt" \
     -c "${BATS_TEST_DIRNAME}/testsData/githubReleaseManager.yaml" validSoftwareConfig 2>&1
 }

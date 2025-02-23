@@ -7,7 +7,7 @@
 InstallCallbacks::installFromTarXz() {
   local newSoftware="$1"
   local targetFileArg="$2"
-  set -x
+
   Log::displayInfo "Installing ${newSoftware} to ${targetFileArg}"
   # Create temp directory
   local tempDir
@@ -25,5 +25,4 @@ InstallCallbacks::installFromTarXz() {
 
   # Cleanup
   sudo rm -rf "${tempDir}" "${newSoftware}"
-  set +x
 }

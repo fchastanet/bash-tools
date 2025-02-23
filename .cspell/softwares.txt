@@ -34,6 +34,7 @@ enduml
 ETAG
 fasd
 fchastanet
+François
 gdebi
 getent
 github
@@ -140,6 +141,7 @@ venv
 virtualenv
 wholename
 wincmd
+wincred
 winpty
 wslg
 wslpath

@@ -2,6 +2,8 @@
 
 specificRequirements() {
   Linux::requireJqCommand
+  Linux::requireYqCommand
+  Git::requireGitCommand
 }
 
 longDescriptionFunction() {
@@ -43,13 +45,6 @@ validateYamlConfig() {
   local errors=0
   Log::displayInfo "Validating configuration file ${configFile}"
 
-  local missingFields
-  missingFields="$(yq eval '.softwares[] | select( has("id") and has("url") and has("version") and has("targetFile") and has("versionArg") | not) | .id // "[unknown]"' "${configFile}")"
-  if [[ "${missingFields}" != '[unknown]' ]]; then
-    Log::displayError "Missing required fields in software entries: ${missingFields}"
-    ((errors++))
-  fi
-
   # Check if softwares key exists and is an array
   if ! yq '.softwares | type' "${configFile}" | grep -q "!!seq"; then
     Log::displayError "Configuration file must have a 'softwares' array"
@@ -60,13 +55,12 @@ validateYamlConfig() {
   while IFS= read -r index; do
     local prefix=".softwares[${index}]"
 
-    # Required fields
-    for field in "id" "url" "version" "targetFile" "versionArg"; do
-      if [[ -z "$(yq "${prefix}.${field}" "${configFile}")" ]]; then
-        Log::displayError "Missing required field '${field}' in software entry ${index}"
-        ((errors++))
-      fi
-    done
+    local missingFields
+    missingFields="$(yq eval "${prefix}"' | select( has("id") and has("url") and has("version") and has("targetFile") and has("versionArg") | not) | .id // "[unknown]"' "${configFile}")"
+    if [[ "${missingFields}" != '[unknown]' ]]; then
+      Log::displayError "Missing required fields in software ${index} entries: ${missingFields}"
+      ((errors++))
+    fi
   done < <(yq '.softwares | keys | .[]' "${configFile}")
 
   Log::displayInfo "Configuration file ${configFile} validation complete"

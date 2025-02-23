@@ -103,9 +103,12 @@ overrides:
     dictionaries:
       - loremIpsum
 
-  - filename: "*.yml"
+  - filename:
+      - "*.yml"
+      - "*.toml"
     dictionaries:
       - lintersConfig
+      - mySoftwares
 
   - filename: "**/*.puml"
     languageId: plantUml

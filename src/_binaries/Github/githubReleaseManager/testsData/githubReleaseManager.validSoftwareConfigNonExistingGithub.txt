@@ -1,12 +1,19 @@
 [44mINFO    - Validating configuration file /bash/src/_binaries/Github/githubReleaseManager/testsData/githubReleaseManager.yaml[0m
 [44mINFO    - Configuration file /bash/src/_binaries/Github/githubReleaseManager/testsData/githubReleaseManager.yaml validation complete[0m
-[44mINFO    - Software: validSoftwareConfig Installing validSoftwareConfig...[0m
-  URL pattern: validUrl
-  URL: validUrl
-  Version: validVersion
-  Target file: targetFile
-  Sudo: sudo
-  Install callback: installCallback
-  Soft version callback: softVersionCallback
-[31mERROR   - Software: validSoftwareConfig targetFile version validVersion doesn't exist on github[0m
-[31mERROR   - Software: validSoftwareConfig Failed to install validSoftwareConfig[0m
+[33mWARN    - GH_TOKEN is not set, cannot use gh, using curl to retrieve release versions list[0m
+[44mINFO    - Software validSoftwareConfig - Installing validSoftwareConfig...[0m
+  Type: GitHub Release
+  URL: https://github.com/fchastanet/fake
+  Version: latest
+  Target file: /usr/local/bin/saml2aws
+  Sudo: 
+  Install callback: InstallCallbacks::installFromTarGz
+  Soft version callback: Version::getCommandVersionFromPlainText
+[44mINFO    - Software validSoftwareConfig - Attempt 1/5: Retrieving release versions list ...[0m
+[44mINFO    - Software validSoftwareConfig - Attempt 2/5: Retrieving release versions list ...[0m
+[44mINFO    - Software validSoftwareConfig - Attempt 3/5: Retrieving release versions list ...[0m
+[44mINFO    - Software validSoftwareConfig - Attempt 4/5: Retrieving release versions list ...[0m
+[44mINFO    - Software validSoftwareConfig - Attempt 5/5: Retrieving release versions list ...[0m
+[31mERROR   - Software validSoftwareConfig - The command has failed after 5 attempts.[0m
+[31mERROR   - Software validSoftwareConfig - latest version not found on https://api.github.com/repos//releases/latest[0m
+[31mERROR   - Software validSoftwareConfig - Failed to install validSoftwareConfig[0m

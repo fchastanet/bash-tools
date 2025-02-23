@@ -9,6 +9,8 @@ importInstallCallbacks() {
   InstallCallbacks::getVersion
   InstallCallbacks::installFromTarGz
   InstallCallbacks::installFromTarXz
+  Git::cloneOrPullIfNoChanges
+  Git::requireGitCommand
 }
 
 forEachSoftware() {
@@ -43,42 +45,110 @@ processSingleSoftware() {
   local configFile="${1}"
   local softwareId="${2}"
 
-  local software
-  software="$(yq ".softwares[] | select(.id == \"${softwareId}\")" "${configFile}")"
+  local id=""
+  local url=""
+  local version=""
+  local versionArg=""
+  local targetFile=""
+  local sudo=""
+  local installCallback=""
+  local softVersionCallback=""
+  local type=""
+  local installScript=""
+  local targetDir=""
+  local cloneOptions=""
+  local branch=""
+
+  # shellcheck source=/dev/null
+  source <(
+    yq -o shell -r \
+      ".softwares[] | select(.id == \"${softwareId}\") | del(.installScript)" \
+      "${configFile}" | sed -E \
+      -e '/^$/d' \
+      -e 's/^([^=]+)=["\x27]*(.*)$/\1="\2/' \
+      -e 's/["\x27]*$/"/'
+  )
+  if [[ -z "${id}" ]]; then
+    return 0
+  fi
   # shellcheck disable=SC2034
   LOG_CONTEXT="Software ${softwareId} - "
-  if [[ -n "${software}" ]]; then
-    local url=""
-    local version=""
-    local versionArg=""
-    local targetFile=""
-    local sudo=""
-    local installCallback=""
-    local softVersionCallback=""
-    # shellcheck source=/dev/null
-    source <(
-      yq -r \
-        ".softwares[] | select(.id == \"${softwareId}\") | to_entries[] | \"\(.key)=\(.value)\"" \
-        "${configFile}" | sed -E \
-        -e '/^$/d' \
-        -e 's/^([^=]+)=["\x27]*(.*)$/\1="\2/' \
-        -e 's/["\x27]*$/"/'
-    )
-    if [[ -z "${installCallback}" || "${installCallback}" = "null" ]]; then
-      installCallback="Github::defaultInstall"
+  if [[ -z "${installCallback}" || "${installCallback}" = "null" ]]; then
+    installCallback="Github::defaultInstall"
+  fi
+  if [[ -z "${softVersionCallback}" || "${softVersionCallback}" = "null" ]]; then
+    softVersionCallback="Version::getCommandVersionFromPlainText"
+  fi
+  if [[ -z "${type}" || "${type}" == "null" ]]; then
+    type="githubRelease"
+  fi
+  if [[ "${type}" == "gitClone" ]]; then
+    installScript="$(yq -r ".softwares[] | select(.id == \"${softwareId}\") | .installScript" "${configFile}")"
+    if [[ "${installScript}" = "null" ]]; then
+      installScript=""
     fi
-    if [[ -z "${softVersionCallback}" || "${softVersionCallback}" = "null" ]]; then
-      softVersionCallback="Version::getCommandVersionFromPlainText"
+    if [[ -z "${targetDir}" || "${targetDir}" == "null" ]]; then
+      Log::displayError "targetDir is required for gitClone type"
+      return 1
     fi
-
-    installSoftware \
+    installUsingGitClone \
+      "${softwareId}" "${url}" "${sudo}" \
+      "${targetDir}" "${branch}" "${cloneOptions}" "${installScript}"
+  else
+    installGithubRelease \
       "${softwareId}" "${url}" "${version}" \
       "${versionArg}" "${targetFile}" "${sudo}" \
       "${installCallback}" "${softVersionCallback}"
   fi
 }
 
-installSoftware() {
+installUsingGitClone() {
+  local softwareId="${1}"
+  local githubUrl="${2}"
+  local sudo="${3}"
+  local targetDir="${4}"
+  local branch="${5:-master}"
+  local cloneOptions="${6:-}"
+  local installScript="${7:-}"
+
+  if [[ "${sudo}" == "null" ]]; then
+    sudo=""
+  fi
+  Log::displayInfo "Installing ${softwareId}..."
+  echo "  Type: Git Clone"
+  echo "  URL: ${githubUrl}"
+  echo "  Sudo: ${sudo}"
+  echo "  Branch: ${branch}"
+  echo "  Clone options: ${cloneOptions}"
+  echo "  Target dir: ${targetDir}"
+  if [[ -n "${installScript}" ]]; then
+    echo "  Install script: Yes"
+  fi
+  function changeBranch() {
+    local dir="$1"
+    (
+      cd "${dir}" || return 1
+      "${sudo:-}" git checkout "${branch}"
+    )
+  }
+  if ! SUDO="${sudo}" Git::cloneOrPullIfNoChanges \
+    "${targetDir}" "${githubUrl}" changeBranch changeBranch; then
+    Log::displayError "Failed to clone/pull ${softwareId}"
+    return 1
+  fi
+  if [[ -n "${installScript}" ]]; then
+    Log::displayInfo "Executing install script for ${softwareId}"
+    (
+      cd "${targetDir}" || return 1
+      eval "${installScript}"
+    ) || {
+      Log::displayError "Failed to execute install script for ${softwareId}"
+      return 1
+    }
+  fi
+}
+
+installGithubRelease() {
   local softwareId="${1}"
   local githubUrl="${2}"
   local version="${3}"
@@ -92,7 +162,9 @@ installSoftware() {
   fi
   local targetFile
   targetFile="$(eval echo "${targetFileArg}")"
+
   Log::displayInfo "Installing ${softwareId}..."
+  echo "  Type: GitHub Release"
   echo "  URL: ${githubUrl}"
   echo "  Version: ${version}"
   echo "  Target file: ${targetFile}"

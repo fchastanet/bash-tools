@@ -1,0 +1,44 @@
+#############################  Display  #############################
+
+# Verbose program output
+# Accepts log level: "error", "warn", "info", "debug", "trace"
+verbose = "info"
+
+# Don't show interactive progress bar while checking links.
+no_progress = false
+
+#############################  Requests  ############################
+
+# Only test links with the given schemes (e.g. https).
+# Omit to check links with any other scheme.
+# At the moment, we support http, https, file, and mailto.
+scheme = ["https"]
+
+#############################  Exclusions  ##########################
+
+# Exclude URLs and mail addresses from checking (supports regex).
+exclude = [
+  'Commands.md',
+  '^https://github/$',
+  '^file://pages/Commands.md',
+  '^http://localhost',
+  '^https://api.github.com/repos//releases/latest',
+  '^https://www.gnu.org/software/parallel/',
+  '^s3://s3server/exports'
+]
+
+# Exclude these filesystem paths from getting checked.
+exclude_path = [
+  "githubReleaseManager.yaml",
+  "src/_binaries/Github/githubReleaseManager/testsData/githubReleaseManager.yaml",
+  "src/_binaries/Github/githubReleaseManager/testsData/githubReleaseManager-MissingSoftwaresKey.yaml",
+  "src/_binaries/Github/githubReleaseManager/testsData/githubReleaseManager-Error.yaml",
+  "src/_binaries/Github/upgradeGithubRelease/testsData/upgradeGithubRelease.help.txt",
+  "src/_binaries/Github/githubReleaseManager/testsData/githubReleaseManager.validSoftwareConfigNonExistingGithub.txt"
+]
+
+# Exclude link-local IP address range from checking.
+exclude_link_local = true
+
+# Exclude loopback IP address range and localhost from checking.
+exclude_loopback = true

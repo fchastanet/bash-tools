@@ -8,5 +8,6 @@
     {
       "pattern": "^Commands.md$"
     }
-  ]
+  ],
+  "aliveStatusCodes": [0, 200, 201, 206, 301, 302]
 }

@@ -1,9 +1,0 @@
-{
-  "id": "saml2aws",
-  "url": "https://github.com/Versent/saml2aws/releases/download/v@version@/saml2aws_@version@_${kernel}_${arch}.tar.gz",
-  "version": "latest",
-  "versionArg": "--version",
-  "sudo": "sudo",
-  "targetFile": "/usr/local/bin/saml2aws",
-  "installCallback": "InstallCallbacks::installFromTarGz"
-}
