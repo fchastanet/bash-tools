@@ -13,15 +13,30 @@ importInstallCallbacks() {
 
 forEachSoftware() {
   local configFile="${1}"
-  shift 2 || true
-  local softwareIds=("$@")
+  shift || true
+  local -a softwareIds=("$@")
 
+  local theme="${optionTheme}"
+  if [[ "${theme}" != "noColor" ]]; then
+    theme="default-force"
+  fi
   # Run installations in parallel using xargs
-  printf "%s\n" "${softwareIds[@]}" |
-    SKIP_YAML_CHECKS=1 xargs -P "$(nproc)" -I {} \
-      "${BASH_SOURCE[0]}" \
-      -c "${optionConfigFile}" \
-      "{}" 2>&1
+  local cmd="${BASH_SOURCE[0]}"
+  export cmd optionConfigFile theme
+  callSoft() {
+    local soft="$1"
+    SKIP_YAML_CHECKS=1 LOG_CONTEXT="Software ${soft} - " "${cmd}" \
+      --theme "${theme}" -c "${optionConfigFile}" "${soft}"
+  }
+  export -f callSoft
+
+  if command -v parallel &>/dev/null; then
+    parallel -j "$(nproc)" callSoft ::: "${softwareIds[@]}"
+  else
+    printf "%s\n" "${softwareIds[@]}" |
+      xargs --no-run-if-empty -n 1 -P "$(nproc)" -I {} bash -c 'callSoft "$@"' _ {}
+  fi
+
 }
 
 processSingleSoftware() {
@@ -33,16 +48,25 @@ processSingleSoftware() {
   # shellcheck disable=SC2034
   LOG_CONTEXT="Software ${softwareId} - "
   if [[ -n "${software}" ]]; then
-    url="$(echo "${software}" | yq --raw-output '.url' -)"
-    version="$(echo "${software}" | yq --raw-output '.version' -)"
-    versionArg="$(echo "${software}" | yq --raw-output '.versionArg' -)"
-    targetFile="$(echo "${software}" | yq --raw-output '.targetFile' -)"
-    sudo="$(echo "${software}" | yq --raw-output '.sudo' -)"
-    installCallback="$(echo "${software}" | yq --raw-output '.installCallback' -)"
+    local url=""
+    local version=""
+    local versionArg=""
+    local targetFile=""
+    local sudo=""
+    local installCallback=""
+    local softVersionCallback=""
+    # shellcheck source=/dev/null
+    source <(
+      yq -r \
+        ".softwares[] | select(.id == \"${softwareId}\") | to_entries[] | \"\(.key)=\(.value)\"" \
+        "${configFile}" | sed -E \
+        -e '/^$/d' \
+        -e 's/^([^=]+)=["\x27]*(.*)$/\1="\2/' \
+        -e 's/["\x27]*$/"/'
+    )
     if [[ -z "${installCallback}" || "${installCallback}" = "null" ]]; then
       installCallback="Github::defaultInstall"
     fi
-    softVersionCallback="$(echo "${software}" | yq --raw-output '.softVersionCallback' -)"
     if [[ -z "${softVersionCallback}" || "${softVersionCallback}" = "null" ]]; then
       softVersionCallback="Version::getCommandVersionFromPlainText"
     fi
@@ -56,7 +80,7 @@ processSingleSoftware() {
 
 installSoftware() {
   local softwareId="${1}"
-  local githubUrlPattern="${2}"
+  local githubUrl="${2}"
   local version="${3}"
   local versionArg="${4}"
   local targetFileArg="${5}"
@@ -66,23 +90,9 @@ installSoftware() {
   if [[ "${sudo}" == "null" ]]; then
     sudo=""
   fi
-  local githubUrl
-  # shellcheck disable=SC2097,SC2098
-  githubUrl="$(
-    ARCH="$(dpkg --print-architecture)" \
-    arch="${ARCH,,}" \
-    KERNEL="$(uname -s)" \
-    kernel="${KERNEL,,}" \
-    MACHINE="$(uname -m)" \
-    machine="${MACHINE,,}" \
-    OS="$(uname -s)" \
-    os="${OS,,}" \
-      eval echo "${githubUrlPattern}"
-  )"
   local targetFile
   targetFile="$(eval echo "${targetFileArg}")"
   Log::displayInfo "Installing ${softwareId}..."
-  echo "  URL pattern: ${githubUrlPattern}"
   echo "  URL: ${githubUrl}"
   echo "  Version: ${version}"
   echo "  Target file: ${targetFile}"
@@ -124,10 +134,26 @@ fi
 declare -a softwareIds
 # Get all software entries if no specific IDs provided
 if [[ ${#softwareIdsArg[@]} -eq 0 ]]; then
-  readarray -t softwareIds < <(yq --raw-output '.softwares[].id' "${optionConfigFile}")
+  readarray -t softwareIds < <(yq '.softwares[].id' "${optionConfigFile}")
 else
   softwareIds=("${softwareIdsArg[@]}")
 fi
+
+# shellcheck disable=SC2034
+declare -g ARCH KERNEL MACHINE OS arch kernel machine os
+ARCH="$(dpkg --print-architecture)"
+# shellcheck disable=SC2034
+arch="${ARCH,,}"
+KERNEL="$(uname -s)"
+# shellcheck disable=SC2034
+kernel="${KERNEL,,}"
+MACHINE="$(uname -m)"
+# shellcheck disable=SC2034
+machine="${MACHINE,,}"
+OS="$(uname -s)"
+# shellcheck disable=SC2034
+os="${OS,,}"
+
 if [[ ${#softwareIds[@]} -eq 1 ]]; then
   processSingleSoftware "${optionConfigFile}" "${softwareIds[0]}"
 else

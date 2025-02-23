@@ -56,7 +56,7 @@ softwares:
     version: latest
     url: |
       "https://github.com/plantuml/plantuml/releases/download/v@version@/plantuml-@version@.jar"
-    versionArg:
+    versionArg: |
       java -jar /opt/java/plantuml.jar -version | head -1 | Version::parse
     softVersionCallback: InstallCallbacks::getVersion
     sudo: sudo
@@ -99,13 +99,13 @@ softwares:
     versionArg: --version
     sudo: sudo
     targetFile: /usr/local/bin/shfmt
-# TODO
-# SUDO=sudo GIT_CLONE_OPTIONS="--depth=1" Git::cloneOrPullIfNoChanges \
-#     "/opt/kubeps1" \
-#     "https://github.com/jonmosco/kube-ps1.git"
+# # TODO
+# # SUDO=sudo GIT_CLONE_OPTIONS="--depth=1" Git::cloneOrPullIfNoChanges \
+# #     "/opt/kubeps1" \
+# #     "https://github.com/jonmosco/kube-ps1.git"
 
-# SUDO=sudo GIT_CLONE_OPTIONS="--depth=1" Git::cloneOrPullIfNoChanges \
-#   "/opt/kubectx" \
-#   "https://github.com/ahmetb/kubectx"
-# sudo ln -sf /opt/kubectx/kubectx /usr/local/bin/kubectx
-# sudo ln -sf /opt/kubectx/kubens /usr/local/bin/kubens
+# # SUDO=sudo GIT_CLONE_OPTIONS="--depth=1" Git::cloneOrPullIfNoChanges \
+# #   "/opt/kubectx" \
+# #   "https://github.com/ahmetb/kubectx"
+# # sudo ln -sf /opt/kubectx/kubectx /usr/local/bin/kubectx
+# # sudo ln -sf /opt/kubectx/kubens /usr/local/bin/kubens

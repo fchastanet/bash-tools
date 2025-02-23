@@ -43,8 +43,15 @@ validateYamlConfig() {
   local errors=0
   Log::displayInfo "Validating configuration file ${configFile}"
 
+  local missingFields
+  missingFields="$(yq eval '.softwares[] | select( has("id") and has("url") and has("version") and has("targetFile") and has("versionArg") | not) | .id // "[unknown]"' "${configFile}")"
+  if [[ "${missingFields}" != '[unknown]' ]]; then
+    Log::displayError "Missing required fields in software entries: ${missingFields}"
+    ((errors++))
+  fi
+
   # Check if softwares key exists and is an array
-  if ! yq '.softwares | type' "${configFile}" | grep -q "array"; then
+  if ! yq '.softwares | type' "${configFile}" | grep -q "!!seq"; then
     Log::displayError "Configuration file must have a 'softwares' array"
     ((errors++))
   fi
