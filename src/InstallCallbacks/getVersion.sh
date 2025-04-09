@@ -7,7 +7,16 @@
 InstallCallbacks::getVersion() {
   # local newSoftware="$1"
   local versionArg="$2"
-  eval "${versionArg}" || {
+  local tmpFile
+  tmpFile="$(Framework::createTempFile)"
+  (
+    echo "#!/bin/bash"
+    echo "set -e -o errexit -o pipefail"
+    # shellcheck disable=SC2086
+    echo ${versionArg}
+  ) >"${tmpFile}"
+  # shellcheck disable=SC1090
+  source "${tmpFile}" | Version::parse || {
     Log::displayError "Failed to get version"
     return 1
   }
