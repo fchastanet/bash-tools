@@ -6,6 +6,8 @@
 source "$(cd "${BATS_TEST_DIRNAME}/.." && pwd)/batsHeaders.sh"
 # shellcheck source=src/InstallCallbacks/getVersion.sh
 source "${rootDir}/src/InstallCallbacks/getVersion.sh"
+# shellcheck source=/dev/null
+source "${FRAMEWORK_ROOT_DIR}/src/Version/parse.sh"
 
 function setup() {
   export TMPDIR="${BATS_TEST_TMPDIR}"
@@ -19,7 +21,7 @@ function InstallCallbacks::getVersion::lsVersion { #@test
   stub ls "--version : echo 'ls (GNU coreutils) 8.30'"
   run InstallCallbacks::getVersion arg1 "ls --version | head -n 1"
   assert_success
-  assert_output "ls (GNU coreutils) 8.30"
+  assert_output "8.30"
 }
 
 function InstallCallbacks::getVersion::invalidCommand { #@test

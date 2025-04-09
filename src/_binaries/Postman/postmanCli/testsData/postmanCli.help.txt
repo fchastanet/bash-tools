@@ -43,8 +43,10 @@
       - INFO[0m
       - DEBUG[0m
       - TRACE[0m
+    Default value: OFF
   [1;34m--log-file <log-file>[0m {single}
     Set log file
+    Default value: /tmp/logFile
   [1;34m--display-level <display-level>[0m {single}
     Set display level
     Possible values: 
@@ -56,6 +58,7 @@
       - INFO[0m
       - DEBUG[0m
       - TRACE[0m
+    Default value: INFO
   [1;34m--no-color[0m {single}
     Produce monochrome output. alias of --theme noColor.
   [1;34m--theme <theme>[0m {single}

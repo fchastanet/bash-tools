@@ -69,6 +69,7 @@ kubernetes
 kubie
 lastname
 launchbar
+lazydocker
 lesspipe
 libcairo
 libcanberra

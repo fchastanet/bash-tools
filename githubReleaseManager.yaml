@@ -4,7 +4,7 @@ softwares:
     url: https://github.com/docker/compose/releases/download/v@version@/docker-compose-${kernel}-${MACHINE}
     version: latest
     versionArg: --version
-    sudo:
+    sudo: sudo
     targetFile: /usr/local/bin/docker-compose
   - id: hadolint
     url: https://github.com/hadolint/hadolint/releases/download/v@version@/hadolint-${KERNEL}-${MACHINE}
@@ -48,8 +48,7 @@ softwares:
   - id: plantuml
     version: latest
     url: https://github.com/plantuml/plantuml/releases/download/v@version@/plantuml-@version@.jar
-    versionArg:
-      java -jar /opt/java/plantuml.jar -version | head -1 | Version::parse
+    versionArg: java -jar /opt/java/plantuml.jar -version | head -1
     softVersionCallback: InstallCallbacks::getVersion
     sudo: sudo
     targetFile: /opt/java/plantuml.jar
@@ -60,7 +59,7 @@ softwares:
     sudo: sudo
     targetFile: /usr/local/bin/saml2aws
     installCallback: InstallCallbacks::installFromTarGz
-  - id: docker-credential-wincred.exe
+  - id: docker-wincred
     url: https://github.com/docker/docker-credential-helpers/releases/download/v@version@/docker-credential-wincred-v@version@.windows-${ARCH}.exe
     version: latest
     versionArg: --version
@@ -69,18 +68,26 @@ softwares:
   - id: oq
     url: https://github.com/Blacksmoke16/oq/releases/download/v@version@/oq-v@version@-${KERNEL}-${MACHINE}
     version: latest
-    versionArg: /usr/local/bin/oq --version | grep 'oq' | Version::parse
+    versionArg: /usr/local/bin/oq --version | grep "oq"
     softVersionCallback: InstallCallbacks::getVersion
     sudo: sudo
     targetFile: /usr/local/bin/oq
   - id: k9s
     url: https://github.com/derailed/k9s/releases/download/v@version@/k9s_${kernel}_${arch}.deb
     version: latest
-    versionArg: /usr/bin/k9s version | grep 'Version:' | Version::parse
+    versionArg: /usr/bin/k9s version | grep 'Version:'
     softVersionCallback: InstallCallbacks::getVersion
     sudo: sudo
     targetFile: /usr/bin/k9s
     installCallback: InstallCallbacks::installDeb
+  - id: lazydocker
+    url: https://github.com/jesseduffield/lazydocker/releases/download/v@version@/lazydocker_@version@_${KERNEL}_${MACHINE}.tar.gz
+    version: latest
+    versionArg: /usr/bin/lazydocker --version | grep 'Version:'
+    softVersionCallback: InstallCallbacks::getVersion
+    sudo: sudo
+    targetFile: /usr/bin/lazydocker
+    installCallback: InstallCallbacks::installFromTarGz
   - id: shfmt
     url: https://github.com/mvdan/sh/releases/download/v@version@/shfmt_v@version@_${kernel}_${arch}
     version: latest

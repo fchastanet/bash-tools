@@ -22,22 +22,47 @@ forEachSoftware() {
   if [[ "${theme}" != "noColor" ]]; then
     theme="default-force"
   fi
+  local bashFrameworkConfigFile
+  bashFrameworkConfigFile="$(Env::createDefaultEnvFile)"
+
   # Run installations in parallel using xargs
   local cmd="${BASH_SOURCE[0]}"
-  export cmd optionConfigFile theme
+  export cmd optionConfigFile theme bashFrameworkConfigFile
   callSoft() {
     local soft="$1"
-    SKIP_YAML_CHECKS=1 LOG_CONTEXT="Software ${soft} - " "${cmd}" \
+    SKIP_YAML_CHECKS=1 "${cmd}" \
+      --bash-framework-config "${bashFrameworkConfigFile}" \
       --theme "${theme}" -c "${optionConfigFile}" "${soft}"
   }
   export -f callSoft
 
-  if command -v parallel &>/dev/null; then
-    parallel -j "$(nproc)" callSoft ::: "${softwareIds[@]}"
-  else
-    printf "%s\n" "${softwareIds[@]}" |
-      xargs --no-run-if-empty -n 1 -P "$(nproc)" -I {} bash -c 'callSoft "$@"' _ {}
-  fi
+  # compute max number of characters in softwareIds
+
+  local maxChars=0
+  for id in "${softwareIds[@]}"; do
+    local len=${#id}
+    if ((len > maxChars)); then
+      maxChars=$len
+    fi
+  done
+
+  (
+    if command -v parallel &>/dev/null; then
+      parallel --line-buffer \
+        --plus --tag \
+        -j "$(nproc)" callSoft ::: "${softwareIds[@]}"
+    else
+      printf "%s\n" "${softwareIds[@]}" |
+        xargs --no-run-if-empty -n 1 -P "$(nproc)" -I {} bash -c 'callSoft "$@"' _ {}
+    fi
+  ) 2>&1 | awk -v width="${maxChars}" '{
+        match($0, /^([^\t ]+)[\t ]*(.*)$/, parts);
+        if (parts[1] != "") {
+          printf "%s%*s %s\n", parts[1], (width - length(parts[1])), "", parts[2];
+        } else {
+          print $0;
+        }
+      }'
 
 }
 
@@ -61,18 +86,15 @@ processSingleSoftware() {
 
   # shellcheck source=/dev/null
   source <(
-    yq -o shell -r \
+    yq -o p -r \
       ".softwares[] | select(.id == \"${softwareId}\") | del(.installScript)" \
       "${configFile}" | sed -E \
       -e '/^$/d' \
-      -e 's/^([^=]+)=["\x27]*(.*)$/\1="\2/' \
-      -e 's/["\x27]*$/"/'
+      -e 's/^([^ ]+) = (.*)$/declare \1="\2"/'
   )
   if [[ -z "${id}" ]]; then
     return 0
   fi
-  # shellcheck disable=SC2034
-  LOG_CONTEXT="Software ${softwareId} - "
   if [[ -z "${installCallback}" || "${installCallback}" = "null" ]]; then
     installCallback="Github::defaultInstall"
   fi

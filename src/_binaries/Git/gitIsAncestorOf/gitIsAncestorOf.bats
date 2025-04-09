@@ -8,7 +8,6 @@ load "${FRAMEWORK_ROOT_DIR}/src/_standalone/Bats/assert_lines_count.sh"
 setup() {
   export TMPDIR="${BATS_TEST_TMPDIR}"
   export HOME="${BATS_TEST_TMPDIR}/home"
-  export BASH_FRAMEWORK_ENV_FILEPATH="${BATS_TEST_DIRNAME}/testsData/.env"
   mkdir -p "${HOME}/.bash-tools"
   cp "${rootDir}/conf/defaultEnv/.env" "${HOME}/.bash-tools/.env"
 }
