@@ -636,7 +636,7 @@ Conf::loadNearestFile() {
     fi
   done
 
-  Log::displayWarning "Config file '${configFileName}' not found in any source directories provided"
+  Log::displayDebug "Config file '${configFileName}' not found in any source directories provided"
   return 1
 }
 
@@ -2405,7 +2405,194 @@ dbImportProfileCommandParse() {
 
 # @description display command options and arguments help for dbImportProfileCommand
 dbImportProfileCommandHelp() {
+  echo -e "${__HELP_TITLE_COLOR}SYNOPSIS:${__RESET_COLOR}"
+  Array::wrap2 ' ' 76 4 "    " "Generate optimized profiles to be used by dbImport."
+  echo
+  echo
 
+  # ------------------------------------------
+  # usage section
+  # ------------------------------------------
+  Array::wrap2 " " 80 2 "${__HELP_TITLE_COLOR}USAGE:${__RESET_COLOR}" "dbImportProfile [OPTIONS] [ARGUMENTS]"
+  echo
+  # ------------------------------------------
+  # usage/options section
+  # ------------------------------------------
+  optionsAltList=("[--ratio|-r <ratio>]" "[--profile|-p <profile>]" "[--from-dsn|-f <dsn>]" "[--help|-h]" "[--config]" "[--bash-framework-config <bash-framework-config>]" "[--verbose|-v]" "[-vv]" "[-vvv]" "[--log-level <log-level>]" "[--log-file <log-file>]" "[--display-level <display-level>]" "[--no-color]" "[--theme <theme>]" "[--version]" "[--quiet|-q]"
+  )
+  Array::wrap2 " " 80 2 "${__HELP_TITLE_COLOR}USAGE:${__RESET_COLOR}" \
+    "dbImportProfile" "${optionsAltList[@]}"
+  echo
+
+  # ------------------------------------------
+  # usage/arguments section
+  # ------------------------------------------
+  echo
+  echo -e "${__HELP_TITLE_COLOR}ARGUMENTS:${__RESET_COLOR}"
+
+  Array::wrap2 " " 80 2 "  ${__HELP_OPTION_COLOR}fromDbName${__HELP_NORMAL} {single} (mandatory)"
+  Array::wrap2 ' ' 76 4 "    " "The name of the source/remote database."
+  echo
+
+
+  # ------------------------------------------
+  # options section
+  # ------------------------------------------
+  echo
+  echo -e "${__HELP_TITLE_COLOR}PROFILE OPTIONS:${__RESET_COLOR}"
+  echo -e "  ${__HELP_OPTION_COLOR}--ratio${__HELP_NORMAL}, ${__HELP_OPTION_COLOR}-r <ratio>${__HELP_NORMAL} {single}"
+  optionRatioHelpFunction
+
+
+
+  Array::wrap2 ' ' 76 6 "    Default value: " "70"
+  echo
+
+  echo -e "  ${__HELP_OPTION_COLOR}--profile${__HELP_NORMAL}, ${__HELP_OPTION_COLOR}-p <profile>${__HELP_NORMAL} {single}"
+  profileOptionHelpFunction
+
+
+  echo
+  echo -e "${__HELP_TITLE_COLOR}SOURCE OPTIONS:${__RESET_COLOR}"
+  echo -e "  ${__HELP_OPTION_COLOR}--from-dsn${__HELP_NORMAL}, ${__HELP_OPTION_COLOR}-f <dsn>${__HELP_NORMAL} {single}"
+  Array::wrap2 ' ' 76 4 "    " "Target mysql server."
+  echo
+
+  echo
+  echo -e "${__HELP_TITLE_COLOR}GLOBAL OPTIONS:${__RESET_COLOR}"
+  echo -e "  ${__HELP_OPTION_COLOR}--help${__HELP_NORMAL}, ${__HELP_OPTION_COLOR}-h${__HELP_NORMAL} {single}"
+  Array::wrap2 ' ' 76 4 "    " "Displays this command help"
+  echo
+
+
+  echo -e "  ${__HELP_OPTION_COLOR}--config${__HELP_NORMAL} {single}"
+  Array::wrap2 ' ' 76 4 "    " "Displays configuration"
+  echo
+
+
+  echo -e "  ${__HELP_OPTION_COLOR}--bash-framework-config <bash-framework-config>${__HELP_NORMAL} {single}"
+  Array::wrap2 ' ' 76 4 "    " "Use alternate bash framework configuration."
+  echo
+
+
+  echo -e "  ${__HELP_OPTION_COLOR}--verbose${__HELP_NORMAL}, ${__HELP_OPTION_COLOR}-v${__HELP_NORMAL} {single}"
+  Array::wrap2 ' ' 76 4 "    " "Info level verbose mode (alias of --display-level INFO)"
+  echo
+
+
+  echo -e "  ${__HELP_OPTION_COLOR}-vv${__HELP_NORMAL} {single}"
+  Array::wrap2 ' ' 76 4 "    " "Debug level verbose mode (alias of --display-level DEBUG)"
+  echo
+
+
+  echo -e "  ${__HELP_OPTION_COLOR}-vvv${__HELP_NORMAL} {single}"
+  Array::wrap2 ' ' 76 4 "    " "Trace level verbose mode (alias of --display-level TRACE)"
+  echo
+
+
+  echo -e "  ${__HELP_OPTION_COLOR}--log-level <log-level>${__HELP_NORMAL} {single}"
+  Array::wrap2 ' ' 76 4 "    " "Set log level"
+  echo
+
+  echo "    Possible values: "
+  echo -e "      - ${__OPTION_COLOR}OFF${__RESET_COLOR}"
+  echo -e "      - ${__OPTION_COLOR}ERR${__RESET_COLOR}"
+  echo -e "      - ${__OPTION_COLOR}ERROR${__RESET_COLOR}"
+  echo -e "      - ${__OPTION_COLOR}WARN${__RESET_COLOR}"
+  echo -e "      - ${__OPTION_COLOR}WARNING${__RESET_COLOR}"
+  echo -e "      - ${__OPTION_COLOR}INFO${__RESET_COLOR}"
+  echo -e "      - ${__OPTION_COLOR}DEBUG${__RESET_COLOR}"
+  echo -e "      - ${__OPTION_COLOR}TRACE${__RESET_COLOR}"
+
+  Array::wrap2 ' ' 76 6 "    Default value: " "$(optionLogLevelDefaultValueFunction)"
+  echo
+
+  echo -e "  ${__HELP_OPTION_COLOR}--log-file <log-file>${__HELP_NORMAL} {single}"
+  Array::wrap2 ' ' 76 4 "    " "Set log file"
+  echo
+
+
+  Array::wrap2 ' ' 76 6 "    Default value: " "$(optionLogFileDefaultValueFunction)"
+  echo
+
+  echo -e "  ${__HELP_OPTION_COLOR}--display-level <display-level>${__HELP_NORMAL} {single}"
+  Array::wrap2 ' ' 76 4 "    " "Set display level"
+  echo
+
+  echo "    Possible values: "
+  echo -e "      - ${__OPTION_COLOR}OFF${__RESET_COLOR}"
+  echo -e "      - ${__OPTION_COLOR}ERR${__RESET_COLOR}"
+  echo -e "      - ${__OPTION_COLOR}ERROR${__RESET_COLOR}"
+  echo -e "      - ${__OPTION_COLOR}WARN${__RESET_COLOR}"
+  echo -e "      - ${__OPTION_COLOR}WARNING${__RESET_COLOR}"
+  echo -e "      - ${__OPTION_COLOR}INFO${__RESET_COLOR}"
+  echo -e "      - ${__OPTION_COLOR}DEBUG${__RESET_COLOR}"
+  echo -e "      - ${__OPTION_COLOR}TRACE${__RESET_COLOR}"
+
+  Array::wrap2 ' ' 76 6 "    Default value: " "$(optionDisplayLevelDefaultValueFunction)"
+  echo
+
+  echo -e "  ${__HELP_OPTION_COLOR}--no-color${__HELP_NORMAL} {single}"
+  Array::wrap2 ' ' 76 4 "    " "Produce monochrome output. alias of --theme noColor."
+  echo
+
+
+  echo -e "  ${__HELP_OPTION_COLOR}--theme <theme>${__HELP_NORMAL} {single}"
+  Array::wrap2 ' ' 76 4 "    " "Choose color theme - default-force means colors will be produced even if command is piped."
+  echo
+
+  echo "    Possible values: "
+  echo -e "      - ${__OPTION_COLOR}default${__RESET_COLOR}"
+  echo -e "      - ${__OPTION_COLOR}default-force${__RESET_COLOR}"
+  echo -e "      - ${__OPTION_COLOR}noColor${__RESET_COLOR}"
+
+  Array::wrap2 ' ' 76 6 "    Default value: " "default"
+  echo
+
+  echo -e "  ${__HELP_OPTION_COLOR}--version${__HELP_NORMAL} {single}"
+  Array::wrap2 ' ' 76 4 "    " "Print version information and quit."
+  echo
+
+
+  echo -e "  ${__HELP_OPTION_COLOR}--quiet${__HELP_NORMAL}, ${__HELP_OPTION_COLOR}-q${__HELP_NORMAL} {single}"
+  Array::wrap2 ' ' 76 4 "    " "Quiet mode, doesn't display any output."
+  echo
+
+  # ------------------------------------------
+  # longDescription section
+  # ------------------------------------------
+  echo
+  echo
+  echo -e "${__HELP_TITLE_COLOR}DESCRIPTION:${__RESET_COLOR}"
+  longDescriptionFunction
+  # ------------------------------------------
+  # version section
+  # ------------------------------------------
+  echo
+  echo -n -e "${__HELP_TITLE_COLOR}VERSION: ${__RESET_COLOR}"
+  echo "3.0"
+  # ------------------------------------------
+  # author section
+  # ------------------------------------------
+  echo
+  echo -n -e "${__HELP_TITLE_COLOR}AUTHOR: ${__RESET_COLOR}"
+  echo "[François Chastanet](https://github.com/fchastanet)"
+  # ------------------------------------------
+  # sourceFile section
+  # ------------------------------------------
+  echo
+  echo -n -e "${__HELP_TITLE_COLOR}SOURCE FILE: ${__RESET_COLOR}"
+  echo "https://github.com/fchastanet/bash-tools-framework/tree/master/src/_binaries/Database/dbImportProfile/dbImportProfile-binary.yaml"
+  # ------------------------------------------
+  # license section
+  # ------------------------------------------
+  echo
+  echo -n -e "${__HELP_TITLE_COLOR}LICENSE: ${__RESET_COLOR}"
+  echo "MIT License"
+  # ------------------------------------------
+  # copyright section
+  # ------------------------------------------
+  Array::wrap2 ' ' 76 0 "$(copyrightCallback)"
 }
 
 

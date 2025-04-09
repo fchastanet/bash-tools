@@ -476,7 +476,7 @@ Conf::loadNearestFile() {
     fi
   done
 
-  Log::displayWarning "Config file '${configFileName}' not found in any source directories provided"
+  Log::displayDebug "Config file '${configFileName}' not found in any source directories provided"
   return 1
 }
 
@@ -1770,12 +1770,14 @@ installRequirementsCommandHelp() {
   echo -e "      - ${__OPTION_COLOR}INFO${__RESET_COLOR}"
   echo -e "      - ${__OPTION_COLOR}DEBUG${__RESET_COLOR}"
   echo -e "      - ${__OPTION_COLOR}TRACE${__RESET_COLOR}"
+
   Array::wrap2 ' ' 76 6 "    Default value: " "$(optionLogLevelDefaultValueFunction)"
   echo
 
   echo -e "  ${__HELP_OPTION_COLOR}--log-file <log-file>${__HELP_NORMAL} {single}"
   Array::wrap2 ' ' 76 4 "    " "Set log file"
   echo
+
 
   Array::wrap2 ' ' 76 6 "    Default value: " "$(optionLogFileDefaultValueFunction)"
   echo
@@ -1793,6 +1795,7 @@ installRequirementsCommandHelp() {
   echo -e "      - ${__OPTION_COLOR}INFO${__RESET_COLOR}"
   echo -e "      - ${__OPTION_COLOR}DEBUG${__RESET_COLOR}"
   echo -e "      - ${__OPTION_COLOR}TRACE${__RESET_COLOR}"
+
   Array::wrap2 ' ' 76 6 "    Default value: " "$(optionDisplayLevelDefaultValueFunction)"
   echo
 
@@ -1809,6 +1812,7 @@ installRequirementsCommandHelp() {
   echo -e "      - ${__OPTION_COLOR}default${__RESET_COLOR}"
   echo -e "      - ${__OPTION_COLOR}default-force${__RESET_COLOR}"
   echo -e "      - ${__OPTION_COLOR}noColor${__RESET_COLOR}"
+
   Array::wrap2 ' ' 76 6 "    Default value: " "default"
   echo
 

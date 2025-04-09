@@ -7,6 +7,7 @@ setup() {
   export TMPDIR="${BATS_TEST_TMPDIR}"
 
   export HOME="${BATS_TEST_TMPDIR}/home"
+  export BASH_FRAMEWORK_LOG_FILE="/tmp/logFile"
   mkdir -p "${HOME}/.bash-tools"
   mkdir -p "${HOME}/bin"
   cp "${rootDir}/conf/defaultEnv/.env" "${HOME}/.bash-tools/.env"

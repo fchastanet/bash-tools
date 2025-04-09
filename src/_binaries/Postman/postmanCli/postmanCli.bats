@@ -29,7 +29,7 @@ function PostmanCli::config { #@test
   assert_line --index 3 "BASH_FRAMEWORK_ARGV_FILTERED             = ()"
   assert_line --index 4 'BASH_FRAMEWORK_DISPLAY_LEVEL             = "3"'
   assert_line --index 5 "BASH_FRAMEWORK_ENV_FILES                 = ([0]=\"${HOME}/.bash-tools/.env\")"
-  assert_line --index 6 "BASH_FRAMEWORK_LOG_FILE                  = \"${TMPDIR}/logFile\""
+  assert_line --index 6 "BASH_FRAMEWORK_LOG_FILE                  = \"/tmp/logFile\""
   assert_line --index 7 'BASH_FRAMEWORK_LOG_FILE_MAX_ROTATION     = "5"'
   assert_line --index 8 'BASH_FRAMEWORK_LOG_LEVEL                 = "0"'
   assert_line --partial --index 9 'BASH_FRAMEWORK_THEME                     = '

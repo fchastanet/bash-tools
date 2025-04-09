@@ -156,6 +156,135 @@ Array::contains() {
 }
 
 
+# @description concatenate each element of an array with a separator
+# but wrapping text when line length is more than provided argument
+# The algorithm will try not to cut the array element if it can.
+# - if an arg can be placed on current line it will be,
+#   otherwise current line is printed and arg is added to the new
+#   current line
+# - Empty arg is interpreted as a new line.
+# - Add \r to arg in order to force break line and avoid following
+#   arg to be concatenated with current arg.
+#
+# @arg $1 glue:String
+# @arg $2 maxLineLength:int
+# @arg $3 indentNextLine:int
+# @arg $@ array:String[]
+Array::wrap2() {
+  local glue="${1-}"
+  local -i glueLength="${#glue}"
+  shift || true
+  local -i maxLineLength=$1
+  shift || true
+  local -i indentNextLine=$1
+  shift || true
+  local indentStr=""
+  if ((indentNextLine > 0)); then
+    indentStr="$(head -c "${indentNextLine}" </dev/zero | tr '\0' " ")"
+  fi
+  if (($# == 0)); then
+    return 0
+  fi
+
+  printCurrentLine() {
+    if ((isNewline == 0)) || ((previousLineEmpty == 1)); then
+      echo
+    fi
+    ((isNewline = 1))
+    echo -en "${indentStr}"
+    ((currentLineLength = indentNextLine)) || true
+  }
+  appendToCurrentLine() {
+    local text="$1"
+    local -i length=$2
+    ((currentLineLength += length)) || true
+    ((isNewline = 0)) || true
+    if [[ "${text: -1}" = $'\r' ]]; then
+      text="${text:0:-1}"
+      echo -en "${text%%+([[:blank:]])}"
+      printCurrentLine
+    else
+      echo -en "${text%%+([[:blank:]])}"
+    fi
+  }
+
+  (
+    local currentLine
+    local -i currentLineLength=0 isNewline=1 argLength=0
+    local -a additionalLines
+    local -i previousLineEmpty=0
+    local arg=""
+
+    while (($# > 0)); do
+      arg="$1"
+      shift || true
+
+      # replace tab by 2 spaces
+      arg="${arg//$'\t'/  }"
+      # remove trailing spaces
+      arg="${arg%[[:blank:]]}"
+      if [[ "${arg}" = $'\n' || -z "${arg}" ]]; then
+        printCurrentLine
+        ((previousLineEmpty = 1))
+        continue
+      else
+        if ((previousLineEmpty == 1)); then
+          printCurrentLine
+        fi
+        ((previousLineEmpty = 0)) || true
+      fi
+      # convert eol to args
+      mapfile -t additionalLines <<<"${arg}"
+      if ((${#additionalLines[@]} > 1)); then
+        set -- "${additionalLines[@]}" "$@"
+        continue
+      fi
+
+      ((argLength = ${#arg})) || true
+
+      # empty arg
+      if ((argLength == 0)); then
+        if ((isNewline == 0)); then
+          # isNewline = 0 means currentLine is not empty
+          printCurrentLine
+        fi
+        continue
+      fi
+
+      if ((isNewline == 0)); then
+        glueLength="${#glue}"
+      else
+        glueLength="0"
+      fi
+      if ((currentLineLength + argLength + glueLength > maxLineLength)); then
+        if ((argLength + glueLength > maxLineLength)); then
+          # arg is too long to even fit on one line
+          # we have to split the arg on current and next line
+          local -i remainingLineLength
+          ((remainingLineLength = maxLineLength - currentLineLength - glueLength))
+          appendToCurrentLine "${glue:0:${glueLength}}${arg:0:${remainingLineLength}}" "$((glueLength + remainingLineLength))"
+          printCurrentLine
+          arg="${arg:${remainingLineLength}}"
+          # remove leading spaces
+          arg="${arg##[[:blank:]]}"
+
+          set -- "${arg}" "$@"
+        else
+          # the arg can fit on next line
+          printCurrentLine
+          appendToCurrentLine "${arg}" "${argLength}"
+        fi
+      else
+        appendToCurrentLine "${glue:0:${glueLength}}${arg}" "$((glueLength + argLength))"
+      fi
+    done
+    if [[ "${currentLine}" != "" ]] && [[ ! "${currentLine}" =~ ^[\ \t]+$ ]]; then
+      printCurrentLine
+    fi
+  ) | sed -E -e 's/[[:blank:]]+$//'
+}
+
+
 # @description check if command specified exists or return 1
 # with error and message if not
 #
@@ -507,7 +636,7 @@ Conf::loadNearestFile() {
     fi
   done
 
-  Log::displayWarning "Config file '${configFileName}' not found in any source directories provided"
+  Log::displayDebug "Config file '${configFileName}' not found in any source directories provided"
   return 1
 }
 
@@ -2325,7 +2454,221 @@ dbScriptAllDatabasesCommandParse() {
 
 # @description display command options and arguments help for dbScriptAllDatabasesCommand
 dbScriptAllDatabasesCommandHelp() {
+  echo -e "${__HELP_TITLE_COLOR}SYNOPSIS:${__RESET_COLOR}"
+  Array::wrap2 ' ' 76 4 "    " "Allows to execute a script on each database of specified mysql server." ""
+  echo
+  echo
 
+  # ------------------------------------------
+  # usage section
+  # ------------------------------------------
+  Array::wrap2 " " 80 2 "${__HELP_TITLE_COLOR}USAGE:${__RESET_COLOR}" "dbScriptAllDatabases [OPTIONS] [ARGUMENTS]"
+  echo
+  # ------------------------------------------
+  # usage/options section
+  # ------------------------------------------
+  optionsAltList=("[--jobs|-j <jobsCount>]" "[--bar|-b]" "[--from-dsn|-f <dsn>]" "[--help|-h]" "[--config]" "[--bash-framework-config <bash-framework-config>]" "[--verbose|-v]" "[-vv]" "[-vvv]" "[--log-level <log-level>]" "[--log-file <log-file>]" "[--display-level <display-level>]" "[--no-color]" "[--theme <theme>]" "[--version]" "[--quiet|-q]" "[--database <dbName>]" "[--output|-o <outputDirectory>]" "[--log-format|-l <logFormat>]"
+  )
+  Array::wrap2 " " 80 2 "${__HELP_TITLE_COLOR}USAGE:${__RESET_COLOR}" \
+    "dbScriptAllDatabases" "${optionsAltList[@]}"
+  echo
+
+  # ------------------------------------------
+  # usage/arguments section
+  # ------------------------------------------
+  echo
+  echo -e "${__HELP_TITLE_COLOR}ARGUMENTS:${__RESET_COLOR}"
+
+  Array::wrap2 " " 80 2 "  ${__HELP_OPTION_COLOR}scriptToExecute${__HELP_NORMAL} {single} (mandatory)"
+  Array::wrap2 ' ' 76 4 "    " "The script that will be executed on each databases."
+  echo
+
+
+  Array::wrap2 " " 80 2 "  [${__HELP_OPTION_COLOR}scriptArguments${__HELP_NORMAL} {list} (optional)]"
+  Array::wrap2 ' ' 76 4 "    " "Optional parameters to pass to the script."
+  echo
+
+
+  # ------------------------------------------
+  # options section
+  # ------------------------------------------
+  echo
+  echo -e "${__HELP_TITLE_COLOR}JOB OPTIONS:${__RESET_COLOR}"
+  echo -e "  ${__HELP_OPTION_COLOR}--jobs${__HELP_NORMAL}, ${__HELP_OPTION_COLOR}-j <jobsCount>${__HELP_NORMAL} {single}"
+  Array::wrap2 ' ' 76 4 "    " "The number of databases to query in parallel."
+  echo
+
+
+  Array::wrap2 ' ' 76 6 "    Default value: " "1"
+  echo
+
+  echo -e "  ${__HELP_OPTION_COLOR}--bar${__HELP_NORMAL}, ${__HELP_OPTION_COLOR}-b${__HELP_NORMAL} {single}"
+  Array::wrap2 ' ' 76 4 "    " "Show progress as a progress bar. In the bar is shown: % of jobs" "completed, estimated seconds left, and number of jobs started."
+  echo
+
+  echo
+  echo -e "${__HELP_TITLE_COLOR}SOURCE OPTIONS:${__RESET_COLOR}"
+  echo -e "  ${__HELP_OPTION_COLOR}--from-dsn${__HELP_NORMAL}, ${__HELP_OPTION_COLOR}-f <dsn>${__HELP_NORMAL} {single}"
+  Array::wrap2 ' ' 76 4 "    " "Target mysql server."
+  echo
+
+  echo
+  echo -e "${__HELP_TITLE_COLOR}GLOBAL OPTIONS:${__RESET_COLOR}"
+  echo -e "  ${__HELP_OPTION_COLOR}--help${__HELP_NORMAL}, ${__HELP_OPTION_COLOR}-h${__HELP_NORMAL} {single}"
+  Array::wrap2 ' ' 76 4 "    " "Displays this command help"
+  echo
+
+
+  echo -e "  ${__HELP_OPTION_COLOR}--config${__HELP_NORMAL} {single}"
+  Array::wrap2 ' ' 76 4 "    " "Displays configuration"
+  echo
+
+
+  echo -e "  ${__HELP_OPTION_COLOR}--bash-framework-config <bash-framework-config>${__HELP_NORMAL} {single}"
+  Array::wrap2 ' ' 76 4 "    " "Use alternate bash framework configuration."
+  echo
+
+
+  echo -e "  ${__HELP_OPTION_COLOR}--verbose${__HELP_NORMAL}, ${__HELP_OPTION_COLOR}-v${__HELP_NORMAL} {single}"
+  Array::wrap2 ' ' 76 4 "    " "Info level verbose mode (alias of --display-level INFO)"
+  echo
+
+
+  echo -e "  ${__HELP_OPTION_COLOR}-vv${__HELP_NORMAL} {single}"
+  Array::wrap2 ' ' 76 4 "    " "Debug level verbose mode (alias of --display-level DEBUG)"
+  echo
+
+
+  echo -e "  ${__HELP_OPTION_COLOR}-vvv${__HELP_NORMAL} {single}"
+  Array::wrap2 ' ' 76 4 "    " "Trace level verbose mode (alias of --display-level TRACE)"
+  echo
+
+
+  echo -e "  ${__HELP_OPTION_COLOR}--log-level <log-level>${__HELP_NORMAL} {single}"
+  Array::wrap2 ' ' 76 4 "    " "Set log level"
+  echo
+
+  echo "    Possible values: "
+  echo -e "      - ${__OPTION_COLOR}OFF${__RESET_COLOR}"
+  echo -e "      - ${__OPTION_COLOR}ERR${__RESET_COLOR}"
+  echo -e "      - ${__OPTION_COLOR}ERROR${__RESET_COLOR}"
+  echo -e "      - ${__OPTION_COLOR}WARN${__RESET_COLOR}"
+  echo -e "      - ${__OPTION_COLOR}WARNING${__RESET_COLOR}"
+  echo -e "      - ${__OPTION_COLOR}INFO${__RESET_COLOR}"
+  echo -e "      - ${__OPTION_COLOR}DEBUG${__RESET_COLOR}"
+  echo -e "      - ${__OPTION_COLOR}TRACE${__RESET_COLOR}"
+
+  Array::wrap2 ' ' 76 6 "    Default value: " "$(optionLogLevelDefaultValueFunction)"
+  echo
+
+  echo -e "  ${__HELP_OPTION_COLOR}--log-file <log-file>${__HELP_NORMAL} {single}"
+  Array::wrap2 ' ' 76 4 "    " "Set log file"
+  echo
+
+
+  Array::wrap2 ' ' 76 6 "    Default value: " "$(optionLogFileDefaultValueFunction)"
+  echo
+
+  echo -e "  ${__HELP_OPTION_COLOR}--display-level <display-level>${__HELP_NORMAL} {single}"
+  Array::wrap2 ' ' 76 4 "    " "Set display level"
+  echo
+
+  echo "    Possible values: "
+  echo -e "      - ${__OPTION_COLOR}OFF${__RESET_COLOR}"
+  echo -e "      - ${__OPTION_COLOR}ERR${__RESET_COLOR}"
+  echo -e "      - ${__OPTION_COLOR}ERROR${__RESET_COLOR}"
+  echo -e "      - ${__OPTION_COLOR}WARN${__RESET_COLOR}"
+  echo -e "      - ${__OPTION_COLOR}WARNING${__RESET_COLOR}"
+  echo -e "      - ${__OPTION_COLOR}INFO${__RESET_COLOR}"
+  echo -e "      - ${__OPTION_COLOR}DEBUG${__RESET_COLOR}"
+  echo -e "      - ${__OPTION_COLOR}TRACE${__RESET_COLOR}"
+
+  Array::wrap2 ' ' 76 6 "    Default value: " "$(optionDisplayLevelDefaultValueFunction)"
+  echo
+
+  echo -e "  ${__HELP_OPTION_COLOR}--no-color${__HELP_NORMAL} {single}"
+  Array::wrap2 ' ' 76 4 "    " "Produce monochrome output. alias of --theme noColor."
+  echo
+
+
+  echo -e "  ${__HELP_OPTION_COLOR}--theme <theme>${__HELP_NORMAL} {single}"
+  Array::wrap2 ' ' 76 4 "    " "Choose color theme - default-force means colors will be produced even if command is piped."
+  echo
+
+  echo "    Possible values: "
+  echo -e "      - ${__OPTION_COLOR}default${__RESET_COLOR}"
+  echo -e "      - ${__OPTION_COLOR}default-force${__RESET_COLOR}"
+  echo -e "      - ${__OPTION_COLOR}noColor${__RESET_COLOR}"
+
+  Array::wrap2 ' ' 76 6 "    Default value: " "default"
+  echo
+
+  echo -e "  ${__HELP_OPTION_COLOR}--version${__HELP_NORMAL} {single}"
+  Array::wrap2 ' ' 76 4 "    " "Print version information and quit."
+  echo
+
+
+  echo -e "  ${__HELP_OPTION_COLOR}--quiet${__HELP_NORMAL}, ${__HELP_OPTION_COLOR}-q${__HELP_NORMAL} {single}"
+  Array::wrap2 ' ' 76 4 "    " "Quiet mode, doesn't display any output."
+  echo
+
+  echo
+  echo -e "${__HELP_TITLE_COLOR}SCRIPTS OPTIONS:${__RESET_COLOR}"
+  echo -e "  ${__HELP_OPTION_COLOR}--database <dbName>${__HELP_NORMAL} {list} (optional)"
+  Array::wrap2 ' ' 76 4 "    " "If provided will check only databases specified," "otherwise script will be executed on all dbs of mysql server."
+  echo
+
+
+  echo -e "  ${__HELP_OPTION_COLOR}--output${__HELP_NORMAL}, ${__HELP_OPTION_COLOR}-o <outputDirectory>${__HELP_NORMAL} {single}"
+  Array::wrap2 ' ' 76 4 "    " "Output directory, see log-format option."
+  echo
+
+
+  echo -e "  ${__HELP_OPTION_COLOR}--log-format${__HELP_NORMAL}, ${__HELP_OPTION_COLOR}-l <logFormat>${__HELP_NORMAL} {single}"
+  Array::wrap2 ' ' 76 4 "    " "If output dir provided, will log each db result to log file."
+  echo
+
+  echo "    Possible values: "
+  echo -e "      - ${__OPTION_COLOR}none${__RESET_COLOR}"
+  echo -e "      - ${__OPTION_COLOR}log${__RESET_COLOR}"
+
+  Array::wrap2 ' ' 76 6 "    Default value: " "none"
+  echo
+  # ------------------------------------------
+  # longDescription section
+  # ------------------------------------------
+  echo
+  echo
+  echo -e "${__HELP_TITLE_COLOR}DESCRIPTION:${__RESET_COLOR}"
+  longDescriptionFunction
+  # ------------------------------------------
+  # version section
+  # ------------------------------------------
+  echo
+  echo -n -e "${__HELP_TITLE_COLOR}VERSION: ${__RESET_COLOR}"
+  echo "3.0"
+  # ------------------------------------------
+  # author section
+  # ------------------------------------------
+  echo
+  echo -n -e "${__HELP_TITLE_COLOR}AUTHOR: ${__RESET_COLOR}"
+  echo "[François Chastanet](https://github.com/fchastanet)"
+  # ------------------------------------------
+  # sourceFile section
+  # ------------------------------------------
+  echo
+  echo -n -e "${__HELP_TITLE_COLOR}SOURCE FILE: ${__RESET_COLOR}"
+  echo "https://github.com/fchastanet/bash-tools-framework/tree/master/src/_binaries/Database/dbScriptAllDatabases/dbScriptAllDatabases-binary.yaml"
+  # ------------------------------------------
+  # license section
+  # ------------------------------------------
+  echo
+  echo -n -e "${__HELP_TITLE_COLOR}LICENSE: ${__RESET_COLOR}"
+  echo "MIT License"
+  # ------------------------------------------
+  # copyright section
+  # ------------------------------------------
+  Array::wrap2 ' ' 76 0 "$(copyrightCallback)"
 }
 
 
