@@ -84,7 +84,7 @@ function Git::upgradeGithubRelease::filePathNotExistsExactVersionShortArg { #@te
   assert_line --index 0 --partial "INFO    - Upgrading ${BATS_TEST_TMPDIR}/targetFile from version not existing to 1.0.0"
   assert_line --index 1 --partial "INFO    - Using url https://github.com/hadolint/hadolint/releases/download/v1.0.0/hadolint-Linux-x86_64"
   assert_line --index 2 --partial "INFO    - Attempt 1/1:"
-  assert_line --index 3 --partial "SUCCESS - Version 1.0.0 installed in ${BATS_TEST_TMPDIR}/targetFile"
+  assert_line --index 3 --partial "SUCCESS - Version not existing upgraded to 1.0.0 in ${BATS_TEST_TMPDIR}/targetFile"
 
   [[ "$(cat "${BATS_TEST_TMPDIR}/targetFile")" = "success" ]]
 }
@@ -110,7 +110,7 @@ function Git::upgradeGithubRelease::filePathNotExistsExactVersionLongArg { #@tes
   assert_line --index 0 --partial "INFO    - Upgrading ${BATS_TEST_TMPDIR}/targetFile from version not existing to 1.0.0"
   assert_line --index 1 --partial "INFO    - Using url https://github.com/hadolint/hadolint/releases/download/v1.0.0/hadolint-Linux-x86_64"
   assert_line --index 2 --partial "INFO    - Attempt 1/1:"
-  assert_line --index 3 --partial "SUCCESS - Version 1.0.0 installed in ${BATS_TEST_TMPDIR}/targetFile"
+  assert_line --index 3 --partial "SUCCESS - Version not existing upgraded to 1.0.0 in ${BATS_TEST_TMPDIR}/targetFile"
 
   [[ "$(cat "${BATS_TEST_TMPDIR}/targetFile")" = "success" ]]
 }
@@ -158,7 +158,7 @@ function Git::upgradeGithubRelease::filePathNotExistsLatestVersionFound { #@test
   assert_line --index 2 --partial "INFO    - Upgrading ${BATS_TEST_TMPDIR}/targetFile from version not existing to 1.0.0"
   assert_line --index 3 --partial "INFO    - Using url https://github.com/hadolint/hadolint/releases/download/v1.0.0/hadolint-Linux-x86_64"
   assert_line --index 4 --partial "INFO    - Attempt 1/1:"
-  assert_line --index 5 --partial "SUCCESS - Version 1.0.0 installed in ${BATS_TEST_TMPDIR}/targetFile"
+  assert_line --index 5 --partial "SUCCESS - Version not existing upgraded to 1.0.0 in ${BATS_TEST_TMPDIR}/targetFile"
 
   [[ "$(cat "${BATS_TEST_TMPDIR}/targetFile")" = "success" ]]
 }
@@ -184,7 +184,7 @@ function Git::upgradeGithubRelease::filePathExistsExactVersionUpgradeNeeded { #@
   assert_line --index 0 --partial "INFO    - Upgrading ${BATS_TEST_TMPDIR}/targetFile from version not existing to 1.1.0"
   assert_line --index 1 --partial "INFO    - Using url https://github.com/hadolint/hadolint/releases/download/v1.1.0/hadolint-Linux-x86_64"
   assert_line --index 2 --partial "INFO    - Attempt 1/1:"
-  assert_line --index 3 --partial "SUCCESS - Version 1.1.0 installed in ${BATS_TEST_TMPDIR}/targetFile"
+  assert_line --index 3 --partial "SUCCESS - Version not existing upgraded to 1.1.0 in ${BATS_TEST_TMPDIR}/targetFile"
 
   [[ "$(cat "${BATS_TEST_TMPDIR}/targetFile")" = "success" ]]
 }

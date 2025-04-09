@@ -96,7 +96,7 @@ function Github::githubReleaseManager::validSoftwareConfigNonExistingGithub { #@
     "'.softwares | keys | .[]' '${f}' : echo '0'" \
     "eval * '${f}' : echo '[unknown]'" \
     "'.softwares[].id' '${f}' : echo 'validSoftwareConfig'" \
-    "-o shell -r * '${f}' : cat '${validSoftwareConfigFile}'"
+    "-o p -r * '${f}' : cat '${validSoftwareConfigFile}'"
   stub gh \
     'auth status : exit 0'
   stub dpkg '--print-architecture : echo "amd64"'
