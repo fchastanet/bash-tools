@@ -123,7 +123,7 @@ repos:
           )
 
   - repo: https://github.com/rbubley/mirrors-prettier
-    rev: v3.5.3
+    rev: v3.6.2
     hooks:
       - id: prettier
         exclude: |
@@ -156,7 +156,7 @@ repos:
         exclude: /testsData/
 
   - repo: https://github.com/fchastanet/bash-tools-framework
-    rev: 6.2.1
+    rev: 6.2.2
     hooks:
       - id: fixShebangExecutionBit
       - id: awkLint
