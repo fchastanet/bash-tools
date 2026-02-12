@@ -31,7 +31,8 @@ generate standalone executable scripts from modular source files.
 
 #### Binary Structure
 
-Each binary tool follows this structure in `src/_binaries/{Category}/{Command}/`:
+Each binary tool follows this structure in
+`src/_binaries/{Category}/{Command}/`:
 
 ```text
 {command}-binary.yaml  # Build configuration (extends shared definitions)
@@ -76,19 +77,19 @@ repository. Binaries are pre-compiled and checked into `bin/`.
 
 ## Directory Structure
 
-| Directory              | Purpose                                            |
-| ---------------------- | -------------------------------------------------- |
-| `src/_binaries/`       | Binary definitions and implementations by category |
-| `src/BashTools/`       | Core framework utilities and helpers               |
-| `src/Db/`              | Database manipulation functions                    |
-| `src/Postman/`         | Postman API/collection management                  |
-| `src/InstallCallbacks/`| Dependency installation logic                      |
-| `bin/`                 | **Compiled executable binaries** (tracked in git)  |
-| `vendor/`              | External dependencies (not tracked, auto-installed)|
-| `conf/`                | Configuration file templates                       |
-| `pages/`               | Docsify documentation website source               |
-| `doc/`                 | Auto-generated documentation                       |
-| `.github/`             | CI/CD workflows and GitHub configuration           |
+| Directory               | Purpose                                             |
+| ----------------------- | --------------------------------------------------- |
+| `src/_binaries/`        | Binary definitions and implementations by category  |
+| `src/BashTools/`        | Core framework utilities and helpers                |
+| `src/Db/`               | Database manipulation functions                     |
+| `src/Postman/`          | Postman API/collection management                   |
+| `src/InstallCallbacks/` | Dependency installation logic                       |
+| `bin/`                  | **Compiled executable binaries** (tracked in git)   |
+| `vendor/`               | External dependencies (not tracked, auto-installed) |
+| `conf/`                 | Configuration file templates                        |
+| `pages/`                | Docsify documentation website source                |
+| `doc/`                  | Auto-generated documentation                        |
+| `.github/`              | CI/CD workflows and GitHub configuration            |
 
 ## Testing
 
@@ -123,7 +124,7 @@ repository. Binaries are pre-compiled and checked into `bin/`.
 
 Tests use this pattern:
 
-```bash
+```
 #!/usr/bin/env bash
 
 # Load test helpers
@@ -173,15 +174,15 @@ pre-commit install --hook-type pre-commit --hook-type pre-push
 
 ### Key Linters
 
-| Tool          | Purpose                          | Config File             |
-| ------------- | -------------------------------- | ----------------------- |
-| **shellcheck**| Shell script static analysis     | `.shellcheckrc`         |
-| **shfmt**     | Shell script formatting          | (embedded in pre-commit)|
-| **yamllint**  | YAML validation                  | `.yamllint.yml`         |
-| **prettier**  | Markdown/JSON/YAML formatting    | `.prettierrc.yaml`      |
-| **mdformat**  | Markdown formatting with plugins | (in pre-commit config)  |
-| **codespell** | Spell checking                   | `cspell.yaml`           |
-| **actionlint**| GitHub Actions validation        | (in pre-commit)         |
+| Tool           | Purpose                          | Config File              |
+| -------------- | -------------------------------- | ------------------------ |
+| **shellcheck** | Shell script static analysis     | `.shellcheckrc`          |
+| **shfmt**      | Shell script formatting          | (embedded in pre-commit) |
+| **yamllint**   | YAML validation                  | `.yamllint.yml`          |
+| **prettier**   | Markdown/JSON/YAML formatting    | `.prettierrc.yaml`       |
+| **mdformat**   | Markdown formatting with plugins | (in pre-commit config)   |
+| **codespell**  | Spell checking                   | `cspell.yaml`            |
+| **actionlint** | GitHub Actions validation        | (in pre-commit)          |
 
 ### ShellCheck Configuration
 
@@ -224,8 +225,8 @@ in `.mega-linter-githubAction.yml`.
 
 Defined in `.framework-config`:
 
-- **Non-framework files**: Match
-  `NON_FRAMEWORK_FILES_REGEXP` (e.g., `.bats`, `testsData/`, `_binaries`)
+- **Non-framework files**: Match `NON_FRAMEWORK_FILES_REGEXP` (e.g., `.bats`,
+  `testsData/`, `_binaries`)
 - **No BATS needed**: Match `BATS_FILE_NOT_NEEDED_REGEXP` (e.g., config files,
   test data)
 - **Function matching ignore**: Match
@@ -253,24 +254,28 @@ pre-commit install --hook-type pre-commit --hook-type pre-push
 ### Making Changes
 
 1. **Create/modify source files** in `src/_binaries/{Category}/{Command}/`:
+
    - `{command}-main.sh`: Implementation logic
    - `{command}-options.sh`: CLI option definitions
    - `{command}-binary.yaml`: Build configuration (if creating new command)
 
-2. **Write/update tests** in corresponding `.bats` file
+1. **Write/update tests** in corresponding `.bats` file
 
-3. **Compile binaries** (if bash-compiler is available):
+1. **Compile binaries** (if bash-compiler is available):
+
    ```bash
    # Usually binaries are pre-compiled, but if you need to rebuild:
    # Requires bash-compiler tool to be installed
    ```
 
-4. **Run tests**:
+1. **Run tests**:
+
    ```bash
    ./test.sh scrasnups/build:bash-tools-ubuntu-5.3 -r src -j 30
    ```
 
-5. **Run pre-commit checks**:
+1. **Run pre-commit checks**:
+
    ```bash
    pre-commit run --all-files
    ```
@@ -308,14 +313,15 @@ docsify serve pages
 Located in `.github/workflows/`:
 
 1. **lint-test.yml**: Main CI pipeline
+
    - Runs pre-commit hooks and MegaLinter
    - Executes unit tests on multiple Bash versions (4.4, 5.0, 5.3)
    - Tests on Ubuntu and Alpine Linux
    - Auto-creates PRs for lint fixes
 
-2. **docsify-gh-pages.yml**: Documentation deployment
+1. **docsify-gh-pages.yml**: Documentation deployment
 
-3. **precommit-autoupdate.yml**: Auto-updates pre-commit hooks
+1. **precommit-autoupdate.yml**: Auto-updates pre-commit hooks
 
 ### Test Matrix
 
@@ -362,16 +368,15 @@ installation scripts.
 **ShellCheck source resolution**:
 
 - Add `# shellcheck source=path/to/file` comment before sourcing
-- Paths are resolved relative to `SCRIPTDIR` and
-  `vendor/bash-tools-framework`
+- Paths are resolved relative to `SCRIPTDIR` and `vendor/bash-tools-framework`
 
 ### Issue: BATS Tests Fail Locally But Pass in CI
 
 **Likely causes**:
 
 1. Different Bash version (test with specific Docker image)
-2. Missing test dependencies (run `./bin/installRequirements`)
-3. Stale temporary files (check `KEEP_TEMP_FILES` setting)
+1. Missing test dependencies (run `./bin/installRequirements`)
+1. Stale temporary files (check `KEEP_TEMP_FILES` setting)
 
 **Debug approach**:
 
@@ -380,10 +385,10 @@ installation scripts.
 ./test.sh scrasnups/build:bash-tools-ubuntu-5.3 -r src
 
 # Keep temp files for inspection
-KEEP_TEMP_FILES=1 ./test.sh scrasnups/build:bash-tools-ubuntu-5.3 <test-file>
+KEEP_TEMP_FILES=1 ./test.sh scrasnups/build:bash-tools-ubuntu-5.3 path/to/test.bats
 
 # Run specific test with verbose output
-./test.sh scrasnups/build:bash-tools-ubuntu-5.3 <test-file> -f "<test-name>"
+./test.sh scrasnups/build:bash-tools-ubuntu-5.3 path/to/test.bats -f "test-name"
 ```
 
 ### Issue: Pre-commit Hook Fails
@@ -400,7 +405,7 @@ pre-commit autoupdate
 pre-commit clean
 
 # Run specific hook to isolate issue
-pre-commit run <hook-id> --all-files
+pre-commit run HOOK_ID --all-files
 
 # Skip hooks temporarily (not recommended for final commit)
 git commit --no-verify
@@ -415,13 +420,13 @@ Changes to source files in `src/` do not automatically update the binaries.
 the bash-compiler tool. As a contributor:
 
 1. Make changes to source files (`*-main.sh`, `*-options.sh`, `*-binary.yaml`)
-2. Ensure tests pass (tests can run against source files)
-3. Submit PR with source changes
-4. Maintainer will recompile binaries before merging
+1. Ensure tests pass (tests can run against source files)
+1. Submit PR with source changes
+1. Maintainer will recompile binaries before merging
 
 If you need to test binary changes locally and bash-compiler is not available,
-you can manually edit the compiled binary in `bin/` temporarily for testing
-(but do not commit these changes).
+you can manually edit the compiled binary in `bin/` temporarily for testing (but
+do not commit these changes).
 
 ### Issue: Documentation Not Updating
 
@@ -444,16 +449,16 @@ Documentation is generated from tomdoc-style comments in source files.
 
 ```bash
 # Run with bats verbose flag
-./test.sh scrasnups/build:bash-tools-ubuntu-5.3 -t <test-file>
+./test.sh scrasnups/build:bash-tools-ubuntu-5.3 -t path/to/test.bats
 
 # Run single test function
-./test.sh scrasnups/build:bash-tools-ubuntu-5.3 <test-file> -f "<test-name>"
+./test.sh scrasnups/build:bash-tools-ubuntu-5.3 path/to/test.bats -f "test-name"
 ```
 
 **Preserve test files**:
 
 ```bash
-KEEP_TEMP_FILES=1 ./test.sh scrasnups/build:bash-tools-ubuntu-5.3 <test-file>
+KEEP_TEMP_FILES=1 ./test.sh scrasnups/build:bash-tools-ubuntu-5.3 path/to/test.bats
 # Inspect files in BATS_TEST_TMPDIR (usually /tmp)
 ```
 
@@ -461,7 +466,7 @@ KEEP_TEMP_FILES=1 ./test.sh scrasnups/build:bash-tools-ubuntu-5.3 <test-file>
 
 ```bash
 # Update expected output files automatically
-BATS_FIX_TEST=1 ./test.sh scrasnups/build:bash-tools-ubuntu-5.3 <test-file>
+BATS_FIX_TEST=1 ./test.sh scrasnups/build:bash-tools-ubuntu-5.3 path/to/test.bats
 ```
 
 ## Best Practices for Copilot Agents
@@ -469,28 +474,28 @@ BATS_FIX_TEST=1 ./test.sh scrasnups/build:bash-tools-ubuntu-5.3 <test-file>
 ### When Making Changes
 
 1. **Minimal modifications**: Only change what's necessary to address the issue
-2. **Test co-location**: Always create/update `.bats` file alongside source
+1. **Test co-location**: Always create/update `.bats` file alongside source
    changes
-3. **Follow naming conventions**: Use existing patterns for functions, files,
+1. **Follow naming conventions**: Use existing patterns for functions, files,
    variables
-4. **Preserve structure**: Keep the binary yaml structure and extends hierarchy
-5. **Run tests before committing**: Use `./test.sh` with appropriate Docker
+1. **Preserve structure**: Keep the binary yaml structure and extends hierarchy
+1. **Run tests before committing**: Use `./test.sh` with appropriate Docker
    image
-6. **Check ShellCheck**: Ensure changes pass shellcheck with project config
-7. **Update docs if needed**: Regenerate docs with `./bin/doc` if function
+1. **Check ShellCheck**: Ensure changes pass shellcheck with project config
+1. **Update docs if needed**: Regenerate docs with `./bin/doc` if function
    signatures change
 
 ### When Creating New Binaries
 
 1. Create directory: `src/_binaries/{Category}/{CommandName}/`
-2. Create files:
+1. Create files:
    - `{commandName}-binary.yaml` (extend appropriate base configs)
    - `{commandName}-main.sh` (implementation)
    - `{commandName}-options.sh` (CLI options and help)
    - `{commandName}.bats` (tests)
    - `testsData/` directory (test fixtures)
-3. Follow existing examples (e.g., `src/_binaries/Git/gitIsBranch/`)
-4. Note: Binary compilation requires bash-compiler tool (maintained separately)
+1. Follow existing examples (e.g., `src/_binaries/Git/gitIsBranch/`)
+1. Note: Binary compilation requires bash-compiler tool (maintained separately)
 
 ### Understanding Dependencies
 
@@ -505,12 +510,12 @@ BATS_FIX_TEST=1 ./test.sh scrasnups/build:bash-tools-ubuntu-5.3 <test-file>
 
 1. **Don't edit compiled binaries directly**: Make changes in `src/_binaries/`
    source files
-2. **Don't ignore shellcheck warnings**: Address them or explicitly disable
-   with explanation
-3. **Don't assume vendor/ exists**: Run installation scripts first
-4. **Don't skip tests**: Even for "small" changes, run relevant test suite
-5. **Don't modify unrelated files**: Keep changes surgical and focused
-6. **Don't remove working tests**: Only modify tests when fixing actual bugs or
+1. **Don't ignore shellcheck warnings**: Address them or explicitly disable with
+   explanation
+1. **Don't assume vendor/ exists**: Run installation scripts first
+1. **Don't skip tests**: Even for "small" changes, run relevant test suite
+1. **Don't modify unrelated files**: Keep changes surgical and focused
+1. **Don't remove working tests**: Only modify tests when fixing actual bugs or
    updating functionality
 
 ## Additional Resources
