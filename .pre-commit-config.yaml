@@ -35,6 +35,10 @@ repos:
           - mdformat-config
           - mdformat-web
           - mdformat-gfm
+        exclude: |
+          (?x)(
+            ^\.github/
+          )
 
   - repo: local
     hooks:
@@ -82,11 +86,11 @@ repos:
         exclude: |
           (?x)^(
             \.vscode\/.*\.json$|
-            src\/Postman\/Collection\/testsData\/postmanCollections_invalidJsonFile.json|
-            src\/Postman\/Model\/testsData\/pushMode\/GithubAPI\/notValidJsonFile.json|
-            src\/Postman\/Model\/testsData\/getCollectionInvalid.json|
-            src\/Postman\/Model\/testsData\/pullMode\/GithubAPI\/notWritableFile.json
-          )$
+            src\/Postman\/Collection\/testsData\/postmanCollections_invalidJsonFile.json$|
+            src\/Postman\/Model\/testsData\/pushMode\/GithubAPI\/notValidJsonFile.json$|
+            src\/Postman\/Model\/testsData\/getCollectionInvalid.json$|
+            src\/Postman\/Model\/testsData\/pullMode\/GithubAPI\/notWritableFile.json$
+          )
 
   - repo: https://github.com/rhysd/actionlint
     rev: v1.7.10
@@ -127,11 +131,12 @@ repos:
     hooks:
       - id: prettier
         exclude: |
-          (?x)^(
-            src\/Postman\/Collection\/testsData\/postmanCollections_invalidJsonFile.json|
-            src\/Postman\/Model\/testsData\/getCollectionInvalid.json|
-            src\/Postman\/Model\/testsData\/pushMode\/GithubAPI\/notValidJsonFile.json
-          )$
+          (?x)(
+            ^src\/Postman\/Collection\/testsData\/postmanCollections_invalidJsonFile.json$|
+            ^src\/Postman\/Model\/testsData\/getCollectionInvalid.json$|
+            ^src\/Postman\/Model\/testsData\/pushMode\/GithubAPI\/notValidJsonFile.json$|
+            ^\.github/
+          )
 
   - repo: https://github.com/fchastanet/jumanjihouse-pre-commit-hooks
     rev: 3.0.2
