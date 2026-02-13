@@ -126,7 +126,7 @@ It defines variables that the compiler reads to determine source directories and
 
 Tests use this pattern:
 
-```
+```bash
 #!/usr/bin/env bash
 
 # Load test helpers
@@ -135,7 +135,7 @@ source "$(cd "${BATS_TEST_DIRNAME}/../../.." && pwd)/batsHeaders.sh"
 setup() {
   export TMPDIR="${BATS_TEST_TMPDIR}"
   export HOME="${BATS_TEST_TMPDIR}/home"
-  # Additional setup...
+  # Additional setup…
 }
 
 teardown() {
@@ -220,7 +220,7 @@ in `.mega-linter-githubAction.yml`.
   `set -o errtrace`
 - **Variable expansion**: Always use `${var}` instead of `$var`
 - **Conditionals**: Use `[[ ]]` instead of `[ ]`
-- **Sourcing**: Use relative paths resolved via `$(cd ... && pwd)` pattern
+- **Sourcing**: Use relative paths resolved via `$(cd … && pwd)` pattern
 - **shellcheck disable**: Use specific codes and add explanatory comments
 
 ### File Patterns
