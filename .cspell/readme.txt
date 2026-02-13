@@ -12,7 +12,6 @@ Brzóska
 Chastanet
 cklmurl
 CONV
-Cxxxx
 datetime
 endfunction
 enduml
@@ -36,6 +35,7 @@ Powerlevel
 proot
 refactorings
 Scrasnups
+SCxxxx
 setupsh
 skinparam
 startuml

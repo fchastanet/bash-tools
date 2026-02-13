@@ -265,25 +265,25 @@ pre-commit install --hook-type pre-commit --hook-type pre-push
 
 3. **Compile binaries** (if bash-compiler is available):
 
-   ```bash
-   # Usually binaries are pre-compiled, but if you need to rebuild:
-   (
-     cd "${HOME}/fchastanet/bash-compiler" || exit 1
-     go run ./cmd/bash-compiler -r "~/fchastanet/bash-tools/vendor/bash-tools-framework" "$@"
-   )
-   ```
+```bash
+# Usually binaries are pre-compiled, but if you need to rebuild:
+(
+  cd "${HOME}/fchastanet/bash-compiler" || exit 1
+  go run ./cmd/bash-compiler -r "~/fchastanet/bash-tools/vendor/bash-tools-framework" "$@"
+)
+```
 
 4. **Run tests**:
 
-   ```bash
-   ./test.sh scrasnups/build:bash-tools-ubuntu-5.3 -r src -j 30
-   ```
+```bash
+./test.sh scrasnups/build:bash-tools-ubuntu-5.3 -r src -j 30
+```
 
 5. **Run pre-commit checks**:
 
-   ```bash
-   pre-commit run --all-files
-   ```
+```bash
+pre-commit run --all-files
+```
 
 ### Documentation
 
