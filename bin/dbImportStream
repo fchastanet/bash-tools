@@ -334,6 +334,9 @@ Assert::tty() {
 # @arg $2 originalStatus:int[] (passed by reference) (optional) copy of original PIPESTATUS array
 # @env PIPESTATUS assuming that this function is called like in the example provided
 # @see https://unix.stackexchange.com/a/709880/582856
+# @see https://gitlab.alpinelinux.org/alpine/aports/-/issues/11152
+# @warning alpine does not support PIPESTATUS very well as execution order of piped process is
+# not guaranteed
 Bash::handlePipelineFailure() {
   local -a pipeStatusBackup=("${PIPESTATUS[@]}")
   local -n handlePipelineFailure_resultingStatusCode=$1
@@ -344,7 +347,7 @@ Bash::handlePipelineFailure() {
   local statusCode
   for statusCode in "${pipeStatusBackup[@]}"; do
     if ((statusCode == 141)); then
-      return 0
+      continue
     elif ((statusCode > 0)); then
       # shellcheck disable=SC2034
       handlePipelineFailure_resultingStatusCode="${statusCode}"
@@ -496,7 +499,7 @@ Compiler::Embed::extractFileFromBase64() {
     if [[ ! -d "${targetDir}" ]]; then
       mkdir -p "${targetDir}"
     fi
-    base64 -d >"${targetFile}" <<<"${binFileBase64}"
+    tr -d '\n ' <<<"${binFileBase64}" | base64 -d >"${targetFile}"
     chmod "${fileMode}" "${targetFile}"
   fi
 
@@ -1946,6 +1949,7 @@ declare optionProfile=""
 declare optionTables=""
 declare optionTargetDsn="default.local"
 declare optionCharacterSet=""
+declare optionAwsFileType="auto"
 declare optionHelp="0"
 declare optionConfig="0"
 declare optionBashFrameworkConfig=""
@@ -1978,6 +1982,9 @@ dbImportStreamCommandParse() {
   optionCharacterSet=""
   local -i options_parse_optionParsedCountOptionCharacterSet
   ((options_parse_optionParsedCountOptionCharacterSet = 0)) || true
+  optionAwsFileType="auto"
+  local -i options_parse_optionParsedCountOptionAwsFileType
+  ((options_parse_optionParsedCountOptionAwsFileType = 0)) || true
   optionHelp="0"
   local -i options_parse_optionParsedCountOptionHelp
   ((options_parse_optionParsedCountOptionHelp = 0)) || true
@@ -2035,7 +2042,7 @@ dbImportStreamCommandParse() {
     local options_parse_arg="$1"
     local argOptDefaultBehavior=0
     case "${options_parse_arg}" in
-      # Option 1/17
+      # Option 1/18
       # optionProfile alts --profile|-p
       # type: String min 0 max 1
       --profile | -p)
@@ -2054,7 +2061,7 @@ dbImportStreamCommandParse() {
         optionProfile="$1"
         ;;
 
-      # Option 2/17
+      # Option 2/18
       # optionTables alts --tables
       # type: String min 0 max 1
       --tables)
@@ -2075,7 +2082,7 @@ dbImportStreamCommandParse() {
 
         ;;
 
-      # Option 3/17
+      # Option 3/18
       # optionTargetDsn alts --target-dsn|-t
       # type: String min 0 max 1
       --target-dsn | -t)
@@ -2094,7 +2101,7 @@ dbImportStreamCommandParse() {
         optionTargetDsn="$1"
         ;;
 
-      # Option 4/17
+      # Option 4/18
       # optionCharacterSet alts --character-set|-c
       # type: String min 0 max 1
       --character-set | -c)
@@ -2113,7 +2120,31 @@ dbImportStreamCommandParse() {
         optionCharacterSet="$1"
         ;;
 
-      # Option 5/17
+      # Option 5/18
+      # optionAwsFileType alts --aws-file-type|-aft
+      # type: String min 0 max 1
+      # authorizedValues: gz|tar.gz|tar|tar.multiple.tables.gz|auto
+      --aws-file-type | -aft)
+        shift
+        if (($# == 0)); then
+          Log::displayError "Command ${SCRIPT_NAME} - Option ${options_parse_arg} - a value needs to be specified"
+          return 1
+        fi
+        if [[ ! "$1" =~ gz|tar.gz|tar|tar.multiple.tables.gz|auto ]]; then
+          Log::displayError "Command ${SCRIPT_NAME} - Option ${options_parse_arg} - value '$1' is not part of authorized values(gz, tar.gz, tar, tar.multiple.tables.gz, auto)"
+          return 1
+        fi
+
+        if ((options_parse_optionParsedCountOptionAwsFileType >= 1 )); then
+          Log::displayError "Command ${SCRIPT_NAME} - Option ${options_parse_arg} - Maximum number of option occurrences reached(1)"
+          return 1
+        fi
+        ((++options_parse_optionParsedCountOptionAwsFileType))
+        # shellcheck disable=SC2034
+        optionAwsFileType="$1"
+        ;;
+
+      # Option 6/18
       # optionHelp alts --help|-h
       # type: Boolean min 0 max 1
       --help | -h)
@@ -2129,7 +2160,7 @@ dbImportStreamCommandParse() {
 
         ;;
 
-      # Option 6/17
+      # Option 7/18
       # optionConfig alts --config
       # type: Boolean min 0 max 1
       --config)
@@ -2143,7 +2174,7 @@ dbImportStreamCommandParse() {
         ((++options_parse_optionParsedCountOptionConfig))
         ;;
 
-      # Option 7/17
+      # Option 8/18
       # optionBashFrameworkConfig alts --bash-framework-config
       # type: String min 0 max 1
       --bash-framework-config)
@@ -2164,7 +2195,7 @@ dbImportStreamCommandParse() {
 
         ;;
 
-      # Option 8/17
+      # Option 9/18
       # optionInfoVerbose alts --verbose|-v
       # type: Boolean min 0 max 1
       --verbose | -v)
@@ -2182,7 +2213,7 @@ dbImportStreamCommandParse() {
 
         ;;
 
-      # Option 9/17
+      # Option 10/18
       # optionDebugVerbose alts -vv
       # type: Boolean min 0 max 1
       -vv)
@@ -2200,7 +2231,7 @@ dbImportStreamCommandParse() {
 
         ;;
 
-      # Option 10/17
+      # Option 11/18
       # optionTraceVerbose alts -vvv
       # type: Boolean min 0 max 1
       -vvv)
@@ -2218,7 +2249,7 @@ dbImportStreamCommandParse() {
 
         ;;
 
-      # Option 11/17
+      # Option 12/18
       # optionLogLevel alts --log-level
       # type: String min 0 max 1
       # authorizedValues: OFF|ERR|ERROR|WARN|WARNING|INFO|DEBUG|TRACE
@@ -2246,7 +2277,7 @@ dbImportStreamCommandParse() {
 
         ;;
 
-      # Option 12/17
+      # Option 13/18
       # optionLogFile alts --log-file
       # type: String min 0 max 1
       --log-file)
@@ -2269,7 +2300,7 @@ dbImportStreamCommandParse() {
 
         ;;
 
-      # Option 13/17
+      # Option 14/18
       # optionDisplayLevel alts --display-level
       # type: String min 0 max 1
       # authorizedValues: OFF|ERR|ERROR|WARN|WARNING|INFO|DEBUG|TRACE
@@ -2297,7 +2328,7 @@ dbImportStreamCommandParse() {
 
         ;;
 
-      # Option 14/17
+      # Option 15/18
       # optionNoColor alts --no-color
       # type: Boolean min 0 max 1
       --no-color)
@@ -2315,7 +2346,7 @@ dbImportStreamCommandParse() {
 
         ;;
 
-      # Option 15/17
+      # Option 16/18
       # optionTheme alts --theme
       # type: String min 0 max 1
       # authorizedValues: default|default-force|noColor
@@ -2343,7 +2374,7 @@ dbImportStreamCommandParse() {
 
         ;;
 
-      # Option 16/17
+      # Option 17/18
       # optionVersion alts --version
       # type: Boolean min 0 max 1
       --version)
@@ -2359,7 +2390,7 @@ dbImportStreamCommandParse() {
 
         ;;
 
-      # Option 17/17
+      # Option 18/18
       # optionQuiet alts --quiet|-q
       # type: Boolean min 0 max 1
       --quiet | -q)
@@ -2456,6 +2487,7 @@ dbImportStreamCommandParse() {
 
 
 
+
   if ((options_parse_argParsedCountArgDumpFile < 1 )); then
     Log::displayError "Command ${SCRIPT_NAME} - Argument 'argDumpFile' should be provided at least 1 time(s)"
     return 1
@@ -2489,7 +2521,7 @@ dbImportStreamCommandHelp() {
   # ------------------------------------------
   # usage/options section
   # ------------------------------------------
-  optionsAltList=("[--profile|-p <profile>]" "[--tables <tablesSeparatedByComma>]" "[--target-dsn|-t <targetDsn>]" "[--character-set|-c <characterSet>]" "[--help|-h]" "[--config]" "[--bash-framework-config <bash-framework-config>]" "[--verbose|-v]" "[-vv]" "[-vvv]" "[--log-level <log-level>]" "[--log-file <log-file>]" "[--display-level <display-level>]" "[--no-color]" "[--theme <theme>]" "[--version]" "[--quiet|-q]"
+  optionsAltList=("[--profile|-p <profile>]" "[--tables <tablesSeparatedByComma>]" "[--target-dsn|-t <targetDsn>]" "[--character-set|-c <characterSet>]" "[--aws-file-type|-aft <fileType>]" "[--help|-h]" "[--config]" "[--bash-framework-config <bash-framework-config>]" "[--verbose|-v]" "[-vv]" "[-vvv]" "[--log-level <log-level>]" "[--log-file <log-file>]" "[--display-level <display-level>]" "[--no-color]" "[--theme <theme>]" "[--version]" "[--quiet|-q]"
   )
   Array::wrap2 " " 80 2 "${__HELP_TITLE_COLOR}USAGE:${__RESET_COLOR}" \
     "dbImportStream" "${optionsAltList[@]}"
@@ -2539,6 +2571,23 @@ dbImportStreamCommandHelp() {
   Array::wrap2 ' ' 76 4 "    " "Change the character set used during database creation."
   echo
 
+  echo
+  echo -e "${__HELP_TITLE_COLOR}SOURCE OPTIONS:${__RESET_COLOR}"
+  echo -e "  ${__HELP_OPTION_COLOR}--aws-file-type${__HELP_NORMAL}, ${__HELP_OPTION_COLOR}-aft <fileType>${__HELP_NORMAL} {single}"
+  Array::wrap2 ' ' 76 4 "    " "Type of the aws file to download." "Possible values are: gz, tar.gz, tar, tar.multiple.tables.gz, auto." "If auto is used, the file type will be determined from the file extension." ""
+  echo
+
+  echo "    Possible values: "
+  echo -e "      - ${__OPTION_COLOR}gz${__RESET_COLOR}"
+  echo -e "      - ${__OPTION_COLOR}tar.gz${__RESET_COLOR}"
+  echo -e "      - ${__OPTION_COLOR}tar${__RESET_COLOR}"
+  Array::wrap2 ' ' 76 8 "      - ${__OPTION_COLOR}tar.multiple.tables.gz:${__RESET_COLOR} The tar file contains multiple table dumps in gzip format."
+  echo
+  Array::wrap2 ' ' 76 8 "      - ${__OPTION_COLOR}auto:${__RESET_COLOR} Determine the file type from the file extension."
+  echo
+
+  Array::wrap2 ' ' 76 6 "    Default value: " "auto"
+  echo
   echo
   echo -e "${__HELP_TITLE_COLOR}GLOBAL OPTIONS:${__RESET_COLOR}"
   echo -e "  ${__HELP_OPTION_COLOR}--help${__HELP_NORMAL}, ${__HELP_OPTION_COLOR}-h${__HELP_NORMAL} {single}"
@@ -2686,11 +2735,74 @@ main() {
 
 Linux::requireTarCommand
 Compiler::Embed::extractFileFromBase64 \
-  "${PERSISTENT_TMPDIR:-/tmp}/1a25e8fe87d1af27f299ca9f5af14fe2fad803ddce20d659e5f6784c6056c9cc/dbImportStreamScript" \
-  "QkVHSU57CiAgd3JpdGU9MQp9CnsKICBidWZmZXIgPSBzdWJzdHIoJDAsIDEsIDE1MCkKICBsaW5lID0gJDAKICBpZihtYXRjaChidWZmZXIsIC9eTE9DSyBUQUJMRVMgYChbXmBdKylgIFdSSVRFOyQvLCBhcnIpICE9IDApIHsKICAgICMgY2hlY2sgaWYgaW5zZXJ0cyBhcmUgcGFydCBvZiB0aGUgcHJvZmlsZQogICAgdGFibGVOYW1lPWFyclsxXQogICAgaWYgKCEgKHRhYmxlTmFtZSBpbiBtYXApKSB7CiAgICAgIHByb2ZpbGVDbWQgPSAiZWNobyAnIiB0YWJsZU5hbWUgIicgfCAiIFBST0ZJTEVfQ09NTUFORCAiIHwgZ3JlcCAtcSAiIHRhYmxlTmFtZQogICAgICBtYXBbdGFibGVOYW1lXSA9IChzeXN0ZW0ocHJvZmlsZUNtZCkgPT0gMCkKICAgIH0KICAgIGlmIChtYXBbdGFibGVOYW1lXSkgewogICAgICBwcmludCAiXDAzM1s0NG0iICJiZWdpbiBpbnNlcnQgIiB0YWJsZU5hbWUgIlwwMzNbMG0iICA+ICIvZGV2L3N0ZGVyciIKICAgICAgbGluZSA9IGxpbmUgIlxuVFJVTkNBVEUgVEFCTEUgYCIgdGFibGVOYW1lICJgOyIKICAgICAgd3JpdGU9MQogICAgfSBlbHNlIHsKICAgICAgcHJpbnQgImlnbm9yZSB0YWJsZSAiIHRhYmxlTmFtZSAgPiAiL2Rldi9zdGRlcnIiCiAgICAgIHdyaXRlPTAKICAgIH0KICB9IGVsc2UgaWYobWF0Y2goYnVmZmVyLCAvXmNvbW1pdDskLywgYXJyKSAhPSAwKSB7CiAgICB3cml0ZT0xCiAgfSBlbHNlIGlmKG1hdGNoKGJ1ZmZlciwgL1NFVCBOQU1FUyAoW14gXSspLywgYXJyKSAhPSAwKSB7CiAgICBpZiAoQ0hBUkFDVEVSX1NFVCAhPSAiIikgewogICAgICBzdWIoL1NFVCBOQU1FUyAoW14gXSspLywgIlNFVCBOQU1FUyAiIENIQVJBQ1RFUl9TRVQsIGxpbmUpCiAgICB9CiAgICB3cml0ZT0xCiAgfSBlbHNlIGlmKG1hdGNoKGJ1ZmZlciwgL1NFVCBjaGFyYWN0ZXJfc2V0X2NsaWVudCA9IChbXiBdKykvLCBhcnIpICE9IDAgJiYgc3Vic3RyKGFyclsxXSwgMCwgMSkgIT0gIkAiKSB7CiAgICBpZiAoQ0hBUkFDVEVSX1NFVCAhPSAiIikgewogICAgICBzdWIoL1NFVCBjaGFyYWN0ZXJfc2V0X2NsaWVudCA9IChbXiBdKykvLCAiU0VUIGNoYXJhY3Rlcl9zZXRfY2xpZW50ID0gIiBDSEFSQUNURVJfU0VULCBsaW5lKQogICAgfQogICAgd3JpdGU9MQogIH0KCgogIGlmICh3cml0ZSA9PSAxKSB7CiAgICBwcmludCBsaW5lCiAgfQp9Cg==" \
+  "${PERSISTENT_TMPDIR:-/tmp}/70036d71f8a9786cf765ce5292712b8c572b13644121d6e913716696e27b71ed/dbImportStreamScript" \
+  "QkVHSU57CiAgd3JpdGU9MQp9CnsKICBidWZmZXIgPSBzdWJzdHIoJDAsIDEsIDE1MCkKICBsaW5l \
+ID0gJDAKICBpZihtYXRjaChidWZmZXIsIC9eTE9DSyBUQUJMRVMgYChbXmBdKylgIFdSSVRFOyQv \
+LCBhcnIpICE9IDApIHsKICAgICMgY2hlY2sgaWYgaW5zZXJ0cyBhcmUgcGFydCBvZiB0aGUgcHJv \
+ZmlsZQogICAgdGFibGVOYW1lPWFyclsxXQogICAgaWYgKCEgKHRhYmxlTmFtZSBpbiBtYXApKSB7 \
+CiAgICAgIHByb2ZpbGVDbWQgPSAiZWNobyAnIiB0YWJsZU5hbWUgIicgfCAiIFBST0ZJTEVfQ09N \
+TUFORCAiIHwgZ3JlcCAtcSAiIHRhYmxlTmFtZQogICAgICBtYXBbdGFibGVOYW1lXSA9IChzeXN0 \
+ZW0ocHJvZmlsZUNtZCkgPT0gMCkKICAgIH0KICAgIGlmIChtYXBbdGFibGVOYW1lXSkgewogICAg \
+ICBwcmludCAiXDAzM1s0NG0iICJiZWdpbiBpbnNlcnQgIiB0YWJsZU5hbWUgIlwwMzNbMG0iICA+ \
+ICIvZGV2L3N0ZGVyciIKICAgICAgbGluZSA9IGxpbmUgIlxuVFJVTkNBVEUgVEFCTEUgYCIgdGFi \
+bGVOYW1lICJgOyIKICAgICAgd3JpdGU9MQogICAgfSBlbHNlIHsKICAgICAgcHJpbnQgImlnbm9y \
+ZSB0YWJsZSAiIHRhYmxlTmFtZSAgPiAiL2Rldi9zdGRlcnIiCiAgICAgIHdyaXRlPTAKICAgIH0K \
+ICB9IGVsc2UgaWYobWF0Y2goYnVmZmVyLCAvXmNvbW1pdDskLywgYXJyKSAhPSAwKSB7CiAgICB3 \
+cml0ZT0xCiAgfSBlbHNlIGlmKG1hdGNoKGJ1ZmZlciwgL1NFVCBOQU1FUyAoW14gXSspLywgYXJy \
+KSAhPSAwKSB7CiAgICBpZiAoQ0hBUkFDVEVSX1NFVCAhPSAiIikgewogICAgICBzdWIoL1NFVCBO \
+QU1FUyAoW14gXSspLywgIlNFVCBOQU1FUyAiIENIQVJBQ1RFUl9TRVQsIGxpbmUpCiAgICB9CiAg \
+ICB3cml0ZT0xCiAgfSBlbHNlIGlmKG1hdGNoKGJ1ZmZlciwgL1NFVCBjaGFyYWN0ZXJfc2V0X2Ns \
+aWVudCA9IChbXiBdKykvLCBhcnIpICE9IDAgJiYgc3Vic3RyKGFyclsxXSwgMCwgMSkgIT0gIkAi \
+KSB7CiAgICBpZiAoQ0hBUkFDVEVSX1NFVCAhPSAiIikgewogICAgICBzdWIoL1NFVCBjaGFyYWN0 \
+ZXJfc2V0X2NsaWVudCA9IChbXiBdKykvLCAiU0VUIGNoYXJhY3Rlcl9zZXRfY2xpZW50ID0gIiBD \
+SEFSQUNURVJfU0VULCBsaW5lKQogICAgfQogICAgd3JpdGU9MQogIH0KCiAgaWYgKHdyaXRlID09 \
+IDEpIHsKICAgIHByaW50IGxpbmUKICB9Cn0K" \
   "644"
 
-declare -gx embed_file_dbImportStreamScript="${PERSISTENT_TMPDIR:-/tmp}/1a25e8fe87d1af27f299ca9f5af14fe2fad803ddce20d659e5f6784c6056c9cc/dbImportStreamScript"
+declare -gx embed_file_dbImportStreamScript="${PERSISTENT_TMPDIR:-/tmp}/70036d71f8a9786cf765ce5292712b8c572b13644121d6e913716696e27b71ed/dbImportStreamScript"
+
+Linux::requireTarCommand
+Compiler::Embed::extractFileFromBase64 \
+  "${PERSISTENT_TMPDIR:-/tmp}/8d96de1bc0c48065a065432fac446f9be27e33d0fb23f688e4f8cee0f7c4204b/dbImportStreamMultipleTablesScript" \
+  "QkVHSU57CiAgd3JpdGU9MQogIGluQ3JlYXRlVGFibGU9MAogIGNyZWF0ZVRhYmxlTmFtZT0iIgp9 \
+CnsKICBidWZmZXIgPSBzdWJzdHIoJDAsIDEsIDE1MCkKICBsaW5lID0gJDAKCiAgIyBGaXggbWFs \
+Zm9ybWVkIE15U1FMIHZlcnNpb24gY29tbWVudHMgLSBhZGQgc3BhY2UgYmVmb3JlICovCiAgaWYg \
+KG1hdGNoKGxpbmUsIC9cL1wqIVswLTldK1teKl0qXCpcLy8sIGFycikpIHsKICAgICMgQ2hlY2sg \
+aWYgdGhlcmUncyBubyBzcGFjZSBiZWZvcmUgKi8KICAgIGlmIChtYXRjaChsaW5lLCAvXC9cKiFb \
+MC05XStbXipdKlteIF1cKlwvLywgYXJyKSkgewogICAgICBnc3ViKC8oXCpcLykvLCAiICovIiwg \
+bGluZSkKICAgIH0KICB9CgogIGlmKG1hdGNoKGJ1ZmZlciwgL15JTlNFUlQgSU5UTyBgKFteYF0r \
+KWAvLCBhcnIpICE9IDApIHsKICAgICMgY2hlY2sgaWYgaW5zZXJ0cyBhcmUgcGFydCBvZiB0aGUg \
+cHJvZmlsZQogICAgdGFibGVOYW1lPWFyclsxXQogICAgaWYgKCEgKHRhYmxlTmFtZSBpbiBtYXAp \
+KSB7CiAgICAgIHByb2ZpbGVDbWQgPSAiZWNobyAnIiB0YWJsZU5hbWUgIicgfCAiIFBST0ZJTEVf \
+Q09NTUFORCAiIHwgZ3JlcCAtcSAiIHRhYmxlTmFtZQogICAgICBtYXBbdGFibGVOYW1lXSA9IChz \
+eXN0ZW0ocHJvZmlsZUNtZCkgPT0gMCkKICAgIH0KICAgIGlmIChtYXBbdGFibGVOYW1lXSkgewog \
+ICAgICBwcmludCAiXDAzM1s0NG0iICJiZWdpbiBpbnNlcnQgIiB0YWJsZU5hbWUgIlwwMzNbMG0i \
+ICA+ICIvZGV2L3N0ZGVyciIKICAgICAgd3JpdGU9MQogICAgfSBlbHNlIHsKICAgICAgcHJpbnQg \
+Imlnbm9yZSB0YWJsZSAiIHRhYmxlTmFtZSAgPiAiL2Rldi9zdGRlcnIiCiAgICAgIHdyaXRlPTAK \
+ICAgIH0KICB9IGVsc2UgaWYobWF0Y2goYnVmZmVyLCAvXjskLywgYXJyKSAhPSAwKSB7CiAgICB3 \
+cml0ZT0xCiAgfSBlbHNlIGlmKG1hdGNoKGJ1ZmZlciwgL1NFVCBOQU1FUyAoW14gXSspLywgYXJy \
+KSAhPSAwKSB7CiAgICBpZiAoQ0hBUkFDVEVSX1NFVCAhPSAiIikgewogICAgICBzdWIoL1NFVCBO \
+QU1FUyAoW14gXSspLywgIlNFVCBOQU1FUyAiIENIQVJBQ1RFUl9TRVQsIGxpbmUpCiAgICB9CiAg \
+ICB3cml0ZT0xCiAgfSBlbHNlIGlmKG1hdGNoKGJ1ZmZlciwgL1NFVCBjaGFyYWN0ZXJfc2V0X2Ns \
+aWVudCA9IChbXiBdKykvLCBhcnIpICE9IDAgJiYgc3Vic3RyKGFyclsxXSwgMCwgMSkgIT0gIkAi \
+KSB7CiAgICBpZiAoQ0hBUkFDVEVSX1NFVCAhPSAiIikgewogICAgICBzdWIoL1NFVCBjaGFyYWN0 \
+ZXJfc2V0X2NsaWVudCA9IChbXiBdKykvLCAiU0VUIGNoYXJhY3Rlcl9zZXRfY2xpZW50ID0gIiBD \
+SEFSQUNURVJfU0VULCBsaW5lKQogICAgfQogICAgd3JpdGU9MQogIH0gZWxzZSBpZihtYXRjaChi \
+dWZmZXIsIC9eQ1JFQVRFIFRBQkxFIGAoW15gXSspYC8sIGFycikgIT0gMCkgewogICAgIyBDb252 \
+ZXJ0IENSRUFURSBUQUJMRSB0byBDUkVBVEUgVEFCTEUgSUYgTk9UIEVYSVNUUwogICAgdGFibGVO \
+YW1lID0gYXJyWzFdCiAgICBpZiAoIW1hdGNoKGxpbmUsIC9JRiBOT1QgRVhJU1RTLykpIHsKICAg \
+ICAgc3ViKC9DUkVBVEUgVEFCTEUgYChbXmBdKylgLywgIkNSRUFURSBUQUJMRSBJRiBOT1QgRVhJ \
+U1RTIGAiIHRhYmxlTmFtZSAiYCIsIGxpbmUpCiAgICB9CiAgICBpbkNyZWF0ZVRhYmxlID0gMQog \
+ICAgY3JlYXRlVGFibGVOYW1lID0gdGFibGVOYW1lCiAgICB3cml0ZT0xCiAgfSBlbHNlIGlmKGlu \
+Q3JlYXRlVGFibGUgJiYgbWF0Y2gobGluZSwgLztbIFx0XSokLywgYXJyKSAhPSAwKSB7CiAgICAj \
+IEVuZCBvZiBDUkVBVEUgVEFCTEUgc3RhdGVtZW50IC0gYWRkIFRSVU5DQVRFIGFmdGVyIHRoZSBz \
+ZW1pY29sb24KICAgIGxpbmUgPSBsaW5lICJcblRSVU5DQVRFIFRBQkxFIGAiIGNyZWF0ZVRhYmxl \
+TmFtZSAiYDsiCiAgICBpbkNyZWF0ZVRhYmxlID0gMAogICAgY3JlYXRlVGFibGVOYW1lID0gIiIK \
+ICAgIHdyaXRlPTEKICB9CgogIGlmICh3cml0ZSA9PSAxKSB7CiAgICBwcmludCBsaW5lCiAgfQp9 \
+Cg==" \
+  "644"
+
+declare -gx embed_file_dbImportStreamMultipleTablesScript="${PERSISTENT_TMPDIR:-/tmp}/8d96de1bc0c48065a065432fac446f9be27e33d0fb23f688e4f8cee0f7c4204b/dbImportStreamMultipleTablesScript"
 
 
 # create db instances
@@ -2711,30 +2823,75 @@ declare remoteCharacterSet="${optionCharacterSet:-${defaultRemoteCharacterSet}}"
 declare status=0
 # shellcheck disable=SC2034
 declare -a pipeStatus=()
+declare awkScriptFile="${embed_file_dbImportStreamScript}"
 
 # shellcheck disable=2086,2154
-(
-  if [[ "${argDumpFile}" =~ \.tar.gz$ ]]; then
-    tar xOfz "${argDumpFile}"
-  elif [[ "${argDumpFile}" =~ \.gz$ ]]; then
-    zcat "${argDumpFile}"
-  fi
-) | (
-  awk \
-    -v PROFILE_COMMAND="${profileCommandFile}" \
-    -v CHARACTER_SET="${remoteCharacterSet}" \
-    -f "${embed_file_dbImportStreamScript}" \
-    -
-) | (
-  mysql \
-    "--defaults-extra-file=${dbTargetInstance['AUTH_FILE']}" \
-    ${dbTargetInstance['DB_IMPORT_OPTIONS']} \
-    "${argTargetDbName}"
-) || (
-  # zcat will continue to write to stdout whereas awk has finished if table has been found
-  # we detect this case because zcat will return code 141 because pipe closed
-  Bash::handlePipelineFailure status pipeStatus
-)
+if [[ "${optionAwsFileType}" == "tar.multiple.tables.gz" ]]; then
+  awkScriptFile="${embed_file_dbImportStreamMultipleTablesScript}"
+  # Process each table individually - this matches the AWK script's design
+  while read -r tableDumpFile; do
+    if [[ -n "${tableDumpFile}" ]]; then
+      Log::displayInfo "Processing table dump file ${tableDumpFile} from ${argDumpFile}"
+      (
+        tar xOf "${argDumpFile}" "${tableDumpFile}" | zcat
+      ) | (
+        awk \
+          -v PROFILE_COMMAND="${profileCommandFile}" \
+          -v CHARACTER_SET="${remoteCharacterSet}" \
+          -f "${embed_file_dbImportStreamMultipleTablesScript}" \
+          -
+      ) | (
+        mysql \
+          "--defaults-extra-file=${dbTargetInstance['AUTH_FILE']}" \
+          ${dbTargetInstance['DB_IMPORT_OPTIONS']} \
+          "${argTargetDbName}"
+      )
+
+      pipeStatus=("${PIPESTATUS[@]}")
+      if [[ "${pipeStatus[0]}" -ne 0 || "${pipeStatus[1]}" -ne 0 || "${pipeStatus[2]}" -ne 0 ]]; then
+        Log::displayError "Failed processing ${tableDumpFile}: tar=${pipeStatus[0]}, awk=${pipeStatus[1]}, mysql=${pipeStatus[2]}"
+        Bash::handlePipelineFailure status pipeStatus
+        break
+      fi
+    fi
+  done < <(tar tf "${argDumpFile}" 2>/dev/null | grep '\.sql\.gz$' || true)
+else
+  (
+    if [[ "${optionAwsFileType}" == "auto" ]]; then
+      if [[ "${argDumpFile}" =~ \.tar.gz$ || "${argDumpFile}" =~ \.tgz$ ]]; then
+        optionAwsFileType="tar.gz"
+      elif [[ "${argDumpFile}" =~ \.tar$ ]]; then
+        optionAwsFileType="tar"
+      elif [[ "${argDumpFile}" =~ \.gz$ ]]; then
+        optionAwsFileType="gz"
+      fi
+    fi
+    if [[ "${optionAwsFileType}" == "tar.gz" ]]; then
+      tar xOfz "${argDumpFile}"
+    elif [[ "${optionAwsFileType}" == "tar" ]]; then
+      tar xOf "${argDumpFile}"
+    elif [[ "${optionAwsFileType}" == "gz" ]]; then
+      zcat "${argDumpFile}"
+    else
+      cat "${argDumpFile}"
+    fi
+  ) | (
+    awk \
+      -v PROFILE_COMMAND="${profileCommandFile}" \
+      -v CHARACTER_SET="${remoteCharacterSet}" \
+      -f "${awkScriptFile}" \
+      -
+  ) | (
+    mysql \
+      "--defaults-extra-file=${dbTargetInstance['AUTH_FILE']}" \
+      ${dbTargetInstance['DB_IMPORT_OPTIONS']} \
+      "${argTargetDbName}"
+  ) || (
+    # zcat will continue to write to stdout whereas awk has finished if table has been found
+    # we detect this case because zcat will return code 141 because pipe closed
+    Bash::handlePipelineFailure status pipeStatus
+  )
+fi
 
 }
 

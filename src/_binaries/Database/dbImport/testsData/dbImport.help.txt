@@ -5,9 +5,10 @@
 [1;37mUSAGE:[0m dbImport [--collation-name|-o <targetDsn>]
   [--target-dsn|-t <targetDsn>] [--character-set|-c <characterSet>]
   [--profile|-p <profile>] [--tables <tablesSeparatedByComma>]
-  [--skip-schema|-s] [--from-dsn|-f <dsn>] [--from-aws|-a <awsFile>] [--help|-h]
-  [--config] [--bash-framework-config <bash-framework-config>] [--verbose|-v]
-  [-vv] [-vvv] [--log-level <log-level>] [--log-file <log-file>]
+  [--skip-schema|-s] [--from-dsn|-f <dsn>] [--from-aws|-a <awsFile>]
+  [--aws-file-type|-aft <fileType>] [--help|-h] [--config]
+  [--bash-framework-config <bash-framework-config>] [--verbose|-v] [-vv] [-vvv]
+  [--log-level <log-level>] [--log-file <log-file>]
   [--display-level <display-level>] [--no-color] [--theme <theme>] [--version]
   [--quiet|-q]
 
@@ -45,6 +46,19 @@
     (Only .gz or tar.gz file are supported).
     This option is incompatible with -f|--from-dsn option.
 
+  [1;34m--aws-file-type[0m, [1;34m-aft <fileType>[0m {single}
+    Type of the aws file to download.
+    Possible values are: gz, tar.gz, tar, tar.multiple.tables.gz, auto.
+    If auto is used, the file type will be determined from the file extension.
+
+    Possible values: 
+      - gz[0m
+      - tar.gz[0m
+      - tar[0m
+      - tar.multiple.tables.gz:[0m The tar file contains multiple table du
+        mps in gzip format.
+      - auto:[0m Determine the file type from the file extension.
+    Default value: auto
 
 [1;37mGLOBAL OPTIONS:[0m
   [1;34m--help[0m, [1;34m-h[0m {single}

@@ -4,9 +4,9 @@
 [1;37mUSAGE:[0m dbImportStream [OPTIONS] [ARGUMENTS]
 [1;37mUSAGE:[0m dbImportStream [--profile|-p <profile>]
   [--tables <tablesSeparatedByComma>] [--target-dsn|-t <targetDsn>]
-  [--character-set|-c <characterSet>] [--help|-h] [--config]
-  [--bash-framework-config <bash-framework-config>] [--verbose|-v] [-vv] [-vvv]
-  [--log-level <log-level>] [--log-file <log-file>]
+  [--character-set|-c <characterSet>] [--aws-file-type|-aft <fileType>]
+  [--help|-h] [--config] [--bash-framework-config <bash-framework-config>]
+  [--verbose|-v] [-vv] [-vvv] [--log-level <log-level>] [--log-file <log-file>]
   [--display-level <display-level>] [--no-color] [--theme <theme>] [--version]
   [--quiet|-q]
 
@@ -28,6 +28,21 @@
     Default value: default.local
   [1;34m--character-set[0m, [1;34m-c <characterSet>[0m {single}
     Change the character set used during database creation.
+
+[1;37mSOURCE OPTIONS:[0m
+  [1;34m--aws-file-type[0m, [1;34m-aft <fileType>[0m {single}
+    Type of the aws file to download.
+    Possible values are: gz, tar.gz, tar, tar.multiple.tables.gz, auto.
+    If auto is used, the file type will be determined from the file extension.
+
+    Possible values: 
+      - gz[0m
+      - tar.gz[0m
+      - tar[0m
+      - tar.multiple.tables.gz:[0m The tar file contains multiple table du
+        mps in gzip format.
+      - auto:[0m Determine the file type from the file extension.
+    Default value: auto
 
 [1;37mGLOBAL OPTIONS:[0m
   [1;34m--help[0m, [1;34m-h[0m {single}

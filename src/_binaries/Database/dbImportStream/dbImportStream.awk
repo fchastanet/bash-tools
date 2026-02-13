@@ -33,7 +33,6 @@ BEGIN{
     write=1
   }
 
-
   if (write == 1) {
     print line
   }

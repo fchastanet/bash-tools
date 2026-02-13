@@ -1,0 +1,28 @@
+---
+binData:
+  commands:
+    default:
+      optionGroups:
+        groupSourceDbOptions:
+          title: "SOURCE OPTIONS:"
+      options:
+        - alts:
+            - --aws-file-type
+            - -aft
+          group: groupSourceDbOptions
+          help: |
+            Type of the aws file to download.
+            Possible values are: gz, tar.gz, tar, tar.multiple.tables.gz, auto.
+            If auto is used, the file type will be determined from the file extension.
+          helpValueName: fileType
+          authorizedValues:
+            - value: gz
+            - value: tar.gz
+            - value: tar
+            - value: tar.multiple.tables.gz
+              help: The tar file contains multiple table dumps in gzip format.
+            - help: Determine the file type from the file extension.
+              value: auto
+          defaultValue: auto
+          type: String
+          variableName: optionAwsFileType

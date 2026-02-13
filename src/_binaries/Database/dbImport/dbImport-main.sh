@@ -167,6 +167,7 @@ declare -a dbImportStreamOptions=(
   --profile "${optionProfile}"
   --target-dsn "${optionTargetDsn}"
   --character-set "${targetCharacterSet}"
+  --aws-file-type "${optionAwsFileType:-auto}"
 )
 if [[ -n "${optionTables:-}" ]]; then
   dbImportStreamOptions+=(
