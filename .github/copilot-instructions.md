@@ -67,13 +67,15 @@ testsData/             # Test fixtures and expected outputs
 To compile binaries:
 
 ```bash
-export FRAMEWORK_ROOT_DIR=/path/to/bash-tools/vendor/bash-tools-framework
-export BASH_TOOLS_ROOT_DIR=/path/to/bash-tools
-go run ./cmd/bash-compiler $(find "${BASH_TOOLS_ROOT_DIR}/src/_binaries" -name '*-binary.yaml' -print)
+(
+    cd "${HOME}/fchastanet/bash-compiler" || exit 1
+    go run ./cmd/bash-compiler -r "~/fchastanet/bash-tools/vendor/bash-tools-framework" "$@"
+)
 ```
 
-**Note**: The Go-based bash-compiler is typically not available in this
-repository. Binaries are pre-compiled and checked into `bin/`.
+**Note**: Binaries are pre-compiled and checked into `bin/`.
+**Note2**: `.bash-compiler` file is automatically loaded and used to configure the compiler.
+It defines variables that the compiler reads to determine source directories and framework paths.
 
 ## Directory Structure
 
@@ -213,7 +215,7 @@ in `.mega-linter-githubAction.yml`.
 
 ### Shell Script Standards
 
-- **Shebang**: `#!/usr/bin/env bash` (or `#!/bin/bash`)
+- **Shebang**: `#!/usr/bin/env bash`
 - **Strict mode**: Scripts use `set -o errexit`, `set -o pipefail`,
   `set -o errtrace`
 - **Variable expansion**: Always use `${var}` instead of `$var`
@@ -259,22 +261,25 @@ pre-commit install --hook-type pre-commit --hook-type pre-push
    - `{command}-options.sh`: CLI option definitions
    - `{command}-binary.yaml`: Build configuration (if creating new command)
 
-1. **Write/update tests** in corresponding `.bats` file
+2. **Write/update tests** in corresponding `.bats` file
 
-1. **Compile binaries** (if bash-compiler is available):
+3. **Compile binaries** (if bash-compiler is available):
 
    ```bash
    # Usually binaries are pre-compiled, but if you need to rebuild:
-   # Requires bash-compiler tool to be installed
+   (
+     cd "${HOME}/fchastanet/bash-compiler" || exit 1
+     go run ./cmd/bash-compiler -r "~/fchastanet/bash-tools/vendor/bash-tools-framework" "$@"
+   )
    ```
 
-1. **Run tests**:
+4. **Run tests**:
 
    ```bash
    ./test.sh scrasnups/build:bash-tools-ubuntu-5.3 -r src -j 30
    ```
 
-1. **Run pre-commit checks**:
+5. **Run pre-commit checks**:
 
    ```bash
    pre-commit run --all-files
@@ -319,9 +324,9 @@ Located in `.github/workflows/`:
    - Tests on Ubuntu and Alpine Linux
    - Auto-creates PRs for lint fixes
 
-1. **docsify-gh-pages.yml**: Documentation deployment
+2. **docsify-gh-pages.yml**: Documentation deployment
 
-1. **precommit-autoupdate.yml**: Auto-updates pre-commit hooks
+3. **precommit-autoupdate.yml**: Auto-updates pre-commit hooks
 
 ### Test Matrix
 
@@ -375,8 +380,8 @@ installation scripts.
 **Likely causes**:
 
 1. Different Bash version (test with specific Docker image)
-1. Missing test dependencies (run `./bin/installRequirements`)
-1. Stale temporary files (check `KEEP_TEMP_FILES` setting)
+2. Missing test dependencies (run `./bin/installRequirements`)
+3. Stale temporary files (check `KEEP_TEMP_FILES` setting)
 
 **Debug approach**:
 
@@ -420,13 +425,14 @@ Changes to source files in `src/` do not automatically update the binaries.
 the bash-compiler tool. As a contributor:
 
 1. Make changes to source files (`*-main.sh`, `*-options.sh`, `*-binary.yaml`)
-1. Ensure tests pass (tests can run against source files)
-1. Submit PR with source changes
-1. Maintainer will recompile binaries before merging
+2. Commiting files will use pre-commit hooks that
+    - Run shellcheck on source files
+    - Compile binaries (bash-compiler is made available by pre-commit hook)
+    - Run tests against source files (not compiled binaries)
+    - Ensure tests pass (tests can run against source files)
+3. Submit PR with source changes
 
-If you need to test binary changes locally and bash-compiler is not available,
-you can manually edit the compiled binary in `bin/` temporarily for testing (but
-do not commit these changes).
+Never edit compiled binaries directly as they will be overwritten by the build process. Focus on modifying source files and ensuring tests pass.
 
 ### Issue: Documentation Not Updating
 
@@ -474,28 +480,28 @@ BATS_FIX_TEST=1 ./test.sh scrasnups/build:bash-tools-ubuntu-5.3 path/to/test.bat
 ### When Making Changes
 
 1. **Minimal modifications**: Only change what's necessary to address the issue
-1. **Test co-location**: Always create/update `.bats` file alongside source
+2. **Test co-location**: Always create/update `.bats` file alongside source
    changes
-1. **Follow naming conventions**: Use existing patterns for functions, files,
+3. **Follow naming conventions**: Use existing patterns for functions, files,
    variables
-1. **Preserve structure**: Keep the binary yaml structure and extends hierarchy
-1. **Run tests before committing**: Use `./test.sh` with appropriate Docker
+4. **Preserve structure**: Keep the binary yaml structure and extends hierarchy
+5. **Run tests before committing**: Use `./test.sh` with appropriate Docker
    image
-1. **Check ShellCheck**: Ensure changes pass shellcheck with project config
-1. **Update docs if needed**: Regenerate docs with `./bin/doc` if function
+6. **Check ShellCheck**: Ensure changes pass shellcheck with project config
+7. **Update docs if needed**: Regenerate docs with `./bin/doc` if function
    signatures change
 
 ### When Creating New Binaries
 
 1. Create directory: `src/_binaries/{Category}/{CommandName}/`
-1. Create files:
+2. Create files:
    - `{commandName}-binary.yaml` (extend appropriate base configs)
    - `{commandName}-main.sh` (implementation)
    - `{commandName}-options.sh` (CLI options and help)
    - `{commandName}.bats` (tests)
    - `testsData/` directory (test fixtures)
-1. Follow existing examples (e.g., `src/_binaries/Git/gitIsBranch/`)
-1. Note: Binary compilation requires bash-compiler tool (maintained separately)
+3. Follow existing examples (e.g., `src/_binaries/Git/gitIsBranch/`)
+4. Note: Binary compilation requires bash-compiler tool (maintained separately)
 
 ### Understanding Dependencies
 
@@ -508,14 +514,13 @@ BATS_FIX_TEST=1 ./test.sh scrasnups/build:bash-tools-ubuntu-5.3 path/to/test.bat
 
 ### Avoiding Common Pitfalls
 
-1. **Don't edit compiled binaries directly**: Make changes in `src/_binaries/`
+1. **Don't edit compiled binaries directly**: Do no make changes in `src/_binaries/`
    source files
-1. **Don't ignore shellcheck warnings**: Address them or explicitly disable with
+2. **Don't ignore shellcheck warnings**: Address them or explicitly disable with
    explanation
-1. **Don't assume vendor/ exists**: Run installation scripts first
-1. **Don't skip tests**: Even for "small" changes, run relevant test suite
-1. **Don't modify unrelated files**: Keep changes surgical and focused
-1. **Don't remove working tests**: Only modify tests when fixing actual bugs or
+3. **Don't skip tests**: Even for "small" changes, run relevant test suite
+4. **Don't modify unrelated files**: Keep changes surgical and focused
+5. **Don't remove working tests**: Only modify tests when fixing actual bugs or
    updating functionality
 
 ## Additional Resources
