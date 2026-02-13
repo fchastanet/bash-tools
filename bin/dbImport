@@ -334,6 +334,9 @@ Assert::tty() {
 # @arg $2 originalStatus:int[] (passed by reference) (optional) copy of original PIPESTATUS array
 # @env PIPESTATUS assuming that this function is called like in the example provided
 # @see https://unix.stackexchange.com/a/709880/582856
+# @see https://gitlab.alpinelinux.org/alpine/aports/-/issues/11152
+# @warning alpine does not support PIPESTATUS very well as execution order of piped process is
+# not guaranteed
 Bash::handlePipelineFailure() {
   local -a pipeStatusBackup=("${PIPESTATUS[@]}")
   local -n handlePipelineFailure_resultingStatusCode=$1
@@ -344,7 +347,7 @@ Bash::handlePipelineFailure() {
   local statusCode
   for statusCode in "${pipeStatusBackup[@]}"; do
     if ((statusCode == 141)); then
-      return 0
+      continue
     elif ((statusCode > 0)); then
       # shellcheck disable=SC2034
       handlePipelineFailure_resultingStatusCode="${statusCode}"
@@ -496,7 +499,7 @@ Compiler::Embed::extractFileFromBase64() {
     if [[ ! -d "${targetDir}" ]]; then
       mkdir -p "${targetDir}"
     fi
-    base64 -d >"${targetFile}" <<<"${binFileBase64}"
+    tr -d '\n ' <<<"${binFileBase64}" | base64 -d >"${targetFile}"
     chmod "${fileMode}" "${targetFile}"
   fi
 
@@ -2943,7 +2946,10 @@ main() {
 Linux::requireTarCommand
 Compiler::Embed::extractFileFromBase64 \
   "${PERSISTENT_TMPDIR:-/tmp}/2e26e9149612ae897e866701fc461bca4f7dc43993209e69077db41f10c2a0a6/dumpSizeQuery" \
-  "U0VMRUNUIFJPVU5EKFNVTShkYXRhX2xlbmd0aCArIGluZGV4X2xlbmd0aCkgLyAxMDI0IC8gMTAyNCwgMCkgQVMgc2l6ZQpGUk9NIGluZm9ybWF0aW9uX3NjaGVtYS5UQUJMRVMgV0hFUkUgdGFibGVfc2NoZW1hPScke2Zyb21EYk5hbWV9JwpBTkQgdGFibGVfbmFtZSBJTigke2xpc3RUYWJsZXNEdW1wU2l6ZX0sICdkdW1teScpCkdST1VQIEJZIHRhYmxlX3NjaGVtYQo=" \
+  "U0VMRUNUIFJPVU5EKFNVTShkYXRhX2xlbmd0aCArIGluZGV4X2xlbmd0aCkgLyAxMDI0IC8gMTAy \
+NCwgMCkgQVMgc2l6ZQpGUk9NIGluZm9ybWF0aW9uX3NjaGVtYS5UQUJMRVMgV0hFUkUgdGFibGVf \
+c2NoZW1hPScke2Zyb21EYk5hbWV9JwpBTkQgdGFibGVfbmFtZSBJTigke2xpc3RUYWJsZXNEdW1w \
+U2l6ZX0sICdkdW1teScpCkdST1VQIEJZIHRhYmxlX3NjaGVtYQo=" \
   "644"
 
 declare -gx embed_file_dumpSizeQuery="${PERSISTENT_TMPDIR:-/tmp}/2e26e9149612ae897e866701fc461bca4f7dc43993209e69077db41f10c2a0a6/dumpSizeQuery"

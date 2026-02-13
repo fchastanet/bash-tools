@@ -68,14 +68,15 @@ To compile binaries:
 
 ```bash
 (
-    cd "${HOME}/fchastanet/bash-compiler" || exit 1
-    go run ./cmd/bash-compiler -r "~/fchastanet/bash-tools/vendor/bash-tools-framework" "$@"
+  cd "${HOME}/fchastanet/bash-compiler" || exit 1
+  go run ./cmd/bash-compiler -r "~/fchastanet/bash-tools/vendor/bash-tools-framework" "$@"
 )
 ```
 
-**Note**: Binaries are pre-compiled and checked into `bin/`.
-**Note2**: `.bash-compiler` file is automatically loaded and used to configure the compiler.
-It defines variables that the compiler reads to determine source directories and framework paths.
+**Note**: Binaries are pre-compiled and checked into `bin/`. **Note2**:
+`.bash-compiler` file is automatically loaded and used to configure the
+compiler. It defines variables that the compiler reads to determine source
+directories and framework paths.
 
 ## Directory Structure
 
@@ -255,15 +256,21 @@ pre-commit install --hook-type pre-commit --hook-type pre-push
 
 ### Making Changes
 
-1. **Create/modify source files** in `src/_binaries/{Category}/{Command}/`:
+#### Create/modify source files
 
-   - `{command}-main.sh`: Implementation logic
-   - `{command}-options.sh`: CLI option definitions
-   - `{command}-binary.yaml`: Build configuration (if creating new command)
+in `src/_binaries/{Category}/{Command}/`:
 
-2. **Write/update tests** in corresponding `.bats` file
+- `{command}-main.sh`: Implementation logic
+- `{command}-options.sh`: CLI option definitions
+- `{command}-binary.yaml`: Build configuration (if creating new command)
 
-3. **Compile binaries** (if bash-compiler is available):
+#### Write/update tests
+
+in corresponding `.bats` file
+
+#### Compile binaries
+
+if bash-compiler is available:
 
 ```bash
 # Usually binaries are pre-compiled, but if you need to rebuild:
@@ -273,13 +280,13 @@ pre-commit install --hook-type pre-commit --hook-type pre-push
 )
 ```
 
-4. **Run tests**:
+#### Run tests
 
 ```bash
 ./test.sh scrasnups/build:bash-tools-ubuntu-5.3 -r src -j 30
 ```
 
-5. **Run pre-commit checks**:
+#### Run pre-commit checks
 
 ```bash
 pre-commit run --all-files
@@ -317,16 +324,16 @@ docsify serve pages
 
 Located in `.github/workflows/`:
 
-1. **lint-test.yml**: Main CI pipeline
+#### lint-test.yml: Main CI pipeline
 
-   - Runs pre-commit hooks and MegaLinter
-   - Executes unit tests on multiple Bash versions (4.4, 5.0, 5.3)
-   - Tests on Ubuntu and Alpine Linux
-   - Auto-creates PRs for lint fixes
+- Runs pre-commit hooks and MegaLinter
+- Executes unit tests on multiple Bash versions (4.4, 5.0, 5.3)
+- Tests on Ubuntu and Alpine Linux
+- Auto-creates PRs for lint fixes
 
-2. **docsify-gh-pages.yml**: Documentation deployment
+#### docsify-gh-pages.yml: Documentation deployment
 
-3. **precommit-autoupdate.yml**: Auto-updates pre-commit hooks
+#### precommit-autoupdate.yml: Auto-updates pre-commit hooks
 
 ### Test Matrix
 
@@ -425,14 +432,15 @@ Changes to source files in `src/` do not automatically update the binaries.
 the bash-compiler tool. As a contributor:
 
 1. Make changes to source files (`*-main.sh`, `*-options.sh`, `*-binary.yaml`)
-2. Commiting files will use pre-commit hooks that
-    - Run shellcheck on source files
-    - Compile binaries (bash-compiler is made available by pre-commit hook)
-    - Run tests against source files (not compiled binaries)
-    - Ensure tests pass (tests can run against source files)
+2. Committing files will use pre-commit hooks that
+   - Run shellcheck on source files
+   - Compile binaries (bash-compiler is made available by pre-commit hook)
+   - Run tests against source files (not compiled binaries)
+   - Ensure tests pass (tests can run against source files)
 3. Submit PR with source changes
 
-Never edit compiled binaries directly as they will be overwritten by the build process. Focus on modifying source files and ensuring tests pass.
+Never edit compiled binaries directly as they will be overwritten by the build
+process. Focus on modifying source files and ensuring tests pass.
 
 ### Issue: Documentation Not Updating
 
@@ -514,8 +522,8 @@ BATS_FIX_TEST=1 ./test.sh scrasnups/build:bash-tools-ubuntu-5.3 path/to/test.bat
 
 ### Avoiding Common Pitfalls
 
-1. **Don't edit compiled binaries directly**: Do no make changes in `src/_binaries/`
-   source files
+1. **Don't edit compiled binaries directly**: Do no make changes in
+   `src/_binaries/` source files
 2. **Don't ignore shellcheck warnings**: Address them or explicitly disable with
    explanation
 3. **Don't skip tests**: Even for "small" changes, run relevant test suite
