@@ -17,6 +17,35 @@ repos:
         always_run: true
         require_serial: true
         stages: [pre-commit, pre-push, manual]
+      - id: v8r
+        name: v8r
+        entry: npx -y v8r --ci .v8rrc.yaml
+        language: system
+        pass_filenames: true
+        stages: [pre-commit, pre-push, manual]
+        files: |
+          (?x)(
+            \.(yaml|yml|json)$
+          )
+        exclude: |
+          (?x)(
+            ^\.?secretlintrc\.yml$|
+            ^\.vscode/|
+            ^\.?checkov\.yml$|
+            ^\.?secretlintrc\.json$|
+            ^githubReleaseManager.yaml$|
+            ^\.?grype\.yaml$|
+            ^\.?trivy\.yaml$|
+            ^\.proselintrc.json$|
+            ^conf/postmanCli/.*\.json$|
+            /testsData/
+          )
+      - id: cspell
+        name: cspell
+        entry: npx -y cspell .
+        language: system
+        pass_filenames: false
+        stages: [pre-commit, pre-push, manual]
 
   - repo: https://github.com/executablebooks/mdformat
     # Do this before other tools "fixing" the line endings
@@ -47,6 +76,7 @@ repos:
         entry: bash -c './bin/installRequirements'
         language: system
         always_run: true
+        pass_filenames: false
         require_serial: true
         fail_fast: true
 

@@ -10,6 +10,7 @@ Bashtools
 buildkit
 Buildx
 byobu
+checkov
 checkstyle
 chsh
 clairefro
@@ -132,6 +133,7 @@ timeago
 tmpl
 tmuxinator
 tomdoc
+trivy
 TRIVY
 TRUFFLEHOG
 tzdata

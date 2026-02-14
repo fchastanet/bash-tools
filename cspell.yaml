@@ -8,6 +8,7 @@ useGitignore: true
 enableGlobDot: true
 ignorePaths:
   - "**/testsData/**"
+  - ".github/**/*.md"
   - package-lock.json
   - "**/*/svg"
   - .vscode

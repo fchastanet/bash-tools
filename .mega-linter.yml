@@ -132,8 +132,10 @@ SPELL_FILTER_REGEX_EXCLUDE: |
 SPELL_PROSELINT_FILTER_REGEX_EXCLUDE: |
   (?x)(
     ^\.git/|
+    ^\.github/|
     ^\.history/|
     ^\.idea/|
+    ^\.cspell/|
     ^pages/_sidebar.md|
     /testsData/|
     ^.cspell/config.txt$
@@ -151,10 +153,16 @@ ACTION_ACTIONLINT_FILTER_REGEX_EXCLUDE: |
 
 YAML_V8R_FILTER_REGEX_EXCLUDE: |
   (?x)(
-    ^\.vscode/\.checkov\.yml|
-    ^\.github/workflows/dependabot\.yml$|
-    ^\.secretlintrc\.yml|
-    ^\.grype\.yaml
+    ^\.?secretlintrc\.yml$|
+    ^\.vscode/|
+    ^\.?checkov\.yml$|
+    ^\.?secretlintrc\.json$|
+    ^githubReleaseManager.yaml$|
+    ^\.?grype\.yaml$|
+    ^\.?trivy\.yaml$|
+    ^\.proselintrc.json$|
+    ^conf/postmanCli/.*\.json$|
+    /testsData/
   )
 
 MARKDOWN_MARKDOWNLINT_FILTER_REGEX_EXCLUDE: |
