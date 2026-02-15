@@ -10,7 +10,7 @@ Postman::Commands::pushCollections() {
   local modelFile="$1"
   shift || true
 
-  # shellcheck disable=SC2317
+  # shellcheck disable=SC2317,SC2329
   pushCollectionsCallback() {
     local modelFile="$1"
     # local postmanCollectionsFile="$2"

@@ -82,7 +82,7 @@ EDITORCONFIG_EDITORCONFIG_CHECKER_FILTER_REGEX_EXCLUDE: |
     testsData/.*\.result$
   )
 
-GIT_GIT_DIFF_PRE_COMMANDS:
+REPOSITORY_GIT_DIFF_PRE_COMMANDS:
   - command: git config --global core.autocrlf false
     continue_if_failed: false
   - command: git config --global core.eol lf
@@ -103,7 +103,7 @@ JAVASCRIPT_DEFAULT_STYLE: prettier
 JAVASCRIPT_ES_CONFIG_FILE: .eslintrc.js
 JAVASCRIPT_ES_FILTER_REGEX_EXCLUDE: (report/)
 
-JSON_ESLINT_PLUGIN_JSONC_FILE_NAME: .eslintrc.js
+JSON_ESLINT_PLUGIN_JSONC_CONFIG_FILE: .eslintrc.js
 
 JSON_JSONLINT_FILTER_REGEX_EXCLUDE: |
   (?x)(

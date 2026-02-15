@@ -25,7 +25,7 @@ longDescriptionFunction() {
   Conf::getMergedList "mysql2pumlSkins" ".puml" "  - "
 }
 
-# shellcheck disable=SC2317
+# shellcheck disable=SC2317,SC2329
 inputSqlFileCallback() {
   # shellcheck disable=SC2154
   if [[ ! -f "${inputSqlFile}" ]]; then
@@ -40,14 +40,6 @@ optionSkinCallback() {
   # shellcheck disable=SC2154
   if ! Array::contains "${optionSkin}" "${skinList[@]}"; then
     Log::displayError "${SCRIPT_NAME} - invalid skin '${optionSkin}' provided"
-    exit 1
-  fi
-}
-
-inputSqlFileCallback() {
-  # shellcheck disable=SC2154
-  if [[ ! -f "${inputSqlFile}" ]]; then
-    Log::displayError "${SCRIPT_NAME} - File '${inputSqlFile}' does not exists"
     exit 1
   fi
 }

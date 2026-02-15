@@ -3,7 +3,7 @@
 
 # Use this script to test if a given TCP host/port are available
 # https://github.com/vishnubob/wait-for-it
-# shellcheck disable=SC2317
+# shellcheck disable=SC2317,SC2329
 usingTcp() {
   # couldn't find another way to mock this part
   if [[ -n "${WAIT_FOR_IT_MOCKED_TCP:-}" ]]; then
@@ -13,7 +13,7 @@ usingTcp() {
   fi
 }
 
-# shellcheck disable=SC2317
+# shellcheck disable=SC2317,SC2329
 usingNc() {
   local -a ncCmd=(nc -z "${hostOrIpArg}" "${portArg}" -w 1)
   if ((BASH_FRAMEWORK_ARGS_VERBOSE >= __VERBOSE_LEVEL_INFO)); then
@@ -47,7 +47,7 @@ whileLoop() {
   return 0
 }
 
-# shellcheck disable=SC2317
+# shellcheck disable=SC2317,SC2329
 timeoutCommand() {
   local timeoutVersion="$1"
   local commandToUse="$2"
@@ -84,27 +84,27 @@ timeoutCommand() {
 
 # --------------------------------------
 # ALGORITHMS
-# shellcheck disable=SC2317
+# shellcheck disable=SC2317,SC2329
 timeoutV1WithNc() {
   timeoutCommand "v1" "usingNc"
 }
-# shellcheck disable=SC2317
+# shellcheck disable=SC2317,SC2329
 timeoutV2WithNc() {
   timeoutCommand "v2" "usingNc"
 }
-# shellcheck disable=SC2317
+# shellcheck disable=SC2317,SC2329
 whileLoopWithNc() {
   whileLoop "usingNc" "1"
 }
-# shellcheck disable=SC2317
+# shellcheck disable=SC2317,SC2329
 timeoutV1WithTcp() {
   timeoutCommand "v1" "usingTcp"
 }
-# shellcheck disable=SC2317
+# shellcheck disable=SC2317,SC2329
 timeoutV2WithTcp() {
   timeoutCommand "v2" "usingTcp"
 }
-# shellcheck disable=SC2317
+# shellcheck disable=SC2317,SC2329
 whileLoopWithTcp() {
   whileLoop "usingTcp" "1"
 }

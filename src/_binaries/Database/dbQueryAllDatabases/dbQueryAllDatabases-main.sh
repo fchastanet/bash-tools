@@ -24,6 +24,7 @@ Log::displayInfo "Using dsn ${dbInstance['DSN_FILE']}"
 
 # list of all databases
 allDbs="$(Database::getUserDbList dbInstance)"
+# shellcheck disable=SC2154
 PARALLEL_OPTIONS+=("-j" "${optionJobs}")
 
 # query all databases
