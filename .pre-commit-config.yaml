@@ -37,6 +37,7 @@ repos:
             ^\.?grype\.yaml$|
             ^\.?trivy\.yaml$|
             ^\.proselintrc.json$|
+            ^package\.json$|
             ^conf/postmanCli/.*\.json$|
             /testsData/
           )
