@@ -9,6 +9,8 @@ DISABLE:
   - SQL
 DISABLE_LINTERS:
   - JAVASCRIPT_ES
+  - SPELL_CSPELL # already included in pre-commit
+  - YAML_V8R # already included in pre-commit
   - JAVASCRIPT_PRETTIER
   - RUBY_RUBOCOP
   - REPOSITORY_CHECKOV
@@ -108,20 +110,6 @@ JSON_JSONLINT_FILTER_REGEX_EXCLUDE: |
     \.vscode/.*\.json$|
     /testsData/
   )
-
-SPELL_CSPELL_CONFIG_FILE: cspell.yaml
-SPELL_CSPELL_FILTER_REGEX_EXCLUDE: |
-  (?x)(
-    \.git/|
-    ^\.history/|
-    IDE/.*/\.idea|
-    ^.*-megalinter_file_names_cspell.txt|
-    ^megalinter-reports/|
-    ^pages/Commands.md|
-    ^commit-msg.md$|
-    /testsData/|
-    \.svg$
-  )
 SPELL_FILTER_REGEX_EXCLUDE: |
   (?x)(
     \.git/|
@@ -149,20 +137,6 @@ MARKDOWN_MARKDOWN_LINK_CHECK_FILTER_REGEX_EXCLUDE: |
 ACTION_ACTIONLINT_FILTER_REGEX_EXCLUDE: |
   (?x)(
     ^\.github/workflows/dependabot\.yml$
-  )
-
-YAML_V8R_FILTER_REGEX_EXCLUDE: |
-  (?x)(
-    ^\.?secretlintrc\.yml$|
-    ^\.vscode/|
-    ^\.?checkov\.yml$|
-    ^\.?secretlintrc\.json$|
-    ^githubReleaseManager.yaml$|
-    ^\.?grype\.yaml$|
-    ^\.?trivy\.yaml$|
-    ^\.proselintrc.json$|
-    ^conf/postmanCli/.*\.json$|
-    /testsData/
   )
 
 MARKDOWN_MARKDOWNLINT_FILTER_REGEX_EXCLUDE: |
