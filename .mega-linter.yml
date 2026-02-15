@@ -9,6 +9,8 @@ DISABLE:
   - SQL
 DISABLE_LINTERS:
   - JAVASCRIPT_ES
+  - SPELL_CSPELL # already included in pre-commit
+  - YAML_V8R # already included in pre-commit
   - JAVASCRIPT_PRETTIER
   - RUBY_RUBOCOP
   - REPOSITORY_CHECKOV
@@ -80,7 +82,7 @@ EDITORCONFIG_EDITORCONFIG_CHECKER_FILTER_REGEX_EXCLUDE: |
     testsData/.*\.result$
   )
 
-GIT_GIT_DIFF_PRE_COMMANDS:
+REPOSITORY_GIT_DIFF_PRE_COMMANDS:
   - command: git config --global core.autocrlf false
     continue_if_failed: false
   - command: git config --global core.eol lf
@@ -101,26 +103,12 @@ JAVASCRIPT_DEFAULT_STYLE: prettier
 JAVASCRIPT_ES_CONFIG_FILE: .eslintrc.js
 JAVASCRIPT_ES_FILTER_REGEX_EXCLUDE: (report/)
 
-JSON_ESLINT_PLUGIN_JSONC_FILE_NAME: .eslintrc.js
+JSON_ESLINT_PLUGIN_JSONC_CONFIG_FILE: .eslintrc.js
 
 JSON_JSONLINT_FILTER_REGEX_EXCLUDE: |
   (?x)(
     \.vscode/.*\.json$|
     /testsData/
-  )
-
-SPELL_CSPELL_CONFIG_FILE: cspell.yaml
-SPELL_CSPELL_FILTER_REGEX_EXCLUDE: |
-  (?x)(
-    \.git/|
-    ^\.history/|
-    IDE/.*/\.idea|
-    ^.*-megalinter_file_names_cspell.txt|
-    ^megalinter-reports/|
-    ^pages/Commands.md|
-    ^commit-msg.md$|
-    /testsData/|
-    \.svg$
   )
 SPELL_FILTER_REGEX_EXCLUDE: |
   (?x)(
@@ -132,8 +120,10 @@ SPELL_FILTER_REGEX_EXCLUDE: |
 SPELL_PROSELINT_FILTER_REGEX_EXCLUDE: |
   (?x)(
     ^\.git/|
+    ^\.github/|
     ^\.history/|
     ^\.idea/|
+    ^\.cspell/|
     ^pages/_sidebar.md|
     /testsData/|
     ^.cspell/config.txt$
@@ -147,14 +137,6 @@ MARKDOWN_MARKDOWN_LINK_CHECK_FILTER_REGEX_EXCLUDE: |
 ACTION_ACTIONLINT_FILTER_REGEX_EXCLUDE: |
   (?x)(
     ^\.github/workflows/dependabot\.yml$
-  )
-
-YAML_V8R_FILTER_REGEX_EXCLUDE: |
-  (?x)(
-    ^\.vscode/\.checkov\.yml|
-    ^\.github/workflows/dependabot\.yml$|
-    ^\.secretlintrc\.yml|
-    ^\.grype\.yaml
   )
 
 MARKDOWN_MARKDOWNLINT_FILTER_REGEX_EXCLUDE: |

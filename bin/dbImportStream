@@ -334,6 +334,9 @@ Assert::tty() {
 # @arg $2 originalStatus:int[] (passed by reference) (optional) copy of original PIPESTATUS array
 # @env PIPESTATUS assuming that this function is called like in the example provided
 # @see https://unix.stackexchange.com/a/709880/582856
+# @see https://gitlab.alpinelinux.org/alpine/aports/-/issues/11152
+# @warning alpine does not support PIPESTATUS very well as execution order of piped process is
+# not guaranteed
 Bash::handlePipelineFailure() {
   local -a pipeStatusBackup=("${PIPESTATUS[@]}")
   local -n handlePipelineFailure_resultingStatusCode=$1
@@ -344,7 +347,7 @@ Bash::handlePipelineFailure() {
   local statusCode
   for statusCode in "${pipeStatusBackup[@]}"; do
     if ((statusCode == 141)); then
-      return 0
+      continue
     elif ((statusCode > 0)); then
       # shellcheck disable=SC2034
       handlePipelineFailure_resultingStatusCode="${statusCode}"
@@ -496,7 +499,7 @@ Compiler::Embed::extractFileFromBase64() {
     if [[ ! -d "${targetDir}" ]]; then
       mkdir -p "${targetDir}"
     fi
-    base64 -d >"${targetFile}" <<<"${binFileBase64}"
+    tr -d '\n ' <<<"${binFileBase64}" | base64 -d >"${targetFile}"
     chmod "${fileMode}" "${targetFile}"
   fi
 
@@ -2687,7 +2690,27 @@ main() {
 Linux::requireTarCommand
 Compiler::Embed::extractFileFromBase64 \
   "${PERSISTENT_TMPDIR:-/tmp}/1a25e8fe87d1af27f299ca9f5af14fe2fad803ddce20d659e5f6784c6056c9cc/dbImportStreamScript" \
-  "QkVHSU57CiAgd3JpdGU9MQp9CnsKICBidWZmZXIgPSBzdWJzdHIoJDAsIDEsIDE1MCkKICBsaW5lID0gJDAKICBpZihtYXRjaChidWZmZXIsIC9eTE9DSyBUQUJMRVMgYChbXmBdKylgIFdSSVRFOyQvLCBhcnIpICE9IDApIHsKICAgICMgY2hlY2sgaWYgaW5zZXJ0cyBhcmUgcGFydCBvZiB0aGUgcHJvZmlsZQogICAgdGFibGVOYW1lPWFyclsxXQogICAgaWYgKCEgKHRhYmxlTmFtZSBpbiBtYXApKSB7CiAgICAgIHByb2ZpbGVDbWQgPSAiZWNobyAnIiB0YWJsZU5hbWUgIicgfCAiIFBST0ZJTEVfQ09NTUFORCAiIHwgZ3JlcCAtcSAiIHRhYmxlTmFtZQogICAgICBtYXBbdGFibGVOYW1lXSA9IChzeXN0ZW0ocHJvZmlsZUNtZCkgPT0gMCkKICAgIH0KICAgIGlmIChtYXBbdGFibGVOYW1lXSkgewogICAgICBwcmludCAiXDAzM1s0NG0iICJiZWdpbiBpbnNlcnQgIiB0YWJsZU5hbWUgIlwwMzNbMG0iICA+ICIvZGV2L3N0ZGVyciIKICAgICAgbGluZSA9IGxpbmUgIlxuVFJVTkNBVEUgVEFCTEUgYCIgdGFibGVOYW1lICJgOyIKICAgICAgd3JpdGU9MQogICAgfSBlbHNlIHsKICAgICAgcHJpbnQgImlnbm9yZSB0YWJsZSAiIHRhYmxlTmFtZSAgPiAiL2Rldi9zdGRlcnIiCiAgICAgIHdyaXRlPTAKICAgIH0KICB9IGVsc2UgaWYobWF0Y2goYnVmZmVyLCAvXmNvbW1pdDskLywgYXJyKSAhPSAwKSB7CiAgICB3cml0ZT0xCiAgfSBlbHNlIGlmKG1hdGNoKGJ1ZmZlciwgL1NFVCBOQU1FUyAoW14gXSspLywgYXJyKSAhPSAwKSB7CiAgICBpZiAoQ0hBUkFDVEVSX1NFVCAhPSAiIikgewogICAgICBzdWIoL1NFVCBOQU1FUyAoW14gXSspLywgIlNFVCBOQU1FUyAiIENIQVJBQ1RFUl9TRVQsIGxpbmUpCiAgICB9CiAgICB3cml0ZT0xCiAgfSBlbHNlIGlmKG1hdGNoKGJ1ZmZlciwgL1NFVCBjaGFyYWN0ZXJfc2V0X2NsaWVudCA9IChbXiBdKykvLCBhcnIpICE9IDAgJiYgc3Vic3RyKGFyclsxXSwgMCwgMSkgIT0gIkAiKSB7CiAgICBpZiAoQ0hBUkFDVEVSX1NFVCAhPSAiIikgewogICAgICBzdWIoL1NFVCBjaGFyYWN0ZXJfc2V0X2NsaWVudCA9IChbXiBdKykvLCAiU0VUIGNoYXJhY3Rlcl9zZXRfY2xpZW50ID0gIiBDSEFSQUNURVJfU0VULCBsaW5lKQogICAgfQogICAgd3JpdGU9MQogIH0KCgogIGlmICh3cml0ZSA9PSAxKSB7CiAgICBwcmludCBsaW5lCiAgfQp9Cg==" \
+  "QkVHSU57CiAgd3JpdGU9MQp9CnsKICBidWZmZXIgPSBzdWJzdHIoJDAsIDEsIDE1MCkKICBsaW5l \
+ID0gJDAKICBpZihtYXRjaChidWZmZXIsIC9eTE9DSyBUQUJMRVMgYChbXmBdKylgIFdSSVRFOyQv \
+LCBhcnIpICE9IDApIHsKICAgICMgY2hlY2sgaWYgaW5zZXJ0cyBhcmUgcGFydCBvZiB0aGUgcHJv \
+ZmlsZQogICAgdGFibGVOYW1lPWFyclsxXQogICAgaWYgKCEgKHRhYmxlTmFtZSBpbiBtYXApKSB7 \
+CiAgICAgIHByb2ZpbGVDbWQgPSAiZWNobyAnIiB0YWJsZU5hbWUgIicgfCAiIFBST0ZJTEVfQ09N \
+TUFORCAiIHwgZ3JlcCAtcSAiIHRhYmxlTmFtZQogICAgICBtYXBbdGFibGVOYW1lXSA9IChzeXN0 \
+ZW0ocHJvZmlsZUNtZCkgPT0gMCkKICAgIH0KICAgIGlmIChtYXBbdGFibGVOYW1lXSkgewogICAg \
+ICBwcmludCAiXDAzM1s0NG0iICJiZWdpbiBpbnNlcnQgIiB0YWJsZU5hbWUgIlwwMzNbMG0iICA+ \
+ICIvZGV2L3N0ZGVyciIKICAgICAgbGluZSA9IGxpbmUgIlxuVFJVTkNBVEUgVEFCTEUgYCIgdGFi \
+bGVOYW1lICJgOyIKICAgICAgd3JpdGU9MQogICAgfSBlbHNlIHsKICAgICAgcHJpbnQgImlnbm9y \
+ZSB0YWJsZSAiIHRhYmxlTmFtZSAgPiAiL2Rldi9zdGRlcnIiCiAgICAgIHdyaXRlPTAKICAgIH0K \
+ICB9IGVsc2UgaWYobWF0Y2goYnVmZmVyLCAvXmNvbW1pdDskLywgYXJyKSAhPSAwKSB7CiAgICB3 \
+cml0ZT0xCiAgfSBlbHNlIGlmKG1hdGNoKGJ1ZmZlciwgL1NFVCBOQU1FUyAoW14gXSspLywgYXJy \
+KSAhPSAwKSB7CiAgICBpZiAoQ0hBUkFDVEVSX1NFVCAhPSAiIikgewogICAgICBzdWIoL1NFVCBO \
+QU1FUyAoW14gXSspLywgIlNFVCBOQU1FUyAiIENIQVJBQ1RFUl9TRVQsIGxpbmUpCiAgICB9CiAg \
+ICB3cml0ZT0xCiAgfSBlbHNlIGlmKG1hdGNoKGJ1ZmZlciwgL1NFVCBjaGFyYWN0ZXJfc2V0X2Ns \
+aWVudCA9IChbXiBdKykvLCBhcnIpICE9IDAgJiYgc3Vic3RyKGFyclsxXSwgMCwgMSkgIT0gIkAi \
+KSB7CiAgICBpZiAoQ0hBUkFDVEVSX1NFVCAhPSAiIikgewogICAgICBzdWIoL1NFVCBjaGFyYWN0 \
+ZXJfc2V0X2NsaWVudCA9IChbXiBdKykvLCAiU0VUIGNoYXJhY3Rlcl9zZXRfY2xpZW50ID0gIiBD \
+SEFSQUNURVJfU0VULCBsaW5lKQogICAgfQogICAgd3JpdGU9MQogIH0KCgogIGlmICh3cml0ZSA9 \
+PSAxKSB7CiAgICBwcmludCBsaW5lCiAgfQp9Cg==" \
   "644"
 
 declare -gx embed_file_dbImportStreamScript="${PERSISTENT_TMPDIR:-/tmp}/1a25e8fe87d1af27f299ca9f5af14fe2fad803ddce20d659e5f6784c6056c9cc/dbImportStreamScript"

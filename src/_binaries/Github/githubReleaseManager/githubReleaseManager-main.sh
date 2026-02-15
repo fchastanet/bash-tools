@@ -40,9 +40,9 @@ forEachSoftware() {
 
   local maxChars=0
   for id in "${softwareIds[@]}"; do
-    local len=${#id}
+    local len="${#id}"
     if ((len > maxChars)); then
-      maxChars=$len
+      maxChars="${len}"
     fi
   done
 
