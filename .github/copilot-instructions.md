@@ -533,11 +533,11 @@ BATS_FIX_TEST=1 ./test.sh scrasnups/build:bash-tools-ubuntu-5.3 path/to/test.bat
 
 ## Additional Resources
 
-- **Bash Tools Framework**: https://fchastanet.github.io/bash-tools-framework/
-- **Project Documentation**: https://fchastanet.github.io/bash-tools/
-- **BATS Documentation**: https://bats-core.readthedocs.io/
-- **ShellCheck Wiki**: https://www.shellcheck.net/wiki/
-- **Pre-commit**: https://pre-commit.com/
+- **Bash Tools Framework**: <https://fchastanet.github.io/bash-tools-framework/>
+- **Project Documentation**: <https://fchastanet.github.io/bash-tools/>
+- **BATS Documentation**: <https://bats-core.readthedocs.io/>
+- **ShellCheck Wiki**: <https://www.shellcheck.net/wiki/>
+- **Pre-commit**: <https://pre-commit.com/>
 
 ## Summary
 
