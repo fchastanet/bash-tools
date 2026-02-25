@@ -1,0 +1,31 @@
+# kics-scan disable=555ab8f9-2001-455e-a077-f2d0f41e2fb9
+---
+name: Build and Deploy Documentation
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - 'content/**'
+      - 'static/**'
+      - 'configs/**'
+      - 'assets/**'
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions: read-all
+
+jobs:
+  build-deploy:
+    uses: fchastanet/my-documents/.github/workflows/build-site-action.yml@master
+    with:
+      site-name: 'bash-tools'
+      baseURL: 'https://fchastanet.github.io/bash-tools'
+      checkout-repo: 'fchastanet/bash-tools'
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
