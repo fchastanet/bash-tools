@@ -96,17 +96,17 @@ softwares:
     targetFile: /usr/local/bin/shfmt
   - id: kubeps1
     type: gitClone
-    url: "https://github.com/jonmosco/kube-ps1.git"
+    url: 'https://github.com/jonmosco/kube-ps1.git'
     sudo: sudo
     targetDir: /opt/kubeps1
-    cloneOptions: "--depth=1"
+    cloneOptions: '--depth=1'
     branch: master
   - id: kubectx
     type: gitClone
-    url: "https://github.com/ahmetb/kubectx"
+    url: 'https://github.com/ahmetb/kubectx'
     sudo: sudo
     targetDir: /opt/kubeps1
-    cloneOptions: "--depth=1"
+    cloneOptions: '--depth=1'
     branch: master
     installScript: |
       sudo ln -sf /opt/kubectx/kubectx /usr/local/bin/kubectx

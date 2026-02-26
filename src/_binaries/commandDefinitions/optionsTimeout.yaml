@@ -3,10 +3,10 @@ binData:
   commands:
     default:
       definitionFiles:
-        27: "${BASH_TOOLS_ROOT_DIR}/src/_binaries/commandDefinitions/optionsTimeout.sh"
+        27: '${BASH_TOOLS_ROOT_DIR}/src/_binaries/commandDefinitions/optionsTimeout.sh'
       optionGroups:
         groupTimeoutOptions:
-          title: "TIMEOUT OPTIONS:"
+          title: 'TIMEOUT OPTIONS:'
       options:
         - variableName: optionTimeout
           group: groupTimeoutOptions

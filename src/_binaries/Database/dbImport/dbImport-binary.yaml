@@ -1,25 +1,25 @@
 extends:
-  - "${BASH_TOOLS_ROOT_DIR}/src/_binaries/commandDefinitions/optionsVersion.yaml"
-  - "${BASH_TOOLS_ROOT_DIR}/src/_binaries/commandDefinitions/optionsMysqlCollationName.yaml"
-  - "${BASH_TOOLS_ROOT_DIR}/src/_binaries/commandDefinitions/optionsMysqlTarget.yaml"
-  - "${BASH_TOOLS_ROOT_DIR}/src/_binaries/commandDefinitions/optionsProfile.yaml"
-  - "${BASH_TOOLS_ROOT_DIR}/src/_binaries/commandDefinitions/optionsTables.yaml"
-  - "${BASH_TOOLS_ROOT_DIR}/src/_binaries/commandDefinitions/optionsMysqlSource.yaml"
-  - "${BASH_TOOLS_ROOT_DIR}/src/_binaries/commandDefinitions/optionsDefault.yaml"
-  - "${FRAMEWORK_ROOT_DIR}/src/_binaries/commandDefinitions/defaultCommand.yaml"
-  - "${FRAMEWORK_ROOT_DIR}/src/_binaries/commandDefinitions/frameworkConfig.yaml"
+  - '${BASH_TOOLS_ROOT_DIR}/src/_binaries/commandDefinitions/optionsVersion.yaml'
+  - '${BASH_TOOLS_ROOT_DIR}/src/_binaries/commandDefinitions/optionsMysqlCollationName.yaml'
+  - '${BASH_TOOLS_ROOT_DIR}/src/_binaries/commandDefinitions/optionsMysqlTarget.yaml'
+  - '${BASH_TOOLS_ROOT_DIR}/src/_binaries/commandDefinitions/optionsProfile.yaml'
+  - '${BASH_TOOLS_ROOT_DIR}/src/_binaries/commandDefinitions/optionsTables.yaml'
+  - '${BASH_TOOLS_ROOT_DIR}/src/_binaries/commandDefinitions/optionsMysqlSource.yaml'
+  - '${BASH_TOOLS_ROOT_DIR}/src/_binaries/commandDefinitions/optionsDefault.yaml'
+  - '${FRAMEWORK_ROOT_DIR}/src/_binaries/commandDefinitions/defaultCommand.yaml'
+  - '${FRAMEWORK_ROOT_DIR}/src/_binaries/commandDefinitions/frameworkConfig.yaml'
 
 vars:
   SRC_FILE_PATH: src/_binaries/Database/dbImport/dbImport-binary.yaml
 
 compilerConfig:
-  targetFile: "${BASH_TOOLS_ROOT_DIR}/bin/dbImport"
+  targetFile: '${BASH_TOOLS_ROOT_DIR}/bin/dbImport'
 
 binData:
   commands:
     default:
       functionName: dbImportCommand
-      version: "3.0"
+      version: '3.0'
       copyrightBeginYear: 2020
       commandName: dbImport
       beforeParseCallbacks:

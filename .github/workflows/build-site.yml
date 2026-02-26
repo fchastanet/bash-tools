@@ -25,6 +25,7 @@ jobs:
       site-name: 'bash-tools'
       baseURL: 'https://fchastanet.github.io/bash-tools'
       checkout-repo: 'fchastanet/bash-tools'
+      pre-build-action: 'fchastanet/bash-tools/.github/actions/pre-build@master'
     permissions:
       contents: read
       pages: write

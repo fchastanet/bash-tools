@@ -3,9 +3,10 @@ title: Bash Tools Documentation
 baseURL: https://fchastanet.github.io/bash-tools/
 
 params:
-  description: 'Bash Tools - A collection of several bash tools using bash-tools-framework for script importing, logging, database manipulation, user interaction, and version comparison.'
+  description: |
+    'Bash Tools - A collection of several bash tools using bash-tools-framework for script importing, logging, database
+    manipulation, user interaction, and version comparison.'
   keywords: 'bash,tools,ubuntu,alpine,scripts,database,mysql,git,docker'
-
   # Repository configuration
   github_repo: https://github.com/fchastanet/bash-tools
   github_project_repo: https://github.com/fchastanet/bash-tools
@@ -28,7 +29,9 @@ params:
 
   # SEO
   meta:
-    description: 'Bash Tools documentation - A collection of bash utilities for database management, Git operations, Docker utilities, and more.'
+    description:
+      'Bash Tools documentation - A collection of bash utilities for database management, Git operations, Docker
+      utilities, and more.'
     keywords: 'bash,tools,ubuntu,alpine,scripts,database,mysql,git,docker,cli'
 
 menu:

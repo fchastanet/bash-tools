@@ -1,22 +1,22 @@
 extends:
-  - "${BASH_TOOLS_ROOT_DIR}/src/_binaries/commandDefinitions/optionsJobs.yaml"
-  - "${BASH_TOOLS_ROOT_DIR}/src/_binaries/commandDefinitions/optionsFromDsn.yaml"
-  - "${BASH_TOOLS_ROOT_DIR}/src/_binaries/commandDefinitions/optionsVersion.yaml"
-  - "${BASH_TOOLS_ROOT_DIR}/src/_binaries/commandDefinitions/optionsDefault.yaml"
-  - "${FRAMEWORK_ROOT_DIR}/src/_binaries/commandDefinitions/defaultCommand.yaml"
-  - "${FRAMEWORK_ROOT_DIR}/src/_binaries/commandDefinitions/frameworkConfig.yaml"
+  - '${BASH_TOOLS_ROOT_DIR}/src/_binaries/commandDefinitions/optionsJobs.yaml'
+  - '${BASH_TOOLS_ROOT_DIR}/src/_binaries/commandDefinitions/optionsFromDsn.yaml'
+  - '${BASH_TOOLS_ROOT_DIR}/src/_binaries/commandDefinitions/optionsVersion.yaml'
+  - '${BASH_TOOLS_ROOT_DIR}/src/_binaries/commandDefinitions/optionsDefault.yaml'
+  - '${FRAMEWORK_ROOT_DIR}/src/_binaries/commandDefinitions/defaultCommand.yaml'
+  - '${FRAMEWORK_ROOT_DIR}/src/_binaries/commandDefinitions/frameworkConfig.yaml'
 
 vars:
   SRC_FILE_PATH: src/_binaries/Database/dbQueryAllDatabases/dbQueryAllDatabases-binary.yaml
 
 compilerConfig:
-  targetFile: "${BASH_TOOLS_ROOT_DIR}/bin/dbQueryAllDatabases"
+  targetFile: '${BASH_TOOLS_ROOT_DIR}/bin/dbQueryAllDatabases'
 
 binData:
   commands:
     default:
       functionName: dbQueryAllDatabasesCommand
-      version: "3.0"
+      version: '3.0'
       copyrightBeginYear: 2020
       commandName: dbQueryAllDatabases
       beforeParseCallbacks:
@@ -30,12 +30,12 @@ binData:
         99: ${BASH_TOOLS_ROOT_DIR}/src/_binaries/Database/dbQueryAllDatabases/dbQueryAllDatabases-options.sh
       mainFile: ${BASH_TOOLS_ROOT_DIR}/src/_binaries/Database/dbQueryAllDatabases/dbQueryAllDatabases-main.sh
       help:
-        "Execute a query on multiple databases to generate a tsv format
-        report.\nThe query can be parallelized on multiple databases."
+        "Execute a query on multiple databases to generate a tsv format report.\nThe query can be parallelized on
+        multiple databases."
       longDescription: longDescriptionFunction
       optionGroups:
         groupQueryOptions:
-          title: "QUERY OPTIONS:"
+          title: 'QUERY OPTIONS:'
       args:
         - type: String
           min: 1
@@ -51,7 +51,7 @@ binData:
           type: String
           help: Character to use to separate mysql column.
           helpValueName: separator
-          defaultValue: "|"
+          defaultValue: '|'
           callbacks:
             - optionSeparatorCallback
           alts:

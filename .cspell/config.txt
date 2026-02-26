@@ -51,6 +51,7 @@ fileurl
 Fira
 fontcolor
 friday
+frontmatter
 fullscreen
 getallheaders
 Gettext

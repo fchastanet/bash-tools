@@ -1,21 +1,21 @@
 extends:
-  - "${BASH_TOOLS_ROOT_DIR}/src/_binaries/Git/gitToolsDefaultOptions.yaml"
-  - "${BASH_TOOLS_ROOT_DIR}/src/_binaries/commandDefinitions/optionsVersion.yaml"
-  - "${BASH_TOOLS_ROOT_DIR}/src/_binaries/commandDefinitions/optionsDefault.yaml"
-  - "${FRAMEWORK_ROOT_DIR}/src/_binaries/commandDefinitions/defaultCommand.yaml"
-  - "${FRAMEWORK_ROOT_DIR}/src/_binaries/commandDefinitions/frameworkConfig.yaml"
+  - '${BASH_TOOLS_ROOT_DIR}/src/_binaries/Git/gitToolsDefaultOptions.yaml'
+  - '${BASH_TOOLS_ROOT_DIR}/src/_binaries/commandDefinitions/optionsVersion.yaml'
+  - '${BASH_TOOLS_ROOT_DIR}/src/_binaries/commandDefinitions/optionsDefault.yaml'
+  - '${FRAMEWORK_ROOT_DIR}/src/_binaries/commandDefinitions/defaultCommand.yaml'
+  - '${FRAMEWORK_ROOT_DIR}/src/_binaries/commandDefinitions/frameworkConfig.yaml'
 
 vars:
   SRC_FILE_PATH: src/_binaries/Git/gitIsBranch/gitIsBranch-binary.yaml
 
 compilerConfig:
-  targetFile: "${BASH_TOOLS_ROOT_DIR}/bin/gitIsBranch"
+  targetFile: '${BASH_TOOLS_ROOT_DIR}/bin/gitIsBranch'
 
 binData:
   commands:
     default:
       functionName: gitIsBranchCommand
-      version: "3.0"
+      version: '3.0'
       copyrightBeginYear: 2020
       commandName: gitIsBranch
       beforeParseCallbacks:

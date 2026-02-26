@@ -1,21 +1,21 @@
 extends:
-  - "${BASH_TOOLS_ROOT_DIR}/src/_binaries/commandDefinitions/optionsTimeout.yaml"
-  - "${BASH_TOOLS_ROOT_DIR}/src/_binaries/commandDefinitions/optionsVersion.yaml"
-  - "${BASH_TOOLS_ROOT_DIR}/src/_binaries/commandDefinitions/optionsDefault.yaml"
-  - "${FRAMEWORK_ROOT_DIR}/src/_binaries/commandDefinitions/defaultCommand.yaml"
-  - "${FRAMEWORK_ROOT_DIR}/src/_binaries/commandDefinitions/frameworkConfig.yaml"
+  - '${BASH_TOOLS_ROOT_DIR}/src/_binaries/commandDefinitions/optionsTimeout.yaml'
+  - '${BASH_TOOLS_ROOT_DIR}/src/_binaries/commandDefinitions/optionsVersion.yaml'
+  - '${BASH_TOOLS_ROOT_DIR}/src/_binaries/commandDefinitions/optionsDefault.yaml'
+  - '${FRAMEWORK_ROOT_DIR}/src/_binaries/commandDefinitions/defaultCommand.yaml'
+  - '${FRAMEWORK_ROOT_DIR}/src/_binaries/commandDefinitions/frameworkConfig.yaml'
 
 vars:
   SRC_FILE_PATH: src/_binaries/Utils/waitForIt/waitForIt-binary.yaml
 
 compilerConfig:
-  targetFile: "${BASH_TOOLS_ROOT_DIR}/bin/waitForIt"
+  targetFile: '${BASH_TOOLS_ROOT_DIR}/bin/waitForIt'
 
 binData:
   commands:
     default:
       functionName: waitForItCommand
-      version: "3.0"
+      version: '3.0'
       copyrightBeginYear: 2020
       commandName: waitForIt
       beforeParseCallbacks:
@@ -51,15 +51,13 @@ binData:
         - type: StringArray
           min: 0
           max: -1
-          help:
-            Execute command with args after the test finishes or exit with
-            status code if no command provided.
+          help: Execute command with args after the test finishes or exit with status code if no command provided.
           name: commandArgs
           variableName: commandArgs
 
       optionGroups:
         waitForItOptionGroup:
-          title: "SPECIFIC OPTIONS:"
+          title: 'SPECIFIC OPTIONS:'
 
       options:
         - variableName: optionAlgo
@@ -76,8 +74,6 @@ binData:
         - variableName: optionLegacy
           type: Boolean
           group: waitForItOptionGroup
-          help:
-            Legacy mode using nc command or while loop (uses timeout command by
-            default).
+          help: Legacy mode using nc command or while loop (uses timeout command by default).
           alts:
             - --user-nc

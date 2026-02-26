@@ -1,20 +1,20 @@
 extends:
-  - "${BASH_TOOLS_ROOT_DIR}/src/_binaries/commandDefinitions/optionsVersion.yaml"
-  - "${BASH_TOOLS_ROOT_DIR}/src/_binaries/commandDefinitions/optionsDefault.yaml"
-  - "${FRAMEWORK_ROOT_DIR}/src/_binaries/commandDefinitions/defaultCommand.yaml"
-  - "${FRAMEWORK_ROOT_DIR}/src/_binaries/commandDefinitions/frameworkConfig.yaml"
+  - '${BASH_TOOLS_ROOT_DIR}/src/_binaries/commandDefinitions/optionsVersion.yaml'
+  - '${BASH_TOOLS_ROOT_DIR}/src/_binaries/commandDefinitions/optionsDefault.yaml'
+  - '${FRAMEWORK_ROOT_DIR}/src/_binaries/commandDefinitions/defaultCommand.yaml'
+  - '${FRAMEWORK_ROOT_DIR}/src/_binaries/commandDefinitions/frameworkConfig.yaml'
 
 vars:
   SRC_FILE_PATH: src/_binaries/Git/githubReleaseManager/githubReleaseManager-binary.yaml
 
 compilerConfig:
-  targetFile: "${BASH_TOOLS_ROOT_DIR}/bin/githubReleaseManager"
+  targetFile: '${BASH_TOOLS_ROOT_DIR}/bin/githubReleaseManager'
 
 binData:
   commands:
     default:
       functionName: githubReleaseManagerCommand
-      version: "3.0"
+      version: '3.0'
       copyrightBeginYear: 2020
       commandName: githubReleaseManager
       beforeParseCallbacks:
@@ -41,7 +41,7 @@ binData:
           variableName: softwareIdsArg
       optionGroups:
         groupGithubReleaseManagerGroupFunction:
-          title: "GITHUB RELEASE MANAGER OPTIONS:"
+          title: 'GITHUB RELEASE MANAGER OPTIONS:'
       options:
         - variableName: optionConfigFile
           group: groupGithubReleaseManagerGroupFunction
@@ -49,7 +49,7 @@ binData:
           help: |
             The yaml configuration file to use.
           helpValueName: configFile
-          defaultValue: "<currentDir>/githubReleaseManager.yaml"
+          defaultValue: '<currentDir>/githubReleaseManager.yaml'
           alts:
             - --config-file
             - -c

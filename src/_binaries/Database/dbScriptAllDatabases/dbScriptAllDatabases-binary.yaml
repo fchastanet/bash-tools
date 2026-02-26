@@ -1,22 +1,22 @@
 extends:
-  - "${BASH_TOOLS_ROOT_DIR}/src/_binaries/commandDefinitions/optionsJobs.yaml"
-  - "${BASH_TOOLS_ROOT_DIR}/src/_binaries/commandDefinitions/optionsFromDsn.yaml"
-  - "${BASH_TOOLS_ROOT_DIR}/src/_binaries/commandDefinitions/optionsVersion.yaml"
-  - "${BASH_TOOLS_ROOT_DIR}/src/_binaries/commandDefinitions/optionsDefault.yaml"
-  - "${FRAMEWORK_ROOT_DIR}/src/_binaries/commandDefinitions/defaultCommand.yaml"
-  - "${FRAMEWORK_ROOT_DIR}/src/_binaries/commandDefinitions/frameworkConfig.yaml"
+  - '${BASH_TOOLS_ROOT_DIR}/src/_binaries/commandDefinitions/optionsJobs.yaml'
+  - '${BASH_TOOLS_ROOT_DIR}/src/_binaries/commandDefinitions/optionsFromDsn.yaml'
+  - '${BASH_TOOLS_ROOT_DIR}/src/_binaries/commandDefinitions/optionsVersion.yaml'
+  - '${BASH_TOOLS_ROOT_DIR}/src/_binaries/commandDefinitions/optionsDefault.yaml'
+  - '${FRAMEWORK_ROOT_DIR}/src/_binaries/commandDefinitions/defaultCommand.yaml'
+  - '${FRAMEWORK_ROOT_DIR}/src/_binaries/commandDefinitions/frameworkConfig.yaml'
 
 vars:
   SRC_FILE_PATH: src/_binaries/Database/dbScriptAllDatabases/dbScriptAllDatabases-binary.yaml
 
 compilerConfig:
-  targetFile: "${BASH_TOOLS_ROOT_DIR}/bin/dbScriptAllDatabases"
+  targetFile: '${BASH_TOOLS_ROOT_DIR}/bin/dbScriptAllDatabases'
 
 binData:
   commands:
     default:
       functionName: dbScriptAllDatabasesCommand
-      version: "3.0"
+      version: '3.0'
       copyrightBeginYear: 2020
       commandName: dbScriptAllDatabases
       beforeParseCallbacks:
@@ -32,7 +32,7 @@ binData:
       longDescription: longDescriptionFunction
       optionGroups:
         groupScriptsOptions:
-          title: "SCRIPTS OPTIONS:"
+          title: 'SCRIPTS OPTIONS:'
       args:
         - help: The script that will be executed on each databases.
           type: String
@@ -55,8 +55,8 @@ binData:
           group: groupScriptsOptions
           type: StringArray
           help:
-            "If provided will check only databases specified,\notherwise script
-            will be executed on all dbs of mysql server."
+            "If provided will check only databases specified,\notherwise script will be executed on all dbs of mysql
+            server."
           helpValueName: dbName
           alts:
             - --database

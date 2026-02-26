@@ -3,10 +3,10 @@ binData:
   commands:
     default:
       definitionFiles:
-        25: "${BASH_TOOLS_ROOT_DIR}/src/_binaries/commandDefinitions/optionsMysqlCollationName.sh"
+        25: '${BASH_TOOLS_ROOT_DIR}/src/_binaries/commandDefinitions/optionsMysqlCollationName.sh'
       optionGroups:
         groupTargetOptions:
-          title: "TARGET OPTIONS:"
+          title: 'TARGET OPTIONS:'
       options:
         - variableName: optionCollationName
           group: groupTargetOptions
