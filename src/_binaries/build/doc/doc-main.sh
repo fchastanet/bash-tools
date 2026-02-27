@@ -23,7 +23,7 @@ runContainer() {
     --rm
     -e KEEP_TEMP_FILES="${KEEP_TEMP_FILES:-0}"
     -e BATS_FIX_TEST="${BATS_FIX_TEST:-0}"
-    -e ORIGINAL_DOC_DIR="${BASH_TOOLS_ROOT_DIR}/pages"
+    -e ORIGINAL_DOC_DIR="${BASH_TOOLS_ROOT_DIR}/content/docs"
     -e SKIP_REQUIREMENTS_CHECKS=1
     --user "www-data:www-data"
     -w /bash
@@ -56,9 +56,10 @@ runContainer() {
 }
 
 generateGenericCommand() {
-  local commandName="$1"
+  local binTempDir="$1"
+  local commandName="$2"
   (
-    echo "#!/bin/bash"
+    echo "#!/usr/bin/env bash"
     echo "${commandName} command is not available in doc generation container, it is only used for tests data generation"
   ) >"${binTempDir}/${commandName}"
   chmod +x "${binTempDir}/${commandName}"
@@ -79,10 +80,10 @@ configureContainer() {
     chmod 755 "${binTempDir}/docker"
   )
 
-  generateGenericCommand "yq"
-  generateGenericCommand "mysql"
-  generateGenericCommand "mysqldump"
-  generateGenericCommand "mysqlshow"
+  generateGenericCommand "${binTempDir}" "yq"
+  generateGenericCommand "${binTempDir}" "mysql"
+  generateGenericCommand "${binTempDir}" "mysqldump"
+  generateGenericCommand "${binTempDir}" "mysqlshow"
 
   export PATH="${binTempDir}:${PATH}"
 }

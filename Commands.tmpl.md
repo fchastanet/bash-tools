@@ -241,7 +241,7 @@ dbImport ExampleDbName
 ```
 
 Ability to import db from dump stored on aws the dump file should have this name `<fromDbName>.tar.gz` and stored on AWS
-location defined by S3_BASE_URL env variable (see src/\_binaries/DbImport/testsData/.env file)
+location defined by S3_BASE_URL env variable (see `src/_binaries/Database/dbImport/testsData/.env` file)
 
 ```bash
 dbImport --from-aws ExampleDbName.tar.gz

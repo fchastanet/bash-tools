@@ -16,19 +16,22 @@ display log messages, database manipulation, user interaction, version compariso
 
 List of tools:
 
-- **gitRenameBranch** : easy rename git local branch, use options to push new branch and delete old branch
 - **cli** : easy connection to docker container
 - **dbImport** : Import db from aws dump or mysql into target db
-- **dbImportTable** : Import remote db table from aws or mysql into target db
+- **dbImportProfile** : import a database using a predefined profile
+- **dbImportStream** : import a database from a streamed dump
 - **dbQueryAllDatabases** : Execute a query on multiple database in order to generate a report, query can be
   parallelized on multiple databases
 - **dbScriptAllDatabases** : same as dbQueryAllDatabases but you can execute an arbitrary script on each database
-- **gitIsAncestor** : show an error if commit is not an ancestor of branch
+- **gitIsAncestorOf** : show an error if commit is not an ancestor of branch
 - **gitIsBranch** : show an error if branchName is not a known branch
-- **gitRenameBranch** : rename git local branch, use options to push new branch and delete old branch
+- **gitRenameBranch** : rename a local git branch, with options to push the new branch and delete the old one
+- **githubReleaseManager** : manage GitHub releases from the command line
+- **upgradeGithubRelease** : upgrade local binaries from a GitHub release
 - **waitForIt** : useful in docker container to know if another container port is accessible
 - **waitForMysql** : useful in docker container to know if mysql server is ready to receive queries
-- ...
+- **postmanCli** : manage and run Postman collections and environments from the command line
+- **mysql2puml** : generate PlantUML diagrams from a MySQL database schema
 
 ## 2. Installation/Configuration
 
