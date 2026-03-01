@@ -2143,7 +2143,7 @@ generateGenericCommand() {
   local commandName="$2"
   (
     echo "#!/usr/bin/env bash"
-    echo "${commandName} command is not available in doc generation container, it is only used for tests data generation"
+    echo "${commandName} command is not available in doc generation container"
   ) >"${binTempDir}/${commandName}"
   chmod +x "${binTempDir}/${commandName}"
 }
@@ -2183,15 +2183,20 @@ generateDoc() {
     TOKEN_NOT_FOUND_COUNT \
     '(test|buildBinFiles)$'
 
+  if ((TOKEN_NOT_FOUND_COUNT > 0)); then
+    return 1
+  fi
+
   # inject plantuml diagram source code into command
   sed -E -i \
     -e "/@@@mysql2puml_plantuml_diagram@@@/r ${BASH_TOOLS_ROOT_DIR}/src/_binaries/Converters/mysql2puml/testsData/mysql2puml.puml" \
     -e "/@@@mysql2puml_plantuml_diagram@@@/d" \
     "${DOC_DIR}/Commands.md"
 
-  if ((TOKEN_NOT_FOUND_COUNT > 0)); then
-    return 1
-  fi
+  # copy plantuml images
+  mkdir -p "${DOC_DIR}/assets"
+  cp "${ROOT_DIR}/src/_binaries/Converters/mysql2puml/testsData/mysql2puml-model.png" \
+    "${DOC_DIR}/assets"
 
   Log::displayStatus "Doc generated in ${ORIGINAL_DOC_DIR} folder"
 }

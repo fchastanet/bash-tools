@@ -175,7 +175,7 @@ repos:
           )
 
   - repo: https://github.com/rhysd/actionlint
-    rev: v1.7.10
+    rev: v1.7.11
     hooks:
       - id: actionlint
         stages: [pre-commit, pre-push, manual]
@@ -243,7 +243,7 @@ repos:
         exclude: /testsData/
 
   - repo: https://github.com/fchastanet/bash-tools-framework
-    rev: 6.2.4
+    rev: 6.2.5
     hooks:
       - id: fixShebangExecutionBit
       - id: awkLint
@@ -257,7 +257,8 @@ repos:
         args: [--same-dir, -f, png, -f, svg, --limit-size, '1200']
         exclude: |
           (?x)(
-            ^conf/mysql2pumlSkins/default.puml$
+            ^conf/mysql2pumlSkins/default.puml$|
+            ^src/_binaries/Converters/mysql2puml/testsData/mysql2pumlSkins/default.puml$
           )
 
   - repo: local
@@ -272,6 +273,6 @@ repos:
         stages: [manual] # GITHUB
 
   - repo: https://github.com/fchastanet/bash-compiler
-    rev: 3.2.0
+    rev: 3.2.1
     hooks:
       - id: buildBashBinaries

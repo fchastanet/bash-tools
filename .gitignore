@@ -21,6 +21,7 @@ resources/
 hugo.yaml
 # Hugo pages auto generated files
 content/docs/Commands.md
+content/docs/assets/mysql2puml-model.png
 
 bin/test
 bin/buildBinFiles

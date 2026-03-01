@@ -23,6 +23,7 @@
     Show progress as a progress bar. In the bar is shown: % of jobs
     completed, estimated seconds left, and number of jobs started.
 
+
 [1;37mSOURCE OPTIONS:[0m
   [1;34m--from-dsn[0m, [1;34m-f <dsn>[0m {single}
     Target mysql server.
@@ -86,6 +87,7 @@
   [1;34m--database <dbName>[0m {list} (optional)
     If provided will check only databases specified,
     otherwise script will be executed on all dbs of mysql server.
+
   [1;34m--output[0m, [1;34m-o <outputDirectory>[0m {single}
     Output directory, see log-format option.
   [1;34m--log-format[0m, [1;34m-l <logFormat>[0m {single}

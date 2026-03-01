@@ -9,8 +9,6 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
-permissions: read-all
-
 jobs:
   build-deploy:
     uses: fchastanet/my-documents/.github/workflows/build-site-action.yml@master

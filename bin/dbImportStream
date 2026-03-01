@@ -2525,7 +2525,7 @@ dbImportStreamCommandHelp() {
 
 
   echo -e "  ${__HELP_OPTION_COLOR}--tables <tablesSeparatedByComma>${__HELP_NORMAL} {single}"
-  Array::wrap2 ' ' 76 4 "    " "Import only table specified in the list." "If aws mode, ignore profile option."
+  Array::wrap2 ' ' 76 4 "    " "Import only table specified in the list." "If aws mode, ignore profile option." ""
   echo
 
   echo

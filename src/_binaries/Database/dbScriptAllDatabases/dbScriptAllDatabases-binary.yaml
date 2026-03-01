@@ -54,9 +54,9 @@ binData:
         - variableName: optionDatabases
           group: groupScriptsOptions
           type: StringArray
-          help:
-            "If provided will check only databases specified,\notherwise script will be executed on all dbs of mysql
-            server."
+          help: |
+            If provided will check only databases specified,
+            otherwise script will be executed on all dbs of mysql server.
           helpValueName: dbName
           alts:
             - --database

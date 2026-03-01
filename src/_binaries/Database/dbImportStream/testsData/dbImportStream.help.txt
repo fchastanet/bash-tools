@@ -22,6 +22,7 @@
     Import only table specified in the list.
     If aws mode, ignore profile option.
 
+
 [1;37mTARGET OPTIONS:[0m
   [1;34m--target-dsn[0m, [1;34m-t <targetDsn>[0m {single}
     Dsn to use for target database.

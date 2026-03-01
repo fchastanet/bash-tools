@@ -2,6 +2,7 @@
     Execute a query on multiple databases to generate a tsv format report.
     The query can be parallelized on multiple databases.
 
+
 [1;37mUSAGE:[0m dbQueryAllDatabases [OPTIONS] [ARGUMENTS]
 [1;37mUSAGE:[0m dbQueryAllDatabases [--jobs|-j <jobsCount>] [--bar|-b]
   [--from-dsn|-f <dsn>] [--help|-h] [--config]
@@ -26,6 +27,7 @@
   [1;34m--bar[0m, [1;34m-b[0m {single}
     Show progress as a progress bar. In the bar is shown: % of jobs
     completed, estimated seconds left, and number of jobs started.
+
 
 [1;37mSOURCE OPTIONS:[0m
   [1;34m--from-dsn[0m, [1;34m-f <dsn>[0m {single}

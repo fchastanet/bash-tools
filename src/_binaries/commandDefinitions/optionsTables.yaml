@@ -11,7 +11,9 @@ binData:
         - variableName: optionTables
           group: groupProfileOptions
           type: String
-          help: "Import only table specified in the list.\nIf aws mode, ignore profile option."
+          help: |
+            Import only table specified in the list.
+            If aws mode, ignore profile option.
           callbacks:
             - optionTablesCallback
           helpValueName: tablesSeparatedByComma

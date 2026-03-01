@@ -2503,7 +2503,7 @@ dbQueryAllDatabasesCommandParse() {
 # @description display command options and arguments help for dbQueryAllDatabasesCommand
 dbQueryAllDatabasesCommandHelp() {
   echo -e "${__HELP_TITLE_COLOR}SYNOPSIS:${__RESET_COLOR}"
-  Array::wrap2 ' ' 76 4 "    " "Execute a query on multiple databases to generate a tsv format report." "The query can be parallelized on multiple databases."
+  Array::wrap2 ' ' 76 4 "    " "Execute a query on multiple databases to generate a tsv format report." "The query can be parallelized on multiple databases." ""
   echo
   echo
 
@@ -2546,7 +2546,7 @@ dbQueryAllDatabasesCommandHelp() {
   echo
 
   echo -e "  ${__HELP_OPTION_COLOR}--bar${__HELP_NORMAL}, ${__HELP_OPTION_COLOR}-b${__HELP_NORMAL} {single}"
-  Array::wrap2 ' ' 76 4 "    " "Show progress as a progress bar. In the bar is shown: % of jobs" "completed, estimated seconds left, and number of jobs started."
+  Array::wrap2 ' ' 76 4 "    " "Show progress as a progress bar. In the bar is shown: % of jobs" "completed, estimated seconds left, and number of jobs started." ""
   echo
 
   echo

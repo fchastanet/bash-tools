@@ -29,9 +29,9 @@ binData:
       definitionFiles:
         99: ${BASH_TOOLS_ROOT_DIR}/src/_binaries/Database/dbQueryAllDatabases/dbQueryAllDatabases-options.sh
       mainFile: ${BASH_TOOLS_ROOT_DIR}/src/_binaries/Database/dbQueryAllDatabases/dbQueryAllDatabases-main.sh
-      help:
-        "Execute a query on multiple databases to generate a tsv format report.\nThe query can be parallelized on
-        multiple databases."
+      help: |
+        Execute a query on multiple databases to generate a tsv format report.
+        The query can be parallelized on multiple databases.
       longDescription: longDescriptionFunction
       optionGroups:
         groupQueryOptions:
