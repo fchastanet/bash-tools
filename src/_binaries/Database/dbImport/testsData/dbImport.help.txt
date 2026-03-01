@@ -34,6 +34,7 @@
     Import only table specified in the list.
     If aws mode, ignore profile option.
 
+
 [1;37mSOURCE OPTIONS:[0m
   [1;34m--skip-schema[0m, [1;34m-s[0m {single}
     Avoids to import the schema.

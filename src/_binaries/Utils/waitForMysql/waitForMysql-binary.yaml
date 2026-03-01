@@ -1,21 +1,21 @@
 extends:
-  - "${BASH_TOOLS_ROOT_DIR}/src/_binaries/commandDefinitions/optionsTimeout.yaml"
-  - "${BASH_TOOLS_ROOT_DIR}/src/_binaries/commandDefinitions/optionsVersion.yaml"
-  - "${BASH_TOOLS_ROOT_DIR}/src/_binaries/commandDefinitions/optionsDefault.yaml"
-  - "${FRAMEWORK_ROOT_DIR}/src/_binaries/commandDefinitions/defaultCommand.yaml"
-  - "${FRAMEWORK_ROOT_DIR}/src/_binaries/commandDefinitions/frameworkConfig.yaml"
+  - '${BASH_TOOLS_ROOT_DIR}/src/_binaries/commandDefinitions/optionsTimeout.yaml'
+  - '${BASH_TOOLS_ROOT_DIR}/src/_binaries/commandDefinitions/optionsVersion.yaml'
+  - '${BASH_TOOLS_ROOT_DIR}/src/_binaries/commandDefinitions/optionsDefault.yaml'
+  - '${FRAMEWORK_ROOT_DIR}/src/_binaries/commandDefinitions/defaultCommand.yaml'
+  - '${FRAMEWORK_ROOT_DIR}/src/_binaries/commandDefinitions/frameworkConfig.yaml'
 
 vars:
   SRC_FILE_PATH: src/_binaries/Utils/waitForMysql/waitForMysql-binary.yaml
 
 compilerConfig:
-  targetFile: "${BASH_TOOLS_ROOT_DIR}/bin/waitForMysql"
+  targetFile: '${BASH_TOOLS_ROOT_DIR}/bin/waitForMysql'
 
 binData:
   commands:
     default:
       functionName: waitForMysqlCommand
-      version: "3.0"
+      version: '3.0'
       copyrightBeginYear: 2020
       commandName: waitForMysql
       beforeParseCallbacks:
@@ -63,8 +63,6 @@ binData:
         - type: StringArray
           min: 0
           max: -1
-          help:
-            Execute command with args after the test finishes or exit with
-            status code if no command provided.
+          help: Execute command with args after the test finishes or exit with status code if no command provided.
           name: commandArgs
           variableName: commandArgs

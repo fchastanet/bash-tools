@@ -1,40 +1,13 @@
-# The commands
-
-- [1. Build tools](#1-build-tools)
-  - [1.1. bin/install](#11-bininstall)
-  - [1.2. bin/installRequirements](#12-bininstallrequirements)
-  - [1.3. bin/waitForIt](#13-binwaitforit)
-  - [1.4. bin/waitForMysql](#14-binwaitformysql)
-  - [1.5. bin/doc](#15-bindoc)
-- [2. Converter and Generator tools](#2-converter-and-generator-tools)
-  - [2.1. bin/mysql2puml](#21-binmysql2puml)
-    - [2.1.1. Help](#211-help)
-    - [2.1.2. Example](#212-example)
-- [3. Git tools](#3-git-tools)
-  - [3.1. bin/gitIsAncestorOf](#31-bingitisancestorof)
-  - [3.2. bin/gitIsBranch](#32-bingitisbranch)
-  - [3.3. bin/gitRenameBranch](#33-bingitrenamebranch)
-  - [3.4. bin/upgradeGithubRelease](#34-binupgradegithubrelease)
-  - [3.5. bin/githubReleaseManager](#35-bingithubreleasemanager)
-- [4. Dev tools](#4-dev-tools)
-  - [4.1. bin/cli](#41-bincli)
-    - [4.1.1. Help](#411-help)
-    - [4.1.2. Example 1: open bash on a container named web](#412-example-1-open-bash-on-a-container-named-web)
-    - [4.1.3. Example 2: connect to mysql container with root user](#413-example-2-connect-to-mysql-container-with-root-user)
-    - [4.1.4. Example 3: connect to mysql server in order to execute a query](#414-example-3-connect-to-mysql-server-in-order-to-execute-a-query)
-    - [4.1.5. Example 4: pipe sql command to mysql container](#415-example-4-pipe-sql-command-to-mysql-container)
-  - [4.2. bin/postmanCli](#42-binpostmancli)
-    - [4.2.1. Help](#421-help)
-- [5. Database tools](#5-database-tools)
-  - [5.1. bin/dbQueryAllDatabases](#51-bindbqueryalldatabases)
-    - [5.1.1. Help](#511-help)
-  - [5.2. bin/dbScriptAllDatabases](#52-bindbscriptalldatabases)
-    - [5.2.1. Help](#521-help)
-  - [5.3. bin/dbImport](#53-bindbimport)
-    - [5.3.1. Help](#531-help)
-  - [5.4. bin/dbImportProfile](#54-bindbimportprofile)
-    - [5.4.1. Help](#541-help)
-  - [5.5. bin/dbImportStream](#55-bindbimportstream)
+---
+title: Commands
+description: Complete reference guide for all Bash Tools commands
+weight: 10
+categories: [documentation]
+tags: [commands, reference, cli]
+creationDate: 2020-11-16
+lastUpdated: 2026-02-15
+version: '1.0'
+---
 
 ## 1. Build tools
 
@@ -108,7 +81,7 @@ Plantuml diagram generated
 
 using plantuml software, here an example of resulting diagram
 
-![resulting database diagram](src/_binaries/Converters/mysql2puml/testsData/mysql2puml-model.png)
+{{< img src="assets/mysql2puml-model.png" alt="resulting database diagram" >}}
 
 ## 3. Git tools
 
@@ -207,8 +180,7 @@ docker exec -i -e COLUMNS="$(tput cols)" -e LINES="$(tput lines)" --user=mysql
 project-mysql //bin/bash -c 'mysql -h127.0.0.1 -uroot -proot -P3306'
 ```
 
-notice that as input is given to the command, tty option is not provided to
-docker exec
+notice that as input is given to the command, tty option is not provided to docker exec
 
 ### 4.2. bin/postmanCli
 
@@ -222,8 +194,7 @@ docker exec
 
 ### 5.1. bin/dbQueryAllDatabases
 
-Execute a query on multiple database in order to generate a report, query can be
-parallelized on multiple databases
+Execute a query on multiple database in order to generate a report, query can be parallelized on multiple databases
 
 ```bash
 bin/dbQueryAllDatabases -e localhost-root conf/dbQueries/databaseSize.sql
@@ -263,30 +234,25 @@ bin/dbScriptAllDatabases --jobs 10 -d localhost-root dbCheckStructOneDatabase
 
 ### 5.3. bin/dbImport
 
-Import default source dsn/db ExampleDbName into default target dsn/db
-ExampleDbName
+Import default source dsn/db ExampleDbName into default target dsn/db ExampleDbName
 
 ```bash
 dbImport ExampleDbName
 ```
 
-Ability to import db from dump stored on aws the dump file should have this name
-`<fromDbName>.tar.gz` and stored on AWS location defined by S3_BASE_URL env
-variable (see src/\_binaries/DbImport/testsData/.env file)
+Ability to import db from dump stored on aws the dump file should have this name `<fromDbName>.tar.gz` and stored on AWS
+location defined by S3_BASE_URL env variable (see `src/_binaries/Database/dbImport/testsData/.env` file)
 
 ```bash
 dbImport --from-aws ExampleDbName.tar.gz
 ```
 
-It allows also to dump from source database and import it into target database.
-Providing --profile option **dumps** only the tables selected. Providing
---tables option **imports** only the tables selected.
+It allows also to dump from source database and import it into target database. Providing --profile option **dumps**
+only the tables selected. Providing --tables option **imports** only the tables selected.
 
-The following command will dump full structure and data of fromDb but will
-insert only the data from tableA and tableB, full structure will be inserted
-too. Second call to this command skip the dump as dump has been saved the first
-time. Note that table A and table B are truncated on target database before
-being imported.
+The following command will dump full structure and data of fromDb but will insert only the data from tableA and tableB,
+full structure will be inserted too. Second call to this command skip the dump as dump has been saved the first time.
+Note that table A and table B are truncated on target database before being imported.
 
 ```bash
 dbImport --from-dsn default.remote --target-dsn default.local -p all \
@@ -307,9 +273,8 @@ Import remote db into local db
 dbImportProfile --from-dsn default.local MY_DB --ratio 45
 ```
 
-Ability to generate profile that can be used in dbImport to filter out tables
-bigger than given ratio (based on biggest table size). Profile is automatically
-saved in ${HOME}/.bash-tools/dbImportProfiles with this format `auto*<dsn>*<db>`
+Ability to generate profile that can be used in dbImport to filter out tables bigger than given ratio (based on biggest
+table size). Profile is automatically saved in ${HOME}/.bash-tools/dbImportProfiles with this format `auto*<dsn>*<db>`
 **eg:** auto_default.local_MY_DB
 
 #### 5.4.1. Help

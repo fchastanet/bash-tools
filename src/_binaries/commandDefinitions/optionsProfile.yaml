@@ -3,12 +3,12 @@ binData:
   commands:
     default:
       definitionFiles:
-        24: "${BASH_TOOLS_ROOT_DIR}/src/_binaries/commandDefinitions/optionsProfile.sh"
+        24: '${BASH_TOOLS_ROOT_DIR}/src/_binaries/commandDefinitions/optionsProfile.sh'
       callbacks:
         - initProfileCommandCallback
       optionGroups:
         groupProfileOptions:
-          title: "PROFILE OPTIONS:"
+          title: 'PROFILE OPTIONS:'
       options:
         - variableName: optionProfile
           group: groupProfileOptions

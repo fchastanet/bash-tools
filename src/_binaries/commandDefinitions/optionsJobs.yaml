@@ -3,10 +3,10 @@ binData:
   commands:
     default:
       definitionFiles:
-        26: "${BASH_TOOLS_ROOT_DIR}/src/_binaries/commandDefinitions/optionsJobs.sh"
+        26: '${BASH_TOOLS_ROOT_DIR}/src/_binaries/commandDefinitions/optionsJobs.sh'
       optionGroups:
         groupJobOptions:
-          title: "JOB OPTIONS:"
+          title: 'JOB OPTIONS:'
       options:
         - variableName: optionJobs
           group: groupJobOptions
@@ -23,9 +23,9 @@ binData:
         - variableName: optionProgressBar
           group: groupJobOptions
           type: Boolean
-          help:
-            "Show progress as a progress bar. In the bar is shown: % of
-            jobs\ncompleted, estimated seconds left, and number of jobs started."
+          help: |
+            Show progress as a progress bar. In the bar is shown: % of jobs
+            completed, estimated seconds left, and number of jobs started.
           callbacks:
             - optionProgressBarCallback
           alts:

@@ -10,6 +10,6 @@ binData:
   commands:
     default:
       definitionFiles:
-        11: "${BASH_TOOLS_ROOT_DIR}/src/_binaries/commandDefinitions/optionsDefault.sh"
+        12: '${BASH_TOOLS_ROOT_DIR}/src/_binaries/commandDefinitions/optionsDefault.sh'
       beforeParseCallbacks:
         - beforeParseCallback

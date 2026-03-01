@@ -27,7 +27,7 @@ repos:
         entry: npx -y v8r --ci .v8rrc.yaml
         language: system
         pass_filenames: true
-        stages: [pre-commit, pre-push, manual]
+        stages: [pre-commit, pre-push]
         files: |
           (?x)(
             \.(yaml|yml|json)$
@@ -36,15 +36,18 @@ repos:
           (?x)(
             ^\.?secretlintrc\.yml$|
             ^\.vscode/|
+            ^configs/site-config\.yaml$|
+            ^conf/postmanCli/MongoDbData/.*\.json$|
+            ^conf/postmanCli/openApis.json$|
+            ^conf/postmanCli/GithubAPI/.*\.json$|
             ^\.?checkov\.yml$|
             ^\.?secretlintrc\.json$|
-            ^githubReleaseManager.yaml$|
             ^\.?grype\.yaml$|
             ^\.?trivy\.yaml$|
             ^\.proselintrc.json$|
             ^package\.json$|
-            ^conf/postmanCli/.*\.json$|
-            /testsData/
+            /testsData/|
+            \.schema\.json$
           )
       - id: cspell
         name: cspell
@@ -62,8 +65,9 @@ repos:
         entry: mdformat # Executable to run, with fixed options
         language: python
         types: [markdown]
-        args: [--wrap, "80", --number]
+        args: [--wrap, '120', --number]
         additional_dependencies:
+          - mdformat-frontmatter
           - mdformat-toc
           - mdformat-shfmt
           - mdformat-tables
@@ -72,7 +76,49 @@ repos:
           - mdformat-gfm
         exclude: |
           (?x)(
-            ^\.github/
+            ^\.github/|
+            ^doc/ai/
+          )
+
+  - repo: https://github.com/jsh9/markdown-heading-numbering
+    rev: 0.1.0
+    hooks:
+      - id: markdown-heading-numbering
+        args:
+          - --start-from-level=2
+          - --initial-numbering=1
+        exclude: |
+          (?x)(
+            ^\.github/|
+            ^doc/ai/|
+            AGENTS\.md|
+            SKILL\.md
+          )
+
+  - repo: https://github.com/jsh9/markdown-toc-creator
+    rev: 0.1.3
+    hooks:
+      - id: markdown-toc-creator
+        args:
+          - --proactive=False
+          - --style=github
+          - --quiet
+          - --add-toc-title=False
+          - --add-horizontal-rules=False
+        exclude: |
+          (?x)(
+              ^\.github/
+          )
+
+  - repo: https://github.com/igorshubovych/markdownlint-cli
+    rev: v0.47.0
+    hooks:
+      - id: markdownlint
+        args: [--disable=MD041, --fix]
+        exclude: |
+          (?x)(
+            ^\.github/|
+            ^doc/ai/
           )
 
   - repo: local
@@ -129,7 +175,7 @@ repos:
           )
 
   - repo: https://github.com/rhysd/actionlint
-    rev: v1.7.10
+    rev: v1.7.11
     hooks:
       - id: actionlint
         stages: [pre-commit, pre-push, manual]
@@ -140,15 +186,15 @@ repos:
       - id: codespell
         args:
           - --dictionary
-          - "-"
+          - '-'
           - --dictionary
           - .cspell/codespellrc-dic.txt
           - --ignore-words
           - .cspell/codespellrc-ignore.txt
           - --quiet-level
-          - "2"
+          - '2'
           - --interactive
-          - "0"
+          - '0'
           - --check-filenames
           - --check-hidden
           - --write-changes
@@ -178,7 +224,7 @@ repos:
     rev: 3.0.2
     hooks:
       - id: shfmt
-        args: [-i, "2", -ci]
+        args: [-i, '2', -ci]
         # x modifier: extended. Spaces and text after a # in the pattern are ignored
         exclude: |
           (?x)(
@@ -197,41 +243,22 @@ repos:
         exclude: /testsData/
 
   - repo: https://github.com/fchastanet/bash-tools-framework
-    rev: 6.2.4
+    rev: 6.2.5
     hooks:
       - id: fixShebangExecutionBit
       - id: awkLint
       - id: shellcheckLint
       - id: shellcheckLintGithubAction
       - id: frameworkLint
-        args:
-          [
-            --expected-warnings-count,
-            "5",
-            --format,
-            plain,
-            --theme,
-            default-force,
-            --display-level,
-            WARNING,
-          ]
+        args: [--expected-warnings-count, '5', --format, plain, --theme, default-force, --display-level, WARNING]
       - id: frameworkLintGithubAction
-        args:
-          [
-            --expected-warnings-count,
-            "5",
-            --format,
-            checkstyle,
-            --theme,
-            default-force,
-            --display-level,
-            WARNING,
-          ]
+        args: [--expected-warnings-count, '5', --format, checkstyle, --theme, default-force, --display-level, WARNING]
       - id: plantuml
-        args: [--same-dir, -f, png, -f, svg, --limit-size, "1200"]
+        args: [--same-dir, -f, png, -f, svg, --limit-size, '1200']
         exclude: |
           (?x)(
-            ^conf/mysql2pumlSkins/default.puml$
+            ^conf/mysql2pumlSkins/default.puml$|
+            ^src/_binaries/Converters/mysql2puml/testsData/mysql2pumlSkins/default.puml$
           )
 
   - repo: local
@@ -246,6 +273,6 @@ repos:
         stages: [manual] # GITHUB
 
   - repo: https://github.com/fchastanet/bash-compiler
-    rev: 3.2.0
+    rev: 3.2.1
     hooks:
       - id: buildBashBinaries

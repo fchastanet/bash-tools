@@ -1,23 +1,23 @@
 extends:
-  - "${BASH_TOOLS_ROOT_DIR}/src/_binaries/commandDefinitions/optionsRatio.yaml"
-  - "${BASH_TOOLS_ROOT_DIR}/src/_binaries/commandDefinitions/optionsProfile.yaml"
-  - "${BASH_TOOLS_ROOT_DIR}/src/_binaries/commandDefinitions/optionsVersion.yaml"
-  - "${BASH_TOOLS_ROOT_DIR}/src/_binaries/commandDefinitions/optionsFromDsn.yaml"
-  - "${BASH_TOOLS_ROOT_DIR}/src/_binaries/commandDefinitions/optionsDefault.yaml"
-  - "${FRAMEWORK_ROOT_DIR}/src/_binaries/commandDefinitions/defaultCommand.yaml"
-  - "${FRAMEWORK_ROOT_DIR}/src/_binaries/commandDefinitions/frameworkConfig.yaml"
+  - '${BASH_TOOLS_ROOT_DIR}/src/_binaries/commandDefinitions/optionsRatio.yaml'
+  - '${BASH_TOOLS_ROOT_DIR}/src/_binaries/commandDefinitions/optionsProfile.yaml'
+  - '${BASH_TOOLS_ROOT_DIR}/src/_binaries/commandDefinitions/optionsVersion.yaml'
+  - '${BASH_TOOLS_ROOT_DIR}/src/_binaries/commandDefinitions/optionsFromDsn.yaml'
+  - '${BASH_TOOLS_ROOT_DIR}/src/_binaries/commandDefinitions/optionsDefault.yaml'
+  - '${FRAMEWORK_ROOT_DIR}/src/_binaries/commandDefinitions/defaultCommand.yaml'
+  - '${FRAMEWORK_ROOT_DIR}/src/_binaries/commandDefinitions/frameworkConfig.yaml'
 
 vars:
   SRC_FILE_PATH: src/_binaries/Database/dbImportProfile/dbImportProfile-binary.yaml
 
 compilerConfig:
-  targetFile: "${BASH_TOOLS_ROOT_DIR}/bin/dbImportProfile"
+  targetFile: '${BASH_TOOLS_ROOT_DIR}/bin/dbImportProfile'
 
 binData:
   commands:
     default:
       functionName: dbImportProfileCommand
-      version: "3.0"
+      version: '3.0'
       copyrightBeginYear: 2021
       commandName: dbImportProfile
       beforeParseCallbacks:

@@ -1,19 +1,19 @@
 extends:
-  - "${FRAMEWORK_ROOT_DIR}/src/_binaries/commandDefinitions/optionsCi.yaml"
-  - "${BASH_TOOLS_ROOT_DIR}/src/_binaries/commandDefinitions/optionsDefault.yaml"
-  - "${FRAMEWORK_ROOT_DIR}/src/_binaries/commandDefinitions/defaultCommand.yaml"
-  - "${FRAMEWORK_ROOT_DIR}/src/_binaries/commandDefinitions/frameworkConfig.yaml"
+  - '${FRAMEWORK_ROOT_DIR}/src/_binaries/commandDefinitions/optionsCi.yaml'
+  - '${BASH_TOOLS_ROOT_DIR}/src/_binaries/commandDefinitions/optionsDefault.yaml'
+  - '${FRAMEWORK_ROOT_DIR}/src/_binaries/commandDefinitions/defaultCommand.yaml'
+  - '${FRAMEWORK_ROOT_DIR}/src/_binaries/commandDefinitions/frameworkConfig.yaml'
 
 vars:
   SRC_FILE_PATH: src/_binaries/build/doc/doc-binary.yaml
 
 compilerConfig:
-  targetFile: "${BASH_TOOLS_ROOT_DIR}/bin/doc"
+  targetFile: '${BASH_TOOLS_ROOT_DIR}/bin/doc'
 binData:
   commands:
     default:
       functionName: docCommand
-      version: "3.0"
+      version: '3.0'
       copyrightBeginYear: 2022
       commandName: doc
       beforeParseCallbacks:

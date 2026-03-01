@@ -1,0 +1,129 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema",
+  "$id": "https://github.com/fchastanet/bash-tools/githubReleaseManager.schema.json",
+  "title": "GitHub Release Manager Configuration",
+  "description": "Configuration schema for managing GitHub release-based software installations",
+  "type": "object",
+  "required": ["softwares"],
+  "properties": {
+    "softwares": {
+      "type": "array",
+      "description": "List of software packages to manage",
+      "items": {
+        "oneOf": [
+          {
+            "$ref": "#/definitions/releaseBasedSoftware"
+          },
+          {
+            "$ref": "#/definitions/gitCloneSoftware"
+          }
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "releaseBasedSoftware": {
+      "type": "object",
+      "description": "Software installed from GitHub releases",
+      "required": ["id", "url", "version"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the software package",
+          "minLength": 1
+        },
+        "url": {
+          "type": "string",
+          "description": "Download URL template with @version@ placeholder and optional variable substitutions (${kernel}, ${MACHINE}, ${arch}, ${ARCH}, ${KERNEL})",
+          "pattern": "^https://github\\.com/[^/]+/[^/]+/releases/download/.*@version@.*$"
+        },
+        "version": {
+          "type": "string",
+          "description": "Version to install (use 'latest' for the most recent release)",
+          "minLength": 1
+        },
+        "versionArg": {
+          "type": "string",
+          "description": "Command or argument to check the installed version of the software"
+        },
+        "sudo": {
+          "type": "string",
+          "enum": ["sudo", ""],
+          "description": "Whether to use sudo for installation"
+        },
+        "targetFile": {
+          "type": "string",
+          "description": "Target installation path for the software",
+          "pattern": "^/"
+        },
+        "installCallback": {
+          "type": "string",
+          "description": "Custom installation callback function (e.g., InstallCallbacks::installFromTarGz, InstallCallbacks::installDeb)",
+          "pattern": "^[A-Za-z0-9_]+::[A-Za-z0-9_]+$"
+        },
+        "softVersionCallback": {
+          "type": "string",
+          "description": "Custom callback function to extract version information",
+          "pattern": "^[A-Za-z0-9_]+::[A-Za-z0-9_]+$"
+        },
+        "type": {
+          "not": {
+            "const": "gitClone"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "gitCloneSoftware": {
+      "type": "object",
+      "description": "Software installed via git clone",
+      "required": ["id", "type", "url", "targetDir"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the software package",
+          "minLength": 1
+        },
+        "type": {
+          "type": "string",
+          "const": "gitClone",
+          "description": "Indicates this software should be installed via git clone"
+        },
+        "url": {
+          "type": "string",
+          "description": "Git repository URL to clone",
+          "pattern": "^https://github\\.com/[^/]+/[^/]+(\\.git)?$"
+        },
+        "sudo": {
+          "type": "string",
+          "enum": ["sudo", ""],
+          "description": "Whether to use sudo for installation"
+        },
+        "targetDir": {
+          "type": "string",
+          "description": "Target directory where the repository will be cloned",
+          "pattern": "^/"
+        },
+        "cloneOptions": {
+          "type": "string",
+          "description": "Additional git clone options (e.g., --depth=1)"
+        },
+        "branch": {
+          "type": "string",
+          "description": "Git branch to clone",
+          "minLength": 1
+        },
+        "installScript": {
+          "type": "string",
+          "description": "Post-clone script to execute for installation setup"
+        },
+        "targetFile": {
+          "type": "string",
+          "description": "Primary target file path (for verification purposes)",
+          "pattern": "^/"
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

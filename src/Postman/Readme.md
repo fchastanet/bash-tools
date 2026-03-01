@@ -1,21 +1,20 @@
 # PostmanCli
 
-## Commands
+## 1. Commands
 
-### pull
+### 1.1. pull
 
 Pull Postman collections to repositories.
 
-### push
+### 1.2. push
 
 Push repositories collections to Postman.
 
 **SUB-ARGUMENTS:**
 
-- list of postman collection's references to push or no argument to push all the
-  collections
+- list of postman collection's references to push or no argument to push all the collections
 
-## Configuration
+## 2. Configuration
 
 ```json
 {
@@ -37,8 +36,8 @@ Push repositories collections to Postman.
 }
 ```
 
-## Algorithms
+## 3. Algorithms
 
-### push-with-merge
+### 3.1. push-with-merge
 
 get each collection

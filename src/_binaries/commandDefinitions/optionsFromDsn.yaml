@@ -3,10 +3,10 @@ binData:
   commands:
     default:
       definitionFiles:
-        29: "${BASH_TOOLS_ROOT_DIR}/src/_binaries/commandDefinitions/optionsFromDsn.sh"
+        29: '${BASH_TOOLS_ROOT_DIR}/src/_binaries/commandDefinitions/optionsFromDsn.sh'
       optionGroups:
         groupSourceDbOptions:
-          title: "SOURCE OPTIONS:"
+          title: 'SOURCE OPTIONS:'
       options:
         - variableName: optionFromDsn
           group: groupSourceDbOptions

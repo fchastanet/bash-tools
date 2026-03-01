@@ -1,14 +1,14 @@
 extends:
-  - "${BASH_TOOLS_ROOT_DIR}/src/_binaries/commandDefinitions/optionsVersion.yaml"
-  - "${BASH_TOOLS_ROOT_DIR}/src/_binaries/commandDefinitions/optionsDefault.yaml"
-  - "${FRAMEWORK_ROOT_DIR}/src/_binaries/commandDefinitions/defaultCommand.yaml"
-  - "${FRAMEWORK_ROOT_DIR}/src/_binaries/commandDefinitions/frameworkConfig.yaml"
+  - '${BASH_TOOLS_ROOT_DIR}/src/_binaries/commandDefinitions/optionsVersion.yaml'
+  - '${BASH_TOOLS_ROOT_DIR}/src/_binaries/commandDefinitions/optionsDefault.yaml'
+  - '${FRAMEWORK_ROOT_DIR}/src/_binaries/commandDefinitions/defaultCommand.yaml'
+  - '${FRAMEWORK_ROOT_DIR}/src/_binaries/commandDefinitions/frameworkConfig.yaml'
 
 vars:
   SRC_FILE_PATH: src/_binaries/Database/extractData/extractData-binary.yaml
 
 compilerConfig:
-  targetFile: "${BASH_TOOLS_ROOT_DIR}/conf/dbScripts/extractData"
+  targetFile: '${BASH_TOOLS_ROOT_DIR}/conf/dbScripts/extractData'
   relativeRootDirBasedOnTargetDir: ../..
   srcDirs:
     - ${BASH_TOOLS_ROOT_DIR}/src
@@ -16,7 +16,7 @@ binData:
   commands:
     default:
       functionName: extractDataCommand
-      version: "3.0"
+      version: '3.0'
       copyrightBeginYear: 2020
       commandName: extractData
       beforeParseCallbacks:

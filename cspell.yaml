@@ -1,78 +1,78 @@
 ---
 $schema: https://raw.githubusercontent.com/streetsidesoftware/cspell/main/cspell.schema.json
-version: "0.2"
+version: '0.2'
 language: en
 noConfigSearch: true
 caseSensitive: true
 useGitignore: true
 enableGlobDot: true
 ignorePaths:
-  - "**/testsData/**"
-  - ".github/**/*.md"
+  - '**/testsData/**'
+  - '.github/**/*.md'
   - package-lock.json
-  - "**/*/svg"
+  - '**/*/svg'
   - .vscode
-  - ".cspell/**"
+  - '.cspell/**'
   - .git/**
-  - "**/.git/**"
-  - ".history/**"
-  - "**/node_modules/**"
-  - "**/vscode-extension/**"
-  - "**/logs/**"
-  - "**/*.svg"
+  - '**/.git/**'
+  - '.history/**'
+  - '**/node_modules/**'
+  - '**/vscode-extension/**'
+  - '**/logs/**'
+  - '**/*.svg'
   - megalinter-reports
   - report
   - .jscpd.json
-  - "*-megalinter_file_names_cspell.txt"
-  - "**/*megalinter_file_names_cspell.txt"
+  - '*-megalinter_file_names_cspell.txt'
+  - '**/*megalinter_file_names_cspell.txt'
   - .shellcheckrc
-  - "**/bin/**"
-  - "vendor/**"
-  - "**/backup/**"
+  - '**/bin/**'
+  - 'vendor/**'
+  - '**/backup/**'
   - commit-msg.md
-  - ".mega-linter*.yml"
-  - ".env"
-  - "**/*.help.txt"
-  - "conf/dbScripts/**"
-  - "install"
+  - '.mega-linter*.yml'
+  - '.env'
+  - '**/*.help.txt'
+  - 'conf/dbScripts/**'
+  - 'install'
 dictionaryDefinitions:
   - name: myBash
-    path: ".cspell/bash.txt"
+    path: '.cspell/bash.txt'
     addWords: true
   - name: loremIpsum
-    path: ".cspell/loremIpsum.txt"
+    path: '.cspell/loremIpsum.txt'
     addWords: true
   - name: config
-    path: ".cspell/config.txt"
+    path: '.cspell/config.txt'
     addWords: true
   - name: mySoftwares
-    path: ".cspell/softwares.txt"
+    path: '.cspell/softwares.txt'
     addWords: true
   - name: readme
-    path: ".cspell/readme.txt"
+    path: '.cspell/readme.txt'
     addWords: true
   - name: dirColors
-    path: ".cspell/dirColors.txt"
+    path: '.cspell/dirColors.txt'
     addWords: false
   - name: plantUml
-    path: ".cspell/plantUml.txt"
+    path: '.cspell/plantUml.txt'
     addWords: false
   - name: myAwk
-    path: ".cspell/myAwk.txt"
+    path: '.cspell/myAwk.txt'
     addWords: false
   - name: postman
-    path: ".cspell/postman.txt"
+    path: '.cspell/postman.txt'
     addWords: false
 
 # https://github.com/streetsidesoftware/cspell/blob/main/packages/cspell/README.md#languagesettings
 languageSettings:
   - languageId: dirColors
-    locale: "*"
+    locale: '*'
     dictionaries:
       - dirColors
 
   - languageId: shellscript
-    locale: "*"
+    locale: '*'
     dictionaries:
       - bash
       - myBash
@@ -80,14 +80,14 @@ languageSettings:
       - software
 
   - languageId: markdown
-    locale: "*"
+    locale: '*'
     dictionaries:
       - readme
       - mySoftwares
       - softwareTerms
 
   - languageId: plantUml
-    locale: "*"
+    locale: '*'
     dictionaries:
       - bash
       - plantUml
@@ -97,31 +97,31 @@ languageSettings:
 # OVERRIDES
 overrides:
   - filename:
-      - "**/*.{bats,tpl}"
-      - "**/*.env"
-      - "src/Array/wrap.sh"
+      - '**/*.{bats,tpl}'
+      - '**/*.env'
+      - 'src/Array/wrap.sh'
     languageId: shellscript
     dictionaries:
       - loremIpsum
 
   - filename:
-      - "*.yml"
-      - "*.toml"
+      - '*.yml'
+      - '*.toml'
     dictionaries:
       - lintersConfig
       - mySoftwares
 
-  - filename: "**/*.puml"
+  - filename: '**/*.puml'
     languageId: plantUml
 
-  - filename: "**/*.html"
+  - filename: '**/*.html'
     dictionaries:
       - mySoftwares
       - software
 
   - filename:
-      - "**/*.md"
-      - "LICENSE"
+      - '**/*.md'
+      - 'LICENSE'
     languageId: markdown
 
   - filename: LICENSE
@@ -131,20 +131,20 @@ overrides:
   - filename:
       - .github/**
       - .*
-      - "*.{yaml,yml}"
+      - '*.{yaml,yml}'
     languageId: shellscript
     dictionaries:
       - config
 
-  - filename: "**/*.awk"
+  - filename: '**/*.awk'
     dictionaries:
       - myAwk
       - mySoftwares
       - software
 
   - filename:
-      - "conf/postmanCli/GithubAPI/*.json"
-      - "conf/postmanCli/MongoDbData/*.json"
+      - 'conf/postmanCli/GithubAPI/*.json'
+      - 'conf/postmanCli/MongoDbData/*.json'
     dictionaries:
       - postman
       - mySoftwares
@@ -154,7 +154,7 @@ patterns:
   - name: urls
     pattern: "/https?://([^ \t\"'()]+)/g"
   - name: packages
-    pattern: "/[-A-Za-z0-9.]+/[-A-Za-z0-9.]+/g"
+    pattern: '/[-A-Za-z0-9.]+/[-A-Za-z0-9.]+/g'
   - name: markdownToc
     pattern: "\\]\\(#[^)]+\\)$"
 
