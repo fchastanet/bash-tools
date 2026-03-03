@@ -28,10 +28,11 @@ jobs:
   pre-commit:
     runs-on: ubuntu-22.04
     permissions:
-      # needed by ouzi-dev/commit-status-updater@v2
+      # needed by akatov/commit-status-updater@219d3f932547cad092e384c7a36bf4d963739c35
       statuses: write
     steps:
-      - uses: ouzi-dev/commit-status-updater@v2
+      - uses: akatov/commit-status-updater@219d3f932547cad092e384c7a36bf4d963739c35
+        if: ${{ github.event_name == 'pull_request' || github.event_name == 'push' }}
         with:
           name: build-bash-tools
           status: pending
@@ -63,7 +64,8 @@ jobs:
           app_id: ${{ secrets.APP_ID }}
           private_key: ${{ secrets.APP_PRIVATE_KEY }}
 
-      - uses: ouzi-dev/commit-status-updater@v2
+      - uses: akatov/commit-status-updater@219d3f932547cad092e384c7a36bf4d963739c35
+        if: ${{ github.event_name == 'pull_request' || github.event_name == 'push' }}
         with:
           name: pre-commit-megalinter
           status: pending
@@ -157,8 +159,8 @@ jobs:
           echo "Pull Request Number - ${{ steps.cpr.outputs.pull-request-number }}"
           echo "Pull Request URL - ${{ steps.cpr.outputs.pull-request-url }}"
 
-      - uses: ouzi-dev/commit-status-updater@v2
-        if: ${{ always() }}
+      - uses: akatov/commit-status-updater@219d3f932547cad092e384c7a36bf4d963739c35
+        if: ${{ github.event_name == 'pull_request' || github.event_name == 'push' }}
         with:
           name: pre-commit-megalinter
           status: ${{ job.status }}
@@ -170,7 +172,7 @@ jobs:
   unit-tests:
     runs-on: ubuntu-22.04
     permissions:
-      # needed by ouzi-dev/commit-status-updater@v2
+      # needed by akatov/commit-status-updater@219d3f932547cad092e384c7a36bf4d963739c35
       statuses: write
       # needed by mikepenz/action-junit-report@v4
       checks: write
@@ -212,7 +214,8 @@ jobs:
           app_id: ${{ secrets.APP_ID }}
           private_key: ${{ secrets.APP_PRIVATE_KEY }}
 
-      - uses: ouzi-dev/commit-status-updater@v2
+      - uses: akatov/commit-status-updater@219d3f932547cad092e384c7a36bf4d963739c35
+        if: ${{ github.event_name == 'pull_request' || github.event_name == 'push' }}
         with:
           name: unit-tests-${{matrix.vendor}}-${{matrix.bashTarVersion}}
           status: pending
@@ -281,7 +284,8 @@ jobs:
           path: |
             logs/**
 
-      - uses: ouzi-dev/commit-status-updater@v2
+      - uses: akatov/commit-status-updater@219d3f932547cad092e384c7a36bf4d963739c35
+        if: ${{ github.event_name == 'pull_request' || github.event_name == 'push' }}
         with:
           name: unit-tests-${{matrix.vendor}}-${{matrix.bashTarVersion}}
           status: ${{ job.status }}
@@ -292,7 +296,7 @@ jobs:
     needs: [unit-tests]
     runs-on: ubuntu-22.04
     permissions:
-      # needed by ouzi-dev/commit-status-updater@v2
+      # needed by akatov/commit-status-updater@219d3f932547cad092e384c7a36bf4d963739c35
       statuses: write
 
     steps:
@@ -300,7 +304,8 @@ jobs:
       # You can get the conclusion via env (env.WORKFLOW_CONCLUSION)
       - uses: AbsoLouie/workflow-conclusion-status@v1.0.2
 
-      - uses: ouzi-dev/commit-status-updater@v2
+      - uses: akatov/commit-status-updater@219d3f932547cad092e384c7a36bf4d963739c35
+        if: ${{ github.event_name == 'pull_request' || github.event_name == 'push' }}
         with:
           name: build-bash-tools
           # neutral, success, skipped, cancelled, timed_out, action_required, failure
