@@ -5,3 +5,16 @@
 
 $primary: #098b00;
 $secondary: #69c0ff;
+
+:root {
+  --bs-primary: #098b00;
+  --bs-secondary: #69c0ff;
+  --bs-primary-text-emphasis: #098b00;
+  --bs-link-color-rgb: #69c0ff;
+  --bs-link-opacity: 1;
+  --bs-link-color: #69c0ff;
+}
+
+.td-sidebar-nav a.active {
+  color: #098b00;
+}

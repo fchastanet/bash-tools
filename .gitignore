@@ -12,13 +12,6 @@ yarn.lock
 megalinter-reports/
 *megalinter_file_names_cspell.txt
 
-# Hugo build artifacts
-/build/
-public/
-sites/
-resources/
-.hugo_build.lock
-hugo.yaml
 # Hugo pages auto generated files
 content/docs/Commands.md
 content/docs/assets/mysql2puml-model.png
