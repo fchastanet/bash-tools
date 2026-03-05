@@ -88,17 +88,30 @@ configureContainer() {
   export PATH="${binTempDir}:${PATH}"
 }
 
+replaceToken() {
+  local targetFile="$1"
+  local command="$2"
+  ( #
+    Log::displayInfo "generate help for ${command}"
+    "${ROOT_DIR}/${command}" --help |
+      File::replaceTokenByInput "@@@${command}_help@@@" "${targetFile}"
+  ) || Log::displayError "generate help for ${command} --help error caught"
+}
+
 generateDoc() {
   local ROOT_DIR=/bash
   local DOC_DIR="${ROOT_DIR}/content/docs"
   Log::displayInfo 'generate Commands.md'
   ((TOKEN_NOT_FOUND_COUNT = 0)) || true
+
   ShellDoc::generateMdFileFromTemplate \
     "${BASH_TOOLS_ROOT_DIR}/Commands.tmpl.md" \
     "${DOC_DIR}/Commands.md" \
     "${BASH_TOOLS_ROOT_DIR}/bin" \
     TOKEN_NOT_FOUND_COUNT \
     '(test|buildBinFiles)$'
+
+  replaceToken "${DOC_DIR}/Commands.md" "install"
 
   if ((TOKEN_NOT_FOUND_COUNT > 0)); then
     return 1

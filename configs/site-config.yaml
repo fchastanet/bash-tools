@@ -35,7 +35,7 @@ params:
     keywords: 'bash,tools,ubuntu,alpine,scripts,database,mysql,git,docker,cli'
 
 menu:
-  site:
+  main:
     - name: GitHub
       url: https://github.com/fchastanet/bash-tools
       weight: 10

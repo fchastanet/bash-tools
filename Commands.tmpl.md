@@ -11,7 +11,7 @@ version: '1.0'
 
 ## 1. Build tools
 
-### 1.1. bin/install
+### 1.1. install
 
 ```text
 @@@install_help@@@
