@@ -2,17 +2,17 @@
 
 <!-- remove -->
 
-> **_NOTE:_** **Documentation is best viewed on [github-pages](https://fchastanet.github.io/bash-tools/)**
+> **_NOTE:_** **Documentation is best viewed on [github-pages](https://devlab.top/bash-tools/)**
 
 <!-- endRemove -->
 
 > **_TIP:_** Checkout related projects of this suite
 >
-> - [My documents](https://fchastanet.github.io/my-documents/)
-> - [Bash Tools Framework](https://fchastanet.github.io/bash-tools-framework/)
-> - **[Bash Tools](https://fchastanet.github.io/bash-tools/)**
-> - [Bash Dev Env](https://fchastanet.github.io/bash-dev-env/)
-> - [Bash Compiler](https://fchastanet.github.io/bash-compiler/)
+> - [My documents](https://devlab.top/my-documents/)
+> - [Bash Tools Framework](https://devlab.top/bash-tools-framework/)
+> - **[Bash Tools](https://devlab.top/bash-tools/)**
+> - [Bash Dev Env](https://devlab.top/bash-dev-env/)
+> - [Bash Compiler](https://devlab.top/bash-compiler/)
 
 <!-- prettier-ignore-start -->
 
@@ -60,7 +60,7 @@ your home directory.
 
 Some tools require GNU parallel for faster processing.
 
-More details can be found at <https://fchastanet.github.io/bash-tools>
+More details can be found at <https://devlab.top/bash-tools>
 
 ## 3. Acknowledgements
 

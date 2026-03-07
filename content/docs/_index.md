@@ -10,9 +10,9 @@ lastUpdated: 2026-02-15
 
 ## 1. Excerpt
 
-This is a collection of several bash tools using
-[bash tools framework](https://fchastanet.github.io/bash-tools-framework/) allowing to easily import bash script, log,
-display log messages, database manipulation, user interaction, version comparison, ...
+This is a collection of several bash tools using [bash tools framework](https://devlab.top/bash-tools-framework/)
+allowing to easily import bash script, log, display log messages, database manipulation, user interaction, version
+comparison, ...
 
 List of tools:
 
