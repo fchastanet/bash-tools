@@ -45,6 +45,7 @@ encrypter
 erasedups
 exif
 expandtab
+fchastanetl
 fgcolor
 fileinfo
 fileurl
