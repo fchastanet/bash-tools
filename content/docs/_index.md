@@ -10,7 +10,7 @@ lastUpdated: 2026-02-15
 
 ## 1. Excerpt
 
-This is a collection of several bash tools using [bash tools framework](https://devlab.top/bash-tools-framework/)
+This is a collection of several bash tools using [bash tools framework](https://bash-tools-framework.devlab.top/)
 allowing to easily import bash script, log, display log messages, database manipulation, user interaction, version
 comparison, ...
 

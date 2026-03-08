@@ -2,17 +2,17 @@
 
 <!-- remove -->
 
-> **_NOTE:_** **Documentation is best viewed on [github-pages](https://devlab.top/bash-tools/)**
+> **_NOTE:_** **Documentation is best viewed on [github-pages](https://bash-tools.devlab.top/)**
 
 <!-- endRemove -->
 
 > **_TIP:_** Checkout related projects of this suite
 >
-> - [My documents](https://devlab.top/my-documents/)
-> - [Bash Tools Framework](https://devlab.top/bash-tools-framework/)
-> - **[Bash Tools](https://devlab.top/bash-tools/)**
-> - [Bash Dev Env](https://devlab.top/bash-dev-env/)
-> - [Bash Compiler](https://devlab.top/bash-compiler/)
+> - [My documents](https://my-documents.devlab.top/)
+> - [Bash Tools Framework](https://bash-tools-framework.devlab.top/)
+> - **[Bash Tools](https://bash-tools.devlab.top/)**
+> - [Bash Dev Env](https://bash-dev-env.devlab.top/)
+> - [Bash Compiler](https://bash-compiler.devlab.top/)
 
 <!-- prettier-ignore-start -->
 
@@ -37,7 +37,8 @@
 
 - [1. Excerpt](#1-excerpt)
 - [2. Installation/Configuration](#2-installationconfiguration)
-- [3. Acknowledgements](#3-acknowledgements)
+- [3. Related Projects](#3-related-projects)
+- [4. Acknowledgements](#4-acknowledgements)
 
 <!--TOC-->
 
@@ -60,9 +61,18 @@ your home directory.
 
 Some tools require GNU parallel for faster processing.
 
-More details can be found at <https://devlab.top/bash-tools>
+More details can be found at <https://bash-tools.devlab.top>
 
-## 3. Acknowledgements
+## 3. Related Projects
+
+This framework is part of a suite of projects:
+
+- [My Documents](https://devlab.top/)
+- [Bash Tools Framework](https://bash-tools-framework.devlab.top/)
+- [Bash Dev Env](https://bash-dev-env.devlab.top/)
+- [Bash Compiler](https://bash-compiler.devlab.top/)
+
+## 4. Acknowledgements
 
 Like so many projects, this effort has roots in many places.
 

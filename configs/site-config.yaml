@@ -1,6 +1,6 @@
 # Site-specific configuration for bash-tools
 title: Bash Tools Documentation
-baseURL: https://devlab.top/bash-tools/
+baseURL: https://bash-tools.devlab.top/
 
 params:
   description: |
@@ -39,8 +39,6 @@ menu:
     - name: GitHub
       url: https://github.com/fchastanet/bash-tools
       weight: 10
-      post: <sup><i class="ps-1 fa-solid fa-up-right-from-square fa-xs" aria-hidden="true"></i></sup>
     - name: Release Notes
       url: https://github.com/fchastanet/bash-tools/releases
       weight: 20
-      post: <sup><i class="ps-1 fa-solid fa-up-right-from-square fa-xs" aria-hidden="true"></i></sup>
