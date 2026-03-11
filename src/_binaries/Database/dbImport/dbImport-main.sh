@@ -167,10 +167,16 @@ declare -a dbImportStreamOptions=(
   --profile "${optionProfile}"
   --target-dsn "${optionTargetDsn}"
   --character-set "${targetCharacterSet}"
+  --dump-kind "${optionDumpKind}"
 )
 if [[ -n "${optionTables:-}" ]]; then
   dbImportStreamOptions+=(
     --tables "${optionTables}"
+  )
+fi
+if [[ "${optionReset}" = "1" ]]; then
+  dbImportStreamOptions+=(
+    --reset
   )
 fi
 time (

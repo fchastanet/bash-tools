@@ -1947,6 +1947,8 @@ optionVersionCallback() {
 # options variables initialization
 declare optionProfile=""
 declare optionTables=""
+declare optionReset="0"
+declare optionDumpKind="auto"
 declare optionTargetDsn="default.local"
 declare optionCharacterSet=""
 declare optionHelp="0"
@@ -1975,6 +1977,12 @@ dbImportStreamCommandParse() {
   optionTables=""
   local -i options_parse_optionParsedCountOptionTables
   ((options_parse_optionParsedCountOptionTables = 0)) || true
+  optionReset="0"
+  local -i options_parse_optionParsedCountOptionReset
+  ((options_parse_optionParsedCountOptionReset = 0)) || true
+  optionDumpKind="auto"
+  local -i options_parse_optionParsedCountOptionDumpKind
+  ((options_parse_optionParsedCountOptionDumpKind = 0)) || true
   optionTargetDsn="default.local"
   local -i options_parse_optionParsedCountOptionTargetDsn
   ((options_parse_optionParsedCountOptionTargetDsn = 0)) || true
@@ -2038,7 +2046,7 @@ dbImportStreamCommandParse() {
     local options_parse_arg="$1"
     local argOptDefaultBehavior=0
     case "${options_parse_arg}" in
-      # Option 1/17
+      # Option 1/19
       # optionProfile alts --profile|-p
       # type: String min 0 max 1
       --profile | -p)
@@ -2057,7 +2065,7 @@ dbImportStreamCommandParse() {
         optionProfile="$1"
         ;;
 
-      # Option 2/17
+      # Option 2/19
       # optionTables alts --tables
       # type: String min 0 max 1
       --tables)
@@ -2078,7 +2086,45 @@ dbImportStreamCommandParse() {
 
         ;;
 
-      # Option 3/17
+      # Option 3/19
+      # optionReset alts --reset
+      # type: Boolean min 0 max 1
+      --reset)
+        # shellcheck disable=SC2034
+        optionReset="1"
+
+        if ((options_parse_optionParsedCountOptionReset >= 1 )); then
+          Log::displayError "Command ${SCRIPT_NAME} - Option ${options_parse_arg} - Maximum number of option occurrences reached(1)"
+          return 1
+        fi
+        ((++options_parse_optionParsedCountOptionReset))
+        ;;
+
+      # Option 4/19
+      # optionDumpKind alts --dump-kind|-k
+      # type: String min 0 max 1
+      # authorizedValues: auto|sql|tar|tar.gz|gz|tar.individual.sql.gz
+      --dump-kind | -k)
+        shift
+        if (($# == 0)); then
+          Log::displayError "Command ${SCRIPT_NAME} - Option ${options_parse_arg} - a value needs to be specified"
+          return 1
+        fi
+        if [[ ! "$1" =~ auto|sql|tar|tar.gz|gz|tar.individual.sql.gz ]]; then
+          Log::displayError "Command ${SCRIPT_NAME} - Option ${options_parse_arg} - value '$1' is not part of authorized values(auto, sql, tar, tar.gz, gz, tar.individual.sql.gz)"
+          return 1
+        fi
+
+        if ((options_parse_optionParsedCountOptionDumpKind >= 1 )); then
+          Log::displayError "Command ${SCRIPT_NAME} - Option ${options_parse_arg} - Maximum number of option occurrences reached(1)"
+          return 1
+        fi
+        ((++options_parse_optionParsedCountOptionDumpKind))
+        # shellcheck disable=SC2034
+        optionDumpKind="$1"
+        ;;
+
+      # Option 5/19
       # optionTargetDsn alts --target-dsn|-t
       # type: String min 0 max 1
       --target-dsn | -t)
@@ -2097,7 +2143,7 @@ dbImportStreamCommandParse() {
         optionTargetDsn="$1"
         ;;
 
-      # Option 4/17
+      # Option 6/19
       # optionCharacterSet alts --character-set|-c
       # type: String min 0 max 1
       --character-set | -c)
@@ -2116,7 +2162,7 @@ dbImportStreamCommandParse() {
         optionCharacterSet="$1"
         ;;
 
-      # Option 5/17
+      # Option 7/19
       # optionHelp alts --help|-h
       # type: Boolean min 0 max 1
       --help | -h)
@@ -2132,7 +2178,7 @@ dbImportStreamCommandParse() {
 
         ;;
 
-      # Option 6/17
+      # Option 8/19
       # optionConfig alts --config
       # type: Boolean min 0 max 1
       --config)
@@ -2146,7 +2192,7 @@ dbImportStreamCommandParse() {
         ((++options_parse_optionParsedCountOptionConfig))
         ;;
 
-      # Option 7/17
+      # Option 9/19
       # optionBashFrameworkConfig alts --bash-framework-config
       # type: String min 0 max 1
       --bash-framework-config)
@@ -2167,7 +2213,7 @@ dbImportStreamCommandParse() {
 
         ;;
 
-      # Option 8/17
+      # Option 10/19
       # optionInfoVerbose alts --verbose|-v
       # type: Boolean min 0 max 1
       --verbose | -v)
@@ -2185,7 +2231,7 @@ dbImportStreamCommandParse() {
 
         ;;
 
-      # Option 9/17
+      # Option 11/19
       # optionDebugVerbose alts -vv
       # type: Boolean min 0 max 1
       -vv)
@@ -2203,7 +2249,7 @@ dbImportStreamCommandParse() {
 
         ;;
 
-      # Option 10/17
+      # Option 12/19
       # optionTraceVerbose alts -vvv
       # type: Boolean min 0 max 1
       -vvv)
@@ -2221,7 +2267,7 @@ dbImportStreamCommandParse() {
 
         ;;
 
-      # Option 11/17
+      # Option 13/19
       # optionLogLevel alts --log-level
       # type: String min 0 max 1
       # authorizedValues: OFF|ERR|ERROR|WARN|WARNING|INFO|DEBUG|TRACE
@@ -2249,7 +2295,7 @@ dbImportStreamCommandParse() {
 
         ;;
 
-      # Option 12/17
+      # Option 14/19
       # optionLogFile alts --log-file
       # type: String min 0 max 1
       --log-file)
@@ -2272,7 +2318,7 @@ dbImportStreamCommandParse() {
 
         ;;
 
-      # Option 13/17
+      # Option 15/19
       # optionDisplayLevel alts --display-level
       # type: String min 0 max 1
       # authorizedValues: OFF|ERR|ERROR|WARN|WARNING|INFO|DEBUG|TRACE
@@ -2300,7 +2346,7 @@ dbImportStreamCommandParse() {
 
         ;;
 
-      # Option 14/17
+      # Option 16/19
       # optionNoColor alts --no-color
       # type: Boolean min 0 max 1
       --no-color)
@@ -2318,7 +2364,7 @@ dbImportStreamCommandParse() {
 
         ;;
 
-      # Option 15/17
+      # Option 17/19
       # optionTheme alts --theme
       # type: String min 0 max 1
       # authorizedValues: default|default-force|noColor
@@ -2346,7 +2392,7 @@ dbImportStreamCommandParse() {
 
         ;;
 
-      # Option 16/17
+      # Option 18/19
       # optionVersion alts --version
       # type: Boolean min 0 max 1
       --version)
@@ -2362,7 +2408,7 @@ dbImportStreamCommandParse() {
 
         ;;
 
-      # Option 17/17
+      # Option 19/19
       # optionQuiet alts --quiet|-q
       # type: Boolean min 0 max 1
       --quiet | -q)
@@ -2459,6 +2505,8 @@ dbImportStreamCommandParse() {
 
 
 
+
+
   if ((options_parse_argParsedCountArgDumpFile < 1 )); then
     Log::displayError "Command ${SCRIPT_NAME} - Argument 'argDumpFile' should be provided at least 1 time(s)"
     return 1
@@ -2492,7 +2540,7 @@ dbImportStreamCommandHelp() {
   # ------------------------------------------
   # usage/options section
   # ------------------------------------------
-  optionsAltList=("[--profile|-p <profile>]" "[--tables <tablesSeparatedByComma>]" "[--target-dsn|-t <targetDsn>]" "[--character-set|-c <characterSet>]" "[--help|-h]" "[--config]" "[--bash-framework-config <bash-framework-config>]" "[--verbose|-v]" "[-vv]" "[-vvv]" "[--log-level <log-level>]" "[--log-file <log-file>]" "[--display-level <display-level>]" "[--no-color]" "[--theme <theme>]" "[--version]" "[--quiet|-q]"
+  optionsAltList=("[--profile|-p <profile>]" "[--tables <tablesSeparatedByComma>]" "[--reset]" "[--dump-kind|-k <dumpKind>]" "[--target-dsn|-t <targetDsn>]" "[--character-set|-c <characterSet>]" "[--help|-h]" "[--config]" "[--bash-framework-config <bash-framework-config>]" "[--verbose|-v]" "[-vv]" "[-vvv]" "[--log-level <log-level>]" "[--log-file <log-file>]" "[--display-level <display-level>]" "[--no-color]" "[--theme <theme>]" "[--version]" "[--quiet|-q]"
   )
   Array::wrap2 " " 80 2 "${__HELP_TITLE_COLOR}USAGE:${__RESET_COLOR}" \
     "dbImportStream" "${optionsAltList[@]}"
@@ -2528,6 +2576,40 @@ dbImportStreamCommandHelp() {
   Array::wrap2 ' ' 76 4 "    " "Import only table specified in the list." "If aws mode, ignore profile option." ""
   echo
 
+  echo
+  echo -e "${__HELP_TITLE_COLOR}SOURCE OPTIONS:${__RESET_COLOR}"
+  echo -e "  ${__HELP_OPTION_COLOR}--reset${__HELP_NORMAL} {single}"
+  Array::wrap2 ' ' 76 4 "    " "reset the table before importing data (using TRUNCATE TABLE or DROP TABLE before CREATE TABLE)."
+  echo
+
+
+  echo -e "  ${__HELP_OPTION_COLOR}--dump-kind${__HELP_NORMAL}, ${__HELP_OPTION_COLOR}-k <dumpKind>${__HELP_NORMAL} {single}"
+  Array::wrap2 ' ' 76 4 "    " "Kind of dump to import." ""
+  echo
+
+  echo "    Possible values: "
+  Array::wrap2 ' ' 76 8 "      - ${__OPTION_COLOR}auto:${__RESET_COLOR} deduce dump kind from filename
+  (.sql -> sql, .tar -> tar, .tar.gz or .tgz  -> tar.gz, .gz -> gz)
+  "
+  echo
+  Array::wrap2 ' ' 76 8 "      - ${__OPTION_COLOR}sql:${__RESET_COLOR} dump file is a .sql file.
+  "
+  echo
+  Array::wrap2 ' ' 76 8 "      - ${__OPTION_COLOR}tar:${__RESET_COLOR} dump file is a .tar file containing multiple .sql files, one per table.
+  "
+  echo
+  Array::wrap2 ' ' 76 8 "      - ${__OPTION_COLOR}tar.gz:${__RESET_COLOR} dump file is a .tar file gzipped containing multiple .sql files, one per table.
+  "
+  echo
+  Array::wrap2 ' ' 76 8 "      - ${__OPTION_COLOR}gz:${__RESET_COLOR} dump file is a gz file containing a single .sql file.
+  "
+  echo
+  Array::wrap2 ' ' 76 8 "      - ${__OPTION_COLOR}tar.individual.sql.gz:${__RESET_COLOR} dump file is a tar file containing multiple .sql.gz files, one per table.
+  "
+  echo
+
+  Array::wrap2 ' ' 76 6 "    Default value: " "auto"
+  echo
   echo
   echo -e "${__HELP_TITLE_COLOR}TARGET OPTIONS:${__RESET_COLOR}"
   echo -e "  ${__HELP_OPTION_COLOR}--target-dsn${__HELP_NORMAL}, ${__HELP_OPTION_COLOR}-t <targetDsn>${__HELP_NORMAL} {single}"
@@ -2689,31 +2771,47 @@ main() {
 
 Linux::requireTarCommand
 Compiler::Embed::extractFileFromBase64 \
-  "${PERSISTENT_TMPDIR:-/tmp}/1a25e8fe87d1af27f299ca9f5af14fe2fad803ddce20d659e5f6784c6056c9cc/dbImportStreamScript" \
-  "QkVHSU57CiAgd3JpdGU9MQp9CnsKICBidWZmZXIgPSBzdWJzdHIoJDAsIDEsIDE1MCkKICBsaW5l \
-ID0gJDAKICBpZihtYXRjaChidWZmZXIsIC9eTE9DSyBUQUJMRVMgYChbXmBdKylgIFdSSVRFOyQv \
-LCBhcnIpICE9IDApIHsKICAgICMgY2hlY2sgaWYgaW5zZXJ0cyBhcmUgcGFydCBvZiB0aGUgcHJv \
-ZmlsZQogICAgdGFibGVOYW1lPWFyclsxXQogICAgaWYgKCEgKHRhYmxlTmFtZSBpbiBtYXApKSB7 \
-CiAgICAgIHByb2ZpbGVDbWQgPSAiZWNobyAnIiB0YWJsZU5hbWUgIicgfCAiIFBST0ZJTEVfQ09N \
-TUFORCAiIHwgZ3JlcCAtcSAiIHRhYmxlTmFtZQogICAgICBtYXBbdGFibGVOYW1lXSA9IChzeXN0 \
-ZW0ocHJvZmlsZUNtZCkgPT0gMCkKICAgIH0KICAgIGlmIChtYXBbdGFibGVOYW1lXSkgewogICAg \
-ICBwcmludCAiXDAzM1s0NG0iICJiZWdpbiBpbnNlcnQgIiB0YWJsZU5hbWUgIlwwMzNbMG0iICA+ \
-ICIvZGV2L3N0ZGVyciIKICAgICAgbGluZSA9IGxpbmUgIlxuVFJVTkNBVEUgVEFCTEUgYCIgdGFi \
-bGVOYW1lICJgOyIKICAgICAgd3JpdGU9MQogICAgfSBlbHNlIHsKICAgICAgcHJpbnQgImlnbm9y \
-ZSB0YWJsZSAiIHRhYmxlTmFtZSAgPiAiL2Rldi9zdGRlcnIiCiAgICAgIHdyaXRlPTAKICAgIH0K \
-ICB9IGVsc2UgaWYobWF0Y2goYnVmZmVyLCAvXmNvbW1pdDskLywgYXJyKSAhPSAwKSB7CiAgICB3 \
-cml0ZT0xCiAgfSBlbHNlIGlmKG1hdGNoKGJ1ZmZlciwgL1NFVCBOQU1FUyAoW14gXSspLywgYXJy \
-KSAhPSAwKSB7CiAgICBpZiAoQ0hBUkFDVEVSX1NFVCAhPSAiIikgewogICAgICBzdWIoL1NFVCBO \
-QU1FUyAoW14gXSspLywgIlNFVCBOQU1FUyAiIENIQVJBQ1RFUl9TRVQsIGxpbmUpCiAgICB9CiAg \
-ICB3cml0ZT0xCiAgfSBlbHNlIGlmKG1hdGNoKGJ1ZmZlciwgL1NFVCBjaGFyYWN0ZXJfc2V0X2Ns \
-aWVudCA9IChbXiBdKykvLCBhcnIpICE9IDAgJiYgc3Vic3RyKGFyclsxXSwgMCwgMSkgIT0gIkAi \
-KSB7CiAgICBpZiAoQ0hBUkFDVEVSX1NFVCAhPSAiIikgewogICAgICBzdWIoL1NFVCBjaGFyYWN0 \
-ZXJfc2V0X2NsaWVudCA9IChbXiBdKykvLCAiU0VUIGNoYXJhY3Rlcl9zZXRfY2xpZW50ID0gIiBD \
-SEFSQUNURVJfU0VULCBsaW5lKQogICAgfQogICAgd3JpdGU9MQogIH0KCgogIGlmICh3cml0ZSA9 \
-PSAxKSB7CiAgICBwcmludCBsaW5lCiAgfQp9Cg==" \
+  "${PERSISTENT_TMPDIR:-/tmp}/f60daf3f7c7389022cfa34ad93f1f1d27253a0cbd47d93580fbf65ff7d20cca8/dbImportStreamScript" \
+  "QkVHSU57CiAgd3JpdGU9MQp9CgpmdW5jdGlvbiBTaG91bGRJbmNsdWRlVGFibGUodGFibGVOYW1l \
+KSB7CiAgaWYgKCEgKHRhYmxlTmFtZSBpbiBtYXApKSB7CiAgICBwcm9maWxlQ21kID0gImVjaG8g \
+JyIgdGFibGVOYW1lICInIHwgIiBQUk9GSUxFX0NPTU1BTkQgIiB8IGdyZXAgLXEgIiB0YWJsZU5h \
+bWUKICAgIG1hcFt0YWJsZU5hbWVdID0gKHN5c3RlbShwcm9maWxlQ21kKSA9PSAwKQogICAgaWYg \
+KG1hcFt0YWJsZU5hbWVdKSB7CiAgICAgIHByaW50ICJcMDMzWzQ0bSIgImJlZ2luIGluc2VydCAi \
+IHRhYmxlTmFtZSAiXDAzM1swbSIgID4gIi9kZXYvc3RkZXJyIgogICAgfSBlbHNlIHsKICAgICAg \
+cHJpbnQgImV4Y2x1ZGUgdGFibGUgIiB0YWJsZU5hbWUgID4gIi9kZXYvc3RkZXJyIgogICAgfQog \
+IH0KICByZXR1cm4gbWFwW3RhYmxlTmFtZV0KfQoKewogIGJ1ZmZlciA9IHN1YnN0cigkMCwgMSwg \
+MTUwKQogIGxpbmUgPSAkMAogIGlmKG1hdGNoKGJ1ZmZlciwgL15MT0NLIFRBQkxFUyBgKFteYF0r \
+KWAgV1JJVEU7JC8sIGFycikgIT0gMCkgewogICAgIyBjaGVjayBpZiBpbnNlcnRzIGFyZSBwYXJ0 \
+IG9mIHRoZSBwcm9maWxlCiAgICB0YWJsZU5hbWU9YXJyWzFdCiAgICBpZiAoU2hvdWxkSW5jbHVk \
+ZVRhYmxlKHRhYmxlTmFtZSkpIHsKICAgICAgaWYgKFJFU0VUPT0xKSB7CiAgICAgICAgcHJpbnQg \
+IlwwMzNbNDRtIiAicmVzZXQgbW9kZSAtIHRydW5jYXRlIHRhYmxlICIgdGFibGVOYW1lICJcMDMz \
+WzBtIiAgPiAiL2Rldi9zdGRlcnIiCiAgICAgICAgbGluZSA9ICJcblRSVU5DQVRFIFRBQkxFIGAi \
+IHRhYmxlTmFtZSAiYCBJRiBFWElTVFM7XG4iIGxpbmUKICAgICAgfQogICAgICB3cml0ZT0xCiAg \
+ICB9IGVsc2UgewogICAgICB3cml0ZT0wCiAgICB9CiAgfSBlbHNlIGlmKG1hdGNoKGJ1ZmZlciwg \
+L15DUkVBVEUgVEFCTEUgYChbXmBdKylgIFwoJC8sIGFycikgIT0gMCkgewogICAgdGFibGVOYW1l \
+PWFyclsxXQogICAgaWYgKFNob3VsZEluY2x1ZGVUYWJsZSh0YWJsZU5hbWUpICYmIFJFU0VUPT0x \
+KSB7CiAgICAgIHByaW50ICJcMDMzWzQ0bSIgInJlc2V0IG1vZGUgLSBkcm9wIHRhYmxlICIgdGFi \
+bGVOYW1lICJcMDMzWzBtIiAgPiAiL2Rldi9zdGRlcnIiCiAgICAgIGxpbmUgPSAiXG5EUk9QIFRB \
+QkxFIElGIEVYSVNUUyBgIiB0YWJsZU5hbWUgImA7XG5DUkVBVEUgVEFCTEUgYCIgdGFibGVOYW1l \
+ICJgIChcbiIKICAgIH0gZWxzZSB7CiAgICAgIGxpbmUgPSAiQ1JFQVRFIFRBQkxFIElGIE5PVCBF \
+WElTVFMgYCIgdGFibGVOYW1lICJgIChcbiIKICAgIH0KICAgIHdyaXRlPTEKICB9IGVsc2UgaWYo \
+bWF0Y2goYnVmZmVyLCAvXklOU0VSVCBJTlRPIGAoW15gXSspYCBWQUxVRVMvLCBhcnIpICE9IDAp \
+IHsKICAgICMgY2hlY2sgaWYgaW5zZXJ0cyBhcmUgcGFydCBvZiB0aGUgcHJvZmlsZQogICAgdGFi \
+bGVOYW1lPWFyclsxXQogICAgd3JpdGU9U2hvdWxkSW5jbHVkZVRhYmxlKHRhYmxlTmFtZSkKICB9 \
+IGVsc2UgaWYobWF0Y2goYnVmZmVyLCAvXmNvbW1pdDskLywgYXJyKSAhPSAwKSB7CiAgICB3cml0 \
+ZT0xCiAgfSBlbHNlIGlmKG1hdGNoKGJ1ZmZlciwgL1NFVCBOQU1FUyAoW0EtWmEtejAtOV8tXSsp \
+LywgYXJyKSAhPSAwKSB7CiAgICBpZiAoQ0hBUkFDVEVSX1NFVCAhPSAiIikgewogICAgICBzdWIo \
+L1NFVCBOQU1FUyAoW0EtWmEtejAtOV8tXSspLywgIlNFVCBOQU1FUyAiIENIQVJBQ1RFUl9TRVQs \
+IGxpbmUpCiAgICB9CiAgICB3cml0ZT0xCiAgfSBlbHNlIGlmKG1hdGNoKGJ1ZmZlciwgL1NFVCBj \
+aGFyYWN0ZXJfc2V0X2NsaWVudCA9IChbQS1aYS16MC05Xy1dKykvLCBhcnIpICE9IDAgJiYgc3Vi \
+c3RyKGFyclsxXSwgMCwgMSkgIT0gIkAiKSB7CiAgICBpZiAoQ0hBUkFDVEVSX1NFVCAhPSAiIikg \
+ewogICAgICBzdWIoL1NFVCBjaGFyYWN0ZXJfc2V0X2NsaWVudCA9IChbQS1aYS16MC05Xy1dKykv \
+LCAiU0VUIGNoYXJhY3Rlcl9zZXRfY2xpZW50ID0gIiBDSEFSQUNURVJfU0VULCBsaW5lKQogICAg \
+fQogICAgd3JpdGU9MQogIH0KCiAgaWYgKHdyaXRlID09IDEpIHsKICAgIHByaW50IGxpbmUKICB9 \
+Cn0K" \
   "644"
 
-declare -gx embed_file_dbImportStreamScript="${PERSISTENT_TMPDIR:-/tmp}/1a25e8fe87d1af27f299ca9f5af14fe2fad803ddce20d659e5f6784c6056c9cc/dbImportStreamScript"
+declare -gx embed_file_dbImportStreamScript="${PERSISTENT_TMPDIR:-/tmp}/f60daf3f7c7389022cfa34ad93f1f1d27253a0cbd47d93580fbf65ff7d20cca8/dbImportStreamScript"
 
 
 # create db instances
@@ -2735,16 +2833,101 @@ declare status=0
 # shellcheck disable=SC2034
 declare -a pipeStatus=()
 
+deduceDumpKindFromFilename() {
+  local dumpFile="$1"
+  Log::displayInfo "Deducing dump file format from filename ${dumpFile}"
+  if [[ "${dumpFile}" =~ \.sql$ ]]; then
+    echo "sql"
+  elif [[ "${dumpFile}" =~ \.tar$ ]]; then
+    echo "tar"
+  elif [[ "${dumpFile}" =~ \.gz$ ]]; then
+    echo "gz"
+  elif [[ "${dumpFile}" =~ (\.tar\.gz|\.tgz)$ ]]; then
+    echo "tar.gz"
+  elif [[ "${dumpFile}" =~ \.tar\.individual\.sql\.gz$ ]]; then
+    echo "tar.individual.sql.gz"
+  else
+    Log::displayError "Unable to deduce dump file format from filename ${dumpFile} - use --dump-kind option to specify the format"
+    return 1
+  fi
+}
+
+loadGzipDumpFile() {
+  local dumpFile="$1"
+  zcat "${dumpFile}"
+}
+
+loadTgzIndividualSql() {
+  local dumpFile="$1"
+  tar xOzf "${dumpFile}" --wildcards --no-anchored '*.sql'
+}
+
+loadTarIndividualSql() {
+  local dumpFile="$1"
+  tar xOf "${dumpFile}" --wildcards --no-anchored '*.sql'
+}
+
+loadTarIndividualSqlGz() {
+  local dumpFile="$1"
+  local sqlGzFile
+  local -a sqlGzFiles
+  mapfile -t sqlGzFiles < <(tar tf "${dumpFile}" | sort | grep -E '\.sql\.gz$')
+  for sqlGzFile in "${sqlGzFiles[@]}"; do
+    LOG_LAST_LOG_DATE_INIT=1 Log::computeDuration
+    tar xOf "${dumpFile}" "${sqlGzFile}" | zcat || {
+      if [[ $? = 141 ]]; then
+        return 0
+      fi
+      # fail if any error during mysql or awk
+      return $?
+    }
+    DISPLAY_DURATION=1 Log::displayInfo "Processed ${sqlGzFile}" >&2
+  done
+  return 0
+}
+
+loadDumpFile() {
+  local dumpFile="$1"
+  local dumpKind="$2"
+  if [[ "${dumpKind}" == "sql" ]]; then
+    cat "${dumpFile}"
+  elif [[ "${dumpKind}" == "tar" ]]; then
+    loadTarDumpFile "${dumpFile}"
+  elif [[ "${dumpKind}" == "gz" ]]; then
+    loadGzipDumpFile "${dumpFile}"
+  elif [[ "${dumpKind}" == "tar" ]]; then
+    loadTarIndividualSql "${dumpFile}"
+  elif [[ "${dumpKind}" == "tar.gz" ]]; then
+    loadTgzIndividualSql "${dumpFile}"
+  elif [[ "${dumpKind}" == "tar.individual.sql.gz" ]]; then
+    loadTarIndividualSqlGz "${dumpFile}"
+  else
+    Log::displayError "Unsupported dump file format for file ${dumpFile}"
+    exit 1
+  fi
+  return 0
+}
+
+if [[ "${optionDumpKind}" = "auto" ]]; then
+  optionDumpKind="$(deduceDumpKindFromFilename "${argDumpFile}")"
+  Log::displayInfo "Deduced dump file format is ${optionDumpKind}"
+fi
+# try process substitution to avoid SIGPIPE
+# https://oneuptime.com/blog/post/2026-01-24-bash-broken-pipe/view
+Log::displayInfo "Loading dump file ${argDumpFile} with format ${optionDumpKind}"
 # shellcheck disable=2086,2154
 (
-  if [[ "${argDumpFile}" =~ \.tar.gz$ ]]; then
-    tar xOfz "${argDumpFile}"
-  elif [[ "${argDumpFile}" =~ \.gz$ ]]; then
-    zcat "${argDumpFile}"
-  fi
+  loadDumpFile "${argDumpFile}" "${optionDumpKind}" || {
+    if [[ $? = 141 ]]; then
+      return 0
+    fi
+    # fail if any error during mysql or awk
+    return $?
+  }
 ) | (
   awk \
     -v PROFILE_COMMAND="${profileCommandFile}" \
+    -v RESET="${optionReset}" \
     -v CHARACTER_SET="${remoteCharacterSet}" \
     -f "${embed_file_dbImportStreamScript}" \
     -
@@ -2753,11 +2936,10 @@ declare -a pipeStatus=()
     "--defaults-extra-file=${dbTargetInstance['AUTH_FILE']}" \
     ${dbTargetInstance['DB_IMPORT_OPTIONS']} \
     "${argTargetDbName}"
-) || (
-  # zcat will continue to write to stdout whereas awk has finished if table has been found
+) || {
   # we detect this case because zcat will return code 141 because pipe closed
   Bash::handlePipelineFailure status pipeStatus
-)
+}
 
 }
 

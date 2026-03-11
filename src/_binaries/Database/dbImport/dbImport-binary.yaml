@@ -5,6 +5,7 @@ extends:
   - '${BASH_TOOLS_ROOT_DIR}/src/_binaries/commandDefinitions/optionsProfile.yaml'
   - '${BASH_TOOLS_ROOT_DIR}/src/_binaries/commandDefinitions/optionsTables.yaml'
   - '${BASH_TOOLS_ROOT_DIR}/src/_binaries/commandDefinitions/optionsMysqlSource.yaml'
+  - '${BASH_TOOLS_ROOT_DIR}/src/_binaries/commandDefinitions/optionsDumpKind.yaml'
   - '${BASH_TOOLS_ROOT_DIR}/src/_binaries/commandDefinitions/optionsDefault.yaml'
   - '${FRAMEWORK_ROOT_DIR}/src/_binaries/commandDefinitions/defaultCommand.yaml'
   - '${FRAMEWORK_ROOT_DIR}/src/_binaries/commandDefinitions/frameworkConfig.yaml'

@@ -1,0 +1,44 @@
+---
+binData:
+  commands:
+    default:
+      optionGroups:
+        groupSourceDbOptions:
+          title: 'SOURCE OPTIONS:'
+      options:
+        - alts:
+            - '--reset'
+          group: groupSourceDbOptions
+          type: Boolean
+          help: reset the table before importing data (using TRUNCATE TABLE or DROP TABLE before CREATE TABLE).
+          variableName: optionReset
+        - alts:
+            - --dump-kind
+            - -k
+          group: groupSourceDbOptions
+          help: |
+            Kind of dump to import.
+          helpValueName: dumpKind
+          type: String
+          variableName: optionDumpKind
+          defaultValue: auto
+          authorizedValues:
+            - value: auto
+              help: |
+                deduce dump kind from filename
+                (.sql -> sql, .tar -> tar, .tar.gz or .tgz  -> tar.gz, .gz -> gz)
+            - value: sql
+              help: |
+                dump file is a .sql file.
+            - value: tar
+              help: |
+                dump file is a .tar file containing multiple .sql files, one per table.
+            - value: tar.gz
+              help: |
+                dump file is a .tar file gzipped containing multiple .sql files, one per table.
+            - value: gz
+              help: |
+                dump file is a gz file containing a single .sql file.
+            - value: tar.individual.sql.gz
+              help: |
+                dump file is a tar file containing multiple .sql.gz files, one per table.
