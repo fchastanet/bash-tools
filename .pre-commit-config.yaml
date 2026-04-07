@@ -5,18 +5,7 @@ minimum_pre_commit_version: 3.5.0
 fail_fast: true
 repos:
   - repo: local
-    # this hook is not intended to be run on github
-    # it just allows to generate the same pre-commit
-    # file with some specific option to github
     hooks:
-      - id: preCommitGeneration
-        name: preCommitGeneration
-        entry: .github/preCommitGeneration.sh
-        language: system
-        pass_filenames: false
-        always_run: true
-        require_serial: true
-        stages: [pre-commit, pre-push, manual]
       - id: v8r
         name: v8r
         entry: npx -y v8r --ci .v8rrc.yaml
@@ -44,12 +33,6 @@ repos:
             /testsData/|
             \.schema\.json$
           )
-      - id: cspell
-        name: cspell
-        entry: npx -y cspell .
-        language: system
-        pass_filenames: false
-        stages: [pre-commit, pre-push, manual]
 
   - repo: https://github.com/executablebooks/mdformat
     # Do this before other tools "fixing" the line endings
@@ -106,7 +89,7 @@ repos:
           )
 
   - repo: https://github.com/igorshubovych/markdownlint-cli
-    rev: v0.47.0
+    rev: v0.48.0
     hooks:
       - id: markdownlint
         args: [--disable=MD041, --fix]
@@ -170,13 +153,13 @@ repos:
           )
 
   - repo: https://github.com/rhysd/actionlint
-    rev: v1.7.11
+    rev: v1.7.12
     hooks:
       - id: actionlint
         stages: [pre-commit, pre-push, manual]
 
   - repo: https://github.com/codespell-project/codespell
-    rev: v2.4.1
+    rev: v2.4.2
     hooks:
       - id: codespell
         args:
@@ -203,18 +186,6 @@ repos:
               ^.cspell/codespellrc-.*.txt$
           )
 
-  - repo: https://github.com/rbubley/mirrors-prettier
-    rev: v3.8.1
-    hooks:
-      - id: prettier
-        exclude: |
-          (?x)(
-            ^src\/Postman\/Collection\/testsData\/postmanCollections_invalidJsonFile.json$|
-            ^src\/Postman\/Model\/testsData\/getCollectionInvalid.json$|
-            ^src\/Postman\/Model\/testsData\/pushMode\/GithubAPI\/notValidJsonFile.json$|
-            ^\.github/
-          )
-
   - repo: https://github.com/fchastanet/jumanjihouse-pre-commit-hooks
     rev: 3.0.2
     hooks:
@@ -238,8 +209,9 @@ repos:
         exclude: /testsData/
 
   - repo: https://github.com/fchastanet/bash-tools-framework
-    rev: 6.2.5
+    rev: 6.3.5
     hooks:
+      - id: cspellForbidden
       - id: fixShebangExecutionBit
       - id: awkLint
       - id: shellcheckLint
@@ -255,6 +227,8 @@ repos:
             ^conf/mysql2pumlSkins/default.puml$|
             ^src/_binaries/Converters/mysql2puml/testsData/mysql2pumlSkins/default.puml$
           )
+      - id: hugoUpdateLastmod
+        stages: [pre-commit]
 
   - repo: local
     hooks:

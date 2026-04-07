@@ -94,6 +94,10 @@ jobs:
           vendor/bash-tools-framework/bin/installRequirements
           docker pull scrasnups/build:bash-tools-ubuntu-5.3
 
+      - name: Transform pre-commit config for GitHub
+        if: ${{ success() }}
+        run: .github/preCommitGeneration.sh
+
       - name: Run pre-commit
         uses: pre-commit/action@v3.0.1
         id: preCommit

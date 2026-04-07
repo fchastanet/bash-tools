@@ -11,6 +11,9 @@ DISABLE_LINTERS:
   - JAVASCRIPT_ES
   - SPELL_CSPELL # already included in pre-commit
   - YAML_V8R # already included in pre-commit
+  - JSON_PRETTIER
+  - YAML_PRETTIER
+  - YAML_YAMLLINT
   - JAVASCRIPT_PRETTIER
   - RUBY_RUBOCOP
   - REPOSITORY_CHECKOV
@@ -146,13 +149,6 @@ MARKDOWN_MARKDOWNLINT_FILTER_REGEX_EXCLUDE: |
   )
 
 JSON_ESLINT_PLUGIN_JSONC_FILTER_REGEX_EXCLUDE: |
-  (?x)(
-    ^src/Postman/Model/testsData/pushMode/GithubAPI/notValidJsonFile.json$|
-    ^src/Postman/Collection/testsData/postmanCollections_invalidJsonFile.json$|
-    ^src/Postman/Model/testsData/getCollectionInvalid.json$
-  )
-
-JSON_PRETTIER_FILTER_REGEX_EXCLUDE: |
   (?x)(
     ^src/Postman/Model/testsData/pushMode/GithubAPI/notValidJsonFile.json$|
     ^src/Postman/Collection/testsData/postmanCollections_invalidJsonFile.json$|

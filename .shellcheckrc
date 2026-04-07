@@ -4,7 +4,11 @@ enable=avoid-nullary-conditions
 enable=add-default-case
 enable=quote-safe-variables
 enable=require-double-brackets
+enable=check-set-e-suppressed
+enable=deprecate-which
+#enable=check-extra-masked-returns
+#enable=check-unassigned-uppercase
 source-path=SCRIPTDIR
 source-path=vendor/bash-tools-framework
 # special property used by shellcheckLint
-exclude=(\.bats$|\.tpl$|/testsData/|\.cache/pre-commit)
+exclude=(^bin/|^install$|^conf/dbScripts/extractData$|\.bats$|\.tpl$|/testsData/|\.cache/pre-commit)

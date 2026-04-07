@@ -18,6 +18,7 @@ compinit
 compinstall
 CONV
 cvzf
+Cxxxx
 Datash
 datetime
 DELIMS
@@ -57,6 +58,7 @@ ISBUSY
 keychain
 KHTML
 killall
+Lastmod
 lastpipe
 libkrb
 libloadandcheckconfigsh

@@ -1,76 +1,96 @@
 ---
 $schema: https://raw.githubusercontent.com/streetsidesoftware/cspell/main/cspell.schema.json
-version: '0.2'
+version: "0.2"
 language: en
 noConfigSearch: true
 caseSensitive: true
 useGitignore: true
 enableGlobDot: true
 ignorePaths:
-  - '**/testsData/**'
-  - '.github/**/*.md'
-  - package-lock.json
-  - '**/*/svg'
-  - .vscode
-  - '.cspell/**'
   - .git/**
   - '**/.git/**'
-  - '.history/**'
   - '**/node_modules/**'
-  - '**/vscode-extension/**'
+  - .history/**
+  - logs/**
   - '**/logs/**'
+  - bin/**
+  - '**/bin/**'
+  - '**/testsData/**'
+  - package-lock.json
   - '**/*.svg'
-  - megalinter-reports
+  - .vscode
+  - .cspell/**
   - report
   - .jscpd.json
+  - megalinter-reports
   - '*-megalinter_file_names_cspell.txt'
   - '**/*megalinter_file_names_cspell.txt'
   - .shellcheckrc
-  - '**/bin/**'
-  - 'vendor/**'
+  - vendor/**
   - '**/backup/**'
   - commit-msg.md
-  - '.mega-linter*.yml'
-  - '.env'
+  - .mega-linter*.yml
+  - TODO.md
+  - .env
   - '**/*.help.txt'
   - 'conf/dbScripts/**'
   - 'install'
 dictionaryDefinitions:
+  - name: forbidden
+    addWords: false
+    path: .cspell/forbidden.txt
   - name: myBash
-    path: '.cspell/bash.txt'
+    path: .cspell/bash.txt
     addWords: true
-  - name: loremIpsum
-    path: '.cspell/loremIpsum.txt'
+  - name: githubWorkflow
+    path: .cspell/githubWorkflow.txt
     addWords: true
   - name: config
-    path: '.cspell/config.txt'
+    path: .cspell/config.txt
     addWords: true
   - name: mySoftwares
-    path: '.cspell/softwares.txt'
+    path: .cspell/softwares.txt
     addWords: true
-  - name: readme
-    path: '.cspell/readme.txt'
+  - name: markdown
+    path: .cspell/markdown.txt
     addWords: true
-  - name: dirColors
-    path: '.cspell/dirColors.txt'
-    addWords: false
-  - name: plantUml
-    path: '.cspell/plantUml.txt'
+  - name: lintersConfig
+    path: .cspell/lintersConfig.txt
+    addWords: true
+  # Specific dictionaries for this repo
+  - name: plantuml
+    path: .cspell/plantuml.txt
     addWords: false
   - name: myAwk
-    path: '.cspell/myAwk.txt'
+    path: .cspell/myAwk.txt
+    addWords: true
+  - name: dirColors
+    path: .cspell/dirColors.txt
     addWords: false
+  - name: loremIpsum
+    path: .cspell/loremIpsum.txt
+    addWords: true
   - name: postman
-    path: '.cspell/postman.txt'
+    path: .cspell/postman.txt
     addWords: false
 
-# https://github.com/streetsidesoftware/cspell/blob/main/packages/cspell/README.md#languagesettings
 languageSettings:
-  - languageId: dirColors
+  - languageId: githubWorkflow
     locale: '*'
     dictionaries:
-      - dirColors
-
+      - githubWorkflow
+      - bash
+      - go
+      - myBash
+      - mySoftwares
+      - software
+  - languageId: config
+    locale: '*'
+    caseSensitive: true
+    dictionaries:
+      - config
+      - mySoftwares
+      - software
   - languageId: shellscript
     locale: '*'
     dictionaries:
@@ -82,60 +102,62 @@ languageSettings:
   - languageId: markdown
     locale: '*'
     dictionaries:
-      - readme
+      - markdown
       - mySoftwares
       - softwareTerms
 
-  - languageId: plantUml
+  # Specific language settings for this repo
+  - languageId: dirColors
     locale: '*'
     dictionaries:
-      - bash
-      - plantUml
-      - mySoftwares
-      - software
-
-# OVERRIDES
+      - dirColors
+# ----------
 overrides:
   - filename:
-      - '**/*.{bats,tpl}'
-      - '**/*.env'
-      - 'src/Array/wrap.sh'
-    languageId: shellscript
-    dictionaries:
-      - loremIpsum
-
+      - '.*'
+      - '*.yml'
+      - '*.yaml'
+      - 'configs/site-config.yaml'
+      - '*.toml'
+      - 'package.json'
+    languageId: config
+  - filename:
+      - .github/**/*.yml
+      - .github/*.yml
+      - templates-examples/**
+    languageId: githubWorkflow
   - filename:
       - '*.yml'
+      - '*.yaml'
       - '*.toml'
     dictionaries:
       - lintersConfig
       - mySoftwares
-
-  - filename: '**/*.puml'
-    languageId: plantUml
-
+  - filename:
+      - LICENSE
+      - '**/*.md'
+    languageId: markdown
+  - filename:
+    - '**/*.puml'
+    dictionaries:
+      - plantuml
   - filename: '**/*.html'
     dictionaries:
       - mySoftwares
       - software
 
-  - filename:
-      - '**/*.md'
-      - 'LICENSE'
-    languageId: markdown
-
-  - filename: LICENSE
-    dictionaries:
-      - readme
-
-  - filename:
-      - .github/**
-      - .*
+  # Specific overrides for this repo
+  - languageId: shellscript
+    filename:
+      - '**/*.sh'
+      - '*.bash'
+      - .github/copilot-instructions.md
       - '*.{yaml,yml}'
-    languageId: shellscript
+      - '**/*.bats'
+      - '**/*.env'
+      - '.env.*'
     dictionaries:
       - config
-
   - filename: '**/*.awk'
     dictionaries:
       - myAwk
@@ -154,17 +176,15 @@ patterns:
   - name: urls
     pattern: "/https?://([^ \t\"'()]+)/g"
   - name: packages
-    pattern: '/[-A-Za-z0-9.]+/[-A-Za-z0-9.]+/g'
+    pattern: /[-A-Za-z0-9.]+/[-A-Za-z0-9.]+/g
   - name: markdownToc
-    pattern: "\\]\\(#[^)]+\\)$"
-
+    pattern: \]\(#[^)]+\)$
 ignoreRegExpList:
   - urls
   - packages
   - markdownToc
-
 enableFiletypes:
   - shellscript
-  - dirColors
-  - markdown
-  - plantUml
+
+dictionaries:
+  - forbidden
