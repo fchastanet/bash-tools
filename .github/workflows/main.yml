@@ -10,46 +10,68 @@ on: # yamllint disable-line rule:truthy
       # avoid infinite loop for auto created PRs
       - "!update/pre-commit-*"
     tags:
-      - "*"
+      - "**"
   workflow_dispatch:
 
 # cancel previous build if several pushes
 concurrency:
-  group: >-
+  group: |
     ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
-permissions: read-all
+env:
+  # Apply linter fixes configuration
+  # When active, APPLY_FIXES must also be defined as
+  # environment variable (in github/workflows/mega-linter.yml
+  # or other CI tool)
+  APPLY_FIXES: all
+  # Decide which event triggers application of fixes in a
+  # commit or a PR (pull_request, push, all)
+  APPLY_FIXES_EVENT: all
+  # If APPLY_FIXES is used, defines if the fixes are
+  # directly committed (commit) or posted in a PR (pull_request)
+  APPLY_FIXES_MODE: pull_request
+  # variables to compute complex conditions
+  COND_UPDATED_SOURCES: false
+  COND_APPLY_FIXES_NEEDED: false
+  COND_PUSH_OR_PR: |-
+    ${{
+      github.event_name == 'pull_request' ||
+      github.event_name == 'push'
+    }}
+
 jobs:
   # -------------------------------------------------------
   # Pre-commit
   # -------------------------------------------------------
-
   pre-commit:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true # Forces Node 24 runtime
     permissions:
-      # needed by akatov/commit-status-updater@219d3f932547cad092e384c7a36bf4d963739c35
+      # needed by guibranco/github-status-action-v2@v1
       statuses: write
     steps:
-      - uses: akatov/commit-status-updater@219d3f932547cad092e384c7a36bf4d963739c35
-        if: ${{ github.event_name == 'pull_request' || github.event_name == 'push' }}
+      - uses: guibranco/github-status-action-v2@v1
+        if: ${{ env.COND_PUSH_OR_PR }}
         with:
-          name: build-bash-tools
-          status: pending
+          authToken: ${{secrets.GITHUB_TOKEN}}
+          context: build-bash-tools
+          state: pending
 
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@v4
 
       - name: Login to DockerHub
-        uses: docker/login-action@v3
+        uses: docker/login-action@v4
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - uses: crazy-max/ghaction-import-gpg@v6
+      - uses: crazy-max/ghaction-import-gpg@v7
         if: ${{ success() }}
         with:
           gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
@@ -57,18 +79,19 @@ jobs:
           git_user_signingkey: true
           git_commit_gpgsign: true
 
-      - uses: tibdex/github-app-token@v2
+      - uses: actions/create-github-app-token@v3.1.1
         if: ${{ success() }}
         id: generate-token
         with:
-          app_id: ${{ secrets.APP_ID }}
-          private_key: ${{ secrets.APP_PRIVATE_KEY }}
+          app-id: ${{ secrets.APP_ID }}
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}
 
-      - uses: akatov/commit-status-updater@219d3f932547cad092e384c7a36bf4d963739c35
-        if: ${{ github.event_name == 'pull_request' || github.event_name == 'push' }}
+      - uses: guibranco/github-status-action-v2@v1
+        if: ${{ env.COND_PUSH_OR_PR }}
         with:
-          name: pre-commit-megalinter
-          status: pending
+          authToken: ${{ secrets.GITHUB_TOKEN }}
+          context: pre-commit-megalinter
+          state: pending
 
       - name: Set env vars
         id: vars
@@ -79,7 +102,7 @@ jobs:
           ) >> "${GITHUB_ENV}"
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: 3.12
 
@@ -88,9 +111,7 @@ jobs:
       - name: Install requirements
         run: |
           set -exo pipefail
-
           bin/installRequirements
-          vendor/bash-tools-framework/bin/installRequirements
           vendor/bash-tools-framework/bin/installRequirements
           docker pull scrasnups/build:bash-tools-ubuntu-5.3
 
@@ -99,20 +120,20 @@ jobs:
         run: .github/preCommitGeneration.sh
 
       - name: Run pre-commit
-        uses: pre-commit/action@v3.0.1
+        uses: j178/prek-action@v2
         id: preCommit
         with:
-          extra_args: >-
+          extra-args: >-
             -c .pre-commit-config-github.yaml -a --hook-stage manual
 
       - name: MegaLinter
         id: ml
-        if: ${{ always() }}
+        if: ${{ !cancelled() }}
         # You can override MegaLinter flavor used to have faster performances
         # More info at https://megalinter.io/latest/flavors/
         uses: oxsecurity/megalinter/flavors/terraform@v9
         # All available variables are described in documentation
-        # https://megalinter.io/latest/configuration/
+        # https://megalinter.io/latest/config-file/
         env:
           # Validates all source when push on master,
           # else just the git diff with master.
@@ -124,29 +145,47 @@ jobs:
 
       - name: Upload MegaLinter artifacts
         if: success() || failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: MegaLinter reports
+          retention-days: 2
+          overwrite: true
           path: |
             megalinter-reports
             mega-linter.log
+
+      - name: MegaLinter/Precommit has updated sources
+        if: >
+          steps.preCommit.outcome == 'failure' || (
+            steps.ml.outputs.has_updated_sources == 1 && (
+              env.APPLY_FIXES_EVENT == 'all' ||
+              env.APPLY_FIXES_EVENT == github.event_name
+            )
+          )
+        run: |
+          echo "COND_UPDATED_SOURCES=true" >> "${GITHUB_ENV}"
+
+      - name: is apply fixes needed ?
+        if: >
+          env.APPLY_FIXES_MODE == 'pull_request' && (
+            github.event_name == 'push' ||
+            github.event.pull_request.head.repo.full_name ==
+            github.repository
+          )
+        run: |
+          echo "COND_APPLY_FIXES_NEEDED=true" >> "${GITHUB_ENV}"
 
       - name: Create Pull Request
         id: cpr
         # prettier-ignore
         if: >
-          (
-            github.event_name == 'push' ||
-            github.event.pull_request.head.repo.full_name ==
-            github.repository
-          ) && (
-            steps.preCommit.conclusion == 'failure' ||
-            steps.ml.conclusion == 'failure'
-          ) && !contains(github.event.head_commit.message, 'skip fix')
-        uses: peter-evans/create-pull-request@v7
+          env.COND_UPDATED_SOURCES == 'true' &&
+          env.COND_APPLY_FIXES_NEEDED == 'true' &&
+          !contains(github.event.head_commit.message, 'skip fix')
+        uses: peter-evans/create-pull-request@v8
         with:
           token: ${{ steps.generate-token.outputs.token }}
-          committer: fchastanet <fchastanet@gmail.com>
+          committer: fchastanet <237869+fchastanet@users.noreply.github.com>
           branch: update/pre-commit-fixes-${{ env.branch_name }}
           delete-branch: true
           title: lint fixes
@@ -156,27 +195,31 @@ jobs:
           labels: pre-commit-fixes
 
       - name: Print Pull request created
-        if: |
-          steps.cpr.outputs.pull-request-number &&
-          steps.cpr.outcome == 'success'
+        if: |-
+          ${{
+            steps.cpr.outputs.pull-request-number &&
+            steps.cpr.conclusion == 'success'
+          }}
         run: |
           echo "Pull Request Number - ${{ steps.cpr.outputs.pull-request-number }}"
           echo "Pull Request URL - ${{ steps.cpr.outputs.pull-request-url }}"
 
-      - uses: akatov/commit-status-updater@219d3f932547cad092e384c7a36bf4d963739c35
-        if: ${{ github.event_name == 'pull_request' || github.event_name == 'push' }}
+      - uses: guibranco/github-status-action-v2@v1
+        if: ${{ env.COND_PUSH_OR_PR }}
         with:
-          name: pre-commit-megalinter
-          status: ${{ job.status }}
+          authToken: ${{ secrets.GITHUB_TOKEN }}
+          context: pre-commit-megalinter
+          state: ${{ job.status }}
 
   # -------------------------------------------------------
   # Unit tests
   # -------------------------------------------------------
-
   unit-tests:
-    runs-on: ubuntu-22.04
+    runs-on: ${{ matrix.os }}
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true # Forces Node 24 runtime
     permissions:
-      # needed by akatov/commit-status-updater@219d3f932547cad092e384c7a36bf4d963739c35
+      # needed by guibranco/github-status-action-v2@v1
       statuses: write
       # needed by mikepenz/action-junit-report@v4
       checks: write
@@ -190,20 +233,21 @@ jobs:
           - "4.4"
           - "5.0"
           - "5.3"
+        os: [ubuntu-latest]
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@v4
 
       - name: Login to DockerHub
-        uses: docker/login-action@v3
+        uses: docker/login-action@v4
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - uses: crazy-max/ghaction-import-gpg@v6
+      - uses: crazy-max/ghaction-import-gpg@v7
         if: ${{ success() }}
         with:
           gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
@@ -211,25 +255,26 @@ jobs:
           git_user_signingkey: true
           git_commit_gpgsign: true
 
-      - uses: tibdex/github-app-token@v2
+      - uses: actions/create-github-app-token@v3.1.1
         if: ${{ success() }}
         id: generate-token
         with:
-          app_id: ${{ secrets.APP_ID }}
-          private_key: ${{ secrets.APP_PRIVATE_KEY }}
+          app-id: ${{ secrets.APP_ID }}
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}
 
-      - uses: akatov/commit-status-updater@219d3f932547cad092e384c7a36bf4d963739c35
-        if: ${{ github.event_name == 'pull_request' || github.event_name == 'push' }}
+      - uses: guibranco/github-status-action-v2@v1
+        if: ${{ env.COND_PUSH_OR_PR }}
         with:
-          name: unit-tests-${{matrix.vendor}}-${{matrix.bashTarVersion}}
-          status: pending
+          authToken: ${{ secrets.GITHUB_TOKEN }}
+          context: unit-tests-${{matrix.vendor}}-${{matrix.bashTarVersion}}-${{matrix.os}}
+          state: pending
 
       - name: Set env vars
         id: vars
         # shellcheck disable=SC2129
         run: |
           (
-            echo "job_tag=${{github.run_id}}-${{matrix.vendor}}-${{matrix.bashTarVersion}}"
+            echo "job_tag=${{github.run_id}}-${{matrix.vendor}}-${{matrix.bashTarVersion}}-${{matrix.os}}"
             echo "image_tag=bash-tools-${{matrix.vendor}}-${{matrix.bashTarVersion}}"
             echo "image_name=scrasnups/build"
             echo "branch_name=${GITHUB_REF##*/}"
@@ -265,8 +310,8 @@ jobs:
           exit "${status}"
 
       - name: Publish Test Report
-        uses: mikepenz/action-junit-report@v5
-        if: ${{ always()}}
+        uses: mikepenz/action-junit-report@v6
+        if: ${{ always() }}
         with:
           token: ${{ github.token }}
           check_name: JUnit ${{ env.image_tag }}
@@ -276,44 +321,50 @@ jobs:
           report_paths: "logs/**.xml"
 
       - name: Checkstyle aggregation
-        uses: lcollins/checkstyle-github-action@v3.1.0
+        uses: lcollins/checkstyle-github-action@v3.2.0
         with:
           path: "logs/*.xml"
 
       - name: Upload Test Results
         if: ${{ always() }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: Test Results ${{ env.image_tag }}
+          retention-days: 2
+          overwrite: true
           path: |
             logs/**
 
-      - uses: akatov/commit-status-updater@219d3f932547cad092e384c7a36bf4d963739c35
-        if: ${{ github.event_name == 'pull_request' || github.event_name == 'push' }}
+      - uses: guibranco/github-status-action-v2@v1
+        if: ${{ env.COND_PUSH_OR_PR }}
         with:
-          name: unit-tests-${{matrix.vendor}}-${{matrix.bashTarVersion}}
-          status: ${{ job.status }}
+          authToken: ${{ secrets.GITHUB_TOKEN }}
+          context: unit-tests-${{matrix.vendor}}-${{matrix.bashTarVersion}}-${{matrix.os}}
+          state: ${{ job.status }}
 
   overallTestResults:
     name: "Overall Tests Results"
     if: ${{ always() }}
-    needs: [unit-tests]
-    runs-on: ubuntu-22.04
+    needs: [unit-tests, pre-commit]
+    runs-on: ubuntu-latest
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true # Forces Node 24 runtime
     permissions:
-      # needed by akatov/commit-status-updater@219d3f932547cad092e384c7a36bf4d963739c35
+      # needed by guibranco/github-status-action-v2@v1
       statuses: write
 
     steps:
       # run this action to get the workflow conclusion
       # You can get the conclusion via env (env.WORKFLOW_CONCLUSION)
-      - uses: AbsoLouie/workflow-conclusion-status@v1.0.2
+      - uses: fchastanet/workflow-conclusion-status@v2
 
-      - uses: akatov/commit-status-updater@219d3f932547cad092e384c7a36bf4d963739c35
-        if: ${{ github.event_name == 'pull_request' || github.event_name == 'push' }}
+      - uses: guibranco/github-status-action-v2@v1
+        if: ${{ env.COND_PUSH_OR_PR }}
         with:
-          name: build-bash-tools
+          authToken: ${{ secrets.GITHUB_TOKEN }}
+          context: build-bash-tools
           # neutral, success, skipped, cancelled, timed_out, action_required, failure
-          status: ${{ env.WORKFLOW_CONCLUSION }}
+          state: ${{ env.WORKFLOW_CONCLUSION }}
 
   # -------------------------------------------------------
   # Build and deploy documentation
@@ -323,14 +374,21 @@ jobs:
       - unit-tests
       - pre-commit
     # Only run if the test and pre-commit jobs succeeded, and if the push is on master branch or if it's a workflow dispatch event
-    if:
-      ${{ needs.unit-tests.result == 'success' && needs.pre-commit.result == 'success'
-      && (github.ref == 'refs/heads/master') }}
+    if: |-
+      ${{
+        needs.unit-tests.result == 'success' &&
+        needs.pre-commit.result == 'success' &&
+        (
+          github.ref == 'refs/heads/master' ||
+          github.event_name == 'workflow_dispatch'
+        )
+      }}
     uses: fchastanet/my-documents/.github/workflows/build-site-action.yml@master
     with:
       site-name: "bash-tools"
       checkout-repo: "fchastanet/bash-tools"
       site-dir: "_site-content"
+    secrets: inherit
     permissions:
       contents: read
       pages: write
