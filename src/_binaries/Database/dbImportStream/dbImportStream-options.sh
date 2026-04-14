@@ -28,6 +28,12 @@ longDescriptionFunction() {
   fromDsnOptionLongDescription
   echo
   profileOptionLongDescription
+  echo
+  echo -e "  ${__HELP_TITLE}Changelog${__HELP_NORMAL}"
+  echo -e "    ${__HELP_EXAMPLE}4.0 (2026-04-14)${__HELP_NORMAL}"
+  echo -e "      - add support for tar.gz and tar.individual.sql.gz dump files"
+  echo -e "    ${__HELP_EXAMPLE}3.0${__HELP_NORMAL}"
+  echo -e "      - initial version"
 }
 
 dbImportStreamCommandCallback() {

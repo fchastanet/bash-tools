@@ -163,14 +163,22 @@ if [[ -z "${optionFromAws}" ]]; then
   fi
 fi
 Log::displayInfo "import remote to local from file ${remoteDbDumpTempFile}"
+# shellcheck disable=SC2154
 declare -a dbImportStreamOptions=(
   --profile "${optionProfile}"
   --target-dsn "${optionTargetDsn}"
   --character-set "${targetCharacterSet}"
+  --dump-kind "${optionDumpKind}"
 )
 if [[ -n "${optionTables:-}" ]]; then
   dbImportStreamOptions+=(
     --tables "${optionTables}"
+  )
+fi
+# shellcheck disable=SC2154
+if [[ "${optionReset}" = "1" ]]; then
+  dbImportStreamOptions+=(
+    --reset
   )
 fi
 time (

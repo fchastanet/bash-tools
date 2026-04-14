@@ -5,9 +5,10 @@
 [1;37mUSAGE:[0m dbImport [--collation-name|-o <targetDsn>]
   [--target-dsn|-t <targetDsn>] [--character-set|-c <characterSet>]
   [--profile|-p <profile>] [--tables <tablesSeparatedByComma>]
-  [--skip-schema|-s] [--from-dsn|-f <dsn>] [--from-aws|-a <awsFile>] [--help|-h]
-  [--config] [--bash-framework-config <bash-framework-config>] [--verbose|-v]
-  [-vv] [-vvv] [--log-level <log-level>] [--log-file <log-file>]
+  [--skip-schema|-s] [--from-dsn|-f <dsn>] [--from-aws|-a <awsFile>] [--reset]
+  [--dump-kind|-k <dumpKind>] [--help|-h] [--config]
+  [--bash-framework-config <bash-framework-config>] [--verbose|-v] [-vv] [-vvv]
+  [--log-level <log-level>] [--log-file <log-file>]
   [--display-level <display-level>] [--no-color] [--theme <theme>] [--version]
   [--quiet|-q]
 
@@ -46,6 +47,27 @@
     (Only .gz or tar.gz file are supported).
     This option is incompatible with -f|--from-dsn option.
 
+  [1;34m--reset[0m {single}
+    Reset the table before importing data using TRUNCATE TABLE or DROP TABLE
+    before CREATE TABLE.
+  [1;34m--dump-kind[0m, [1;34m-k <dumpKind>[0m {single}
+    Kind of dump to import.
+
+    Possible values: 
+      - auto:[0m Deduce dump kind from filename:
+            [2;97m.sql[0m             -> sql
+            [2;97m.tar[0m             -> tar
+            [2;97m.tar.gz or .tgz[0m  -> tar.gz
+            [2;97m.gz[0m              -> gz
+      - sql:[0m dump file is a .sql file.
+      - tar:[0m dump file is a .tar file containing multiple .sql files, o
+        ne per table.
+      - tar.gz:[0m dump file is a .tar file gzipped containing multiple .s
+        ql files, one per table.
+      - gz:[0m dump file is a gz file containing a single .sql file.
+      - tar.individual.sql.gz:[0m dump file is a tar file containing multi
+        ple .sql.gz files, one per table.
+    Default value: auto
 
 [1;37mGLOBAL OPTIONS:[0m
   [1;34m--help[0m, [1;34m-h[0m {single}
@@ -140,7 +162,13 @@
     2. import from S3
     [2;97mdbImport --from-aws awsFile.tar.gz --target-dsn localhost fromDb toDb[0m
 
-[1;37mVERSION: [0m3.0
+  [1;37mChangelog[0m
+    [2;97m4.0 (2026-04-14)[0m
+      - add support for tar.gz and tar.individual.sql.gz dump files
+    [2;97m3.0[0m
+      - initial version
+
+[1;37mVERSION: [0m4.0
 
 [1;37mAUTHOR: [0m[François Chastanet](https://github.com/fchastanet)
 

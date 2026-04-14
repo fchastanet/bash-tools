@@ -1,6 +1,7 @@
 extends:
   - '${BASH_TOOLS_ROOT_DIR}/src/_binaries/commandDefinitions/optionsProfile.yaml'
   - '${BASH_TOOLS_ROOT_DIR}/src/_binaries/commandDefinitions/optionsTables.yaml'
+  - '${BASH_TOOLS_ROOT_DIR}/src/_binaries/commandDefinitions/optionsDumpKind.yaml'
   - '${BASH_TOOLS_ROOT_DIR}/src/_binaries/commandDefinitions/optionsVersion.yaml'
   - '${BASH_TOOLS_ROOT_DIR}/src/_binaries/commandDefinitions/optionsMysqlTarget.yaml'
   - '${BASH_TOOLS_ROOT_DIR}/src/_binaries/commandDefinitions/optionsDefault.yaml'
@@ -17,7 +18,7 @@ binData:
   commands:
     default:
       functionName: dbImportStreamCommand
-      version: '3.0'
+      version: '4.0'
       copyrightBeginYear: 2020
       commandName: dbImportStream
       beforeParseCallbacks:
