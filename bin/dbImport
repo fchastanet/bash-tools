@@ -2854,7 +2854,7 @@ dbImportCommandHelp() {
 
 
   echo -e "  ${__HELP_OPTION_COLOR}--reset${__HELP_NORMAL} {single}"
-  Array::wrap2 ' ' 76 4 "    " "reset the table before importing data (using TRUNCATE TABLE or DROP TABLE before CREATE TABLE)."
+  Array::wrap2 ' ' 76 4 "    " "Reset the table before importing data using TRUNCATE TABLE or DROP TABLE before CREATE TABLE."
   echo
 
 
@@ -2863,24 +2863,21 @@ dbImportCommandHelp() {
   echo
 
   echo "    Possible values: "
-  Array::wrap2 ' ' 76 8 "      - ${__OPTION_COLOR}auto:${__RESET_COLOR} deduce dump kind from filename
-  (.sql -> sql, .tar -> tar, .tar.gz or .tgz  -> tar.gz, .gz -> gz)
-  "
+  Array::wrap2 ' ' 76 8 "      - ${__OPTION_COLOR}auto:${__RESET_COLOR} Deduce dump kind from filename:
+    ${__HELP_EXAMPLE}.sql${__HELP_NORMAL}             -> sql
+    ${__HELP_EXAMPLE}.tar${__HELP_NORMAL}             -> tar
+    ${__HELP_EXAMPLE}.tar.gz or .tgz${__HELP_NORMAL}  -> tar.gz
+    ${__HELP_EXAMPLE}.gz${__HELP_NORMAL}              -> gz"
   echo
-  Array::wrap2 ' ' 76 8 "      - ${__OPTION_COLOR}sql:${__RESET_COLOR} dump file is a .sql file.
-  "
+  Array::wrap2 ' ' 76 8 "      - ${__OPTION_COLOR}sql:${__RESET_COLOR} dump file is a .sql file."
   echo
-  Array::wrap2 ' ' 76 8 "      - ${__OPTION_COLOR}tar:${__RESET_COLOR} dump file is a .tar file containing multiple .sql files, one per table.
-  "
+  Array::wrap2 ' ' 76 8 "      - ${__OPTION_COLOR}tar:${__RESET_COLOR} dump file is a .tar file containing multiple .sql files, one per table."
   echo
-  Array::wrap2 ' ' 76 8 "      - ${__OPTION_COLOR}tar.gz:${__RESET_COLOR} dump file is a .tar file gzipped containing multiple .sql files, one per table.
-  "
+  Array::wrap2 ' ' 76 8 "      - ${__OPTION_COLOR}tar.gz:${__RESET_COLOR} dump file is a .tar file gzipped containing multiple .sql files, one per table."
   echo
-  Array::wrap2 ' ' 76 8 "      - ${__OPTION_COLOR}gz:${__RESET_COLOR} dump file is a gz file containing a single .sql file.
-  "
+  Array::wrap2 ' ' 76 8 "      - ${__OPTION_COLOR}gz:${__RESET_COLOR} dump file is a gz file containing a single .sql file."
   echo
-  Array::wrap2 ' ' 76 8 "      - ${__OPTION_COLOR}tar.individual.sql.gz:${__RESET_COLOR} dump file is a tar file containing multiple .sql.gz files, one per table.
-  "
+  Array::wrap2 ' ' 76 8 "      - ${__OPTION_COLOR}tar.individual.sql.gz:${__RESET_COLOR} dump file is a tar file containing multiple .sql.gz files, one per table."
   echo
 
   Array::wrap2 ' ' 76 6 "    Default value: " "auto"

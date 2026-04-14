@@ -10,7 +10,9 @@ binData:
             - '--reset'
           group: groupSourceDbOptions
           type: Boolean
-          help: reset the table before importing data (using TRUNCATE TABLE or DROP TABLE before CREATE TABLE).
+          help: >-
+            Reset the table before importing data
+            using TRUNCATE TABLE or DROP TABLE before CREATE TABLE.
           variableName: optionReset
         - alts:
             - --dump-kind
@@ -24,21 +26,27 @@ binData:
           defaultValue: auto
           authorizedValues:
             - value: auto
-              help: |
-                deduce dump kind from filename
-                (.sql -> sql, .tar -> tar, .tar.gz or .tgz  -> tar.gz, .gz -> gz)
+              help: >-
+                Deduce dump kind from filename:
+                  ${__HELP_EXAMPLE}.sql${__HELP_NORMAL}             -> sql
+                  ${__HELP_EXAMPLE}.tar${__HELP_NORMAL}             -> tar
+                  ${__HELP_EXAMPLE}.tar.gz or .tgz${__HELP_NORMAL}  -> tar.gz
+                  ${__HELP_EXAMPLE}.gz${__HELP_NORMAL}              -> gz
             - value: sql
-              help: |
+              help: >-
                 dump file is a .sql file.
             - value: tar
-              help: |
-                dump file is a .tar file containing multiple .sql files, one per table.
+              help: >-
+                dump file is a .tar file containing multiple .sql files,
+                one per table.
             - value: tar.gz
-              help: |
-                dump file is a .tar file gzipped containing multiple .sql files, one per table.
+              help: >-
+                dump file is a .tar file gzipped containing multiple
+                .sql files, one per table.
             - value: gz
-              help: |
+              help: >-
                 dump file is a gz file containing a single .sql file.
             - value: tar.individual.sql.gz
-              help: |
-                dump file is a tar file containing multiple .sql.gz files, one per table.
+              help: >-
+                dump file is a tar file containing multiple
+                .sql.gz files, one per table.

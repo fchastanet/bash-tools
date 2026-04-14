@@ -226,7 +226,7 @@ function Database::dbImport::remote_db_fully_functional_from_aws { #@test
     's3 ls --human-readable s3://s3server/exports/fromDb.tar.gz : exit 0' \
     "s3 cp s3://s3server/exports/fromDb.tar.gz '${HOME}/.bash-tools/dbImportDumps/fromDb.tar.gz' : touch '${HOME}/.bash-tools/dbImportDumps/fromDb.tar.gz'; exit 0"
   stub tar \
-    "xOfz '${HOME}/.bash-tools/dbImportDumps/fromDb.tar.gz' : cat '${BATS_TEST_DIRNAME}/testsData/dump.sql'"
+    "xOzf '${HOME}/.bash-tools/dbImportDumps/fromDb.tar.gz' --wildcards --no-anchored '*.sql' : cat '${BATS_TEST_DIRNAME}/testsData/dump.sql'"
 
   # call 5 (order 9): create target db
   # call 7 (order 11): import data dump into db
@@ -285,7 +285,7 @@ function Database::dbImport::import_local_dump_not_aws_with_tables_filter { #@te
   run "${binDir}/dbImport" --verbose -f default.local fromDb toDb --tables dataTable,otherTable 2>&1
   assert_output --partial "db created"
   assert_output --partial "import structure dump"
-  assert_output --partial "ignore table emptyTable"
+  assert_output --partial "exclude table emptyTable"
   assert_output --partial "Import database duration : "
   assert_output --partial "begin insert otherTable"
   assert_output --partial "begin insert dataTable"
@@ -311,7 +311,7 @@ function Database::dbImport::import_from_aws_with_tables_filter { #@test
 
   run "${binDir}/dbImport" --verbose --from-aws fromDb.tar.gz toDb --tables dataTable,otherTable 2>&1
   assert_output --partial "Import database duration : "
-  assert_output --partial "ignore table emptyTable"
+  assert_output --partial "exclude table emptyTable"
   assert_output --partial "begin insert dataTable"
   assert_output --partial "begin insert otherTable"
   [[ -f "${HOME}/.bash-tools/dbImportDumps/fromDb.tar.gz" ]]

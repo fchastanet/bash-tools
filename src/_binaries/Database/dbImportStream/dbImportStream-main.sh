@@ -28,12 +28,12 @@ deduceDumpKindFromFilename() {
     echo "sql"
   elif [[ "${dumpFile}" =~ \.tar$ ]]; then
     echo "tar"
-  elif [[ "${dumpFile}" =~ \.gz$ ]]; then
-    echo "gz"
   elif [[ "${dumpFile}" =~ (\.tar\.gz|\.tgz)$ ]]; then
     echo "tar.gz"
   elif [[ "${dumpFile}" =~ \.tar\.individual\.sql\.gz$ ]]; then
     echo "tar.individual.sql.gz"
+  elif [[ "${dumpFile}" =~ \.gz$ ]]; then
+    echo "gz"
   else
     Log::displayError "Unable to deduce dump file format from filename ${dumpFile} - use --dump-kind option to specify the format"
     return 1
