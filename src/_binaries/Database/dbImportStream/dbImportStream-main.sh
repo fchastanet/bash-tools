@@ -40,6 +40,10 @@ deduceDumpKindFromFilename() {
   fi
 }
 
+isAlpine() {
+  [[ "$(Linux::getDistributorId)" =~ alpine ]]
+}
+
 loadTarDumpFile() {
   local dumpFile="$1"
   tar xf "${dumpFile}"
@@ -50,14 +54,38 @@ loadGzipDumpFile() {
   zcat "${dumpFile}"
 }
 
+# alpine tar does not support --wildcards,
+# so we need to extract all files and cat them
+alpineTarWildcardsAlternative() {
+  local dumpFile="$1"
+  local tarOptions="$2"
+  local tempDir
+  tempDir="$(mktemp -d)"
+  (
+    trap 'rm -rf "${tempDir}"' EXIT
+    cd "${tempDir}" || exit 1
+    tar "${tarOptions}" "${dumpFile}"
+    ls -al
+    cat ./*.sql
+  )
+}
+
 loadTgzIndividualSql() {
   local dumpFile="$1"
-  tar xOzf "${dumpFile}" --wildcards --no-anchored '*.sql'
+  if isAlpine; then
+    alpineTarWildcardsAlternative "${dumpFile}" "xzf"
+  else
+    tar xOzf "${dumpFile}" --wildcards --no-anchored '*.sql'
+  fi
 }
 
 loadTarIndividualSql() {
   local dumpFile="$1"
-  tar xOf "${dumpFile}" --wildcards --no-anchored '*.sql'
+  if isAlpine; then
+    alpineTarWildcardsAlternative "${dumpFile}" "xf"
+  else
+    tar xOf "${dumpFile}" --wildcards --no-anchored '*.sql'
+  fi
 }
 
 loadTarIndividualSqlGz() {

@@ -221,12 +221,10 @@ function Database::dbImport::remote_db_dump_already_present_from_db { #@test
 }
 
 function Database::dbImport::remote_db_fully_functional_from_aws { #@test
-
+  (cd "${BATS_TEST_DIRNAME}/testsData" && tar cvzf "${HOME}/.bash-tools/dbImportDumps/fromDb.tar.gz.temp" 'dump.sql')
   stub aws \
     's3 ls --human-readable s3://s3server/exports/fromDb.tar.gz : exit 0' \
-    "s3 cp s3://s3server/exports/fromDb.tar.gz '${HOME}/.bash-tools/dbImportDumps/fromDb.tar.gz' : touch '${HOME}/.bash-tools/dbImportDumps/fromDb.tar.gz'; exit 0"
-  stub tar \
-    "xOzf '${HOME}/.bash-tools/dbImportDumps/fromDb.tar.gz' --wildcards --no-anchored '*.sql' : cat '${BATS_TEST_DIRNAME}/testsData/dump.sql'"
+    "s3 cp s3://s3server/exports/fromDb.tar.gz '${HOME}/.bash-tools/dbImportDumps/fromDb.tar.gz' : mv '${HOME}/.bash-tools/dbImportDumps/fromDb.tar.gz.temp' '${HOME}/.bash-tools/dbImportDumps/fromDb.tar.gz'; exit 0"
 
   # call 5 (order 9): create target db
   # call 7 (order 11): import data dump into db
@@ -247,7 +245,7 @@ function Database::dbImport::remote_db_fully_functional_from_aws { #@test
 function Database::dbImport::remote_db_dump_already_present_from_aws { #@test
   stub aws
   # create false dump 1 day in the past
-  tar cvzf "${HOME}/.bash-tools/dbImportDumps/fromDb.tar.gz" "${BATS_TEST_DIRNAME}/testsData/dump.sql"
+  (cd "${BATS_TEST_DIRNAME}/testsData" && tar cvzf "${HOME}/.bash-tools/dbImportDumps/fromDb.tar.gz" "dump.sql")
   touch -d@$(($(date +%s) + 86400)) "${HOME}/.bash-tools/dbImportDumps/fromDb.tar.gz"
   # call 5 (order 2): create target db (after dumps have been done)
   # call 7 (order 4): import data dump into db
