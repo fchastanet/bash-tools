@@ -40,6 +40,11 @@ deduceDumpKindFromFilename() {
   fi
 }
 
+loadTarDumpFile() {
+  local dumpFile="$1"
+  tar xf "${dumpFile}"
+}
+
 loadGzipDumpFile() {
   local dumpFile="$1"
   zcat "${dumpFile}"
@@ -96,7 +101,9 @@ loadDumpFile() {
   return 0
 }
 
+# shellcheck disable=SC2154
 if [[ "${optionDumpKind}" = "auto" ]]; then
+  # shellcheck disable=SC2154
   optionDumpKind="$(deduceDumpKindFromFilename "${argDumpFile}")"
   Log::displayInfo "Deduced dump file format is ${optionDumpKind}"
 fi

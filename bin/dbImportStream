@@ -1601,7 +1601,7 @@ optionHelpCallback() {
 # shellcheck disable=SC2317,SC2329 # if function is overridden
 optionVersionCallback() {
   # shellcheck disable=SC2154
-  echo "${SCRIPT_NAME} version 3.0"
+  echo "${SCRIPT_NAME} version 4.0"
   exit 0
 }
 
@@ -1801,6 +1801,12 @@ longDescriptionFunction() {
   fromDsnOptionLongDescription
   echo
   profileOptionLongDescription
+  echo
+  echo -e "  ${__HELP_TITLE}Changelog${__HELP_NORMAL}"
+  echo -e "    ${__HELP_EXAMPLE}4.0 (2026-04-14)${__HELP_NORMAL}"
+  echo -e "      - add support for tar.gz and tar.individual.sql.gz dump files"
+  echo -e "    ${__HELP_EXAMPLE}3.0${__HELP_NORMAL}"
+  echo -e "      - initial version"
 }
 
 dbImportStreamCommandCallback() {
@@ -1934,7 +1940,7 @@ fromDsnOptionLongDescription() {
 
 optionVersionCallback() {
   # shellcheck disable=SC2154
-  echo "${SCRIPT_NAME} version 3.0"
+  echo "${SCRIPT_NAME} version 4.0"
   Db::checkRequirements
   exit 0
 }
@@ -2736,7 +2742,7 @@ dbImportStreamCommandHelp() {
   # ------------------------------------------
   echo
   echo -n -e "${__HELP_TITLE_COLOR}VERSION: ${__RESET_COLOR}"
-  echo "3.0"
+  echo "4.0"
   # ------------------------------------------
   # author section
   # ------------------------------------------
@@ -2852,6 +2858,11 @@ deduceDumpKindFromFilename() {
   fi
 }
 
+loadTarDumpFile() {
+  local dumpFile="$1"
+  tar xf "${dumpFile}"
+}
+
 loadGzipDumpFile() {
   local dumpFile="$1"
   zcat "${dumpFile}"
@@ -2908,7 +2919,9 @@ loadDumpFile() {
   return 0
 }
 
+# shellcheck disable=SC2154
 if [[ "${optionDumpKind}" = "auto" ]]; then
+  # shellcheck disable=SC2154
   optionDumpKind="$(deduceDumpKindFromFilename "${argDumpFile}")"
   Log::displayInfo "Deduced dump file format is ${optionDumpKind}"
 fi

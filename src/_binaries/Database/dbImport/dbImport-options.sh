@@ -40,6 +40,12 @@ longDescriptionFunction() {
   echo
   echo -e "    2. import from S3"
   echo -e "    ${__HELP_EXAMPLE}dbImport --from-aws awsFile.tar.gz --target-dsn localhost fromDb toDb${__HELP_NORMAL}"
+  echo
+  echo -e "  ${__HELP_TITLE}Changelog${__HELP_NORMAL}"
+  echo -e "    ${__HELP_EXAMPLE}4.0 (2026-04-14)${__HELP_NORMAL}"
+  echo -e "      - add support for tar.gz and tar.individual.sql.gz dump files"
+  echo -e "    ${__HELP_EXAMPLE}3.0${__HELP_NORMAL}"
+  echo -e "      - initial version"
   Db::checkRequirements
 }
 

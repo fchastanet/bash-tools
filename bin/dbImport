@@ -1694,7 +1694,7 @@ optionHelpCallback() {
 # shellcheck disable=SC2317,SC2329 # if function is overridden
 optionVersionCallback() {
   # shellcheck disable=SC2154
-  echo "${SCRIPT_NAME} version 3.0"
+  echo "${SCRIPT_NAME} version 4.0"
   exit 0
 }
 
@@ -1906,6 +1906,12 @@ longDescriptionFunction() {
   echo
   echo -e "    2. import from S3"
   echo -e "    ${__HELP_EXAMPLE}dbImport --from-aws awsFile.tar.gz --target-dsn localhost fromDb toDb${__HELP_NORMAL}"
+  echo
+  echo -e "  ${__HELP_TITLE}Changelog${__HELP_NORMAL}"
+  echo -e "    ${__HELP_EXAMPLE}4.0 (2026-04-14)${__HELP_NORMAL}"
+  echo -e "      - add support for tar.gz and tar.individual.sql.gz dump files"
+  echo -e "    ${__HELP_EXAMPLE}3.0${__HELP_NORMAL}"
+  echo -e "      - initial version"
   Db::checkRequirements
 }
 
@@ -2070,7 +2076,7 @@ fromDsnOptionLongDescription() {
 
 optionVersionCallback() {
   # shellcheck disable=SC2154
-  echo "${SCRIPT_NAME} version 3.0"
+  echo "${SCRIPT_NAME} version 4.0"
   Db::checkRequirements
   exit 0
 }
@@ -2991,7 +2997,7 @@ dbImportCommandHelp() {
   # ------------------------------------------
   echo
   echo -n -e "${__HELP_TITLE_COLOR}VERSION: ${__RESET_COLOR}"
-  echo "3.0"
+  echo "4.0"
   # ------------------------------------------
   # author section
   # ------------------------------------------
@@ -3198,6 +3204,7 @@ if [[ -z "${optionFromAws}" ]]; then
   fi
 fi
 Log::displayInfo "import remote to local from file ${remoteDbDumpTempFile}"
+# shellcheck disable=SC2154
 declare -a dbImportStreamOptions=(
   --profile "${optionProfile}"
   --target-dsn "${optionTargetDsn}"
@@ -3209,6 +3216,7 @@ if [[ -n "${optionTables:-}" ]]; then
     --tables "${optionTables}"
   )
 fi
+# shellcheck disable=SC2154
 if [[ "${optionReset}" = "1" ]]; then
   dbImportStreamOptions+=(
     --reset

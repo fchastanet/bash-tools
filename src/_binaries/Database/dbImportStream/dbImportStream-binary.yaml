@@ -18,7 +18,7 @@ binData:
   commands:
     default:
       functionName: dbImportStreamCommand
-      version: '3.0'
+      version: '4.0'
       copyrightBeginYear: 2020
       commandName: dbImportStream
       beforeParseCallbacks:
