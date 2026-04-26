@@ -13,7 +13,7 @@ megalinter-reports/
 *megalinter_file_names_cspell.txt
 
 # Hugo pages auto generated files
-content/Commands.md
+content/commands/Commands-*.md
 content/assets/mysql2puml-model.png
 
 bin/test

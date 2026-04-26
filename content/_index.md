@@ -5,6 +5,7 @@ description: |
   A collection of several bash tools using bash-tools-framework allowing to easily import bash script, log, display log
   messages, database manipulation, user interaction, version comparison, and more.
 type: docs
+sidebar_root_for: self
 weight: 1
 date: '2020-11-16T17:19:23+02:00'
 lastmod: '2026-04-26T17:19:23+02:00'
