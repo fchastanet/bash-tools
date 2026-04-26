@@ -2,6 +2,7 @@
 title: Commands
 description: Complete reference guide for all Bash Tools commands
 weight: 10
+type: docs
 categories: [documentation]
 tags: [commands, reference, cli]
 creationDate: 2020-11-16

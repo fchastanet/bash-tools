@@ -23,6 +23,7 @@ installationconfiguration
 installdir
 installfile
 Jetbrains
+lastmod
 libassertsh
 libloadandcheckconfigsh
 libutilssh

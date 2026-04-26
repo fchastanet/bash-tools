@@ -2106,7 +2106,7 @@ runContainer() {
     --rm
     -e KEEP_TEMP_FILES="${KEEP_TEMP_FILES:-0}"
     -e BATS_FIX_TEST="${BATS_FIX_TEST:-0}"
-    -e ORIGINAL_DOC_DIR="${BASH_TOOLS_ROOT_DIR}/content/docs"
+    -e ORIGINAL_DOC_DIR="${BASH_TOOLS_ROOT_DIR}/content"
     -e SKIP_REQUIREMENTS_CHECKS=1
     --user "www-data:www-data"
     -w /bash
@@ -2183,7 +2183,7 @@ replaceToken() {
 
 generateDoc() {
   local ROOT_DIR=/bash
-  local DOC_DIR="${ROOT_DIR}/content/docs"
+  local DOC_DIR="${ROOT_DIR}/content"
   Log::displayInfo 'generate Commands.md'
   ((TOKEN_NOT_FOUND_COUNT = 0)) || true
 
@@ -2218,13 +2218,13 @@ if [[ "${IN_BASH_DOCKER:-}" != "You're in docker" ]]; then
   Git::requireGitCommand
   installRequirements
   if [[ "${optionContinuousIntegrationMode}" = "1" ]]; then
-    chmod -R 777 content/docs
+    chmod -R 777 content
   fi
   runContainer
   if [[ "${optionContinuousIntegrationMode}" = "1" ]]; then
     # restore previous rights
-    find content/docs -type d -exec chmod 755 {} ';'
-    find content/docs -type f -exec chmod 644 {} ';'
+    find content -type d -exec chmod 755 {} ';'
+    find content -type f -exec chmod 644 {} ';'
   fi
 else
   tmpDir=$(mktemp -d)
