@@ -115,6 +115,7 @@ nuove
 oldmode
 oneline
 ovpn
+oxipng
 oxsecurity
 pagedown
 pageup
@@ -192,6 +193,7 @@ verysilent
 vimrc
 Vsbycmmq
 wddx
+webp
 wekyb
 widthtype
 WORKON

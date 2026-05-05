@@ -8,9 +8,11 @@ type: docs
 sidebar_root_for: self
 weight: 1
 date: '2020-11-16T17:19:23+02:00'
-lastmod: '2026-04-26T17:19:23+02:00'
-version: '1.1'
+lastmod: '2026-05-05T23:34:19+02:00'
+version: '1.2'
 ---
+
+{{< img src="assets/bash-tools-homepage.png" alt="Bash Tools illustration" >}}
 
 ## 1. Excerpt
 
