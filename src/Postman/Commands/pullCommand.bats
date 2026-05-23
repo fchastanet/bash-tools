@@ -2,6 +2,8 @@
 
 # shellcheck source=src/batsHeaders.sh
 source "$(cd "${BATS_TEST_DIRNAME}/../.." && pwd)/batsHeaders.sh"
+# shellcheck source=src/Postman/Commands/getValidatedRefs.sh
+source "${rootDir}/src/Postman/Commands/getValidatedRefs.sh"
 # shellcheck source=src/Postman/Commands/pullCommand.sh
 source "${rootDir}/src/Postman/Commands/pullCommand.sh"
 

@@ -131,7 +131,7 @@ jobs:
         if: ${{ !cancelled() }}
         # You can override MegaLinter flavor used to have faster performances
         # More info at https://megalinter.io/latest/flavors/
-        uses: oxsecurity/megalinter/flavors/terraform@v9
+        uses: oxsecurity/megalinter/flavors/documentation@v9
         # All available variables are described in documentation
         # https://megalinter.io/latest/config-file/
         env:

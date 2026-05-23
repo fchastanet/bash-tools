@@ -12,19 +12,6 @@ Postman::Commands::pullCommand() {
   Postman::Model::validate "${modelFile}" "pull" || return 1
 
   local -a refs
-  # shellcheck disable=SC2154
-  Postman::Model::getCollectionRefs "${modelFile}" refs || return 1
-  if (($# > 0)); then
-    # shellcheck disable=SC2154
-    Postman::Model::checkIfValidCollectionRefs "${modelFile}" refs "$@" || return 1
-    refs=("$@")
-  fi
-
-  if ((${#refs} == 0)); then
-    Log::displayError "No collection refs to pull"
-    return 1
-  else
-    Log::displayDebug "Collection refs to pull ${refs[*]}"
-    Postman::Commands::pullCollections "${modelFile}" "${refs[@]}" || return 1
-  fi
+  Postman::Commands::getValidatedRefs "${modelFile}" "pull" refs "$@" || return 1
+  Postman::Commands::pullCollections "${modelFile}" "${refs[@]}" || return 1
 }
