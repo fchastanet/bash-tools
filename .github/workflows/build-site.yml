@@ -18,6 +18,7 @@ jobs:
       site-name: 'bash-tools'
       checkout-repo: 'fchastanet/bash-tools'
       site-dir: "_site-content"
+    secrets: inherit
     permissions:
       contents: read
       pages: write
