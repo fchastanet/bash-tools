@@ -85,12 +85,12 @@ argQueryCallback() {
     queryIsFile="1"
   else
     declare queryAbsoluteFile
-    queryAbsoluteFile="$(Conf::getAbsoluteFile "dbQueries" "${argQuery}" "sql")" && {
+    if queryAbsoluteFile="$(Conf::getAbsoluteFile "dbQueries" "${argQuery}" "sql" 2>/dev/null)"; then
       # shellcheck disable=SC2034
       queryIsFile="1"
       argQuery="${queryAbsoluteFile}"
       Log::displayInfo "Using query file ${queryAbsoluteFile}"
-    }
+    fi
   fi
 }
 

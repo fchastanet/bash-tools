@@ -798,7 +798,7 @@ Database::newInstance() {
   instanceNewInstance['SKIP_COLUMN_NAMES']="${SKIP_COLUMN_NAMES:-1}"
   instanceNewInstance['SSL_OPTIONS']="${MYSQL_SSL_OPTIONS:---ssl-mode=DISABLED}"
   instanceNewInstance['QUERY_OPTIONS']="${MYSQL_QUERY_OPTIONS:---batch --raw --default-character-set=utf8}"
-  instanceNewInstance['DUMP_OPTIONS']="${MYSQL_DUMP_OPTIONS:---default-character-set=utf8  --compression-algorithms --hex-blob --routines --triggers --single-transaction --set-gtid-purged=OFF --column-statistics=0 ${instanceNewInstance['SSL_OPTIONS']}}"
+  instanceNewInstance['DUMP_OPTIONS']="${MYSQL_DUMP_OPTIONS:---default-character-set=utf8  --compression-algorithms=zstd --hex-blob --routines --triggers --single-transaction --set-gtid-purged=OFF --column-statistics=0 ${instanceNewInstance['SSL_OPTIONS']}}"
   instanceNewInstance['DB_IMPORT_OPTIONS']="${DB_IMPORT_OPTIONS:---connect-timeout=5 --batch --raw --default-character-set=utf8}"
 
   instanceNewInstance['INITIALIZED']=1
@@ -1971,12 +1971,12 @@ argQueryCallback() {
     queryIsFile="1"
   else
     declare queryAbsoluteFile
-    queryAbsoluteFile="$(Conf::getAbsoluteFile "dbQueries" "${argQuery}" "sql")" && {
+    if queryAbsoluteFile="$(Conf::getAbsoluteFile "dbQueries" "${argQuery}" "sql" 2>/dev/null)"; then
       # shellcheck disable=SC2034
       queryIsFile="1"
       argQuery="${queryAbsoluteFile}"
       Log::displayInfo "Using query file ${queryAbsoluteFile}"
-    }
+    fi
   fi
 }
 
@@ -2724,9 +2724,10 @@ declare -gx embed_file_dbQueryAllDatabasesScript="${PERSISTENT_TMPDIR:-/tmp}/101
 
 # later on, parallel calls this script(inception)
 if [[ "${DB_QUERY_ALL_DATABASES_COMMAND}" = "DbQueryOneDatabase" ]]; then
-  shift || true
   Linux::requireExecutedAsUser
-  Db::queryOneDatabase "${ORIGINAL_BASH_FRAMEWORK_ARGV[@]}"
+  # ORIGINAL_BASH_FRAMEWORK_ARGV is ("--from-dsn" "<dsn>" "<db>"),
+  # drop the "--from-dsn" flag to keep only dsn/db positional args
+  Db::queryOneDatabase "${ORIGINAL_BASH_FRAMEWORK_ARGV[@]:1}"
   exit 0
 fi
 
@@ -2757,7 +2758,7 @@ export DB_QUERY_ALL_DATABASES_COMMAND="DbQueryOneDatabase"
 echo "${allDbs}" |
   SHELL=$(type -p bash) \
     parallel --bar --eta --progress "${PARALLEL_OPTIONS[@]}" \
-    "$0" "${optionFromDsn}" |
+    "$0" --from-dsn "${optionFromDsn%.env}" |
   awk -f "${embed_file_dbQueryAllDatabasesScript}" -
 
 }

@@ -207,3 +207,4 @@ Xresources
 Xvsb
 xzvf
 zipstream
+zstd

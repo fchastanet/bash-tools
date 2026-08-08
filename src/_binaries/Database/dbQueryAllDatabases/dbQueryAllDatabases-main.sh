@@ -3,9 +3,10 @@
 
 # later on, parallel calls this script(inception)
 if [[ "${DB_QUERY_ALL_DATABASES_COMMAND}" = "DbQueryOneDatabase" ]]; then
-  shift || true
   Linux::requireExecutedAsUser
-  Db::queryOneDatabase "${ORIGINAL_BASH_FRAMEWORK_ARGV[@]}"
+  # ORIGINAL_BASH_FRAMEWORK_ARGV is ("--from-dsn" "<dsn>" "<db>"),
+  # drop the "--from-dsn" flag to keep only dsn/db positional args
+  Db::queryOneDatabase "${ORIGINAL_BASH_FRAMEWORK_ARGV[@]:1}"
   exit 0
 fi
 
@@ -36,5 +37,5 @@ export DB_QUERY_ALL_DATABASES_COMMAND="DbQueryOneDatabase"
 echo "${allDbs}" |
   SHELL=$(type -p bash) \
     parallel --bar --eta --progress "${PARALLEL_OPTIONS[@]}" \
-    "$0" "${optionFromDsn}" |
+    "$0" --from-dsn "${optionFromDsn%.env}" |
   awk -f "${embed_file_dbQueryAllDatabasesScript}" -
