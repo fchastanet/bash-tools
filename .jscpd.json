@@ -1,6 +1,8 @@
 {
   "threshold": 0,
   "reporters": ["html", "markdown"],
+  "minLines": 15,
+  "minTokens": 70,
   "ignore": [
     "**/node_modules/**",
     "**/.git/**",
@@ -22,6 +24,9 @@
     ".pre-commit-config-github.yaml",
     "vendor/**",
     "**/testsData/**",
+    "conf/dbScripts/extractData",
+    "install",
+    "**/*.bats",
     "pages/doc/**",
     "pages/Commands.md",
     "vendor/bash-tools-framework/**",
