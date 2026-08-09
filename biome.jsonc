@@ -1,0 +1,53 @@
+{
+  "files": {
+    "includes": [
+      "**",
+      "!**/node_modules",
+      "!dist",
+      "!.vscode",
+      "!vendor",
+      "!megalinter-reports",
+      "!src/Postman/Model/testsData/pushMode/GithubAPI/notValidJsonFile.json",
+      "!src/Postman/Model/testsData/pullMode/GithubAPI/notWritableFile.json",
+      "!src/Postman/Model/testsData/getCollectionInvalid.json",
+      "!src/Postman/Model/testsData/getCollectionInvalid.json",
+      "!src/Postman/Model/testsData/pullMode/GithubAPI/notWritableFile.json",
+      "!src/Postman/Collection/testsData/postmanCollections_invalidJsonFile.json"
+    ]
+  },
+  "formatter": {
+    "indentStyle": "space",
+    "lineWidth": 120
+  },
+  "linter": {
+    "rules": {
+      "recommended": true
+    }
+  },
+  "javascript": {
+    "formatter": {
+      "lineWidth": 120,
+      "quoteStyle": "single"
+    }
+  },
+  // Jsonc support
+  "json": {
+    "formatter": {
+      "lineWidth": 120,
+      "expand": "auto",
+      "trailingCommas": "none"
+    },
+    "parser": {
+      "allowComments": true,
+      "allowTrailingCommas": false
+    }
+  },
+  "overrides": [
+    {
+      "includes": ["**/.vscode/*.json"],
+      "linter": {
+        "rules": {}
+      }
+    }
+  ]
+}

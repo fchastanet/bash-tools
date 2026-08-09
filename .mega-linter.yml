@@ -47,8 +47,6 @@ FILEIO_REPORTER: false
 PRE_COMMANDS:
   - command: env
     cwd: 'workspace'
-  - command: yarn add --dev eslint-plugin-json eslint-config-prettier
-    cwd: 'workspace'
 POST_COMMANDS:
   # FIX files set as root user
   # HOST_USER_ID and HOST_GROUP_ID set in package.json
@@ -105,10 +103,7 @@ IGNORE_GITIGNORED_FILES: true
 IGNORE_GENERATED_FILES: true
 
 JAVASCRIPT_DEFAULT_STYLE: prettier
-JAVASCRIPT_ES_CONFIG_FILE: .eslintrc.js
 JAVASCRIPT_ES_FILTER_REGEX_EXCLUDE: (report/)
-
-JSON_ESLINT_PLUGIN_JSONC_CONFIG_FILE: .eslintrc.js
 
 JSON_JSONLINT_FILTER_REGEX_EXCLUDE: |
   (?x)(
@@ -148,11 +143,4 @@ MARKDOWN_MARKDOWNLINT_FILTER_REGEX_EXCLUDE: |
   (?x)(
     ^pages/Commands.md|
     ^pages/README.md
-  )
-
-JSON_ESLINT_PLUGIN_JSONC_FILTER_REGEX_EXCLUDE: |
-  (?x)(
-    ^src/Postman/Model/testsData/pushMode/GithubAPI/notValidJsonFile.json$|
-    ^src/Postman/Collection/testsData/postmanCollections_invalidJsonFile.json$|
-    ^src/Postman/Model/testsData/getCollectionInvalid.json$
   )

@@ -5,8 +5,7 @@ commit-msg.md
 
 # node modules
 node_modules/
-package*.json
-yarn.lock
+.yarn/
 
 # megalinter
 megalinter-reports/

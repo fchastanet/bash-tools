@@ -34,6 +34,16 @@ repos:
             \.schema\.json$
           )
 
+  - repo: https://github.com/biomejs/pre-commit
+    rev: v2.5.5
+    hooks:
+      - id: biome-format
+        stages: [pre-commit, pre-push]
+      - id: biome-check
+        stages: [pre-commit, pre-push]
+      - id: biome-ci
+        stages: [manual]
+
   - repo: https://github.com/sudosubin/pre-commit-image
     rev: v0.1.2
     hooks:

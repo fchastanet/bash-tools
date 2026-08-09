@@ -118,6 +118,7 @@ overrides:
       - '*.yml'
       - '*.yaml'
       - 'configs/site-config.yaml'
+      - 'biome.jsonc'
       - '*.toml'
       - 'package.json'
     languageId: config
