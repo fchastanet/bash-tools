@@ -43,7 +43,7 @@
           "request": {
             "method": "POST",
             "header": [],
-            "body": {"mode": "file", "file": {"src": "IVfZVvvDp/test.md"}},
+            "body": { "mode": "file", "file": { "src": "IVfZVvvDp/test.md" } },
             "url": {
               "raw": "postman-echo.com/post",
               "host": ["postman-echo", "com"],
@@ -58,11 +58,11 @@
           "event": [
             {
               "listen": "prerequest",
-              "script": {"exec": [""], "type": "text/javascript"}
+              "script": { "exec": [""], "type": "text/javascript" }
             },
             {
               "listen": "test",
-              "script": {"exec": [""], "type": "text/javascript"}
+              "script": { "exec": [""], "type": "text/javascript" }
             }
           ],
           "id": "fb33abcc-8329-4fa9-9fbb-8e513f9307f6",
@@ -72,7 +72,7 @@
             "body": {
               "mode": "raw",
               "raw": "{\n    \"message\": \"This file was added using the GitHub API!\",\n    \"content\": \"{{encodedFileData}}\"\n}",
-              "options": {"raw": {"language": "json"}}
+              "options": { "raw": { "language": "json" } }
             },
             "url": {
               "raw": "{{baseUrl}}/repos/:owner/:repo/contents/:path",
@@ -117,9 +117,9 @@
           "host": ["{{baseUrl}}"],
           "path": ["search", "repositories"],
           "query": [
-            {"key": "q", "value": "postman"},
-            {"key": "order", "value": "desc"},
-            {"key": "per_page", "value": "30"}
+            { "key": "q", "value": "postman" },
+            { "key": "order", "value": "desc" },
+            { "key": "per_page", "value": "30" }
           ]
         },
         "description": "Searches repositories based on keywords `q`"
@@ -182,7 +182,7 @@
         "body": {
           "mode": "raw",
           "raw": "{\n    \"name\": \"i-made-this-repo-from-an-api\"\n}",
-          "options": {"raw": {"language": "json"}}
+          "options": { "raw": { "language": "json" } }
         },
         "url": {
           "raw": "{{baseUrl}}/user/repos",
@@ -203,7 +203,7 @@
         "body": {
           "mode": "raw",
           "raw": "{\n    \"name\": \"api-fork-test-hello-world\"\n}",
-          "options": {"raw": {"language": "json"}}
+          "options": { "raw": { "language": "json" } }
         },
         "url": {
           "raw": "{{baseUrl}}/repos/:owner/:repo/forks",
@@ -236,7 +236,7 @@
         "body": {
           "mode": "raw",
           "raw": "{\n    \"name\": \"updated-with-api\"\n}",
-          "options": {"raw": {"language": "json"}}
+          "options": { "raw": { "language": "json" } }
         },
         "url": {
           "raw": "{{baseUrl}}/repos/:owner/:repo",
@@ -248,7 +248,7 @@
               "value": "clairefro",
               "description": "your GitHub username"
             },
-            {"key": "repo", "value": "Hello-World"}
+            { "key": "repo", "value": "Hello-World" }
           ]
         },
         "description": "Updates data on a repo, such as `name`"
@@ -288,24 +288,24 @@
   "auth": {
     "type": "basic",
     "basic": [
-      {"key": "password", "value": "{{personalAccessToken}}", "type": "string"},
-      {"key": "username", "value": "{{username}}", "type": "string"}
+      { "key": "password", "value": "{{personalAccessToken}}", "type": "string" },
+      { "key": "username", "value": "{{username}}", "type": "string" }
     ]
   },
   "event": [
     {
       "listen": "prerequest",
-      "script": {"type": "text/javascript", "exec": [""]}
+      "script": { "type": "text/javascript", "exec": [""] }
     },
-    {"listen": "test", "script": {"type": "text/javascript", "exec": [""]}}
+    { "listen": "test", "script": { "type": "text/javascript", "exec": [""] } }
   ],
   "variable": [
-    {"key": "baseUrl", "value": "https://api.github.com"},
+    { "key": "baseUrl", "value": "https://api.github.com" },
     {
       "key": "personalAccessToken",
       "value": "<PASTE YOUR PERSONAL ACCESS TOKEN IN CURRENT VALUE COLUMN ONLY>"
     },
-    {"key": "username", "value": "<your github username>"},
-    {"key": "encodedFileData", "value": ""}
+    { "key": "username", "value": "<your github username>" },
+    { "key": "encodedFileData", "value": "" }
   ]
 }

@@ -21,9 +21,9 @@
           "host": ["{{baseUrl}}"],
           "path": ["search", "repositories"],
           "query": [
-            {"key": "q", "value": "postman"},
-            {"key": "order", "value": "desc"},
-            {"key": "per_page", "value": "30"}
+            { "key": "q", "value": "postman" },
+            { "key": "order", "value": "desc" },
+            { "key": "per_page", "value": "30" }
           ]
         },
         "description": "Searches repositories based on keywords `q`"
@@ -81,9 +81,9 @@
   "event": [
     {
       "listen": "prerequest",
-      "script": {"type": "text/javascript", "exec": [""]}
+      "script": { "type": "text/javascript", "exec": [""] }
     },
-    {"listen": "test", "script": {"type": "text/javascript", "exec": [""]}}
+    { "listen": "test", "script": { "type": "text/javascript", "exec": [""] } }
   ],
-  "variable": [{"key": "baseUrl", "value": "https://api.github.com"}]
+  "variable": [{ "key": "baseUrl", "value": "https://api.github.com" }]
 }

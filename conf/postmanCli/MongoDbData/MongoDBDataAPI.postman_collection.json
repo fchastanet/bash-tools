@@ -16,9 +16,9 @@
       "request": {
         "method": "POST",
         "header": [
-          {"key": "Content-Type", "value": "application/{{CONTENT_TYPE}}"},
-          {"key": "Access-Control-Request-Headers", "value": "*"},
-          {"key": "api-key", "value": "{{API_KEY}}"}
+          { "key": "Content-Type", "value": "application/{{CONTENT_TYPE}}" },
+          { "key": "Access-Control-Request-Headers", "value": "*" },
+          { "key": "api-key", "value": "{{API_KEY}}" }
         ],
         "body": {
           "mode": "raw",
@@ -40,9 +40,9 @@
       "request": {
         "method": "POST",
         "header": [
-          {"key": "Content-Type", "value": "application/{{CONTENT_TYPE}}"},
-          {"key": "Access-Control-Request-Headers", "value": "*"},
-          {"key": "api-key", "value": "{{API_KEY}}"},
+          { "key": "Content-Type", "value": "application/{{CONTENT_TYPE}}" },
+          { "key": "Access-Control-Request-Headers", "value": "*" },
+          { "key": "api-key", "value": "{{API_KEY}}" },
           {
             "key": "Accept",
             "value": "application/{{CONTENT_TYPE}}",
@@ -69,9 +69,9 @@
       "request": {
         "method": "POST",
         "header": [
-          {"key": "Content-Type", "value": "application/{{CONTENT_TYPE}}"},
-          {"key": "Access-Control-Request-Headers", "value": "*"},
-          {"key": "api-key", "value": "{{API_KEY}}"}
+          { "key": "Content-Type", "value": "application/{{CONTENT_TYPE}}" },
+          { "key": "Access-Control-Request-Headers", "value": "*" },
+          { "key": "api-key", "value": "{{API_KEY}}" }
         ],
         "body": {
           "mode": "raw",
@@ -93,9 +93,9 @@
       "request": {
         "method": "POST",
         "header": [
-          {"key": "Content-Type", "value": "application/{{CONTENT_TYPE}}"},
-          {"key": "Access-Control-Request-Headers", "value": "*"},
-          {"key": "api-key", "value": "{{API_KEY}}"}
+          { "key": "Content-Type", "value": "application/{{CONTENT_TYPE}}" },
+          { "key": "Access-Control-Request-Headers", "value": "*" },
+          { "key": "api-key", "value": "{{API_KEY}}" }
         ],
         "body": {
           "mode": "raw",
@@ -117,9 +117,9 @@
       "request": {
         "method": "POST",
         "header": [
-          {"key": "Content-Type", "value": "application/{{CONTENT_TYPE}}"},
-          {"key": "Access-Control-Request-Headers", "value": "*"},
-          {"key": "api-key", "value": "{{API_KEY}}"}
+          { "key": "Content-Type", "value": "application/{{CONTENT_TYPE}}" },
+          { "key": "Access-Control-Request-Headers", "value": "*" },
+          { "key": "api-key", "value": "{{API_KEY}}" }
         ],
         "body": {
           "mode": "raw",
@@ -141,9 +141,9 @@
       "request": {
         "method": "POST",
         "header": [
-          {"key": "Content-Type", "value": "application/{{CONTENT_TYPE}}"},
-          {"key": "Access-Control-Request-Headers", "value": "*"},
-          {"key": "api-key", "value": "{{API_KEY}}"},
+          { "key": "Content-Type", "value": "application/{{CONTENT_TYPE}}" },
+          { "key": "Access-Control-Request-Headers", "value": "*" },
+          { "key": "api-key", "value": "{{API_KEY}}" },
           {
             "key": "Accept",
             "value": "application/{{CONTENT_TYPE}}",
@@ -170,9 +170,9 @@
       "request": {
         "method": "POST",
         "header": [
-          {"key": "Content-Type", "value": "application/{{CONTENT_TYPE}}"},
-          {"key": "Access-Control-Request-Headers", "value": "*"},
-          {"key": "api-key", "value": "{{API_KEY}}"}
+          { "key": "Content-Type", "value": "application/{{CONTENT_TYPE}}" },
+          { "key": "Access-Control-Request-Headers", "value": "*" },
+          { "key": "api-key", "value": "{{API_KEY}}" }
         ],
         "body": {
           "mode": "raw",
@@ -194,9 +194,9 @@
       "request": {
         "method": "POST",
         "header": [
-          {"key": "Content-Type", "value": "application/{{CONTENT_TYPE}}"},
-          {"key": "Access-Control-Request-Headers", "value": "*"},
-          {"key": "api-key", "value": "{{API_KEY}}"}
+          { "key": "Content-Type", "value": "application/{{CONTENT_TYPE}}" },
+          { "key": "Access-Control-Request-Headers", "value": "*" },
+          { "key": "api-key", "value": "{{API_KEY}}" }
         ],
         "body": {
           "mode": "raw",
@@ -218,9 +218,9 @@
       "request": {
         "method": "POST",
         "header": [
-          {"key": "Content-Type", "value": "application/{{CONTENT_TYPE}}"},
-          {"key": "Access-Control-Request-Headers", "value": "*"},
-          {"key": "api-key", "value": "{{API_KEY}}"},
+          { "key": "Content-Type", "value": "application/{{CONTENT_TYPE}}" },
+          { "key": "Access-Control-Request-Headers", "value": "*" },
+          { "key": "api-key", "value": "{{API_KEY}}" },
           {
             "key": "Accept",
             "value": "application/{{CONTENT_TYPE}}",
@@ -245,9 +245,9 @@
   "event": [
     {
       "listen": "prerequest",
-      "script": {"type": "text/javascript", "exec": [""]}
+      "script": { "type": "text/javascript", "exec": [""] }
     },
-    {"listen": "test", "script": {"type": "text/javascript", "exec": [""]}}
+    { "listen": "test", "script": { "type": "text/javascript", "exec": [""] } }
   ],
   "variable": [
     {
