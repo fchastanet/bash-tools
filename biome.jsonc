@@ -12,7 +12,8 @@
       "!src/Postman/Model/testsData/getCollectionInvalid.json",
       "!src/Postman/Model/testsData/getCollectionInvalid.json",
       "!src/Postman/Model/testsData/pullMode/GithubAPI/notWritableFile.json",
-      "!src/Postman/Collection/testsData/postmanCollections_invalidJsonFile.json"
+      "!src/Postman/Collection/testsData/postmanCollections_invalidJsonFile.json",
+      "!**/*.svg"
     ]
   },
   "formatter": {
@@ -20,8 +21,9 @@
     "lineWidth": 120
   },
   "linter": {
+    "enabled": true,
     "rules": {
-      "recommended": true
+      "preset": "recommended"
     }
   },
   "javascript": {
